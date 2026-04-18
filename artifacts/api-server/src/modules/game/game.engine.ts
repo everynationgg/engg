@@ -1210,6 +1210,20 @@ export function reconnectPlayer(state: GameState, oldId: string, newId: string):
     }
   }
 
+  // Remap nested targets in orbit actions
+  for (const action of Object.values(state.orbitActions)) {
+    if (action && action.targets) {
+      action.targets = remapArray(action.targets);
+    }
+  }
+
+  // Remap targets in votes
+  for (const [voterId, targetId] of Object.entries(state.votes)) {
+    if (targetId === oldId) {
+      state.votes[voterId] = newId;
+    }
+  }
+
   // Remove from grace tracking (player reconnected)
   removePlayerFromGrace(state, oldId);
 }
