@@ -326,6 +326,7 @@ export default function GameShell() {
       clearInterval(pollId);
       if (transitionTimeoutRef.current) clearTimeout(transitionTimeoutRef.current);
       if (transitionTickRef.current) clearInterval(transitionTickRef.current);
+      disconnectSocket();
     };
   }, [roomCode]);
 
