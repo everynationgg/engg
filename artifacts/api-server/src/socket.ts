@@ -713,7 +713,7 @@ export function attachSocketIO(httpServer: HttpServer) {
           }
 
           // NEW PLAYER: block joining when the game has already started
-          if (session.phase !== "role_config") {
+          if (session.phase !== "lobby" && session.phase !== "role_config") {
             gameInProgress = true;
             return CAS_SKIP;
           }
