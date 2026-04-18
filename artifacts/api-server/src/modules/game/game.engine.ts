@@ -1173,6 +1173,9 @@ export function restartGame(state: GameState): GameState {
  * MUTATION: modifies `state` in place.
  */
 export function reconnectPlayer(state: GameState, oldId: string, newId: string): void {
+  console.log(`[reconnectPlayer] START oldId=${oldId}, newId=${newId}`);
+  console.log(`[reconnectPlayer] BEFORE state.rolesAssigned:`, state.rolesAssigned);
+  
   if (oldId === newId) {
     const player = state.players.find((p) => p.id === oldId);
     if (player) {
@@ -1180,6 +1183,7 @@ export function reconnectPlayer(state: GameState, oldId: string, newId: string):
       player.connectionStatus = "connected";
     }
     removePlayerFromGrace(state, oldId);
+    console.log(`[reconnectPlayer] SKIPPED (oldId === newId)`);
     return;
   }
 
@@ -1189,21 +1193,26 @@ export function reconnectPlayer(state: GameState, oldId: string, newId: string):
     player.id = newId;
     player.connected = true;
     player.connectionStatus = "connected";
+  } else {
+    console.log(`[reconnectPlayer] WARNING: Player not found in state.players for oldId=${oldId}`);
   }
 
   // Remap keyed records
-  const remap = (record: Record<string, unknown>) => {
+  const remap = (record: Record<string, unknown>, name: string) => {
     if (record[oldId] !== undefined) {
       record[newId] = record[oldId];
       delete record[oldId];
+      console.log(`[reconnectPlayer] Remapped ${name} from ${oldId} to ${newId}`);
+    } else {
+      console.log(`[reconnectPlayer] WARNING: ${name}[oldId] is undefined`);
     }
   };
 
-  remap(state.rolesAssigned);
-  remap(state.initialRoles);
-  remap(state.orbitActions);
-  remap(state.orbitFeedback);
-  remap(state.votes);
+  remap(state.rolesAssigned, "rolesAssigned");
+  remap(state.initialRoles, "initialRoles");
+  remap(state.orbitActions, "orbitActions");
+  remap(state.orbitFeedback, "orbitFeedback");
+  remap(state.votes, "votes");
 
   // Remap arrays of IDs
   const remapArray = (arr: string[]) => arr.map((id) => (id === oldId ? newId : id));
