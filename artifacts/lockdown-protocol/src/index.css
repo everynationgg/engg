@@ -1,0 +1,908 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-card-border: hsl(var(--card-border));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-popover-border: hsl(var(--popover-border));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-border: var(--primary-border);
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-secondary-border: var(--secondary-border);
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-muted-border: var(--muted-border);
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent-border: var(--accent-border);
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-destructive-border: var(--destructive-border);
+
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-primary-border: var(--sidebar-primary-border);
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-accent-border: var(--sidebar-accent-border);
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  --font-sans: var(--app-font-sans);
+  --font-serif: var(--app-font-serif);
+  --font-mono: var(--app-font-mono);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --button-outline: rgba(0,0,0, .10);
+  --badge-outline: rgba(0,0,0, .05);
+  --opaque-button-border-intensity: -8;
+  --elevate-1: rgba(0,0,0, .03);
+  --elevate-2: rgba(0,0,0, .08);
+
+  --background: 220 30% 6%;
+  --foreground: 190 80% 90%;
+  --border: 210 30% 18%;
+  --input: 210 30% 20%;
+  --ring: 185 100% 50%;
+
+  --card: 220 28% 9%;
+  --card-foreground: 190 80% 90%;
+  --card-border: 210 30% 18%;
+
+  --sidebar: 220 28% 8%;
+  --sidebar-foreground: 190 80% 90%;
+  --sidebar-border: 210 30% 16%;
+  --sidebar-primary: 185 100% 50%;
+  --sidebar-primary-foreground: 220 30% 6%;
+  --sidebar-accent: 270 80% 55%;
+  --sidebar-accent-foreground: 190 80% 95%;
+  --sidebar-ring: 185 100% 50%;
+
+  --popover: 220 28% 9%;
+  --popover-foreground: 190 80% 90%;
+  --popover-border: 210 30% 18%;
+
+  --primary: 185 100% 50%;
+  --primary-foreground: 220 30% 6%;
+
+  --secondary: 270 80% 55%;
+  --secondary-foreground: 190 80% 95%;
+
+  --muted: 220 28% 14%;
+  --muted-foreground: 210 30% 55%;
+
+  --accent: 270 80% 55%;
+  --accent-foreground: 190 80% 95%;
+
+  --destructive: 0 75% 55%;
+  --destructive-foreground: 0 0% 98%;
+
+  --chart-1: 185 100% 50%;
+  --chart-2: 270 80% 55%;
+  --chart-3: 140 70% 50%;
+  --chart-4: 30 90% 55%;
+  --chart-5: 0 75% 55%;
+
+  --app-font-sans: 'Exo 2', sans-serif;
+  --app-font-serif: Georgia, serif;
+  --app-font-mono: Menlo, monospace;
+  --radius: .5rem;
+  --shadow-2xs: 0px 2px 8px 0px hsl(185 100% 50% / 0.05);
+  --shadow-xs: 0px 2px 8px 0px hsl(185 100% 50% / 0.08);
+  --shadow-sm: 0px 2px 8px 0px hsl(185 100% 50% / 0.10), 0px 1px 2px -1px hsl(185 100% 50% / 0.05);
+  --shadow: 0px 4px 16px 0px hsl(185 100% 50% / 0.12), 0px 1px 2px -1px hsl(185 100% 50% / 0.06);
+  --shadow-md: 0px 4px 20px 0px hsl(185 100% 50% / 0.14), 0px 2px 4px -1px hsl(185 100% 50% / 0.07);
+  --shadow-lg: 0px 8px 30px 0px hsl(185 100% 50% / 0.16), 0px 4px 8px -2px hsl(185 100% 50% / 0.08);
+  --shadow-xl: 0px 12px 40px 0px hsl(185 100% 50% / 0.20), 0px 8px 16px -4px hsl(185 100% 50% / 0.10);
+  --shadow-2xl: 0px 16px 60px 0px hsl(185 100% 50% / 0.25);
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+
+  --sidebar-primary-border: hsl(var(--sidebar-primary));
+  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --sidebar-accent-border: hsl(var(--sidebar-accent));
+  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --primary-border: hsl(var(--primary));
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --secondary-border: hsl(var(--secondary));
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --muted-border: hsl(var(--muted));
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --accent-border: hsl(var(--accent));
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --destructive-border: hsl(var(--destructive));
+  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+}
+
+.dark {
+  --button-outline: rgba(255,255,255, .10);
+  --badge-outline: rgba(255,255,255, .05);
+  --opaque-button-border-intensity: 9;
+  --elevate-1: rgba(255,255,255, .04);
+  --elevate-2: rgba(255,255,255, .09);
+
+  --background: 220 30% 6%;
+  --foreground: 190 80% 90%;
+  --border: 210 30% 18%;
+  --input: 210 30% 20%;
+  --ring: 185 100% 50%;
+
+  --card: 220 28% 9%;
+  --card-foreground: 190 80% 90%;
+  --card-border: 210 30% 18%;
+
+  --sidebar: 220 28% 8%;
+  --sidebar-foreground: 190 80% 90%;
+  --sidebar-border: 210 30% 16%;
+  --sidebar-primary: 185 100% 50%;
+  --sidebar-primary-foreground: 220 30% 6%;
+  --sidebar-accent: 270 80% 55%;
+  --sidebar-accent-foreground: 190 80% 95%;
+  --sidebar-ring: 185 100% 50%;
+
+  --popover: 220 28% 9%;
+  --popover-foreground: 190 80% 90%;
+  --popover-border: 210 30% 18%;
+
+  --primary: 185 100% 50%;
+  --primary-foreground: 220 30% 6%;
+
+  --secondary: 270 80% 55%;
+  --secondary-foreground: 190 80% 95%;
+
+  --muted: 220 28% 14%;
+  --muted-foreground: 210 30% 55%;
+
+  --accent: 270 80% 55%;
+  --accent-foreground: 190 80% 95%;
+
+  --destructive: 0 75% 55%;
+  --destructive-foreground: 0 0% 98%;
+
+  --chart-1: 185 100% 50%;
+  --chart-2: 270 80% 55%;
+  --chart-3: 140 70% 50%;
+  --chart-4: 30 90% 55%;
+  --chart-5: 0 75% 55%;
+
+  --shadow-2xs: 0px 2px 8px 0px hsl(185 100% 50% / 0.05);
+  --shadow-xs: 0px 2px 8px 0px hsl(185 100% 50% / 0.08);
+  --shadow-sm: 0px 2px 8px 0px hsl(185 100% 50% / 0.10), 0px 1px 2px -1px hsl(185 100% 50% / 0.05);
+  --shadow: 0px 4px 16px 0px hsl(185 100% 50% / 0.12), 0px 1px 2px -1px hsl(185 100% 50% / 0.06);
+  --shadow-md: 0px 4px 20px 0px hsl(185 100% 50% / 0.14), 0px 2px 4px -1px hsl(185 100% 50% / 0.07);
+  --shadow-lg: 0px 8px 30px 0px hsl(185 100% 50% / 0.16), 0px 4px 8px -2px hsl(185 100% 50% / 0.08);
+  --shadow-xl: 0px 12px 40px 0px hsl(185 100% 50% / 0.20), 0px 8px 16px -4px hsl(185 100% 50% / 0.10);
+  --shadow-2xl: 0px 16px 60px 0px hsl(185 100% 50% / 0.25);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    background: linear-gradient(135deg, hsl(220 30% 6%) 0%, hsl(230 28% 7%) 25%, hsl(220 30% 6%) 50%, hsl(215 32% 7%) 75%, hsl(220 30% 6%) 100%);
+    background-size: 200% 200%;
+    animation: ix-gradient-shift 30s ease infinite;
+    color: hsl(190 80% 90%);
+  }
+}
+
+/* Sci-fi neon glow utilities */
+.glow-cyan {
+  box-shadow: 0 0 10px hsl(185 100% 50% / 0.5), 0 0 20px hsl(185 100% 50% / 0.3), 0 0 40px hsl(185 100% 50% / 0.1);
+}
+
+.glow-cyan-border {
+  box-shadow: 0 0 8px hsl(185 100% 50% / 0.6), inset 0 0 8px hsl(185 100% 50% / 0.1);
+  border-color: hsl(185 100% 50%);
+}
+
+.glow-purple {
+  box-shadow: 0 0 10px hsl(270 80% 55% / 0.5), 0 0 20px hsl(270 80% 55% / 0.3), 0 0 40px hsl(270 80% 55% / 0.1);
+}
+
+.glow-purple-border {
+  box-shadow: 0 0 8px hsl(270 80% 55% / 0.6), inset 0 0 8px hsl(270 80% 55% / 0.1);
+  border-color: hsl(270 80% 55%);
+}
+
+.text-glow-cyan {
+  text-shadow: 0 0 10px hsl(185 100% 50% / 0.8), 0 0 30px hsl(185 100% 50% / 0.5);
+}
+
+.text-glow-purple {
+  text-shadow: 0 0 10px hsl(270 80% 55% / 0.8), 0 0 30px hsl(270 80% 55% / 0.5);
+}
+
+.font-orbitron {
+  font-family: 'Orbitron', monospace;
+}
+
+/* Role card glow on selected */
+.role-card-selected-cyan {
+  border: 2px solid hsl(185 100% 50%);
+  box-shadow: 0 0 12px hsl(185 100% 50% / 0.7), 0 0 24px hsl(185 100% 50% / 0.4), inset 0 0 10px hsl(185 100% 50% / 0.05);
+}
+
+.role-card-selected-purple {
+  border: 2px solid hsl(270 80% 55%);
+  box-shadow: 0 0 12px hsl(270 80% 55% / 0.7), 0 0 24px hsl(270 80% 55% / 0.4), inset 0 0 10px hsl(270 80% 55% / 0.05);
+}
+
+@layer utilities {
+  input[type="search"]::-webkit-search-cancel-button {
+    @apply hidden;
+  }
+
+  [contenteditable][data-placeholder]:empty::before {
+    content: attr(data-placeholder);
+    color: hsl(var(--muted-foreground));
+    pointer-events: none;
+  }
+
+  .no-default-hover-elevate {}
+  .no-default-active-elevate {}
+
+  .toggle-elevate::before,
+  .toggle-elevate-2::before {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0px;
+    border-radius: inherit;
+    z-index: -1;
+  }
+
+  .toggle-elevate.toggle-elevated::before {
+    background-color: var(--elevate-2);
+  }
+
+  .border.toggle-elevate::before {
+    inset: -1px;
+  }
+
+  .hover-elevate:not(.no-default-hover-elevate),
+  .active-elevate:not(.no-default-active-elevate),
+  .hover-elevate-2:not(.no-default-hover-elevate),
+  .active-elevate-2:not(.no-default-active-elevate) {
+    position: relative;
+    z-index: 0;
+  }
+
+  .hover-elevate:not(.no-default-hover-elevate)::after,
+  .active-elevate:not(.no-default-active-elevate)::after,
+  .hover-elevate-2:not(.no-default-hover-elevate)::after,
+  .active-elevate-2:not(.no-default-active-elevate)::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0px;
+    border-radius: inherit;
+    z-index: 999;
+  }
+
+  .hover-elevate:hover:not(.no-default-hover-elevate)::after,
+  .active-elevate:active:not(.no-default-active-elevate)::after {
+    background-color: var(--elevate-1);
+  }
+
+  .hover-elevate-2:hover:not(.no-default-hover-elevate)::after,
+  .active-elevate-2:active:not(.no-default-active-elevate)::after {
+    background-color: var(--elevate-2);
+  }
+
+  .border.hover-elevate:not(.no-hover-interaction-elevate)::after,
+  .border.active-elevate:not(.no-active-interaction-elevate)::after,
+  .border.hover-elevate-2:not(.no-hover-interaction-elevate)::after,
+  .border.active-elevate-2:not(.no-active-interaction-elevate)::after,
+  .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
+    inset: -1px;
+  }
+}
+
+/* =============================================
+   GLOBAL INTERACTION & ANIMATION SYSTEM
+   ============================================= */
+
+/* --- Keyframes --- */
+
+@keyframes ix-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes ix-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes ix-fade-slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ix-fade-slide-down {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(8px); }
+}
+
+@keyframes ix-scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes ix-scale-out {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.95); }
+}
+
+@keyframes ix-slide-in-right {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes ix-slide-out-right {
+  from { transform: translateX(0); }
+  to   { transform: translateX(100%); }
+}
+
+@keyframes ix-pulse-glow {
+  0%, 100% { box-shadow: 0 0 8px hsl(185 100% 50% / 0.3); }
+  50%      { box-shadow: 0 0 20px hsl(185 100% 50% / 0.6), 0 0 40px hsl(185 100% 50% / 0.2); }
+}
+
+@keyframes ix-shake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-4px); }
+  40%      { transform: translateX(4px); }
+  60%      { transform: translateX(-3px); }
+  80%      { transform: translateX(3px); }
+}
+
+@keyframes ix-typing-dot {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30%           { opacity: 1;   transform: translateY(-3px); }
+}
+
+@keyframes ix-gradient-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes ix-stagger-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ix-chat-msg-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes ix-empty-pulse {
+  0%, 100% { opacity: 0.5; }
+  50%      { opacity: 1; }
+}
+
+/* --- Reusable animation classes --- */
+
+/*
+ * MOTION HIERARCHY
+ * Micro (buttons, taps):     120–130ms  cubic-bezier(0.2,0,0,1) — snappy, sharper ease-out
+ * UI transitions (pages):    170–190ms  ease-out
+ * Panels / modals:           260–280ms  cubic-bezier(0.16,1,0.3,1) — softer, weighted curve
+ * Entry uses ease-out; exit uses ease-in (faster fade out)
+ */
+
+/* Page / view transitions — UI transition tier (180ms) */
+.ix-page-enter {
+  animation: ix-fade-slide-up 180ms ease-out both;
+}
+
+.ix-page-exit {
+  animation: ix-fade-slide-down 140ms ease-in both;
+}
+
+/* Modal open / close — panel tier (weighted easing, 270ms) */
+.ix-modal-enter {
+  animation: ix-scale-in 270ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.ix-modal-exit {
+  animation: ix-scale-out 160ms ease-in both;
+}
+
+/* Backdrop — panel tier (270ms) */
+.ix-backdrop {
+  animation: ix-fade-in 270ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.ix-backdrop-blur {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Menu panel slide — panel tier (weighted easing, 270ms) */
+.ix-menu-panel-enter {
+  animation: ix-slide-in-right 270ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.ix-menu-panel-exit {
+  animation: ix-slide-out-right 160ms ease-in both;
+}
+
+/* Menu item stagger — UI transition tier */
+.ix-stagger-item {
+  animation: ix-stagger-in 180ms ease-out both;
+  animation-delay: calc(var(--ix-stagger-index, 0) * 40ms);
+}
+
+/* Chat message appear — UI transition tier (180ms) */
+.ix-chat-msg {
+  animation: ix-chat-msg-in 180ms ease-out both;
+}
+
+/* Empty state pulse */
+.ix-empty-pulse {
+  animation: ix-empty-pulse 2.5s ease-in-out infinite;
+}
+
+/* Typing indicator dots — smooth fade in/out */
+.ix-typing-dots {
+  animation: ix-fade-in 200ms ease-out both;
+}
+.ix-typing-dots span {
+  display: inline-block;
+  animation: ix-typing-dot 1.2s ease-in-out infinite;
+}
+.ix-typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+.ix-typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+/* Error shake — micro tier (200ms) */
+.ix-shake {
+  animation: ix-shake 200ms ease-out;
+}
+
+/* Pulse glow for success actions */
+.ix-pulse-glow {
+  animation: ix-pulse-glow 1.5s ease-in-out infinite;
+}
+
+/* --- SUCCESS / COMPLETION FEEDBACK --- */
+
+@keyframes ix-success-flash {
+  0%   { box-shadow: 0 0 0 0 hsl(185 100% 50% / 0.5); transform: scale(1); }
+  50%  { box-shadow: 0 0 16px 4px hsl(185 100% 50% / 0.4); transform: scale(1.05); }
+  100% { box-shadow: 0 0 0 0 hsl(185 100% 50% / 0); transform: scale(1); }
+}
+
+@keyframes ix-msg-sent-pulse {
+  0%   { box-shadow: 0 0 0 0 hsl(270 80% 55% / 0.4); transform: scale(1); }
+  50%  { box-shadow: 0 0 10px 2px hsl(270 80% 55% / 0.3); transform: scale(1.04); }
+  100% { box-shadow: 0 0 0 0 hsl(270 80% 55% / 0); transform: scale(1); }
+}
+
+@keyframes ix-lobby-highlight {
+  0%   { box-shadow: 0 0 0 0 hsl(140 70% 50% / 0.4); transform: scale(1); }
+  50%  { box-shadow: 0 0 14px 3px hsl(140 70% 50% / 0.3); transform: scale(1.05); }
+  100% { box-shadow: 0 0 0 0 hsl(140 70% 50% / 0); transform: scale(1); }
+}
+
+/* Apply via JS: el.classList.add('ix-success') — single-fire only */
+.ix-success {
+  animation: ix-success-flash 180ms ease-out both;
+  animation-iteration-count: 1;
+}
+
+.ix-msg-sent {
+  animation: ix-msg-sent-pulse 180ms ease-out both;
+  animation-iteration-count: 1;
+}
+
+.ix-lobby-highlight {
+  animation: ix-lobby-highlight 200ms ease-out both;
+  animation-iteration-count: 1;
+}
+
+/* --- BUTTON INTERACTION SYSTEM — micro tier (snappy) --- */
+
+.ix-btn {
+  transition: transform 130ms cubic-bezier(0.2, 0, 0, 1), box-shadow 130ms cubic-bezier(0.2, 0, 0, 1), filter 130ms cubic-bezier(0.2, 0, 0, 1);
+  will-change: transform;
+}
+
+.ix-btn:hover:not(:disabled) {
+  transform: scale(1.03);
+  filter: brightness(1.1);
+}
+
+.ix-btn:active:not(:disabled) {
+  transform: scale(0.96);
+  filter: brightness(0.95);
+  transition-duration: 50ms;
+}
+
+/* Button variants — hierarchy */
+.ix-btn-primary {
+  transition: transform 130ms cubic-bezier(0.2, 0, 0, 1), box-shadow 130ms cubic-bezier(0.2, 0, 0, 1), filter 130ms cubic-bezier(0.2, 0, 0, 1);
+  will-change: transform;
+}
+
+.ix-btn-primary:hover:not(:disabled) {
+  transform: scale(1.03);
+  filter: brightness(1.15);
+  box-shadow: 0 0 16px hsl(185 100% 50% / 0.4), 0 0 32px hsl(185 100% 50% / 0.15);
+}
+
+.ix-btn-primary:active:not(:disabled) {
+  transform: scale(0.96);
+  filter: brightness(0.92);
+  transition-duration: 50ms;
+}
+
+.ix-btn-secondary {
+  transition: transform 130ms cubic-bezier(0.2, 0, 0, 1), box-shadow 130ms cubic-bezier(0.2, 0, 0, 1), filter 130ms cubic-bezier(0.2, 0, 0, 1);
+  will-change: transform;
+}
+
+.ix-btn-secondary:hover:not(:disabled) {
+  transform: scale(1.02);
+  filter: brightness(1.06);
+  box-shadow: 0 0 8px hsl(185 100% 50% / 0.15);
+}
+
+.ix-btn-secondary:active:not(:disabled) {
+  transform: scale(0.97);
+  filter: brightness(0.96);
+  transition-duration: 50ms;
+}
+
+.ix-btn-disabled,
+.ix-btn:disabled,
+.ix-btn-primary:disabled,
+.ix-btn-secondary:disabled,
+.ix-btn-loading {
+  cursor: not-allowed;
+  pointer-events: none;
+  filter: none;
+  transform: none;
+}
+
+.ix-btn-disabled,
+.ix-btn:disabled,
+.ix-btn-primary:disabled,
+.ix-btn-secondary:disabled {
+  opacity: 0.45;
+}
+
+/* Loading state — micro tier (130ms), prevents interaction, subtle pulse */
+.ix-btn-loading {
+  opacity: 0.7;
+  animation: ix-btn-loading-pulse 1s ease-in-out infinite;
+}
+
+@keyframes ix-btn-loading-pulse {
+  0%, 100% { opacity: 0.7; }
+  50%       { opacity: 0.5; }
+}
+
+/* --- INPUT FEEDBACK — refined focus, typing, error --- */
+
+.ix-input {
+  transition: border-color 140ms ease-out, box-shadow 140ms ease-out, transform 140ms ease-out;
+}
+
+.ix-input:focus {
+  transform: scale(1.01);
+  box-shadow: 0 0 0 2px hsl(185 100% 50% / 0.2), 0 0 16px hsl(185 100% 50% / 0.12);
+  border-color: hsl(185 100% 50%) !important;
+}
+
+/* Typing state — add via JS when input has content
+   Border feedback is immediate; glow animation is delayed for sustained typing */
+.ix-input-typing {
+  border-image: linear-gradient(90deg, hsl(185 100% 50% / 0.6), hsl(270 80% 55% / 0.5), hsl(185 100% 50% / 0.6)) 1;
+  border-image-slice: 1;
+  box-shadow: 0 0 0 1px hsl(185 100% 50% / 0.1);
+  animation: ix-input-glow-shift 3s ease-in-out infinite;
+  animation-delay: 200ms;
+}
+
+@keyframes ix-input-glow-shift {
+  0%, 100% { box-shadow: 0 0 0 1px hsl(185 100% 50% / 0.08); }
+  50%      { box-shadow: 0 0 0 1px hsl(270 80% 55% / 0.08); }
+}
+
+/* Error state — red glow + shake */
+.ix-input-error {
+  animation: ix-shake 200ms ease-out;
+  box-shadow: 0 0 0 2px hsl(0 75% 55% / 0.3), 0 0 12px hsl(0 75% 55% / 0.15) !important;
+  border-color: hsl(0 75% 55%) !important;
+}
+
+/* --- CHAT SYSTEM MESSAGE --- */
+
+.ix-chat-system-msg {
+  animation: ix-fade-in 200ms ease-in-out both;
+  animation-delay: 60ms;
+  text-align: center;
+  font-size: 0.6em;
+  letter-spacing: 0.08em;
+  color: hsl(210 30% 50%);
+  opacity: 0.7;
+  padding: 6px 0;
+  margin: 4px 0;
+}
+
+/* Consecutive message grouping — tighter spacing */
+.ix-chat-msg + .ix-chat-msg {
+  margin-top: -4px;
+}
+
+/* --- CONNECTION STATE INDICATOR --- */
+
+@keyframes ix-connection-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+
+@keyframes ix-connection-settle {
+  0%   { transform: scale(1.3); opacity: 0.6; filter: brightness(1.5); }
+  35%  { transform: scale(1.04); opacity: 1; filter: brightness(1.3); }
+  100% { transform: scale(1); opacity: 1; filter: brightness(1); }
+}
+
+@keyframes ix-connection-blink {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 0.15; }
+}
+
+@keyframes ix-connection-fade-to-pulse {
+  from { opacity: 0.3; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes ix-connection-fade-to-blink {
+  from { opacity: 0.8; transform: scale(1); }
+  to   { opacity: 0.5; transform: scale(1); }
+}
+
+.ix-connection-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  will-change: transform, opacity, filter;
+}
+
+.ix-connection-dot--connected {
+  background: hsl(140 70% 55%);
+  box-shadow: 0 0 6px hsl(140 70% 55% / 0.6);
+  animation: ix-connection-settle 280ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.ix-connection-dot--reconnecting {
+  background: hsl(45 90% 55%);
+  box-shadow: 0 0 6px hsl(45 90% 55% / 0.6);
+  animation: ix-connection-fade-to-pulse 200ms ease-out both, ix-connection-pulse 1s ease-in-out 200ms infinite;
+}
+
+.ix-connection-dot--disconnected {
+  background: hsl(0 75% 55%);
+  box-shadow: 0 0 4px hsl(0 75% 55% / 0.3);
+  animation: ix-connection-fade-to-blink 300ms ease-out both, ix-connection-blink 2s ease-in-out 300ms infinite;
+  opacity: 0.5;
+}
+
+/* --- PLAYER STATUS LIST (presence overlay) --- */
+
+.ix-player-status-list {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  pointer-events: none;
+  opacity: 0.6;
+  transition: opacity 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ix-player-status-list:hover {
+  opacity: 1;
+}
+
+.ix-player-status-list--interrupted {
+  opacity: 0.9;
+}
+
+/* Hide player status list when chat modal is open to prevent visual overlap */
+body[data-chat-open="true"] .ix-player-status-list {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease-out;
+}
+
+.ix-player-status-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px 2px 6px;
+  border-radius: 4px;
+  background: hsl(220 28% 8% / 0.7);
+  backdrop-filter: blur(4px);
+  transition: opacity 200ms ease;
+}
+
+.ix-player-status-item--inactive {
+  opacity: 0.7;
+}
+
+.ix-player-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  will-change: transform, opacity;
+}
+
+.ix-player-dot--connected {
+  background: hsl(140 70% 55%);
+  box-shadow: 0 0 4px hsl(140 70% 55% / 0.5);
+}
+
+.ix-player-dot--reconnecting {
+  background: hsl(45 90% 55%);
+  box-shadow: 0 0 6px hsl(45 90% 55% / 0.6);
+  animation: ix-connection-pulse 1s ease-in-out infinite;
+}
+
+.ix-player-dot--disconnected {
+  background: hsl(0 75% 55%);
+  box-shadow: 0 0 3px hsl(0 75% 55% / 0.3);
+  opacity: 0.5;
+}
+
+.ix-player-status-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.55em;
+  letter-spacing: 0.06em;
+  color: hsl(210 30% 70%);
+  white-space: nowrap;
+}
+
+.ix-player-status-badge {
+  margin-left: 4px;
+  font-size: 0.8em;
+  letter-spacing: 0.1em;
+  vertical-align: middle;
+}
+
+.ix-player-status-badge--host {
+  color: hsl(50 100% 60%);
+}
+
+.ix-player-status-badge--you {
+  color: hsl(185 100% 60%);
+}
+
+/* --- SYSTEM TOAST OVERLAY --- */
+
+@keyframes ix-toast-enter {
+  0%   { opacity: 0; transform: translateY(-8px) scale(0.95); }
+  60%  { opacity: 1; transform: translateY(0) scale(1.02); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes ix-toast-exit {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(-6px) scale(0.97); }
+}
+
+.ix-system-toast-container {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 9998;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.ix-system-toast {
+  pointer-events: auto;
+  animation: ix-toast-enter 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.72em;
+  letter-spacing: 0.06em;
+  color: hsl(190 80% 88%);
+  background: hsl(220 28% 10% / 0.95);
+  border: 1px solid hsl(185 100% 50% / 0.3);
+  box-shadow: 0 4px 20px hsl(185 100% 50% / 0.12), 0 0 0 1px hsl(185 100% 50% / 0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  max-width: 300px;
+}
+
+.ix-system-toast--exiting {
+  animation: ix-toast-exit 160ms ease-in both;
+}
+
+.ix-system-toast--info {
+  border-color: hsl(185 100% 50% / 0.3);
+}
+
+.ix-system-toast--success {
+  border-color: hsl(140 70% 50% / 0.4);
+  box-shadow: 0 4px 20px hsl(140 70% 50% / 0.1), 0 0 0 1px hsl(140 70% 50% / 0.08);
+}
+
+.ix-system-toast--warning {
+  border-color: hsl(45 90% 55% / 0.4);
+  box-shadow: 0 4px 20px hsl(45 90% 55% / 0.1), 0 0 0 1px hsl(45 90% 55% / 0.08);
+}
+
+.ix-system-toast--error {
+  border-color: hsl(0 75% 55% / 0.4);
+  box-shadow: 0 4px 20px hsl(0 75% 55% / 0.1), 0 0 0 1px hsl(0 75% 55% / 0.08);
+}
+
+/* --- SUBTLE GLOBAL GRADIENT BACKGROUND SHIFT --- */
+
+.ix-bg-alive {
+  background-size: 200% 200%;
+  animation: ix-gradient-shift 30s ease infinite;
+  will-change: background-position;
+}
+
+/* Card hover interaction — UI transition tier (180ms) */
+.ix-card {
+  transition: transform 180ms ease-out, box-shadow 180ms ease-out;
+}
+
+.ix-card:hover {
+  transform: scale(1.02);
+}

@@ -10,6 +10,10 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: stats
+    description: Player statistics and results
 paths:
   /healthz:
     get:
@@ -24,6 +28,139 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /auth/register:
+    post:
+      operationId: registerUser
+      tags: [auth]
+      summary: Register a new user
+      description: Create a new user account with email, username, and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Invalid input or user already exists
+        "500":
+          description: Server error
+  /auth/login:
+    post:
+      operationId: loginUser
+      tags: [auth]
+      summary: Login user
+      description: Authenticate user with email and password, returns JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+        "500":
+          description: Server error
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get current user
+      description: Get the current authenticated user's profile
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: User profile retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Server error
+  /stats/record-game:
+    post:
+      operationId: recordGameResult
+      tags: [stats]
+      summary: Record game result
+      description: Record the outcome of a completed game for the current user
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordGameRequest"
+      responses:
+        "201":
+          description: Game result recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameResultResponse"
+        "400":
+          description: Invalid input
+        "401":
+          description: Unauthorized
+        "500":
+          description: Server error
+  /stats/my-stats:
+    get:
+      operationId: getPlayerStats
+      tags: [stats]
+      summary: Get player stats
+      description: Get the current player's statistics (wins, losses, games played)
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Player stats retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayerStatsResponse"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Server error
+  /stats/leaderboard:
+    get:
+      operationId: getLeaderboard
+      tags: [stats]
+      summary: Get leaderboard
+      description: Get global leaderboard sorted by win rate
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Number of players to return (max 100)
+      responses:
+        "200":
+          description: Leaderboard retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeaderboardResponse"
+        "500":
+          description: Server error
 components:
   schemas:
     HealthStatus:
@@ -33,4 +170,169 @@ components:
           type: string
       required:
         - status
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+        password:
+          type: string
+          minLength: 6
+      required:
+        - email
+        - username
+        - password
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - email
+        - password
+    AuthResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        username:
+          type: string
+        token:
+          type: string
+      required:
+        - id
+        - email
+        - username
+        - token
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        username:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - email
+        - username
+        - createdAt
+    RecordGameRequest:
+      type: object
+      properties:
+        gameId:
+          type: string
+          description: Unique game identifier
+        role:
+          type: string
+          description: Role played (alien, crew, commander, etc.)
+        won:
+          type: string
+          enum: ["yes", "no"]
+          description: Whether player won the game
+      required:
+        - gameId
+        - role
+        - won
+    GameResultResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        gameId:
+          type: string
+        userId:
+          type: string
+        role:
+          type: string
+        won:
+          type: string
+        completedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - gameId
+        - userId
+        - role
+        - won
+        - completedAt
+    PlayerStatsResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        gamesPlayed:
+          type: integer
+        gamesWon:
+          type: integer
+        gamesLost:
+          type: integer
+        winRate:
+          type: number
+          format: float
+          description: Win percentage (0-100)
+      required:
+        - id
+        - userId
+        - gamesPlayed
+        - gamesWon
+        - gamesLost
+        - winRate
+    LeaderboardEntry:
+      type: object
+      properties:
+        userId:
+          type: string
+        username:
+          type: string
+        gamesPlayed:
+          type: integer
+        gamesWon:
+          type: integer
+        winRate:
+          type: number
+          format: float
+        rank:
+          type: integer
+      required:
+        - userId
+        - username
+        - gamesPlayed
+        - gamesWon
+        - winRate
+        - rank
+    LeaderboardResponse:
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/LeaderboardEntry"
+        totalPlayers:
+          type: integer
+      required:
+        - entries
+        - totalPlayers
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
 

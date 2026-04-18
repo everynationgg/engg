@@ -1,0 +1,1196 @@
+import { useState, useCallback, useEffect, useRef } from "react";
+import { useLocation } from "wouter";
+import { ROLES, ALIEN_ROLES, CHAOTIC_ROLES, CREW_ROLES, type Role } from "@/data/roles";
+import { playSciFiClick, playLobbyJoin } from "@/lib/sound";
+import { getSocket } from "@/lib/socket";
+import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
+import { systemToast } from "@/components/SystemToast";
+import HamburgerMenu from "@/components/HamburgerMenu";
+import SettingsModal from "@/components/SettingsModal";
+import ConfirmModal from "@/components/ConfirmModal";
+import ProfileModal from "@/components/ProfileModal";
+
+function getMyCallsign(): string {
+  return sessionStorage.getItem("lp_callsign") || "OPERATIVE";
+}
+
+interface RoleCounts {
+  [roleId: string]: number;
+}
+
+interface LivePlayer {
+  id: string;
+  name: string;
+  isHost: boolean;
+  isYou?: boolean;
+  playerId?: string;
+}
+
+function getRoomCode(): string {
+  return sessionStorage.getItem("lp_roomCode") || "------";
+}
+
+function randomizeRoles(playerCount: number): RoleCounts {
+  const totalRoles = playerCount + 3;
+  const counts: RoleCounts = {};
+  ROLES.forEach((r) => { counts[r.id] = 0; });
+
+  const pool: string[] = [];
+  let attempts = 0;
+
+  while (pool.length < totalRoles && attempts < 10000) {
+    attempts++;
+    const role = ROLES[Math.floor(Math.random() * ROLES.length)];
+    const currentCount = pool.filter((id) => id === role.id).length;
+    if (currentCount < 2) {
+      pool.push(role.id);
+    }
+  }
+
+  pool.forEach((roleId) => {
+    counts[roleId] = (counts[roleId] || 0) + 1;
+  });
+
+  return counts;
+}
+
+export default function RoleConfigPage() {
+  const [, setLocation] = useLocation();
+  const [selectedRole, setSelectedRole] = useState<Role>(ROLES[0]);
+  const [roleCounts, setRoleCounts] = useState<RoleCounts>(() => {
+    const init: RoleCounts = {};
+    ROLES.forEach((r) => { init[r.id] = 0; });
+    return init;
+  });
+  const [copyFeedback, setCopyFeedback] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
+  const [kickError, setKickError] = useState<string | null>(null);
+  const [kickConfirmTarget, setKickConfirmTarget] = useState<LivePlayer | null>(null);
+  const [kickedNotice, setKickedNotice] = useState<string | null>(null);
+  const [nameTakenNotice, setNameTakenNotice] = useState<string | null>(null);
+  const [livePlayers, setLivePlayers] = useState<LivePlayer[]>([]);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
+
+  // isCreating is a one-shot flag: read from sessionStorage ONCE on mount (then
+  // immediately deleted so reconnects never re-trigger create_session).
+  // Only the player who clicked "Create Lobby" will have lp_isCreating="true".
+  // Every other path (join, page reload, reconnect) will have it absent → false.
+  const [isCreating] = useState(() => {
+    const v = sessionStorage.getItem("lp_isCreating") === "true";
+    sessionStorage.removeItem("lp_isCreating");
+    return v;
+  });
+
+  const myCallsign = getMyCallsign();
+  const roomCode = getRoomCode();
+  const kickedOutRef = useRef(false);
+  const previousPlayerCountRef = useRef(0);
+
+  const handleToggleMusic = () => {
+    const next = !musicOn;
+    setMusicOn(next);
+    setSoundEnabled(next);
+    if (next) {
+      startLobbyMusic();
+    } else {
+      stopLobbyMusic();
+    }
+  };
+
+  // Socket connection — server is the single source of truth for phase
+  useEffect(() => {
+    const socket = getSocket();
+
+    type SessionPayload = {
+      phase: string;
+      players: LivePlayer[];
+      rolesAssigned: { [playerId: string]: string };
+    };
+
+    const handlePhaseUpdate = (session: SessionPayload) => {
+      console.log("PHASE:", session.phase, "PLAYERS:", session.players.length);
+
+      if (previousPlayerCountRef.current > 0 && session.players.length > previousPlayerCountRef.current) {
+        playLobbyJoin();
+        systemToast("Player joined", "info");
+      }
+      previousPlayerCountRef.current = session.players.length;
+
+      // Prefer the stable playerId (non-host) over the volatile socket.id for
+      // identifying the current player, so reconnects don't lose the "(You)" marker.
+      const myPlayerId = sessionStorage.getItem("lp_playerId");
+      const mySocketId = socket.id;
+
+      // Update live player list — always reflect the server's authoritative list
+      const updated = session.players.map((p) => ({
+        ...p,
+        isYou: myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId,
+      }));
+      setLivePlayers(updated);
+
+      // Store role assignment when server transitions to role_reveal or any later
+      // in-game phase (covers reconnect scenarios where phase is already past role_reveal)
+      if (session.phase !== "role_config") {
+        const myRole = session.rolesAssigned[mySocketId ?? ""];
+        if (myRole) {
+          sessionStorage.setItem("lp_assignedRole", myRole);
+        }
+        sessionStorage.setItem("lp_totalPlayers", String(session.players.length));
+      }
+    };
+
+    const handleKicked = (payload?: { reason?: string }) => {
+      const reason = payload?.reason ?? "You were removed by the host";
+      kickedOutRef.current = true;
+      setKickedNotice(reason);
+
+      // Remove local lobby/session identity so auto-join logic cannot re-enter.
+      sessionStorage.removeItem("lp_roomCode");
+      sessionStorage.removeItem("lp_isCreating");
+      sessionStorage.removeItem("lp_isHost");
+    };
+
+    const handleJoinBlocked = (reason?: string) => {
+      const normalized = (reason ?? "").toLowerCase();
+      if (!normalized.includes("removed") && !normalized.includes("kicked")) return false;
+
+      kickedOutRef.current = true;
+      setKickedNotice(reason ?? "You were removed from this session");
+      sessionStorage.removeItem("lp_roomCode");
+      sessionStorage.removeItem("lp_isCreating");
+      sessionStorage.removeItem("lp_isHost");
+      return true;
+    };
+
+    const handleNameTaken = (reason?: string) => {
+      const normalized = (reason ?? "").toLowerCase();
+      if (!normalized.includes("name already taken")) return false;
+
+      setNameTakenNotice(`Callsign ${myCallsign} is already taken in this lobby. Please choose a different callsign.`);
+      return true;
+    };
+
+    // Track whether join_session has succeeded so the poll can retry if needed.
+    let joinSucceeded = false;
+
+    const joinOrCreate = async () => {
+      if (kickedOutRef.current) return;
+
+      // isCreating is true only for the player who originally generated the room
+      // code on this device. It is a one-shot React state value (sessionStorage
+      // key was deleted immediately on mount), so reconnects always see false and
+      // always call join_session — preventing any accidental create_session calls.
+      const lp_userId = sessionStorage.getItem("lp_userId");
+
+      console.log(
+        "[join] Emitting", isCreating ? "create_session" : "join_session",
+        "→ sessionId:", roomCode, "| isCreating:", isCreating,
+      );
+
+      // Ensure a stable per-session UUID for both host and non-host flows.
+      // Without this, a host recreated via create_session fallback can lose
+      // identity continuity after restart/reconnect.
+      let playerId = sessionStorage.getItem("lp_playerId");
+      if (!playerId) {
+        playerId = crypto.randomUUID();
+        sessionStorage.setItem("lp_playerId", playerId);
+        // Remove any cached token — it was issued for a different playerId.
+        sessionStorage.removeItem("lp_playerToken");
+      }
+
+      if (!isCreating) {
+        // Try to use a cached token.  If none exists, attempt to fetch one from
+        // the server — but if that request times out, proceed WITHOUT a token.
+        // The server will generate one server-side so the join never partially
+        // fails (player visible in chat but absent from session.players).
+        let playerToken: string | undefined = sessionStorage.getItem("lp_playerToken") ?? undefined;
+        if (!playerToken) {
+          const resp = await new Promise<{ success: boolean; token?: string } | null>((resolve) => {
+            const timer = setTimeout(() => resolve(null), 5000);
+            socket.emit("request_player_token", { playerId }, (r: { success: boolean; token?: string }) => {
+              clearTimeout(timer);
+              resolve(r);
+            });
+          });
+          if (resp?.success && resp.token) {
+            playerToken = resp.token;
+            sessionStorage.setItem("lp_playerToken", playerToken);
+          } else {
+            console.warn("[join] Failed to obtain player token — proceeding without it (server will generate)");
+            // Do NOT return — fall through to join_session with playerToken undefined.
+          }
+        }
+
+        socket.emit(
+          "join_session",
+          { sessionId: roomCode, playerName: myCallsign, playerId, playerToken, userId: lp_userId ?? undefined },
+          (resp: { success: boolean; error?: string; session?: SessionPayload; playerToken?: string }) => {
+            if (resp?.success && resp.session) {
+              console.log("[join] join_session OK — players:", resp.session.players.length);
+              joinSucceeded = true;
+              systemToast("Joined lobby", "success");
+              // Cache the server-returned token (may have been generated server-side).
+              if (resp.playerToken) {
+                sessionStorage.setItem("lp_playerToken", resp.playerToken);
+              }
+              handlePhaseUpdate(resp.session);
+            } else {
+              console.warn("[join] join_session failed:", resp?.error ?? "unknown error");
+              if (handleJoinBlocked(resp?.error)) {
+                joinSucceeded = true;
+                return;
+              }
+              if (handleNameTaken(resp?.error)) {
+                joinSucceeded = true;
+                return;
+              }
+              // Session doesn't exist or room code is invalid — stop retrying and
+              // send the user back to the landing page so they don't get stuck in
+              // an infinite join loop.
+              const errLower = (resp?.error ?? "").toLowerCase();
+              if (errLower.includes("game already in progress")) {
+                joinSucceeded = true;
+                systemToast("Game already in progress — please wait for the next round", "error", 6000);
+                sessionStorage.removeItem("lp_callsign");
+                sessionStorage.removeItem("lp_roomCode");
+                setLocation("/");
+                return;
+              }
+              if (errLower.includes("not found") || errLower.includes("invalid session")) {
+                joinSucceeded = true;
+                systemToast("Room not found. Use Create Game to start a new lobby.", "error", 6000);
+                sessionStorage.removeItem("lp_callsign");
+                sessionStorage.removeItem("lp_roomCode");
+                setLocation("/");
+              }
+            }
+          },
+        );
+      } else {
+        socket.emit(
+          "create_session",
+          { sessionId: roomCode, playerName: myCallsign, playerId, userId: lp_userId ?? undefined },
+          (resp: { success: boolean; error?: string; session?: SessionPayload }) => {
+            if (resp?.success && resp.session) {
+              console.log(
+                "[join] create_session OK — players:", resp.session.players.length,
+              );
+              joinSucceeded = true;
+              systemToast("Lobby created", "success");
+              handlePhaseUpdate(resp.session);
+            } else {
+              console.warn("[join] create_session failed:", resp?.error ?? "unknown error");
+              if (handleJoinBlocked(resp?.error)) {
+                joinSucceeded = true;
+              } else {
+                systemToast("Failed to create game", "error");
+              }
+            }
+          },
+        );
+      }
+    };
+
+    // Register listener BEFORE emitting so we never miss the server's broadcast
+    socket.on("phase_update", handlePhaseUpdate);
+    socket.on("kicked", handleKicked);
+    // Re-join on reconnect so a server restart doesn't strand the player on this page.
+    // Reset joinSucceeded so the poll interval retries the join if the reconnect fails.
+    const onConnect = () => {
+      if (kickedOutRef.current) return;
+      joinSucceeded = false;
+      joinOrCreate();
+    };
+    socket.on("connect", onConnect);
+
+    // If already connected, join immediately; otherwise the connect event will fire
+    if (socket.connected) {
+      joinOrCreate();
+    }
+
+    // Fallback poll every 2 s: if connected, fetch latest session state to catch
+    // any missed phase_update broadcasts; if disconnected, attempt to rejoin so
+    // the socket re-enters the session room after a reconnect.
+    // Also retries joinOrCreate when connected but the initial join failed (e.g.
+    // token request timed out on first attempt) — prevents silent join failures
+    // where the player appears in chat but not in session.players.
+    const pollInterval = setInterval(() => {
+      if (kickedOutRef.current) return;
+
+      if (socket.connected) {
+        if (!joinSucceeded) {
+          // Join hasn't completed yet — retry instead of just polling state.
+          joinOrCreate();
+        } else {
+          socket.emit(
+            "get_session",
+            { sessionId: roomCode },
+            (resp: { success: boolean; session?: SessionPayload }) => {
+              if (resp?.success && resp.session) {
+                handlePhaseUpdate(resp.session);
+              }
+            },
+          );
+        }
+      } else {
+        // Socket is disconnected — Socket.IO buffers the emission and replays
+        // it once the transport reconnects, so the join fires automatically.
+        joinOrCreate();
+      }
+    }, 2000);
+
+    return () => {
+      socket.off("phase_update", handlePhaseUpdate);
+      socket.off("kicked", handleKicked);
+      socket.off("connect", onConnect);
+      clearInterval(pollInterval);
+    };
+  }, [roomCode, myCallsign, isCreating]);
+
+  // Derive host status from server-provided player list.  Falls back to
+  // isCreating only before the first server response arrives.
+  const amIHost = livePlayers.find((p) => p.isYou)?.isHost ?? isCreating;
+
+  // Use livePlayers if populated, else fallback to current user only
+  const players: LivePlayer[] = livePlayers.length > 0
+    ? livePlayers
+    : [{ id: "local", name: myCallsign, isHost: isCreating, isYou: true }];
+  const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+  const joinUrl = typeof window !== "undefined"
+    ? `${window.location.origin}${base}/join/${roomCode}`
+    : `${base}/join/${roomCode}`;
+
+  const totalRoleCount = Object.values(roleCounts).reduce((a, b) => a + b, 0);
+  const requiredRoles = players.length + 3;
+  const rolesReady = totalRoleCount === requiredRoles;
+
+  const handleSelectRole = useCallback((role: Role) => {
+    playSciFiClick();
+    setSelectedRole(role);
+  }, []);
+
+  const handleAdd = useCallback((roleId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    playSciFiClick();
+    setRoleCounts((prev) => ({ ...prev, [roleId]: (prev[roleId] || 0) + 1 }));
+  }, []);
+
+  const handleRemove = useCallback((roleId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    playSciFiClick();
+    setRoleCounts((prev) => ({ ...prev, [roleId]: Math.max(0, (prev[roleId] || 0) - 1) }));
+  }, []);
+
+  const handleRandomize = useCallback(() => {
+    playSciFiClick();
+    setStartError(null);
+    setRoleCounts(randomizeRoles(players.length));
+  }, [players.length]);
+
+  const handleCopyLink = useCallback(() => {
+    playSciFiClick();
+    navigator.clipboard.writeText(joinUrl).then(() => {
+      setCopyFeedback(true);
+      setTimeout(() => setCopyFeedback(false), 2000);
+    });
+  }, [joinUrl]);
+
+  const handleStartGame = useCallback(() => {
+    playSciFiClick();
+    if (players.length < 1 || !rolesReady) {
+      setStartError("Not enough roles configured");
+      setTimeout(() => setStartError(null), 3000);
+      return;
+    }
+    setStartError(null);
+
+    // Server is authoritative — send role counts and let the server
+    // assign roles, update phase, and broadcast phase_update to all players
+    const socket = getSocket();
+    socket.emit(
+      "start_game",
+      { sessionId: roomCode, roleCounts },
+      (resp: { success: boolean; error?: string }) => {
+        if (!resp?.success) {
+          setStartError(resp?.error ?? "Failed to start — reconnecting, please try again");
+          setTimeout(() => setStartError(null), 4000);
+        }
+      },
+    );
+  }, [players.length, rolesReady, roleCounts, roomCode]);
+
+  const handleKickPlayer = useCallback((target: LivePlayer) => {
+    if (!target.playerId) {
+      setKickError("Cannot kick this player yet. Ask them to rejoin once.");
+      setTimeout(() => setKickError(null), 3000);
+      return;
+    }
+
+    setKickConfirmTarget(target);
+  }, []);
+
+  const confirmKickPlayer = useCallback(() => {
+    if (!kickConfirmTarget?.playerId) {
+      setKickConfirmTarget(null);
+      return;
+    }
+
+    playSciFiClick();
+    const socket = getSocket();
+    socket.emit(
+      "kick_player",
+      { sessionId: roomCode, targetPlayerId: kickConfirmTarget.playerId },
+      (resp: { success: boolean; error?: string }) => {
+        if (!resp?.success) {
+          setKickError(resp?.error ?? "Failed to kick player");
+          setTimeout(() => setKickError(null), 3000);
+        }
+        setKickConfirmTarget(null);
+      },
+    );
+  }, [kickConfirmTarget, roomCode]);
+
+  const closeKickConfirm = useCallback(() => {
+    setKickConfirmTarget(null);
+  }, []);
+
+  const acknowledgeKicked = useCallback(() => {
+    setKickedNotice(null);
+    setLocation("/");
+  }, [setLocation]);
+
+  const acknowledgeNameTaken = useCallback(() => {
+    setNameTakenNotice(null);
+    sessionStorage.removeItem("lp_callsign");
+    sessionStorage.removeItem("lp_isCreating");
+    setLocation(`/join/${roomCode}`);
+  }, [roomCode, setLocation]);
+
+
+  return (
+    <div
+      className="relative h-screen w-full flex flex-col overflow-hidden"
+      style={{ background: "hsl(220 30% 5%)", color: "hsl(190 80% 90%)" }}
+    >
+      {/* Hamburger Menu */}
+      <HamburgerMenu
+        onShowSettings={() => setShowSettingsModal(true)}
+        onShowProfile={() => setShowProfileModal(true)}
+        onShowHowToPlay={() => {}} // No how to play in role config
+        musicOn={musicOn}
+        onToggleMusic={handleToggleMusic}
+        playSound={playSciFiClick}
+        showQuitButton
+        isHost={amIHost}
+      />
+
+      {/* Settings Modal */}
+      <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
+
+      {/* Profile Modal */}
+      <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
+
+      <ConfirmModal
+        isOpen={Boolean(kickConfirmTarget)}
+        title="Kick Player"
+        message={kickConfirmTarget ? `Remove ${kickConfirmTarget.name} from this lobby?` : "Remove this player from this lobby?"}
+        warning="This player will be ejected and cannot rejoin this session."
+        confirmLabel="Kick"
+        cancelLabel="Cancel"
+        onConfirm={confirmKickPlayer}
+        onCancel={closeKickConfirm}
+      />
+
+      <ConfirmModal
+        isOpen={Boolean(kickedNotice)}
+        title="Ejected"
+        message={kickedNotice ?? "You were removed from this lobby."}
+        warning="You have been removed from this session by the host."
+        showCancel={false}
+        confirmLabel="OK"
+        onConfirm={acknowledgeKicked}
+        onCancel={acknowledgeKicked}
+      />
+
+      <ConfirmModal
+        isOpen={Boolean(nameTakenNotice)}
+        title="Callsign Taken"
+        message={nameTakenNotice ?? "This callsign is already taken in this lobby."}
+        warning="Pick a different callsign and try joining again."
+        showCancel={false}
+        confirmLabel="Choose New Callsign"
+        onConfirm={acknowledgeNameTaken}
+        onCancel={acknowledgeNameTaken}
+      />
+
+      {/* Top bar */}
+      <div
+        className="w-full px-4 py-3 flex items-center gap-3 border-b shrink-0"
+        style={{
+          background: "hsl(220 28% 7%)",
+          borderColor: "hsl(185 100% 50% / 0.2)",
+          boxShadow: "0 1px 12px hsl(185 100% 50% / 0.1)",
+        }}
+      >
+        <div className="flex-1 min-w-0">
+          <div
+            className="font-orbitron font-black text-base sm:text-lg tracking-widest uppercase leading-none"
+            style={{ color: "hsl(185 100% 55%)", textShadow: "0 0 12px hsl(185 100% 50% / 0.7)" }}
+          >
+            ERROR: NEWFORM
+          </div>
+          <div
+            className="font-orbitron font-bold text-xs tracking-[0.3em] uppercase"
+            style={{ color: "hsl(270 80% 65%)" }}
+          >
+            DETECTED
+          </div>
+        </div>
+
+
+        <div className="text-right shrink-0 hidden sm:block">
+          <div className="text-xs tracking-widest uppercase mb-1" style={{ color: "hsl(210 30% 50%)" }}>Role Configuration</div>
+          <div
+            className="font-orbitron font-bold text-sm tracking-[0.2em]"
+            style={{ color: "hsl(185 100% 70%)" }}
+          >
+            PRE-GAME SETUP
+          </div>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden" style={{ minHeight: 0 }}>
+        {/* LEFT PANEL — hidden on mobile */}
+        <div
+          className="hidden lg:flex w-60 shrink-0 flex-col border-r overflow-y-auto"
+          style={{
+            background: "hsl(220 28% 7%)",
+            borderColor: "hsl(185 100% 50% / 0.15)",
+          }}
+        >
+          {/* Room info */}
+          <div className="px-4 pt-5 pb-4 border-b" style={{ borderColor: "hsl(210 30% 14%)" }}>
+            <div className="text-xs tracking-widest uppercase mb-2" style={{ color: "hsl(210 30% 45%)" }}>Room Code</div>
+            <div
+              className="font-orbitron font-black text-2xl tracking-[0.3em]"
+              style={{ color: "hsl(185 100% 60%)", textShadow: "0 0 10px hsl(185 100% 50% / 0.6)" }}
+              data-testid="text-room-code"
+            >
+              {roomCode}
+            </div>
+            <div
+              className="mt-2 px-2 py-1 rounded text-xs"
+              style={{
+                background: "hsl(220 28% 10%)",
+                border: "1px solid hsl(185 100% 50% / 0.25)",
+                color: "hsl(185 100% 72%)",
+                fontFamily: "'Exo 2', sans-serif",
+              }}
+            >
+              {players.length}/10 players · need at least 4 to start
+            </div>
+            {/* Copy link button */}
+            <button
+              onClick={handleCopyLink}
+              data-testid="button-copy-link"
+              className="mt-2 w-full py-1.5 font-orbitron text-xs tracking-[0.2em] uppercase rounded border transition-all duration-150 cursor-pointer"
+              style={{
+                background: copyFeedback ? "hsl(140 60% 15% / 0.6)" : "hsl(220 28% 10%)",
+                borderColor: copyFeedback ? "hsl(140 60% 45%)" : "hsl(185 100% 50% / 0.35)",
+                color: copyFeedback ? "hsl(140 60% 60%)" : "hsl(185 100% 50%)",
+              }}
+              onMouseEnter={(e) => {
+                if (copyFeedback) return;
+                e.currentTarget.style.borderColor = "hsl(185 100% 50%)";
+                e.currentTarget.style.color = "hsl(185 100% 75%)";
+              }}
+              onMouseLeave={(e) => {
+                if (copyFeedback) return;
+                e.currentTarget.style.borderColor = "hsl(185 100% 50% / 0.35)";
+                e.currentTarget.style.color = "hsl(185 100% 50%)";
+              }}
+            >
+              {copyFeedback ? "LINK COPIED!" : "COPY LINK"}
+            </button>
+          </div>
+
+          {/* Players */}
+          <div className="px-4 pt-4 pb-2">
+            <div className="text-xs tracking-widest uppercase mb-3" style={{ color: "hsl(210 30% 45%)" }}>
+              Players ({players.length})
+            </div>
+            {kickError && (
+              <div className="text-xs mb-3" style={{ color: "hsl(0 75% 60%)" }}>
+                {kickError}
+              </div>
+            )}
+            <div className="flex flex-col gap-2">
+              {players.map((player) => (
+                <div
+                  key={player.id}
+                  className="flex items-center gap-2 px-3 py-2 rounded"
+                  style={{ background: "hsl(220 28% 10%)", border: "1px solid hsl(210 30% 15%)" }}
+                  data-testid={`player-row-${player.id}`}
+                >
+                  <span className="font-orbitron text-xs tracking-wider truncate min-w-0 flex-1" style={{ color: "hsl(190 60% 75%)" }}>
+                    {player.name}{player.isYou && <span style={{ color: "hsl(185 100% 55%)" }}> (You)</span>}
+                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span
+                      className="text-xs tracking-wider font-bold"
+                      style={{ color: player.isHost ? "hsl(45 90% 60%)" : "hsl(140 70% 55%)" }}
+                    >
+                      {player.isHost ? "HOST" : "READY"}
+                    </span>
+                    {amIHost && !player.isYou && (
+                      <button
+                        onClick={() => handleKickPlayer(player)}
+                        className="px-2 py-0.5 rounded border font-orbitron text-[10px] tracking-wider"
+                        style={{
+                          borderColor: "hsl(0 75% 55% / 0.5)",
+                          color: "hsl(0 80% 68%)",
+                          background: "hsl(0 40% 12% / 0.45)",
+                        }}
+                        data-testid={`button-kick-${player.id}`}
+                      >
+                        KICK
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Role summary */}
+          <div className="px-4 pt-4 mt-auto pb-4 border-t" style={{ borderColor: "hsl(210 30% 14%)" }}>
+            <div className="text-xs tracking-widest uppercase mb-3" style={{ color: "hsl(210 30% 45%)" }}>Active Roles</div>
+            <div className="flex flex-col gap-1">
+              {ROLES.filter((r) => (roleCounts[r.id] || 0) > 0).map((r) => (
+                <div key={r.id} className="flex items-center justify-between">
+                  <span className="text-xs" style={{ color: r.team === "alien" ? "hsl(270 80% 65%)" : r.team === "chaotic" ? "hsl(300 70% 65%)" : "hsl(185 100% 60%)" }}>
+                    {r.name}
+                  </span>
+                  <span className="font-orbitron text-xs" style={{ color: "hsl(190 60% 75%)" }}>x{roleCounts[r.id]}</span>
+                </div>
+              ))}
+              {ROLES.every((r) => (roleCounts[r.id] || 0) === 0) && (
+                <div className="text-xs" style={{ color: "hsl(210 30% 35%)" }}>No roles selected yet</div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* CENTER PANEL */}
+        <div className="flex-1 overflow-y-auto px-6 py-5">
+
+          {/* Mobile-only: room code + player list */}
+          <div className="lg:hidden mb-5 pb-5 border-b" style={{ borderColor: "hsl(210 30% 14%)" }}>
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div>
+                <div className="text-xs tracking-widest uppercase mb-0.5" style={{ color: "hsl(210 30% 45%)" }}>Room Code</div>
+                <div className="font-orbitron font-black text-2xl tracking-[0.25em]" style={{ color: "hsl(185 100% 60%)", textShadow: "0 0 8px hsl(185 100% 50% / 0.5)" }}>
+                  {roomCode}
+                </div>
+                <div
+                  className="mt-1 px-2 py-1 rounded text-xs inline-block"
+                  style={{
+                    background: "hsl(220 28% 10%)",
+                    border: "1px solid hsl(185 100% 50% / 0.25)",
+                    color: "hsl(185 100% 72%)",
+                    fontFamily: "'Exo 2', sans-serif",
+                  }}
+                >
+                  {players.length}/10 · min 4
+                </div>
+              </div>
+              <button
+                onClick={handleCopyLink}
+                className="px-3 py-1.5 font-orbitron text-xs tracking-[0.15em] uppercase rounded border transition-all duration-150 cursor-pointer shrink-0"
+                style={{
+                  background: copyFeedback ? "hsl(140 60% 15% / 0.6)" : "hsl(220 28% 10%)",
+                  borderColor: copyFeedback ? "hsl(140 60% 45%)" : "hsl(185 100% 50% / 0.35)",
+                  color: copyFeedback ? "hsl(140 60% 60%)" : "hsl(185 100% 50%)",
+                }}
+              >
+                {copyFeedback ? "COPIED!" : "COPY LINK"}
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {players.map((player) => (
+                <div
+                  key={player.id}
+                  className="px-2.5 py-1 rounded font-orbitron text-xs tracking-wider flex items-center gap-2 max-w-full"
+                  style={{
+                    background: "hsl(220 28% 10%)",
+                    border: player.isYou ? "1px solid hsl(185 100% 50% / 0.5)" : "1px solid hsl(210 30% 15%)",
+                    color: player.isYou ? "hsl(185 100% 70%)" : "hsl(190 60% 70%)",
+                  }}
+                >
+                  <span className="truncate min-w-0">{player.name}{player.isHost ? " HOST" : ""}{player.isYou ? " ★" : ""}</span>
+                  {amIHost && !player.isYou && (
+                    <button
+                      onClick={() => handleKickPlayer(player)}
+                      className="px-1.5 py-0.5 rounded border font-orbitron text-[9px] tracking-wider shrink-0"
+                      style={{
+                        borderColor: "hsl(0 75% 55% / 0.5)",
+                        color: "hsl(0 80% 68%)",
+                        background: "hsl(0 40% 12% / 0.45)",
+                      }}
+                      data-testid={`button-kick-mobile-${player.id}`}
+                    >
+                      KICK
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            {kickError && (
+              <div className="text-xs mt-2" style={{ color: "hsl(0 75% 60%)" }}>
+                {kickError}
+              </div>
+            )}
+          </div>
+
+          {/* Action buttons — host only, anchored above the role cards */}
+          {amIHost && (
+            <div className="flex flex-wrap items-center gap-3 mb-5">
+              {startError && (
+                <span
+                  className="w-full text-xs tracking-wider"
+                  style={{ color: "hsl(0 75% 60%)", fontFamily: "'Exo 2', sans-serif" }}
+                >
+                  {startError}
+                </span>
+              )}
+              <button
+                onClick={handleRandomize}
+                data-testid="button-randomize-roles"
+                className="flex-1 sm:flex-none px-5 py-2 font-orbitron font-bold text-xs tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-150 cursor-pointer"
+                style={{
+                  background: "linear-gradient(135deg, hsl(45 90% 20% / 0.6), hsl(30 90% 12% / 0.8))",
+                  borderColor: "hsl(45 90% 50%)",
+                  color: "hsl(45 90% 65%)",
+                  boxShadow: "0 0 8px hsl(45 90% 50% / 0.3), 0 0 16px hsl(45 90% 50% / 0.1)",
+                }}
+                onMouseEnter={(e) => {
+                  const btn = e.currentTarget;
+                  btn.style.boxShadow = "0 0 14px hsl(45 90% 50% / 0.6), 0 0 28px hsl(45 90% 50% / 0.25)";
+                  btn.style.color = "hsl(45 90% 80%)";
+                }}
+                onMouseLeave={(e) => {
+                  const btn = e.currentTarget;
+                  btn.style.boxShadow = "0 0 8px hsl(45 90% 50% / 0.3), 0 0 16px hsl(45 90% 50% / 0.1)";
+                  btn.style.color = "hsl(45 90% 65%)";
+                }}
+              >
+                RANDOMIZE ROLES
+              </button>
+              <button
+                onClick={handleStartGame}
+                data-testid="button-start-game"
+                className="flex-1 sm:flex-none px-5 py-2 font-orbitron font-bold text-xs tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-150 cursor-pointer"
+                style={{
+                  background: rolesReady
+                    ? "linear-gradient(135deg, hsl(185 100% 18% / 0.7), hsl(185 100% 8% / 0.9))"
+                    : "hsl(220 28% 10%)",
+                  borderColor: rolesReady ? "hsl(185 100% 50%)" : "hsl(210 30% 25%)",
+                  color: rolesReady ? "hsl(185 100% 65%)" : "hsl(210 30% 40%)",
+                  boxShadow: rolesReady
+                    ? "0 0 8px hsl(185 100% 50% / 0.4), 0 0 18px hsl(185 100% 50% / 0.15)"
+                    : "none",
+                  cursor: rolesReady ? "pointer" : "not-allowed",
+                }}
+                onMouseEnter={(e) => {
+                  if (!rolesReady) return;
+                  const btn = e.currentTarget;
+                  btn.style.boxShadow = "0 0 16px hsl(185 100% 50% / 0.7), 0 0 32px hsl(185 100% 50% / 0.3)";
+                  btn.style.color = "hsl(185 100% 85%)";
+                }}
+                onMouseLeave={(e) => {
+                  if (!rolesReady) return;
+                  const btn = e.currentTarget;
+                  btn.style.boxShadow = "0 0 8px hsl(185 100% 50% / 0.4), 0 0 18px hsl(185 100% 50% / 0.15)";
+                  btn.style.color = "hsl(185 100% 65%)";
+                }}
+              >
+                START GAME
+              </button>
+            </div>
+          )}
+
+          {/* Alien Team */}
+          <div className="mb-7">
+            <div className="flex items-center gap-3 mb-4">
+              <div
+                className="h-px flex-1"
+                style={{ background: "linear-gradient(90deg, hsl(270 80% 55% / 0.6), transparent)" }}
+              />
+              <span
+                className="font-orbitron font-bold text-xs tracking-[0.3em] uppercase px-3"
+                style={{ color: "hsl(270 80% 65%)", textShadow: "0 0 8px hsl(270 80% 55% / 0.7)" }}
+              >
+                ALIEN TEAM
+              </span>
+              <div
+                className="h-px flex-1"
+                style={{ background: "linear-gradient(90deg, transparent, hsl(270 80% 55% / 0.6))" }}
+              />
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
+              {ALIEN_ROLES.map((role) => (
+                <RoleCard
+                  key={role.id}
+                  role={role}
+                  count={roleCounts[role.id] || 0}
+                  isSelected={selectedRole.id === role.id}
+                  showControls={amIHost}
+                  onSelect={handleSelectRole}
+                  onAdd={handleAdd}
+                  onRemove={handleRemove}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Chaotic */}
+          <div className="mb-7">
+            <div className="flex items-center gap-3 mb-4">
+              <div
+                className="h-px flex-1"
+                style={{ background: "linear-gradient(90deg, hsl(300 70% 50% / 0.6), transparent)" }}
+              />
+              <span
+                className="font-orbitron font-bold text-xs tracking-[0.3em] uppercase px-3"
+                style={{ color: "hsl(300 70% 65%)", textShadow: "0 0 8px hsl(300 70% 50% / 0.7)" }}
+              >
+                CHAOTIC
+              </span>
+              <div
+                className="h-px flex-1"
+                style={{ background: "linear-gradient(90deg, transparent, hsl(300 70% 50% / 0.6))" }}
+              />
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
+              {CHAOTIC_ROLES.map((role) => (
+                <RoleCard
+                  key={role.id}
+                  role={role}
+                  count={roleCounts[role.id] || 0}
+                  isSelected={selectedRole.id === role.id}
+                  showControls={amIHost}
+                  onSelect={handleSelectRole}
+                  onAdd={handleAdd}
+                  onRemove={handleRemove}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Crew Team */}
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div
+                className="h-px flex-1"
+                style={{ background: "linear-gradient(90deg, hsl(185 100% 50% / 0.6), transparent)" }}
+              />
+              <span
+                className="font-orbitron font-bold text-xs tracking-[0.3em] uppercase px-3"
+                style={{ color: "hsl(185 100% 60%)", textShadow: "0 0 8px hsl(185 100% 50% / 0.7)" }}
+              >
+                CREW TEAM
+              </span>
+              <div
+                className="h-px flex-1"
+                style={{ background: "linear-gradient(90deg, transparent, hsl(185 100% 50% / 0.6))" }}
+              />
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
+              {CREW_ROLES.map((role) => (
+                <RoleCard
+                  key={role.id}
+                  role={role}
+                  count={roleCounts[role.id] || 0}
+                  isSelected={selectedRole.id === role.id}
+                  showControls={amIHost}
+                  onSelect={handleSelectRole}
+                  onAdd={handleAdd}
+                  onRemove={handleRemove}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT PANEL — flexible width on desktop, strip on mobile */}
+        <div
+          className="flex w-full min-h-[148px] lg:h-auto lg:w-[clamp(200px,30%,420px)] shrink-0 flex-col border-t lg:border-t-0 lg:border-l overflow-y-auto"
+          style={{
+            background: "hsl(220 28% 7%)",
+            borderColor: "hsl(185 100% 50% / 0.15)",
+          }}
+        >
+          <RolePreview role={selectedRole} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface RoleCardProps {
+  role: Role;
+  count: number;
+  isSelected: boolean;
+  showControls: boolean;
+  onSelect: (role: Role) => void;
+  onAdd: (roleId: string, e: React.MouseEvent) => void;
+  onRemove: (roleId: string, e: React.MouseEvent) => void;
+}
+
+function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRemove }: RoleCardProps) {
+  const accentColor =
+    role.team === "alien"
+      ? "hsl(270 80% 55%)"
+      : role.team === "chaotic"
+      ? "hsl(300 70% 50%)"
+      : "hsl(185 100% 50%)";
+  const accentColorLight =
+    role.team === "alien"
+      ? "hsl(270 80% 70%)"
+      : role.team === "chaotic"
+      ? "hsl(300 70% 65%)"
+      : "hsl(185 100% 70%)";
+
+  return (
+    <div
+      onClick={() => onSelect(role)}
+      data-testid={`role-card-${role.id}`}
+      className="group relative flex flex-col rounded-md overflow-visible cursor-pointer transition-all duration-150"
+      style={{
+        background: "hsl(220 28% 10%)",
+        border: isSelected
+          ? `2px solid ${accentColor}`
+          : "2px solid hsl(210 30% 16%)",
+        boxShadow: isSelected
+          ? `0 0 12px ${accentColor}90, 0 0 24px ${accentColor}40`
+          : "none",
+      }}
+    >
+      {/* Image */}
+      <div className="relative w-full aspect-square overflow-hidden">
+        <img
+          src={role.image}
+          alt={role.name}
+          className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
+          loading="lazy"
+          style={{ filter: isSelected ? "brightness(1.05)" : "brightness(0.85)" }}
+          data-testid={`img-role-${role.id}`}
+        />
+        {/* Overlay gradient */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: isSelected
+              ? `linear-gradient(to bottom, transparent 50%, ${accentColor}20 100%)`
+              : "linear-gradient(to bottom, transparent 60%, hsl(220 30% 5% / 0.5) 100%)",
+          }}
+        />
+        {/* Count badge — hosts only */}
+        {showControls && count > 0 && (
+          <div
+            className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center font-orbitron font-bold text-xs"
+            style={{ background: accentColor, color: "hsl(220 30% 6%)" }}
+          >
+            {count}
+          </div>
+        )}
+      </div>
+
+      {/* Name and controls */}
+      <div className={`px-1.5 flex flex-col ${showControls ? "py-1.5 gap-1.5" : "py-1"}`}>
+        <div
+          className="font-orbitron font-bold text-xs tracking-wider uppercase text-center truncate"
+          style={{ color: isSelected ? accentColorLight : "hsl(190 60% 70%)" }}
+        >
+          {role.name}
+        </div>
+        {showControls && (
+          <div className="flex items-center justify-center gap-2">
+            <button
+              onClick={(e) => onRemove(role.id, e)}
+              data-testid={`button-remove-${role.id}`}
+              className="w-6 h-6 rounded flex items-center justify-center font-bold text-xs transition-all duration-150 cursor-pointer"
+              style={{
+                background: "hsl(220 28% 14%)",
+                border: "1px solid hsl(210 30% 20%)",
+                color: "hsl(210 30% 55%)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "hsl(0 75% 55%)";
+                e.currentTarget.style.color = "hsl(0 75% 70%)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "hsl(210 30% 20%)";
+                e.currentTarget.style.color = "hsl(210 30% 55%)";
+              }}
+            >
+              −
+            </button>
+            <span
+              className="font-orbitron text-xs w-4 text-center"
+              style={{ color: count > 0 ? accentColorLight : "hsl(210 30% 35%)" }}
+            >
+              {count}
+            </span>
+            <button
+              onClick={(e) => onAdd(role.id, e)}
+              data-testid={`button-add-${role.id}`}
+              className="w-6 h-6 rounded flex items-center justify-center font-bold text-xs transition-all duration-150 cursor-pointer"
+              style={{
+                background: "hsl(220 28% 14%)",
+                border: "1px solid hsl(210 30% 20%)",
+                color: "hsl(210 30% 55%)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = accentColor;
+                e.currentTarget.style.color = accentColorLight;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "hsl(210 30% 20%)";
+                e.currentTarget.style.color = "hsl(210 30% 55%)";
+              }}
+            >
+              +
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div
+        className="pointer-events-none absolute left-1/2 z-20 hidden -translate-x-1/2 group-hover:block"
+        style={{
+          bottom: "calc(100% + 6px)",
+          minWidth: "170px",
+          maxWidth: "220px",
+          background: "hsl(220 28% 8% / 0.97)",
+          border: `1px solid ${accentColor.replace(")", " / 0.55)")}`,
+          boxShadow: `0 0 16px ${accentColor.replace(")", " / 0.25)")}`,
+          borderRadius: "8px",
+          padding: "8px",
+        }}
+      >
+        <div className="font-orbitron text-[10px] tracking-[0.2em] uppercase mb-1" style={{ color: accentColorLight }}>
+          Ability
+        </div>
+        <p className="text-[11px] leading-snug" style={{ color: "hsl(190 60% 75%)", fontFamily: "'Exo 2', sans-serif" }}>
+          {role.ability}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function RolePreview({ role }: { role: Role }) {
+  const accentColor =
+    role.team === "alien"
+      ? "hsl(270 80% 55%)"
+      : role.team === "chaotic"
+      ? "hsl(300 70% 50%)"
+      : "hsl(185 100% 50%)";
+  const accentColorLight =
+    role.team === "alien"
+      ? "hsl(270 80% 70%)"
+      : role.team === "chaotic"
+      ? "hsl(300 70% 65%)"
+      : "hsl(185 100% 70%)";
+  const accentColorDim =
+    role.team === "alien"
+      ? "hsl(270 80% 55% / 0.25)"
+      : role.team === "chaotic"
+      ? "hsl(300 70% 50% / 0.25)"
+      : "hsl(185 100% 50% / 0.25)";
+  const teamLabel =
+    role.team === "alien" ? "ALIEN TEAM" : role.team === "chaotic" ? "CHAOTIC" : "CREW TEAM";
+
+  return (
+    <div className="flex flex-row lg:flex-col h-full">
+      {/* Role image — small fixed square on mobile, full-width on desktop */}
+      <div className="relative w-32 h-32 lg:w-full lg:h-auto lg:aspect-square overflow-hidden shrink-0">
+        <img
+          src={role.image}
+          alt={role.name}
+          className="w-full h-full object-cover"
+          loading="lazy"
+          style={{ filter: "brightness(0.95)" }}
+          data-testid="img-role-preview"
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(to bottom, transparent 50%, hsl(220 28% 7%) 100%)`,
+          }}
+        />
+        {/* Team badge */}
+        <div
+          className="absolute top-2 left-2 lg:top-3 lg:left-3 px-1.5 lg:px-2 py-0.5 rounded font-orbitron text-xs tracking-widest uppercase font-bold"
+          style={{
+            background: accentColorDim,
+            border: `1px solid ${accentColor}`,
+            color: accentColorLight,
+            backdropFilter: "blur(4px)",
+            fontSize: "0.6rem",
+          }}
+        >
+          {teamLabel}
+        </div>
+      </div>
+
+      {/* Right side (mobile) / Bottom section (desktop) */}
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+        {/* Role name */}
+        <div
+          className="px-3 lg:px-4 pt-2 pb-2 lg:pt-2 lg:pb-3 border-b shrink-0"
+          style={{ borderColor: "hsl(210 30% 14%)" }}
+        >
+          <div
+            className="font-orbitron font-black text-base lg:text-xl tracking-widest uppercase"
+            style={{ color: accentColorLight, textShadow: `0 0 10px ${accentColor}` }}
+            data-testid="text-preview-name"
+          >
+            {role.name}
+          </div>
+        </div>
+
+        {/* Details */}
+        <div className="flex-1 overflow-y-auto px-3 lg:px-4 py-2 lg:py-3 flex flex-col gap-2 lg:gap-4">
+          <InfoBlock label="Alignment" value={role.alignment} accentColor={accentColorLight} />
+          <InfoBlock label="Win Condition" value={role.winCondition} accentColor={accentColorLight} />
+          <InfoBlock label="Ability" value={role.ability} accentColor={accentColorLight} />
+          <InfoBlock label="Notes" value={role.notes} accentColor={accentColorLight} dim />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InfoBlock({ label, value, accentColor, dim }: { label: string; value: string; accentColor: string; dim?: boolean }) {
+  return (
+    <div data-testid={`preview-block-${label.toLowerCase().replace(/\s/g, "-")}`}>
+      <div
+        className="font-orbitron text-xs tracking-[0.2em] uppercase mb-1.5 font-bold"
+        style={{ color: accentColor }}
+      >
+        {label}
+      </div>
+      <p
+        className="text-xs leading-relaxed"
+        style={{ color: dim ? "hsl(210 30% 48%)" : "hsl(190 60% 72%)", fontFamily: "'Exo 2', sans-serif" }}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}

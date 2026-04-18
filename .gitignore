@@ -47,3 +47,28 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Auto-generated files (regenerated at build/dev time)
+artifacts/mockup-sandbox/src/.generated/
+
+# Backup files
+*.old
+
+# Per-artifact build output
+artifacts/*/dist/
+
+# Artifact environment files (keep .env.example, not .env)
+artifacts/**/.env
+!artifacts/**/.env.example
+
+# Dump files
+*_dump.txt
+chat_dump*.txt
+code_dump.txt
+api_server_dump.txt
+socket_dump.txt
+
+# Temporary/generated assets (Pasted prompts from Replit AI)
+attached_assets/Pasted-*.txt
+attached_assets/image_*.png
+.vercel

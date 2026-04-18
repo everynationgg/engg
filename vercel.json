@@ -1,0 +1,97 @@
+{
+  "buildCommand": "PORT=3000 BASE_PATH=/end NODE_ENV=production pnpm --filter @workspace/lockdown-protocol run build",
+  "outputDirectory": "artifacts/lockdown-protocol/dist/public",
+  "installCommand": "pnpm install",
+  "framework": null,
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "dev": true
+    }
+  },
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/end",
+      "permanent": false
+    },
+    {
+      "source": "/join/:code",
+      "destination": "/end/join/:code",
+      "permanent": false
+    },
+    {
+      "source": "/r/:roomCode",
+      "destination": "/end/room/:roomCode",
+      "permanent": true
+    },
+    {
+      "source": "/profile",
+      "destination": "/end/profile",
+      "permanent": false
+    },
+    {
+      "source": "/settings",
+      "destination": "/end/settings",
+      "permanent": false
+    },
+    {
+      "source": "/verify-email",
+      "destination": "/end/verify-email",
+      "permanent": false
+    },
+    {
+      "source": "/reset-password",
+      "destination": "/end/reset-password",
+      "permanent": false
+    },
+    {
+      "source": "/role-config",
+      "destination": "/end/role-config",
+      "permanent": false
+    },
+    {
+      "source": "/role-reveal",
+      "destination": "/end/role-reveal",
+      "permanent": false
+    },
+    {
+      "source": "/orbit",
+      "destination": "/end/orbit",
+      "permanent": false
+    },
+    {
+      "source": "/discussion",
+      "destination": "/end/discussion",
+      "permanent": false
+    },
+    {
+      "source": "/voting",
+      "destination": "/end/voting",
+      "permanent": false
+    },
+    {
+      "source": "/result",
+      "destination": "/end/result",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/end/assets/:path*",
+      "destination": "/assets/:path*"
+    },
+    {
+      "source": "/end/:file.:ext",
+      "destination": "/:file.:ext"
+    },
+    {
+      "source": "/end",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/end/:path*",
+      "destination": "/index.html"
+    }
+  ]
+}

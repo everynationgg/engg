@@ -1,0 +1,377 @@
+import { useState, useEffect, useCallback } from "react";
+import { getSocket } from "@/lib/socket";
+import { ROLES } from "@/data/roles";
+import { playSciFiClick, playVoteCast } from "@/lib/sound";
+import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
+import { isPlayerConnected } from "@/lib/utils";
+import HamburgerMenu from "@/components/HamburgerMenu";
+import SettingsModal from "@/components/SettingsModal";
+import ProfileModal from "@/components/ProfileModal";
+
+interface LivePlayer {
+  id: string;
+  name: string;
+  isHost: boolean;
+  isYou?: boolean;
+  playerId?: string;
+  connected?: boolean;
+  connectionStatus?: "connected" | "reconnecting" | "disconnected";
+  alive?: boolean;
+}
+
+function getRoomCode(): string {
+  return sessionStorage.getItem("lp_roomCode") || "------";
+}
+function getInitialRoleId(): string {
+  return sessionStorage.getItem("lp_assignedRole") || "crew";
+}
+
+export default function VotingPage() {
+  const roomCode = getRoomCode();
+  const initialRoleId = getInitialRoleId();
+  const role = ROLES.find((r) => r.id === initialRoleId) ?? ROLES[6];
+
+  const isAlien = role.team === "alien";
+  const isChaotic = role.team === "chaotic";
+  const accentColor = isAlien ? "hsl(0 75% 55%)" : isChaotic ? "hsl(300 70% 55%)" : "hsl(185 100% 50%)";
+  const accentLight = isAlien ? "hsl(0 75% 70%)" : isChaotic ? "hsl(300 70% 70%)" : "hsl(185 100% 70%)";
+  const accentGlow = isAlien ? "hsl(0 75% 55% / 0.4)" : isChaotic ? "hsl(300 70% 55% / 0.4)" : "hsl(185 100% 50% / 0.4)";
+  const bgTint = isAlien ? "hsl(0 40% 6%)" : isChaotic ? "hsl(290 30% 6%)" : "hsl(200 30% 6%)";
+
+  const [sessionPlayers, setSessionPlayers] = useState<LivePlayer[]>([]);
+  const [votedFor, setVotedFor] = useState<string | null>(null);
+  const [pendingVote, setPendingVote] = useState<string | null>(null);
+  const [waitingCount, setWaitingCount] = useState<number>(0);
+  const [voterIds, setVoterIds] = useState<Set<string>>(new Set());
+  const [myId, setMyId] = useState<string>("");
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
+  const [roomCopyFeedback, setRoomCopyFeedback] = useState(false);
+
+  const handleCopyRoomCode = useCallback(() => {
+    playSciFiClick();
+    navigator.clipboard.writeText(roomCode).then(() => {
+      setRoomCopyFeedback(true);
+      setTimeout(() => setRoomCopyFeedback(false), 1400);
+    }).catch(() => {
+    });
+  }, [roomCode]);
+
+  useEffect(() => {
+    const socket = getSocket();
+    setMyId(socket.id ?? "");
+
+    const handlePhaseUpdate = (session: { phase: string; players: LivePlayer[]; votes?: Record<string, string> }) => {
+      const myPlayerId = sessionStorage.getItem("lp_playerId");
+      const id = socket.id;
+      setSessionPlayers(session.players.map((p) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === id })));
+      if (session.votes) {
+        setWaitingCount(Object.keys(session.votes).length);
+        setVoterIds(new Set(Object.keys(session.votes)));
+      }
+      // GameShell handles phase navigation
+    };
+
+    socket.on("phase_update", handlePhaseUpdate);
+
+    // Shared sync function: fetches latest session and updates local state
+    const syncSession = () => {
+      socket.emit("get_session", { sessionId: roomCode }, (resp: { success: boolean; session?: { phase: string; players: LivePlayer[]; votes?: Record<string, string> } }) => {
+        if (resp.success && resp.session) {
+          const myPlayerId = sessionStorage.getItem("lp_playerId");
+          const id = socket.id;
+          setSessionPlayers(resp.session.players.map((p) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === id })));
+          if (resp.session.votes) {
+            setWaitingCount(Object.keys(resp.session.votes).length);
+            setVoterIds(new Set(Object.keys(resp.session.votes)));
+            if (resp.session.votes[id ?? ""]) setVotedFor(resp.session.votes[id ?? ""]);
+          }
+          // GameShell handles phase navigation
+        }
+      });
+    };
+
+    // Initial fetch
+    syncSession();
+
+    // Periodic fallback: poll every 3 seconds so the UI stays in sync even when
+    // phase_update socket events are missed (e.g. transport hiccups).
+    const pollId = setInterval(syncSession, 3000);
+
+    return () => {
+      socket.off("phase_update", handlePhaseUpdate);
+      clearInterval(pollId);
+    };
+  }, [roomCode]);
+
+  const handleVote = (targetId: string) => {
+    if (votedFor || (targetId !== "abstain" && targetId === myId)) return;
+    const socket = getSocket();
+    setVotedFor(targetId);
+    playVoteCast();
+    socket.emit("cast_vote", { sessionId: roomCode, targetId });
+  };
+
+  const handleAbstain = () => {
+    if (votedFor) return;
+    handleVote("abstain");
+  };
+
+  const handleToggleMusic = () => {
+    const next = !musicOn;
+    setMusicOn(next);
+    setSoundEnabled(next);
+    if (next) {
+      startLobbyMusic();
+    } else {
+      stopLobbyMusic();
+    }
+  };
+
+  const activePlayers = sessionPlayers.filter(isPlayerConnected);
+  const totalPlayers = activePlayers.length;
+  const votesIn = waitingCount;
+  const pendingVoters = activePlayers.filter((p) => !voterIds.has(p.id));
+
+  return (
+    <div className="relative min-h-screen w-full flex flex-col" style={{ background: bgTint, color: "hsl(190 80% 90%)" }}>
+      {/* Hamburger Menu */}
+      <HamburgerMenu
+        onShowSettings={() => setShowSettingsModal(true)}
+        onShowProfile={() => setShowProfileModal(true)}
+        onShowHowToPlay={() => {}} // No how to play in voting
+        musicOn={musicOn}
+        onToggleMusic={handleToggleMusic}
+        playSound={playSciFiClick}
+        showQuitButton
+      />
+
+      {/* Settings Modal */}
+      <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
+
+      {/* Profile Modal */}
+      <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
+
+      {/* Top bar */}
+      <div
+        className="w-full px-6 py-3 flex items-center justify-between border-b shrink-0"
+        style={{ background: "hsl(220 28% 7%)", borderColor: accentColor.replace(")", " / 0.25)"), boxShadow: `0 1px 12px ${accentGlow.replace("0.4", "0.1")}` }}
+      >
+        <div>
+          <div className="font-orbitron font-black text-lg tracking-widest uppercase leading-none" style={{ color: accentLight, textShadow: `0 0 12px ${accentGlow}` }}>
+            ERROR: NEWFORM
+          </div>
+          <div className="font-orbitron font-bold text-xs tracking-[0.3em] uppercase" style={{ color: "hsl(270 80% 65%)" }}>
+            DETECTED
+          </div>
+          <button
+            onClick={handleCopyRoomCode}
+            className="mt-1 text-[10px] tracking-[0.22em] uppercase rounded border px-2 py-0.5 lg:hidden"
+            style={{
+              color: roomCopyFeedback ? "hsl(140 70% 62%)" : "hsl(185 100% 66%)",
+              borderColor: roomCopyFeedback ? "hsl(140 60% 45% / 0.45)" : "hsl(185 100% 50% / 0.35)",
+              background: "hsl(220 28% 9%)",
+            }}
+          >
+            {roomCopyFeedback ? "CODE COPIED" : `ROOM ${roomCode}`}
+          </button>
+        </div>
+        <div className="text-right">
+          <div className="text-xs tracking-widest uppercase mb-1" style={{ color: "hsl(210 30% 50%)" }}>Phase</div>
+          <div className="font-orbitron font-bold text-sm tracking-[0.2em]" style={{ color: accentLight }}>
+            VOTING
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 flex flex-col px-6 py-6 gap-5 overflow-y-auto pb-32 lg:pb-8 max-w-2xl mx-auto w-full">
+
+        {/* Title */}
+        <div>
+          <div className="font-orbitron font-black text-2xl tracking-widest uppercase" style={{ color: accentLight, textShadow: `0 0 12px ${accentGlow}` }}>
+            VOTING
+          </div>
+          <div className="text-xs tracking-widest uppercase mt-1" style={{ color: "hsl(210 30% 50%)" }}>
+            SELECT A PLAYER TO ELIMINATE
+          </div>
+          {role.id === "commander" && (
+            <div className="text-xs tracking-wider mt-1" style={{ color: "hsl(45 90% 60%)", fontFamily: "'Exo 2', sans-serif" }}>
+              ★ Your vote counts as 2
+            </div>
+          )}
+        </div>
+
+        {/* Vote progress */}
+        <div className="rounded-md px-4 py-3 flex items-center justify-between" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 15%)" }}>
+          <div className="text-xs tracking-widest uppercase" style={{ color: "hsl(210 30% 50%)" }}>VOTES IN</div>
+          <div className="font-orbitron font-bold text-sm" style={{ color: accentLight }}>
+            {votesIn} / {totalPlayers}
+          </div>
+        </div>
+
+        {/* Pending voters — shown once at least one vote is in and some players still haven't voted */}
+        {votesIn > 0 && pendingVoters.length > 0 && (
+          <div className="rounded-md px-4 py-3" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 15%)" }}>
+            <div className="text-xs tracking-widest uppercase mb-2" style={{ color: "hsl(210 30% 50%)" }}>
+              WAITING ON
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {pendingVoters.map((p) => (
+                <span
+                  key={p.id}
+                  className="font-orbitron text-xs tracking-wider px-2 py-1 rounded"
+                  style={{
+                    background: "hsl(220 28% 13%)",
+                    border: "1px solid hsl(45 90% 55% / 0.35)",
+                    color: p.isYou ? "hsl(45 90% 65%)" : "hsl(45 70% 55%)",
+                  }}
+                >
+                  {p.isYou ? `${p.name} (YOU)` : p.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Player list */}
+        {!votedFor && !pendingVote ? (
+          <div className="flex flex-col gap-3">
+            <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-1" style={{ color: "hsl(210 30% 50%)" }}>
+              CHOOSE CAREFULLY
+            </div>
+            {activePlayers.map((p) => {
+              const isSelf = p.id === myId;
+              return (
+                <button
+                  key={p.id}
+                  data-testid={`vote-player-${p.name}`}
+                  onClick={() => { if (!isSelf) { playSciFiClick(); setPendingVote(p.id); } }}
+                  disabled={isSelf}
+                  className="w-full py-4 font-orbitron font-bold text-sm tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-150"
+                  style={{
+                    background: isSelf ? "hsl(220 28% 8%)" : accentColor.replace(")", " / 0.12)"),
+                    borderColor: isSelf ? "hsl(210 30% 16%)" : accentColor.replace(")", " / 0.6)"),
+                    color: isSelf ? "hsl(210 30% 30%)" : accentLight,
+                    cursor: isSelf ? "not-allowed" : "pointer",
+                    boxShadow: isSelf ? "none" : `0 0 6px ${accentGlow}`,
+                  }}
+                  onMouseEnter={(e) => { if (!isSelf) e.currentTarget.style.boxShadow = `0 0 16px ${accentGlow.replace("0.4", "0.65")}`; }}
+                  onMouseLeave={(e) => { if (!isSelf) e.currentTarget.style.boxShadow = `0 0 6px ${accentGlow}`; }}
+                >
+                  {p.name}
+                  {isSelf ? " (YOU)" : ""}
+                  {/* Status suffixes ([ALIVE]/[ELIMINATED]/[OFFLINE]) disabled for now. */}
+                </button>
+              );
+            })}
+
+            {/* Abstain option */}
+            <div className="mt-1 pt-3" style={{ borderTop: "1px solid hsl(210 30% 14%)" }}>
+              <button
+                data-testid="vote-abstain"
+                onClick={() => { playSciFiClick(); setPendingVote("abstain"); }}
+                className="w-full py-3 font-orbitron font-bold text-xs tracking-[0.25em] uppercase rounded-md border transition-all duration-150"
+                style={{
+                  background: "hsl(220 28% 8%)",
+                  borderColor: "hsl(210 30% 22%)",
+                  color: "hsl(210 30% 50%)",
+                  cursor: "pointer",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "hsl(210 30% 38%)";
+                  e.currentTarget.style.color = "hsl(210 30% 70%)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "hsl(210 30% 22%)";
+                  e.currentTarget.style.color = "hsl(210 30% 50%)";
+                }}
+              >
+                ABSTAIN
+              </button>
+            </div>
+          </div>
+        ) : !votedFor && pendingVote ? (
+          <div className="rounded-md p-6 flex flex-col gap-5" style={{ background: "hsl(220 28% 10%)", border: `1px solid ${accentColor.replace(")", " / 0.45)")}`, boxShadow: `0 0 20px ${accentGlow}` }}>
+            <div className="text-center">
+              <div className="font-orbitron font-bold text-xs tracking-[0.3em] uppercase mb-3" style={{ color: "hsl(210 30% 50%)" }}>
+                CONFIRM VOTE
+              </div>
+              {pendingVote === "abstain" ? (
+                <p className="text-base" style={{ color: "hsl(210 30% 70%)", fontFamily: "'Exo 2', sans-serif" }}>
+                  Abstain from voting this round?
+                </p>
+              ) : (
+                <p className="text-base" style={{ color: "hsl(190 60% 80%)", fontFamily: "'Exo 2', sans-serif" }}>
+                  Vote to eliminate{" "}
+                  <span className="font-bold font-orbitron tracking-wider" style={{ color: accentLight }}>
+                    {sessionPlayers.find((p) => p.id === pendingVote)?.name ?? "Unknown"}
+                  </span>
+                  ?
+                </p>
+              )}
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { handleVote(pendingVote); setPendingVote(null); }}
+                className="flex-1 py-3 font-orbitron font-bold text-sm tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-150"
+                style={{
+                  background: accentColor.replace(")", " / 0.18)"),
+                  borderColor: accentColor.replace(")", " / 0.7)"),
+                  color: accentLight,
+                  cursor: "pointer",
+                  boxShadow: `0 0 8px ${accentGlow}`,
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = `0 0 18px ${accentGlow.replace("0.4", "0.7")}`; }}
+                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = `0 0 8px ${accentGlow}`; }}
+              >
+                YES
+              </button>
+              <button
+                onClick={() => setPendingVote(null)}
+                className="flex-1 py-3 font-orbitron font-bold text-sm tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-150"
+                style={{
+                  background: "hsl(220 28% 8%)",
+                  borderColor: "hsl(210 30% 22%)",
+                  color: "hsl(210 30% 55%)",
+                  cursor: "pointer",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "hsl(210 30% 40%)";
+                  e.currentTarget.style.color = "hsl(210 30% 75%)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "hsl(210 30% 22%)";
+                  e.currentTarget.style.color = "hsl(210 30% 55%)";
+                }}
+              >
+                NO
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-md p-6 text-center" style={{ background: "hsl(220 28% 10%)", border: `1px solid ${accentColor.replace(")", " / 0.3)")}` }}>
+            <div className="font-orbitron font-bold text-sm tracking-[0.25em] uppercase mb-2" style={{ color: accentLight }}>
+              {votedFor === "abstain" ? "ABSTAINED" : "VOTE LOCKED"}
+            </div>
+            {votedFor === "abstain" ? (
+              <p className="text-sm mb-1" style={{ color: "hsl(210 30% 55%)", fontFamily: "'Exo 2', sans-serif" }}>
+                You chose not to vote this round.
+              </p>
+            ) : (
+              <p className="text-sm mb-1" style={{ color: "hsl(190 60% 75%)", fontFamily: "'Exo 2', sans-serif" }}>
+                You voted for: <span className="font-bold" style={{ color: accentLight }}>
+                  {sessionPlayers.find((p) => p.id === votedFor)?.name ?? "Unknown"}
+                </span>
+              </p>
+            )}
+            <p className="text-xs" style={{ color: "hsl(210 30% 45%)", fontFamily: "'Exo 2', sans-serif" }}>
+              Waiting for other players... ({votesIn} / {totalPlayers})
+            </p>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}

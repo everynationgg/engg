@@ -1,0 +1,15 @@
+# Keep Docker build context small and avoid Windows junction/symlink issues
+**/node_modules
+**/.pnpm-store
+**/dist
+**/coverage
+
+.git
+.gitignore
+.vscode
+
+artifacts/lockdown-protocol
+mockup-sandbox
+attached_assets
+
+*.log

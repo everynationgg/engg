@@ -1,0 +1,443 @@
+import { randomBytes, randomUUID } from "node:crypto";
+import { Router, type IRouter } from "express";
+import { z } from "zod";
+import { db, usersTable, emailVerificationTokensTable, passwordResetTokensTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
+import {
+  RegisterUserBody,
+  LoginUserBody,
+  LoginUserResponse,
+  GetCurrentUserResponse,
+} from "@workspace/api-zod";
+import { hashPassword, comparePassword, generateToken } from "../lib/auth.js";
+import { sendEmail, generateVerificationEmailHTML, generatePasswordResetEmailHTML } from "../lib/email.js";
+import { authMiddleware, type AuthRequest } from "../middlewares/auth.js";
+import xss from "xss";
+import { Filter } from "bad-words";
+
+const filter = new Filter();
+const router: IRouter = Router();
+
+// Username validation helper
+function validateUsername(username: string): { valid: boolean; error?: string } {
+  if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+    return { valid: false, error: "Username can only contain letters, numbers, underscores, and hyphens" };
+  }
+  if (filter.isProfane(username)) {
+    return { valid: false, error: "Username contains inappropriate language" };
+  }
+  return { valid: true };
+}
+
+// Register endpoint
+router.post("/auth/register", async (req, res) => {
+  try {
+    const body = RegisterUserBody.parse(req.body);
+
+    // Sanitize inputs
+    const sanitizedEmail = xss(body.email.trim().toLowerCase());
+    const sanitizedUsername = xss(body.username.trim());
+
+    // Validate username
+    const usernameCheck = validateUsername(sanitizedUsername);
+    if (!usernameCheck.valid) {
+      res.status(400).json({ error: usernameCheck.error });
+      return;
+    }
+
+    // Check if user exists
+    const existingUser = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, sanitizedEmail))
+      .limit(1);
+
+    if (existingUser.length > 0) {
+      res.status(400).json({ error: "User already exists" });
+      return;
+    }
+
+    // Check if username taken
+    const existingUsername = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.username, sanitizedUsername))
+      .limit(1);
+
+    if (existingUsername.length > 0) {
+      res.status(400).json({ error: "Username already taken" });
+      return;
+    }
+
+    // Hash password
+    const passwordHash = await hashPassword(body.password);
+
+    // Create user
+    const userId = randomUUID();
+    const user = await db
+      .insert(usersTable)
+      .values({
+        id: userId,
+        email: sanitizedEmail,
+        username: sanitizedUsername,
+        passwordHash,
+        isVerified: false,
+      })
+      .returning({ id: usersTable.id, email: usersTable.email, username: usersTable.username });
+
+    if (user.length === 0) {
+      res.status(500).json({ error: "Failed to create user" });
+      return;
+    }
+
+    // Create verification token (valid for 24 hours)
+    const verificationTokenId = randomUUID();
+    const verificationToken = randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await db.insert(emailVerificationTokensTable).values({
+      id: verificationTokenId,
+      userId,
+      token: verificationToken,
+      expiresAt,
+    });
+
+    // Send verification email
+    const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+    try {
+      await sendEmail({
+        to: sanitizedEmail,
+        subject: "Verify your Lockdown Protocol email",
+        html: generateVerificationEmailHTML(sanitizedUsername, verificationLink),
+      });
+    } catch (emailError) {
+      console.error("Failed to send verification email:", emailError);
+      // Don't fail the registration if email fails
+    }
+
+    const token = generateToken(userId);
+
+    const response: z.infer<typeof LoginUserResponse> = {
+      id: user[0].id,
+      email: user[0].email,
+      username: user[0].username,
+      token,
+    };
+
+    res.status(201).json(response);
+  } catch (error) {
+    console.error("Registration error:", error);
+    res.status(400).json({ error: "Invalid request" });
+  }
+});
+
+// Login endpoint
+router.post("/auth/login", async (req, res) => {
+  try {
+    const body = LoginUserBody.parse(req.body);
+    const sanitizedEmail = xss(body.email.trim().toLowerCase());
+
+    const users = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, sanitizedEmail))
+      .limit(1);
+
+    if (users.length === 0) {
+      res.status(401).json({ error: "Invalid credentials" });
+      return;
+    }
+
+    const user = users[0];
+
+    const isPasswordValid = await comparePassword(body.password, user.passwordHash);
+    if (!isPasswordValid) {
+      res.status(401).json({ error: "Invalid credentials" });
+      return;
+    }
+
+    const token = generateToken(user.id);
+
+    const response: z.infer<typeof LoginUserResponse> = {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      token,
+    };
+
+    res.json(response);
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(400).json({ error: "Invalid request" });
+  }
+});
+
+// Get current user
+router.get("/auth/me", authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const users = await db
+      .select({ id: usersTable.id, email: usersTable.email, username: usersTable.username, createdAt: usersTable.createdAt })
+      .from(usersTable)
+      .where(eq(usersTable.id, req.userId))
+      .limit(1);
+
+    if (users.length === 0) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    const user = users[0];
+    const response: z.infer<typeof GetCurrentUserResponse> = {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      createdAt: user.createdAt,
+    };
+
+    res.json(response);
+  } catch (error) {
+    console.error("Get user error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Verify email with token
+router.post("/auth/verify-email", async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token || typeof token !== "string") {
+      res.status(400).json({ error: "Verification token required" });
+      return;
+    }
+
+    // Find the verification token
+    const verificationRecords = await db
+      .select()
+      .from(emailVerificationTokensTable)
+      .where(eq(emailVerificationTokensTable.token, token))
+      .limit(1);
+
+    if (verificationRecords.length === 0) {
+      res.status(400).json({ error: "Invalid verification token" });
+      return;
+    }
+
+    const verificationRecord = verificationRecords[0];
+
+    // Check if token expired
+    if (new Date() > verificationRecord.expiresAt) {
+      res.status(400).json({ error: "Verification token expired" });
+      return;
+    }
+
+    // Mark user as verified
+    await db
+      .update(usersTable)
+      .set({ isVerified: true })
+      .where(eq(usersTable.id, verificationRecord.userId));
+
+    // Delete the verification token (one-time use)
+    await db.delete(emailVerificationTokensTable).where(eq(emailVerificationTokensTable.id, verificationRecord.id));
+
+    res.json({ success: true, message: "Email verified successfully" });
+  } catch (error) {
+    console.error("Email verification error:", error);
+    res.status(500).json({ error: "Email verification failed" });
+  }
+});
+
+// Resend verification email
+router.post("/auth/resend-verification-email", authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    // Get user
+    const users = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.id, req.userId))
+      .limit(1);
+
+    if (users.length === 0) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    const user = users[0];
+
+    if (user.isVerified) {
+      res.status(400).json({ error: "Email already verified" });
+      return;
+    }
+
+    // Delete old tokens
+    await db.delete(emailVerificationTokensTable).where(eq(emailVerificationTokensTable.userId, req.userId));
+
+    // Create new verification token
+    const verificationTokenId = randomUUID();
+    const verificationToken = randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await db.insert(emailVerificationTokensTable).values({
+      id: verificationTokenId,
+      userId: req.userId,
+      token: verificationToken,
+      expiresAt,
+    });
+
+    // Send verification email
+    const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: "Verify your Lockdown Protocol email",
+        html: generateVerificationEmailHTML(user.username, verificationLink),
+      });
+      res.json({ success: true, message: "Verification email sent" });
+    } catch (emailError) {
+      console.error("Failed to send verification email:", emailError);
+      res.status(500).json({ error: "Failed to send verification email" });
+    }
+  } catch (error) {
+    console.error("Resend verification email error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Request password reset
+router.post("/auth/request-password-reset", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      res.status(400).json({ error: "Email is required" });
+      return;
+    }
+
+    const sanitizedEmail = xss(email.trim().toLowerCase());
+
+    // Get user
+    const users = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, sanitizedEmail))
+      .limit(1);
+
+    if (users.length === 0) {
+      // Don't reveal if email exists (security best practice)
+      res.json({ success: true, message: "If the email exists, a reset link has been sent" });
+      return;
+    }
+
+    const user = users[0];
+
+    // Delete old reset tokens
+    await db.delete(passwordResetTokensTable).where(eq(passwordResetTokensTable.userId, user.id));
+
+    // Create new reset token (valid for 1 hour)
+    const resetTokenId = randomUUID();
+    const resetToken = randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+    await db.insert(passwordResetTokensTable).values({
+      id: resetTokenId,
+      userId: user.id,
+      token: resetToken,
+      expiresAt,
+    });
+
+    // Send password reset email
+    const resetLink = `${process.env.FRONTEND_URL || "http://localhost:5173"}/reset-password?token=${resetToken}`;
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: "Reset your Lockdown Protocol password",
+        html: generatePasswordResetEmailHTML(user.username, resetLink),
+      });
+      res.json({ success: true, message: "If the email exists, a reset link has been sent" });
+    } catch (emailError) {
+      console.error("Failed to send password reset email:", emailError);
+      res.status(500).json({ error: "Failed to send reset email" });
+    }
+  } catch (error) {
+    console.error("Password reset request error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Reset password
+router.post("/auth/reset-password", async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      res.status(400).json({ error: "Token and new password are required" });
+      return;
+    }
+
+    // Validate password length
+    if (newPassword.length < 6) {
+      res.status(400).json({ error: "Password must be at least 6 characters" });
+      return;
+    }
+
+    // Get reset token
+    const resetTokens = await db
+      .select()
+      .from(passwordResetTokensTable)
+      .where(eq(passwordResetTokensTable.token, token))
+      .limit(1);
+
+    if (resetTokens.length === 0) {
+      res.status(400).json({ error: "Invalid or expired reset token" });
+      return;
+    }
+
+    const resetRecord = resetTokens[0];
+
+    // Check if token is expired
+    if (new Date() > resetRecord.expiresAt) {
+      res.status(400).json({ error: "Reset token has expired" });
+      return;
+    }
+
+    // Get user
+    const users = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.id, resetRecord.userId))
+      .limit(1);
+
+    if (users.length === 0) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    const user = users[0];
+
+    // Hash new password
+    const newPasswordHash = await hashPassword(newPassword);
+
+    // Update password
+    await db.update(usersTable).set({ passwordHash: newPasswordHash }).where(eq(usersTable.id, user.id));
+
+    // Delete used token
+    await db.delete(passwordResetTokensTable).where(eq(passwordResetTokensTable.token, token));
+
+    res.json({ success: true, message: "Password reset successful" });
+  } catch (error) {
+    console.error("Password reset error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+export default router;
