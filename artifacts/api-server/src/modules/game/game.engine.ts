@@ -1173,6 +1173,16 @@ export function restartGame(state: GameState): GameState {
  * MUTATION: modifies `state` in place.
  */
 export function reconnectPlayer(state: GameState, oldId: string, newId: string): void {
+  if (oldId === newId) {
+    const player = state.players.find((p) => p.id === oldId);
+    if (player) {
+      player.connected = true;
+      player.connectionStatus = "connected";
+    }
+    removePlayerFromGrace(state, oldId);
+    return;
+  }
+
   // Update the player entry
   const player = state.players.find((p) => p.id === oldId);
   if (player) {
