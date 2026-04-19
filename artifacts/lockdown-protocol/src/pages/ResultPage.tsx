@@ -101,6 +101,8 @@ export default function ResultPage() {
   const [showWinParticles, setShowWinParticles] = useState(false);
   const [pendingVoteResult, setPendingVoteResult] = useState<VoteResult | null>(null);
   const [cinematicPlayed, setCinematicPlayed] = useState(false);
+  
+  const handleCinematicComplete = useCallback(() => setCinematicPlayed(true), []);
 
   const resultPlayedRef = useRef(false);
   const recordedResultRef = useRef(false);
@@ -685,7 +687,7 @@ export default function ResultPage() {
       </div>
       
       {result && !cinematicPlayed && (
-        <EjectionCinematic result={result} onComplete={() => setCinematicPlayed(true)} />
+        <EjectionCinematic result={result} onComplete={handleCinematicComplete} />
       )}
     </div>
   );
@@ -763,10 +765,8 @@ function EjectionCinematic({
   return (
     <div className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden bg-black transition-opacity duration-500 ${phase === 3 ? 'opacity-0' : 'opacity-100'}`}>
       
-      {/* Scrolling starfield background */}
-      <div className="absolute inset-0 opacity-40">
-         <div className="absolute inset-0" style={{ backgroundImage: `url('${import.meta.env.BASE_URL}moon-phases.webp')`, backgroundSize: "cover", animation: "drift-bg 30s linear infinite" }} />
-      </div>
+      {/* Deep space background */}
+      <div className="absolute inset-0 opacity-80" style={{ background: "radial-gradient(circle at center, hsl(210 40% 12%), black 80%)" }} />
 
       {result.eliminatedId ? (
         <div className="relative z-10 flex flex-col items-center w-full">
