@@ -8,8 +8,9 @@ export default function CustomCursor() {
   const { lowGraphics } = usePerformanceMode();
 
   useEffect(() => {
-    if (lowGraphics) {
-      document.body.classList.add('low-graphics');
+    const isTouchDevice = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
+    if (lowGraphics || isTouchDevice) {
+      if (lowGraphics) document.body.classList.add('low-graphics');
       return;
     }
 
@@ -42,7 +43,8 @@ export default function CustomCursor() {
     };
   }, [lowGraphics]);
 
-  if (lowGraphics) return null;
+  const isTouchDevice = typeof window !== "undefined" && (window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0);
+  if (lowGraphics || isTouchDevice) return null;
 
   return (
     <>

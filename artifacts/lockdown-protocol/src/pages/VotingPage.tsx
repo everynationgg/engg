@@ -222,7 +222,7 @@ export default function VotingPage() {
   }, [myId]);
 
   return (
-    <div className={`relative min-h-screen w-full flex flex-col transition-transform duration-1000 ${votesIn > 0 ? "scale-[1.02]" : "scale-100"} ${isAlien ? "ix-glitch-bg" : ""}`} style={{ background: bgTint, color: "hsl(190 80% 90%)" }}>
+    <div className={`relative h-[100dvh] overflow-hidden w-full flex flex-col transition-transform duration-1000 ${votesIn > 0 ? "scale-[1.02]" : "scale-100"} ${isAlien ? "ix-glitch-bg" : ""}`} style={{ background: bgTint, color: "hsl(190 80% 90%)" }}>
       {/* Alien Corruption Overlays */}
       {isAlien && (
         <div className="absolute inset-0 pointer-events-none z-0">

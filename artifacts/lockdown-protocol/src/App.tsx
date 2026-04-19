@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import SystemToastContainer from "@/components/SystemToast";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
+import { PreferencesProvider } from "@/hooks/usePreferences";
 import LandingPage from "@/pages/LandingPage";
 import ProfilePage from "@/pages/ProfilePage";
 import SettingsPage from "@/pages/SettingsPage";
@@ -80,11 +81,13 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
-          </WouterRouter>
-          <Toaster />
-          <SystemToastContainer />
+          <PreferencesProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <Router />
+            </WouterRouter>
+            <Toaster />
+            <SystemToastContainer />
+          </PreferencesProvider>
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>

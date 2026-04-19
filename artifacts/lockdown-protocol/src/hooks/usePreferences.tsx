@@ -1,7 +1,7 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, createContext, useContext } from "react";
 import { useAuth } from "./useAuth";
 
-interface UserPrefs {
+export interface UserPrefs {
   userId: string;
   musicVolume: number;
   sfxVolume: number;
@@ -12,7 +12,22 @@ interface UserPrefs {
   updatedAt?: Date;
 }
 
-export function usePreferences() {
+interface PreferencesContextType {
+  preferences: UserPrefs | null;
+  isLoading: boolean;
+  error: string | null;
+  fetchPreferences: () => Promise<void>;
+  updatePreferences: (updates: Partial<Omit<UserPrefs, "userId" | "createdAt" | "updatedAt">>) => Promise<any>;
+  updateMusicVolume: (volume: number) => Promise<any>;
+  updateSfxVolume: (volume: number) => Promise<any>;
+  updateTheme: (theme: "dark" | "light") => Promise<any>;
+  updateNotifications: (enabled: boolean) => Promise<any>;
+  updateColorblindMode: (enabled: boolean) => Promise<any>;
+}
+
+const PreferencesContext = createContext<PreferencesContextType | undefined>(undefined);
+
+export function PreferencesProvider({ children }: { children: React.ReactNode }) {
   const { token } = useAuth();
   const [preferences, setPreferences] = useState<UserPrefs | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -39,12 +54,12 @@ export function usePreferences() {
       }
 
       const data = await response.json();
-        setPreferences(data);
-        // Apply theme to DOM
-        if (data.theme) {
+      setPreferences(data);
+      // Apply theme to DOM
+      if (data.theme) {
         document.documentElement.classList.remove("dark", "light");
         document.documentElement.classList.add(data.theme);
-        }
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to fetch preferences";
       setError(message);
@@ -104,7 +119,7 @@ export function usePreferences() {
     document.documentElement.classList.remove("dark", "light");
     document.documentElement.classList.add(theme);
     return updatePreferences({ theme });
-    }, [updatePreferences]);
+  }, [updatePreferences]);
 
   const updateNotifications = useCallback((enabled: boolean) => {
     return updatePreferences({ notificationsEnabled: enabled });
@@ -121,16 +136,30 @@ export function usePreferences() {
     }
   }, [token, preferences, fetchPreferences]);
 
-  return {
-    preferences,
-    isLoading,
-    error,
-    fetchPreferences,
-    updatePreferences,
-    updateMusicVolume,
-    updateSfxVolume,
-    updateTheme,
-    updateNotifications,
-    updateColorblindMode,
-  };
+  return (
+    <PreferencesContext.Provider
+      value={{
+        preferences,
+        isLoading,
+        error,
+        fetchPreferences,
+        updatePreferences,
+        updateMusicVolume,
+        updateSfxVolume,
+        updateTheme,
+        updateNotifications,
+        updateColorblindMode,
+      }}
+    >
+      {children}
+    </PreferencesContext.Provider>
+  );
+}
+
+export function usePreferences() {
+  const context = useContext(PreferencesContext);
+  if (context === undefined) {
+    throw new Error("usePreferences must be used within a PreferencesProvider");
+  }
+  return context;
 }
