@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { ALIEN_ROLES, CREW_ROLES, CHAOTIC_ROLES, Role } from "@/data/roles";
+import howToPlayImg from "@assets/How_to_Play.webp";
 
 interface HowToPlayModalProps {
   onClose: () => void;
 }
 
 export default function HowToPlayModal({ onClose }: HowToPlayModalProps) {
-  const [activeTab, setActiveTab] = useState<"phases" | "roles">("phases");
+  const [activeTab, setActiveTab] = useState<"phases" | "roles" | "image">("phases");
 
   // Close on ESC
   useEffect(() => {
@@ -81,6 +82,16 @@ export default function HowToPlayModal({ onClose }: HowToPlayModalProps) {
           >
             Role Glossary
           </button>
+          <button
+            onClick={() => setActiveTab("image")}
+            className="px-4 py-2 font-orbitron text-xs tracking-widest uppercase transition-colors"
+            style={{
+              color: activeTab === "image" ? "hsl(185 100% 60%)" : "hsl(210 30% 50%)",
+              borderBottom: activeTab === "image" ? "2px solid hsl(185 100% 50%)" : "2px solid transparent",
+            }}
+          >
+            Quick Guide
+          </button>
         </div>
 
         {/* Content */}
@@ -115,11 +126,22 @@ export default function HowToPlayModal({ onClose }: HowToPlayModalProps) {
                 </PhaseStep>
               </div>
             </div>
-          ) : (
+          ) : activeTab === "roles" ? (
             <div className="flex flex-col gap-8">
               <RoleSection team="Crew" color="hsl(185 100% 50%)" glow="hsl(185 100% 50% / 0.3)" roles={CREW_ROLES} />
               <RoleSection team="Alien" color="hsl(0 75% 55%)" glow="hsl(0 75% 55% / 0.3)" roles={ALIEN_ROLES} />
               <RoleSection team="Chaotic" color="hsl(300 70% 65%)" glow="hsl(300 70% 65% / 0.3)" roles={CHAOTIC_ROLES} />
+            </div>
+          ) : (
+            <div className="flex justify-center">
+              <img
+                src={howToPlayImg}
+                alt="Quick Guide"
+                className="w-full max-w-sm rounded-lg"
+                style={{ border: "1px solid hsl(185 100% 50% / 0.3)", boxShadow: "0 0 20px hsl(185 100% 50% / 0.15)" }}
+                draggable={false}
+                loading="lazy"
+              />
             </div>
           )}
         </div>
