@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import howToPlayImg from "@assets/How_to_Play.webp";
+import HowToPlayModal from "@/components/HowToPlayModal";
 import { QuitGameButtonInner, useQuitGame } from "@/components/QuitGameButton";
 import ConfirmModal from "@/components/ConfirmModal";
 
@@ -338,39 +338,7 @@ export default function HamburgerMenu({
       )}
 
       {/* How to Play Modal */}
-      {showHowToPlay && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 ix-backdrop ix-backdrop-blur"
-          style={{ background: "hsl(220 30% 4% / 0.9)" }}
-          onClick={() => setShowHowToPlay(false)}
-        >
-          <div
-            className="relative w-full max-w-sm max-h-full overflow-y-auto rounded-lg ix-modal-enter"
-            style={{ border: "1px solid hsl(270 80% 55% / 0.4)", boxShadow: "0 0 40px hsl(270 80% 55% / 0.2)" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setShowHowToPlay(false)}
-              className="ix-btn absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center rounded font-orbitron font-bold text-sm cursor-pointer"
-              style={{
-                background: "hsl(220 28% 10% / 0.9)",
-                border: "1px solid hsl(210 30% 25%)",
-                color: "hsl(190 60% 70%)",
-              }}
-              aria-label="Close"
-            >
-              ✕
-            </button>
-            <img
-              src={howToPlayImg}
-              alt="How to Play"
-              className="w-full block rounded-lg"
-              draggable={false}
-              loading="lazy"
-            />
-          </div>
-        </div>
-      )}
+      {showHowToPlay && <HowToPlayModal onClose={() => setShowHowToPlay(false)} />}
 
       {/* Quit Game Confirm Modal - rendered outside dropdown so it persists after menu closes */}
       {showQuitButton && (
