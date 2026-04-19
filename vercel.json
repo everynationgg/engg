@@ -90,7 +90,7 @@
       "destination": "/index.html"
     },
     {
-      "source": "/end/:path*",
+      "source": "/end/(.*)",
       "destination": "/index.html"
     }
   ]
