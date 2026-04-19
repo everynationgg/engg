@@ -100,6 +100,7 @@ export default function ResultPage() {
   const [revealedCountRows, setRevealedCountRows] = useState(0);
   const [showWinParticles, setShowWinParticles] = useState(false);
   const [pendingVoteResult, setPendingVoteResult] = useState<VoteResult | null>(null);
+  const [cinematicPlayed, setCinematicPlayed] = useState(false);
 
   const resultPlayedRef = useRef(false);
   const recordedResultRef = useRef(false);
@@ -144,7 +145,7 @@ export default function ResultPage() {
     fetchLeaderboard();
 
     const handleVoteResult = (data: VoteResult) => {
-      setResult(data);
+      setResult((prev) => JSON.stringify(prev) === JSON.stringify(data) ? prev : data);
       if (!resultPlayedRef.current) {
         resultPlayedRef.current = true;
         playGameOutcome(data.winTeam);
@@ -153,12 +154,12 @@ export default function ResultPage() {
     };
 
     const handleRoundSummary = (data: RoundSummary) => {
-      setSummary(data);
+      setSummary((prev) => JSON.stringify(prev) === JSON.stringify(data) ? prev : data);
     };
 
     const handlePhaseUpdate = (session: { phase: string; voteResult?: VoteResult | null; roundSummary?: RoundSummary }) => {
-      if (session.voteResult) setResult(session.voteResult);
-      if (session.roundSummary) setSummary(session.roundSummary);
+      if (session.voteResult) setResult((prev) => JSON.stringify(prev) === JSON.stringify(session.voteResult) ? prev : session.voteResult!);
+      if (session.roundSummary) setSummary((prev) => JSON.stringify(prev) === JSON.stringify(session.roundSummary) ? prev : session.roundSummary!);
       // GameShell handles navigation to role_config
     };
 
@@ -177,14 +178,14 @@ export default function ResultPage() {
     }) => {
       if (resp.success && resp.session) {
         if (resp.session.voteResult) {
-          setResult(resp.session.voteResult);
+          setResult((prev) => JSON.stringify(prev) === JSON.stringify(resp.session.voteResult) ? prev : resp.session.voteResult!);
           if (!resultPlayedRef.current) {
             resultPlayedRef.current = true;
             playGameOutcome(resp.session.voteResult.winTeam);
           }
           maybeRecordMyResult(resp.session.voteResult);
         }
-        if (resp.session.roundSummary) setSummary(resp.session.roundSummary);
+        if (resp.session.roundSummary) setSummary((prev) => JSON.stringify(prev) === JSON.stringify(resp.session.roundSummary) ? prev : resp.session.roundSummary!);
 
         // Derive host status from the server's player list rather than from
         // sessionStorage.  Match by socket.id (most reliable) or by stable
@@ -215,8 +216,8 @@ export default function ResultPage() {
         };
       }) => {
         if (resp.success && resp.session) {
-          if (resp.session.voteResult) setResult(resp.session.voteResult);
-          if (resp.session.roundSummary) setSummary(resp.session.roundSummary);
+          if (resp.session.voteResult) setResult((prev) => JSON.stringify(prev) === JSON.stringify(resp.session.voteResult) ? prev : resp.session.voteResult!);
+          if (resp.session.roundSummary) setSummary((prev) => JSON.stringify(prev) === JSON.stringify(resp.session.roundSummary) ? prev : resp.session.roundSummary!);
           if (resp.session.players) {
             const mySocketId = socket.id;
             const myPlayerId = sessionStorage.getItem("lp_playerId") ?? null;
@@ -382,7 +383,7 @@ export default function ResultPage() {
                 <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(210 30% 50%)" }}>
                   ELIMINATED
                 </div>
-                <div className="flex items-center gap-4 animate-airlock-eject">
+                <div className="flex items-center gap-4">
                   {(() => {
                     const roleDef = ROLES.find((r) => r.id === result.eliminatedRole);
                     return roleDef ? (
@@ -682,6 +683,10 @@ export default function ResultPage() {
         )}
 
       </div>
+      
+      {result && !cinematicPlayed && (
+        <EjectionCinematic result={result} onComplete={() => setCinematicPlayed(true)} />
+      )}
     </div>
   );
 }
@@ -725,6 +730,92 @@ function WinParticles({ hue }: { hue: number }) {
           0% { transform: translateY(0) scale(0.7); opacity: 0; }
           15% { opacity: 1; }
           100% { transform: translateY(-58px) translateX(-10px) scale(0.2); opacity: 0; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function EjectionCinematic({
+  result,
+  onComplete,
+}: {
+  result: VoteResult;
+  onComplete: () => void;
+}) {
+  const [phase, setPhase] = useState(0);
+
+  useEffect(() => {
+    // phase 0: initial blank/stars
+    // phase 1: text appears + character drifts
+    // phase 2: role reveal text appears
+    // phase 3: fade out
+    const t1 = setTimeout(() => setPhase(1), 500);
+    const t2 = setTimeout(() => setPhase(2), 3000);
+    const t3 = setTimeout(() => setPhase(3), 6000);
+    const t4 = setTimeout(onComplete, 6500);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
+  }, [onComplete]);
+
+  const roleDef = ROLES.find((r) => r.id === result.eliminatedRole);
+  const isAlien = roleDef?.team === "alien";
+
+  return (
+    <div className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden bg-black transition-opacity duration-500 ${phase === 3 ? 'opacity-0' : 'opacity-100'}`}>
+      
+      {/* Scrolling starfield background */}
+      <div className="absolute inset-0 opacity-40">
+         <div className="absolute inset-0" style={{ backgroundImage: `url('${import.meta.env.BASE_URL}moon-phases.webp')`, backgroundSize: "cover", animation: "drift-bg 30s linear infinite" }} />
+      </div>
+
+      {result.eliminatedId ? (
+        <div className="relative z-10 flex flex-col items-center w-full">
+          {/* Character drifting across screen */}
+          <div className="absolute w-full h-full pointer-events-none flex items-center justify-center">
+            {roleDef && (
+              <img 
+                src={roleDef.image} 
+                alt={roleDef.name}
+                className={`w-32 h-32 rounded-lg object-cover transition-all ${phase >= 1 ? 'animate-airlock-eject-cinematic' : 'opacity-0'}`}
+                style={{ border: `2px solid ${isAlien ? 'hsl(0 75% 55%)' : 'hsl(185 100% 50%)'}`, boxShadow: `0 0 30px ${isAlien ? 'hsl(0 75% 55% / 0.5)' : 'hsl(185 100% 50% / 0.5)'}` }}
+              />
+            )}
+          </div>
+
+          <div className="mt-48 text-center flex flex-col gap-4">
+            <div className={`font-orbitron font-black text-2xl tracking-[0.3em] uppercase transition-all duration-1000 ${phase >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ color: "hsl(190 80% 90%)" }}>
+              {result.eliminatedName} WAS EJECTED
+            </div>
+            
+            <div className={`font-orbitron font-bold text-xl tracking-[0.2em] uppercase transition-all duration-1000 ${phase >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ color: isAlien ? "hsl(0 75% 60%)" : "hsl(185 100% 60%)" }}>
+              THEY WERE {isAlien ? "AN ALIEN" : "A CREWMEMBER"}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="relative z-10 text-center">
+          <div className={`font-orbitron font-black text-2xl tracking-[0.3em] uppercase transition-all duration-1000 ${phase >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ color: "hsl(210 30% 60%)" }}>
+            NO ONE WAS EJECTED
+          </div>
+          <div className={`mt-4 font-orbitron font-bold text-xl tracking-[0.2em] uppercase transition-all duration-1000 ${phase >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ color: "hsl(210 30% 50%)" }}>
+            TIED VOTE
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes drift-bg {
+          0% { transform: scale(1.1) translateX(0); }
+          100% { transform: scale(1.1) translateX(-5%); }
+        }
+        @keyframes airlock-eject-cinematic {
+          0% { transform: scale(1.2) translateX(-100vw) rotate(-45deg); opacity: 0; filter: blur(2px); }
+          20% { opacity: 1; filter: blur(0px); transform: scale(1) translateX(-30vw) rotate(-15deg); }
+          80% { opacity: 1; filter: blur(0px); transform: scale(1) translateX(30vw) rotate(15deg); }
+          100% { transform: scale(0.5) translateX(100vw) rotate(120deg); opacity: 0; filter: blur(4px); }
+        }
+        .animate-airlock-eject-cinematic {
+          animation: airlock-eject-cinematic 6s linear forwards;
         }
       `}</style>
     </div>

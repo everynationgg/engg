@@ -30,7 +30,7 @@ export default function RoleRevealPage() {
   const isAlien = role.team === "alien";
 
   useEffect(() => {
-    // 1.5s pitch black delay
+    // Brief delay to build tension without feeling broken
     const t1 = setTimeout(() => {
       setRevealState("flash");
       if (isAlien) {
@@ -42,7 +42,7 @@ export default function RoleRevealPage() {
       setTimeout(() => {
         setRevealState("ready");
       }, 150);
-    }, 1500);
+    }, 1000);
     return () => clearTimeout(t1);
   }, [isAlien]);
 
@@ -158,7 +158,13 @@ export default function RoleRevealPage() {
   };
 
   if (revealState === "black") {
-    return <div className="fixed inset-0 bg-black z-[9999]" />;
+    return (
+      <div className="fixed inset-0 bg-black z-[9999] flex flex-col items-center justify-center">
+        <div className="font-orbitron text-xs tracking-[0.4em] uppercase" style={{ color: "hsl(210 30% 25%)" }}>
+          DECRYPTING NEURAL LINK<span className="animate-pulse">...</span>
+        </div>
+      </div>
+    );
   }
 
   if (revealState === "flash") {
