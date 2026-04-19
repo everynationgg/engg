@@ -90,6 +90,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/end/",
+      "destination": "/index.html"
+    },
+    {
       "source": "/end/(.*)",
       "destination": "/index.html"
     }
