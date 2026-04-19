@@ -7,8 +7,6 @@ import HamburgerMenu from "@/components/HamburgerMenu";
 import SettingsModal from "@/components/SettingsModal";
 import ProfileModal from "@/components/ProfileModal";
 import { TeamIcon } from "@/components/TeamIcon";
-import ScratchOffCard from "@/components/ScratchOffCard";
-
 function getAssignedRole(): Role {
   const roleId = sessionStorage.getItem("lp_assignedRole");
   const found = ROLES.find((r) => r.id === roleId);
@@ -26,7 +24,7 @@ function getTotalPlayers(): number {
 
 export default function RoleRevealPage() {
   const [acknowledged, setAcknowledged] = useState(false);
-  const [revealState, setRevealState] = useState<"black" | "flash" | "scratch" | "ready">("black");
+  const [revealState, setRevealState] = useState<"black" | "flash" | "ready">("black");
 
   const role = getAssignedRole();
   const isAlien = role.team === "alien";
@@ -37,19 +35,15 @@ export default function RoleRevealPage() {
       setRevealState("flash");
       // Flash lasts 150ms
       setTimeout(() => {
-        setRevealState("scratch");
+        setRevealState("ready");
+        if (isAlien) {
+          playBassDrop();
+        } else {
+          playSciFiClick(1.0);
+        }
       }, 150);
     }, 1000);
     return () => clearTimeout(t1);
-  }, []);
-
-  const handleReveal = useCallback(() => {
-    if (isAlien) {
-      playBassDrop();
-    } else {
-      playSciFiClick(1.0);
-    }
-    setRevealState("ready");
   }, [isAlien]);
 
   const [readyCount, setReadyCount] = useState(0);
@@ -239,13 +233,7 @@ export default function RoleRevealPage() {
       </div>
 
       {/* Main content — horizontal on desktop, vertical on mobile */}
-      <ScratchOffCard
-        onReveal={handleReveal}
-        coverColor={bgTint}
-        coverImage={role.image}
-        revealThreshold={0.4}
-        className="flex-1 w-full h-full relative"
-      >
+      <div className="flex-1 w-full h-full relative">
         <div className="flex flex-col lg:flex-row absolute inset-0 overflow-hidden" style={{ minHeight: 0 }}>
 
           {/* LEFT — Role image */}
@@ -413,7 +401,7 @@ export default function RoleRevealPage() {
           </div>
         </div>
         </div>
-      </ScratchOffCard>
+      </div>
 
       {/* Acknowledge button — mobile (fixed bottom) */}
       <div

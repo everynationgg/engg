@@ -174,7 +174,7 @@ export default function HamburgerMenu({
               <button
                 key={item.id}
                 onClick={item.onClick}
-                className="absolute flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full cursor-pointer pointer-events-auto ix-btn group/item"
+                className="absolute flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full cursor-pointer pointer-events-auto ix-btn group/item hover:z-50"
                 style={{
                   background: "hsl(220 28% 10% / 0.85)",
                   border: `2px solid ${item.color}`,
@@ -194,7 +194,6 @@ export default function HamburgerMenu({
                   e.currentTarget.style.background = "hsl(220 28% 10% / 0.85)";
                   e.currentTarget.style.boxShadow = `0 0 15px ${item.color.replace(')', ' / 0.2)')}, inset 0 0 5px ${item.color.replace(')', ' / 0.1)')}`;
                 }}
-                title={item.label}
               >
                 <span style={{ fontSize: "1.4em" }}>{item.icon}</span>
                 
