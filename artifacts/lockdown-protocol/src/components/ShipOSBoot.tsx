@@ -68,7 +68,7 @@ export default function ShipOSBoot() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan-900/10 via-black to-black pointer-events-none" />
       <div className="relative z-10 space-y-2">
         {lines.map((line, i) => (
-          <div key={i} className={`font-mono tracking-wider ${line.includes("WARNING") ? "text-red-500" : ""}`} style={{ textShadow: line.includes("WARNING") ? "0 0 10px rgba(239,68,68,0.8)" : "0 0 10px rgba(6,182,212,0.8)" }}>
+          <div key={i} className={`font-mono tracking-wider ${line?.includes("WARNING") ? "text-red-500" : ""}`} style={{ textShadow: line?.includes("WARNING") ? "0 0 10px rgba(239,68,68,0.8)" : "0 0 10px rgba(6,182,212,0.8)" }}>
             {line}
           </div>
         ))}
