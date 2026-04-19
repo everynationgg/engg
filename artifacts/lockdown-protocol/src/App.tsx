@@ -14,6 +14,9 @@ import JoinPage from "@/pages/JoinPage";
 import GameShell from "@/pages/GameShell";
 import NotFound from "@/pages/not-found";
 import GlobalControls from "@/components/GlobalControls";
+import CustomCursor from "@/components/CustomCursor";
+import ShipOSBoot from "@/components/ShipOSBoot";
+import ParallaxBackground from "@/components/ParallaxBackground";
 
 const queryClient = new QueryClient();
 
@@ -41,8 +44,11 @@ function LegacyRoomRedirect() {
 function Router() {
   return (
     <>
+      <ShipOSBoot />
+      <ParallaxBackground />
       {/* This is now the ONLY component controlling lobby-music.mp3 */}
       <GlobalControls />
+      <CustomCursor />
 
       <Switch>
         <Route path="/" component={LandingPage} />

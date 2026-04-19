@@ -46,6 +46,13 @@ export type GamePhase =
   | "result"
   | "interrupted";
 
+export interface GameSettings {
+  anonymousVoting: boolean;
+  blindEjections: boolean;
+  discussionTime: number;
+  votingTime: number;
+}
+
 export interface PlayerAction {
   type: string;
   targets: string[];
@@ -117,6 +124,7 @@ export interface PrivateFeedback {
  */
 export interface GameState {
   sessionId: string;
+  settings: GameSettings;
   phase: GamePhase;
   players: Player[];
   rolesAssigned: Record<string, string>;
@@ -283,6 +291,12 @@ export function consumeJustUnfrozen(state: GameState): boolean {
 export function createGame(sessionId: string, hostPlayer: Player): GameState {
   return {
     sessionId,
+    settings: {
+      anonymousVoting: false,
+      blindEjections: false,
+      discussionTime: 120,
+      votingTime: 60,
+    },
     phase: "lobby",
     players: [{ ...hostPlayer, alive: true }],
     rolesAssigned: {},
@@ -324,6 +338,7 @@ export function createGame(sessionId: string, hostPlayer: Player): GameState {
 export function startGame(
   state: GameState,
   roleCounts: Record<string, number>,
+  settings: GameSettings,
   rng: () => number = Math.random,
 ): GameState {
   const pool: string[] = [];
@@ -345,6 +360,7 @@ export function startGame(
   state.initialRoles = { ...state.rolesAssigned };
   state.centerCards = pool.slice(state.players.length);
   state.roleCounts = { ...roleCounts };
+  state.settings = { ...settings };
 
   // Reset round state
   state.orbitActions = {};
@@ -593,7 +609,7 @@ export function resolveRound(state: GameState): ResolutionResult {
               logActor(actor.name, actor.id, `scanned ${target.name}`);
             }
           } else if (action.type === "scan_deck") {
-            const roles = action.targets.map((t) => {
+            const roles = action.targets.slice(0, 2).map((t) => {
               const idx = parseInt(t.replace("center_", ""), 10);
               return state.centerCards[idx] ?? "unknown";
             });
@@ -678,22 +694,29 @@ export function resolveRound(state: GameState): ResolutionResult {
         case "warper": {
           const [tA, tB] = action.targets;
           if (tA && tB) {
+            const playerA = state.players.find((p) => p.id === tA);
+            const playerB = state.players.find((p) => p.id === tB);
+
+            if (!playerA || !playerB) {
+              feedback[actor.id] = { type: "no_action" };
+              logActor(actor.name, actor.id, "attempted an invalid swap");
+              break;
+            }
+
             const roleA = state.rolesAssigned[tA];
             const roleB = state.rolesAssigned[tB];
             state.rolesAssigned[tA] = roleB;
             state.rolesAssigned[tB] = roleA;
             logInternal(tA, "role was swapped by a warper");
             logInternal(tB, "role was swapped by a warper");
-            const playerA = state.players.find((p) => p.id === tA);
-            const playerB = state.players.find((p) => p.id === tB);
             feedback[actor.id] = {
               type: "warper_swap",
-              data: { playerAName: playerA?.name ?? "Player A", playerBName: playerB?.name ?? "Player B" },
+              data: { playerAName: playerA.name, playerBName: playerB.name },
             };
             logActor(
               actor.name,
               actor.id,
-              `swapped the roles of ${playerA?.name ?? "Player A"} and ${playerB?.name ?? "Player B"}`,
+              `swapped the roles of ${playerA.name} and ${playerB.name}`,
             );
           } else {
             feedback[actor.id] = { type: "no_action" };
@@ -705,18 +728,26 @@ export function resolveRound(state: GameState): ResolutionResult {
         // ── Shifter (MUTATES state.rolesAssigned) ────────────────────────
         case "shifter": {
           const targetId = action.targets[0];
+          const targetPlayer = state.players.find((p) => p.id === targetId);
+
+          if (!targetPlayer) {
+            feedback[actor.id] = { type: "no_action" };
+            logActor(actor.name, actor.id, "attempted an invalid exchange");
+            break;
+          }
+
           const actorRole = state.rolesAssigned[actor.id];
           const targetRole = state.rolesAssigned[targetId];
           state.rolesAssigned[actor.id] = targetRole;
           state.rolesAssigned[targetId] = actorRole;
-          const targetPlayer = state.players.find((p) => p.id === targetId);
+          
           logInternal(actor.id, "role was changed by a shifter");
           logInternal(targetId, "role was changed by a shifter");
           feedback[actor.id] = {
             type: "shifter_exchange",
-            data: { targetName: targetPlayer?.name ?? "a player", acquiredRole: targetRole },
+            data: { targetName: targetPlayer.name, acquiredRole: targetRole },
           };
-          logActor(actor.name, actor.id, `exchanged roles with ${targetPlayer?.name ?? "a player"}`);
+          logActor(actor.name, actor.id, `exchanged roles with ${targetPlayer.name}`);
           break;
         }
 
@@ -1318,7 +1349,7 @@ export function kickPlayer(
       : { accepted: false, error: "Player not found" };
   }
 
-  if (target.playerId !== undefined && target.playerId === requester.playerId) {
+  if (target.id === requesterSocketId || (target.playerId !== undefined && target.playerId === requester.playerId)) {
     return { accepted: false, error: "Host cannot kick themselves" };
   }
 

@@ -180,25 +180,21 @@ export default function ResultPage() {
       };
     }) => {
       if (resp.success && resp.session) {
-        if (resp.session.voteResult) {
-          setResult((prev) => JSON.stringify(prev) === JSON.stringify(resp.session.voteResult) ? prev : resp.session.voteResult!);
+        const sess = resp.session;
+        if (sess.voteResult) {
+          setResult((prev) => JSON.stringify(prev) === JSON.stringify(sess.voteResult) ? prev : sess.voteResult!);
           if (!resultPlayedRef.current) {
             resultPlayedRef.current = true;
-            playGameOutcome(resp.session.voteResult.winTeam);
+            playGameOutcome(sess.voteResult.winTeam);
           }
-          maybeRecordMyResult(resp.session.voteResult);
+          maybeRecordMyResult(sess.voteResult);
         }
-        if (resp.session.roundSummary) setSummary((prev) => JSON.stringify(prev) === JSON.stringify(resp.session.roundSummary) ? prev : resp.session.roundSummary!);
+        if (sess.roundSummary) setSummary((prev) => JSON.stringify(prev) === JSON.stringify(sess.roundSummary) ? prev : sess.roundSummary!);
 
-        // Derive host status from the server's player list rather than from
-        // sessionStorage.  Match by socket.id (most reliable) or by stable
-        // playerId UUID if stored (covers reconnect scenarios where socket.id
-        // may differ).  No name-based fallback is used to avoid false matches
-        // when two players share the same callsign.
-        if (resp.session.players) {
+        if (sess.players) {
           const mySocketId = socket.id;
           const myPlayerId = sessionStorage.getItem("lp_playerId") ?? null;
-          const myPlayer = resp.session.players.find(
+          const myPlayer = sess.players.find(
             (p) => p.id === mySocketId || (myPlayerId && (p as { playerId?: string }).playerId === myPlayerId),
           );
           if (myPlayer?.isHost === true) setIsHost(true);
@@ -219,12 +215,13 @@ export default function ResultPage() {
         };
       }) => {
         if (resp.success && resp.session) {
-          if (resp.session.voteResult) setResult((prev) => JSON.stringify(prev) === JSON.stringify(resp.session.voteResult) ? prev : resp.session.voteResult!);
-          if (resp.session.roundSummary) setSummary((prev) => JSON.stringify(prev) === JSON.stringify(resp.session.roundSummary) ? prev : resp.session.roundSummary!);
-          if (resp.session.players) {
+          const sess = resp.session;
+          if (sess.voteResult) setResult((prev) => JSON.stringify(prev) === JSON.stringify(sess.voteResult) ? prev : sess.voteResult!);
+          if (sess.roundSummary) setSummary((prev) => JSON.stringify(prev) === JSON.stringify(sess.roundSummary) ? prev : sess.roundSummary!);
+          if (sess.players) {
             const mySocketId = socket.id;
             const myPlayerId = sessionStorage.getItem("lp_playerId") ?? null;
-            const myPlayer = resp.session.players.find(
+            const myPlayer = sess.players.find(
               (p) => p.id === mySocketId || (myPlayerId && (p as { playerId?: string }).playerId === myPlayerId),
             );
             if (myPlayer?.isHost === true) setIsHost(true);
@@ -320,7 +317,33 @@ export default function ResultPage() {
   }, [result]);
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col" style={{ background: bgTint, color: "hsl(190 80% 90%)" }}>
+    <div className={`relative min-h-screen w-full flex flex-col overflow-hidden ${alienWon ? "ix-glitch-bg" : ""}`} style={{ background: bgTint, color: "hsl(190 80% 90%)" }}>
+      {/* Victory/Defeat Screen Takeover Overlays */}
+      {alienWon && (
+        <div className="absolute inset-0 pointer-events-none z-0">
+          {/* Corrupted scanlines and red vignette */}
+          <div className="absolute inset-0 opacity-40 mix-blend-overlay" style={{ background: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,0,0,0.2) 2px, rgba(255,0,0,0.2) 4px)" }} />
+          <div className="absolute inset-0 opacity-80" style={{ background: "radial-gradient(circle at center, transparent 40%, rgba(255,0,0,0.3) 100%)" }} />
+          {/* Glitching error text in background */}
+          <div className="absolute top-10 left-10 opacity-10 font-mono text-4xl text-red-500 font-bold rotate-12 select-none tracking-[0.5em] uppercase">SYSTEM COMPROMISED</div>
+          <div className="absolute bottom-20 right-10 opacity-10 font-mono text-6xl text-red-600 font-black -rotate-6 select-none tracking-widest uppercase">FATAL ERROR</div>
+        </div>
+      )}
+      
+      {crewWon && (
+        <div className="absolute inset-0 pointer-events-none z-0">
+          {/* Pristine grid and blue glow */}
+          <div className="absolute inset-0 opacity-20" style={{ background: "linear-gradient(rgba(0,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,255,0.1) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+          <div className="absolute inset-0 opacity-60" style={{ background: "radial-gradient(circle at center, transparent 30%, rgba(0,255,255,0.1) 100%)" }} />
+          {/* Secure text in background */}
+          <div className="absolute top-1/4 left-0 w-full flex justify-between px-10 opacity-5 font-orbitron text-6xl text-cyan-400 font-black select-none tracking-[1em] uppercase">
+            <span>SECURE</span>
+            <span>SECURE</span>
+          </div>
+        </div>
+      )}
+      
+      <div className="relative z-10 flex flex-col flex-1 h-full">
       {/* Hamburger Menu */}
       <HamburgerMenu
         onShowSettings={() => setShowSettingsModal(true)}
@@ -685,6 +708,7 @@ export default function ResultPage() {
           </div>
         )}
 
+      </div>
       </div>
       
       {result && !cinematicPlayed && (

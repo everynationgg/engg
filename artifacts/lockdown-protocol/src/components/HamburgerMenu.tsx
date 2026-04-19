@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import HowToPlayModal from "@/components/HowToPlayModal";
-import { QuitGameButtonInner, useQuitGame } from "@/components/QuitGameButton";
+import { useQuitGame } from "@/components/QuitGameButton";
 import ConfirmModal from "@/components/ConfirmModal";
 
 interface HamburgerMenuProps {
@@ -38,7 +38,7 @@ export default function HamburgerMenu({
     setTimeout(() => {
       setMenuOpen(false);
       setMenuClosing(false);
-    }, 180);
+    }, 400); // Wait for radial animation to finish
   }, [menuOpen, menuClosing]);
 
   // Close on ESC key
@@ -75,272 +75,189 @@ export default function HamburgerMenu({
     }
   };
 
-  // Track stagger index for menu items
-  let staggerIndex = 0;
+  const menuItems = [];
+
+  if (isLoggedIn) {
+    menuItems.push({
+      id: "profile",
+      icon: "📊",
+      label: "PROFILE",
+      onClick: () => handleMenuItemClick(onShowProfile),
+      color: "hsl(185 100% 50%)"
+    });
+    menuItems.push({
+      id: "logout",
+      icon: "👤",
+      label: "LOGOUT",
+      onClick: handleLogout,
+      color: "hsl(50 100% 50%)"
+    });
+  } else if (onShowAuth) {
+    menuItems.push({
+      id: "login",
+      icon: "🔐",
+      label: "LOGIN",
+      onClick: () => handleMenuItemClick(onShowAuth),
+      color: "hsl(50 100% 50%)"
+    });
+  }
+
+  menuItems.push({
+    id: "settings",
+    icon: "⚙️",
+    label: "SETTINGS",
+    onClick: () => handleMenuItemClick(onShowSettings),
+    color: "hsl(270 80% 55%)"
+  });
+
+  menuItems.push({
+    id: "howtoplay",
+    icon: "📖",
+    label: "HOW TO PLAY",
+    onClick: () => { playSound(); closeMenu(); setShowHowToPlay(true); },
+    color: "hsl(270 80% 55%)"
+  });
+
+  menuItems.push({
+    id: "sound",
+    icon: musicOn ? "🔊" : "🔇",
+    label: "SOUND",
+    onClick: () => { playSound(); onToggleMusic(); },
+    color: musicOn ? "hsl(185 100% 50%)" : "hsl(210 30% 50%)"
+  });
+
+  if (showQuitButton) {
+    menuItems.push({
+      id: "quit",
+      icon: "🚪",
+      label: "QUIT",
+      onClick: () => { playSound(); closeMenu(); openConfirm(); },
+      color: "hsl(0 75% 55%)"
+    });
+  }
 
   return (
     <div
-      className="fixed z-20"
+      className="fixed z-50"
       style={{
         right: "calc(0.75rem + env(safe-area-inset-right, 0px))",
         bottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))",
       }}
     >
+      {/* Backdrop overlay — click outside to close */}
+      {menuOpen && (
+        <div
+          className={`fixed inset-0 -z-10 ${menuClosing ? "ix-backdrop" : "ix-backdrop ix-backdrop-blur"}`}
+          style={{
+            background: "rgba(0, 0, 0, 0.5)",
+            animation: menuClosing ? "ix-fade-out 200ms ease-in both" : undefined,
+          }}
+          onClick={closeMenu}
+        />
+      )}
+
+      {/* Radial Menu Items */}
+      {menuOpen && (
+        <div className="absolute inset-0 pointer-events-none -z-10 flex items-center justify-center">
+          {menuItems.map((item, index) => {
+            // Spread evenly from 180deg (Left) to 270deg (Top)
+            const angleOffset = menuItems.length > 1 ? 90 / (menuItems.length - 1) : 0;
+            const angle = 180 + (index * angleOffset);
+            const radius = 130; // Distance from center
+            const rad = angle * (Math.PI / 180);
+            
+            // Offset logic so it works on mobile devices too
+            const x = radius * Math.cos(rad);
+            const y = radius * Math.sin(rad);
+
+            return (
+              <button
+                key={item.id}
+                onClick={item.onClick}
+                className="absolute flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full cursor-pointer pointer-events-auto ix-btn group/item"
+                style={{
+                  background: "hsl(220 28% 10% / 0.85)",
+                  border: `2px solid ${item.color}`,
+                  color: item.color,
+                  backdropFilter: "blur(6px)",
+                  boxShadow: `0 0 15px ${item.color.replace(')', ' / 0.2)')}, inset 0 0 5px ${item.color.replace(')', ' / 0.1)')}`,
+                  transform: menuClosing ? "translate(0px, 0px) scale(0)" : `translate(${x}px, ${y}px) scale(1)`,
+                  transition: `transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) ${menuClosing ? 0 : index * 0.05}s, box-shadow 0.2s, background 0.2s`,
+                  opacity: menuClosing ? 0 : 1,
+                  transformOrigin: "center"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = item.color.replace(')', ' / 0.2)');
+                  e.currentTarget.style.boxShadow = `0 0 20px ${item.color.replace(')', ' / 0.4)')}, inset 0 0 10px ${item.color.replace(')', ' / 0.2)')}`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "hsl(220 28% 10% / 0.85)";
+                  e.currentTarget.style.boxShadow = `0 0 15px ${item.color.replace(')', ' / 0.2)')}, inset 0 0 5px ${item.color.replace(')', ' / 0.1)')}`;
+                }}
+                title={item.label}
+              >
+                <span style={{ fontSize: "1.4em" }}>{item.icon}</span>
+                
+                {/* Tooltip label (Desktop only) */}
+                <span className="hidden sm:block absolute whitespace-nowrap px-2 py-1 bg-black/80 rounded border text-[10px] font-orbitron tracking-widest opacity-0 group-hover/item:opacity-100 transition-opacity pointer-events-none shadow-lg"
+                      style={{ 
+                        borderColor: item.color,
+                        color: item.color,
+                        top: "-35px",
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        boxShadow: `0 0 10px ${item.color.replace(')', ' / 0.3)')}`
+                      }}>
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Hamburger Button */}
       <button
         onClick={toggleMenu}
-        className="ix-btn flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded border font-orbitron text-xl sm:text-2xl cursor-pointer relative group"
+        className="ix-btn flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 font-orbitron cursor-pointer relative group z-10"
         style={{
           background: menuOpen ? "hsl(185 100% 15%)" : "hsl(220 28% 8% / 0.85)",
           borderColor: menuOpen ? "hsl(185 100% 50%)" : "hsl(210 30% 35%)",
           color: menuOpen ? "hsl(185 100% 60%)" : "hsl(210 30% 60%)",
           backdropFilter: "blur(6px)",
           boxShadow: menuOpen ? "0 0 20px hsl(185 100% 50% / 0.4), inset 0 0 10px hsl(185 100% 50% / 0.1)" : "0 0 10px hsl(210 30% 35% / 0.2)",
-          transition: "box-shadow 220ms ease, background-color 220ms ease, border-color 220ms ease, color 220ms ease",
+          transition: "box-shadow 300ms ease, background-color 300ms ease, border-color 300ms ease, color 300ms ease",
         }}
         aria-label="Toggle menu"
-        title={menuOpen ? "Close menu" : "Open menu"}
       >
-        ☰
+        <svg viewBox="0 0 100 100" width="30" height="30" className="stroke-current fill-none transition-transform duration-300" style={{ transform: menuOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
+           {menuOpen ? (
+              <>
+                 <line x1="30" y1="30" x2="70" y2="70" strokeWidth="8" strokeLinecap="round" />
+                 <line x1="70" y1="30" x2="30" y2="70" strokeWidth="8" strokeLinecap="round" />
+              </>
+           ) : (
+              <>
+                 <line x1="20" y1="35" x2="80" y2="35" strokeWidth="8" strokeLinecap="round" />
+                 <line x1="20" y1="50" x2="80" y2="50" strokeWidth="8" strokeLinecap="round" />
+                 <line x1="20" y1="65" x2="50" y2="65" strokeWidth="8" strokeLinecap="round" />
+              </>
+           )}
+        </svg>
       </button>
 
       {/* Menu label on hover */}
       {!menuOpen && (
-        <div className="absolute bottom-16 right-0 bg-gray-900 text-cyan-400 px-2 py-1 rounded text-xs font-orbitron tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none"
-          style={{ borderBottom: "1px solid hsl(185 100% 50% / 0.3)" }}>
+        <div className="absolute top-[-30px] right-0 bg-black/80 text-cyan-400 px-2 py-1 rounded border border-cyan-500/50 text-[10px] font-orbitron tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none"
+          style={{ boxShadow: "0 0 10px hsl(185 100% 50% / 0.3)" }}>
           MENU
-        </div>
-      )}
-
-      {/* Backdrop overlay — click outside to close */}
-      {menuOpen && (
-        <div
-          className={`fixed inset-0 z-10 ${menuClosing ? "ix-backdrop" : "ix-backdrop ix-backdrop-blur"}`}
-          style={{
-            background: "rgba(0, 0, 0, 0.5)",
-            animation: menuClosing ? "ix-fade-out 180ms ease-in both" : undefined,
-          }}
-          onClick={closeMenu}
-        />
-      )}
-
-      {/* Dropdown Menu Panel */}
-      {menuOpen && (
-        <div
-          className={`absolute bottom-16 right-0 rounded border flex flex-col gap-3 p-4 w-56 shadow-2xl z-50 ${
-            menuClosing ? "ix-menu-panel-exit" : "ix-menu-panel-enter"
-          }`}
-          style={{
-            background: "linear-gradient(135deg, hsl(220 28% 10%) 0%, hsl(220 28% 12%) 100%)",
-            borderColor: "hsl(185 100% 50% / 0.6)",
-            backdropFilter: "blur(10px)",
-            boxShadow: "0 10px 40px hsl(185 100% 50% / 0.2), inset 0 1px 0 hsl(185 100% 50% / 0.1)",
-            transformOrigin: "bottom right",
-          }}
-        >
-          {/* Section Label */}
-          <div
-            className="px-2 py-1 border-b ix-stagger-item"
-            style={{ borderColor: "hsl(210 30% 25%)", "--ix-stagger-index": staggerIndex++ } as React.CSSProperties}
-          >
-            <p className="font-orbitron text-xs tracking-[0.2em] uppercase" style={{ color: "hsl(210 30% 50%)" }}>
-              🎮 MENU
-            </p>
-          </div>
-
-          {/* Login/Profile section */}
-          {isLoggedIn ? (
-            <>
-              <button
-                onClick={() => handleMenuItemClick(onShowProfile)}
-                className="ix-btn ix-stagger-item flex items-center gap-3 px-3 py-2.5 rounded border text-left font-orbitron text-xs tracking-[0.1em] uppercase hover:translate-x-1"
-                style={{
-                  background: "hsl(185 80% 20%)",
-                  borderColor: "hsl(185 100% 40%)",
-                  color: "hsl(185 100% 70%)",
-                  transition: "background 200ms ease, box-shadow 200ms ease, transform 180ms ease-out",
-                  "--ix-stagger-index": staggerIndex++,
-                } as React.CSSProperties}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "hsl(185 85% 25%)";
-                  e.currentTarget.style.boxShadow = "0 0 15px hsl(185 100% 50% / 0.4), inset 0 0 10px hsl(185 100% 50% / 0.1)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "hsl(185 80% 20%)";
-                  e.currentTarget.style.boxShadow = "none";
-                }}
-              >
-                <span style={{ fontSize: "1.2em" }}>📊</span>
-                <span className="flex-1">PROFILE</span>
-                <span style={{ fontSize: "0.8em", opacity: 0.6 }}>→</span>
-              </button>
-              <button
-                onClick={handleLogout}
-                className="ix-btn ix-stagger-item flex items-center gap-3 px-3 py-2.5 rounded border text-left font-orbitron text-xs tracking-[0.1em] uppercase hover:translate-x-1"
-                style={{
-                  background: "hsl(50 70% 20%)",
-                  borderColor: "hsl(50 100% 40%)",
-                  color: "hsl(50 100% 70%)",
-                  transition: "background 200ms ease, box-shadow 200ms ease, transform 180ms ease-out",
-                  "--ix-stagger-index": staggerIndex++,
-                } as React.CSSProperties}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "hsl(50 80% 25%)";
-                  e.currentTarget.style.boxShadow = "0 0 15px hsl(50 100% 50% / 0.4), inset 0 0 10px hsl(50 100% 50% / 0.1)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "hsl(50 70% 20%)";
-                  e.currentTarget.style.boxShadow = "none";
-                }}
-              >
-                <span style={{ fontSize: "1.2em" }}>👤</span>
-                <span className="flex-1 truncate">LOGOUT</span>
-                <span style={{ fontSize: "0.7em", opacity: 0.5 }} title={username || "user"}>({(username || "user").slice(0, 4)}...)</span>
-              </button>
-            </>
-          ) : onShowAuth ? (
-            <button
-              onClick={() => handleMenuItemClick(onShowAuth)}
-              className="ix-btn ix-stagger-item flex items-center gap-3 px-3 py-2.5 rounded border text-left font-orbitron text-xs tracking-[0.1em] uppercase hover:translate-x-1"
-              style={{
-                background: "hsl(50 70% 20%)",
-                borderColor: "hsl(50 100% 40%)",
-                color: "hsl(50 100% 70%)",
-                transition: "background 200ms ease, box-shadow 200ms ease, transform 180ms ease-out",
-                "--ix-stagger-index": staggerIndex++,
-              } as React.CSSProperties}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "hsl(50 80% 25%)";
-                e.currentTarget.style.boxShadow = "0 0 15px hsl(50 100% 50% / 0.4), inset 0 0 10px hsl(50 100% 50% / 0.1)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "hsl(50 70% 20%)";
-                e.currentTarget.style.boxShadow = "none";
-              }}
-            >
-              <span style={{ fontSize: "1.2em" }}>🔐</span>
-              <span className="flex-1">LOGIN</span>
-              <span style={{ fontSize: "0.8em", opacity: 0.6 }}>→</span>
-            </button>
-          ) : (
-            <div
-              className="px-3 py-2 rounded text-xs font-orbitron tracking-[0.1em] text-center ix-stagger-item"
-              style={{ color: "hsl(210 30% 60%)", "--ix-stagger-index": staggerIndex++ } as React.CSSProperties}
-            >
-              Login via landing page
-            </div>
-          )}
-
-          {/* Settings — available to all users */}
-          <button
-            onClick={() => handleMenuItemClick(onShowSettings)}
-            className="ix-btn ix-stagger-item flex items-center gap-3 px-3 py-2.5 rounded border text-left font-orbitron text-xs tracking-[0.1em] uppercase group/item hover:translate-x-1"
-            style={{
-              background: "hsl(270 70% 20%)",
-              borderColor: "hsl(270 80% 30%)",
-              color: "hsl(270 80% 70%)",
-              transition: "background 200ms ease, box-shadow 200ms ease, transform 180ms ease-out",
-              "--ix-stagger-index": staggerIndex++,
-            } as React.CSSProperties}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "hsl(270 80% 25%)";
-              e.currentTarget.style.boxShadow = "0 0 15px hsl(270 80% 50% / 0.4), inset 0 0 10px hsl(270 80% 50% / 0.1)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "hsl(270 70% 20%)";
-              e.currentTarget.style.boxShadow = "none";
-            }}
-          >
-            <span style={{ fontSize: "1.2em" }}>⚙️</span>
-            <span className="flex-1">SETTINGS</span>
-            <span style={{ fontSize: "0.8em", opacity: 0.6 }}>→</span>
-          </button>
-
-          {/* Quit Game button - only shown on game pages */}
-          {showQuitButton && (
-            <div className="ix-stagger-item" style={{ "--ix-stagger-index": staggerIndex++ } as React.CSSProperties}>
-              <QuitGameButtonInner
-                playSound={playSound}
-                onRequestQuit={() => {
-                  closeMenu();
-                  openConfirm();
-                }}
-              />
-            </div>
-          )}
-
-          {/* Divider */}
-          <div style={{ borderTop: "1px solid hsl(210 30% 25%)", margin: "4px 0" }} />
-
-          {/* How to Play button */}
-          <button
-            onClick={() => {
-              playSound();
-              closeMenu();
-              setShowHowToPlay(true);
-            }}
-            className="ix-btn ix-stagger-item flex items-center gap-3 px-3 py-2.5 rounded border text-left font-orbitron text-xs tracking-[0.1em] uppercase hover:translate-x-1"
-            style={{
-              background: "hsl(270 70% 20%)",
-              borderColor: "hsl(270 80% 30%)",
-              color: "hsl(270 80% 70%)",
-              transition: "background 200ms ease, box-shadow 200ms ease, transform 180ms ease-out",
-              "--ix-stagger-index": staggerIndex++,
-            } as React.CSSProperties}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "hsl(270 80% 25%)";
-              e.currentTarget.style.boxShadow = "0 0 15px hsl(270 80% 50% / 0.4), inset 0 0 10px hsl(270 80% 50% / 0.1)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "hsl(270 70% 20%)";
-              e.currentTarget.style.boxShadow = "none";
-            }}
-          >
-            <span style={{ fontSize: "1.2em" }}>📖</span>
-            <span className="flex-1">HOW TO PLAY</span>
-            <span style={{ fontSize: "0.8em", opacity: 0.6 }}>→</span>
-          </button>
-
-          {/* Music toggle */}
-          <button
-            onClick={() => {
-              playSound();
-              onToggleMusic();
-            }}
-            className="ix-btn ix-stagger-item flex items-center gap-3 px-3 py-2.5 rounded border text-left font-orbitron text-xs tracking-[0.1em] uppercase hover:translate-x-1"
-            style={{
-              background: musicOn ? "hsl(185 70% 20%)" : "hsl(210 20% 25%)",
-              borderColor: musicOn ? "hsl(185 100% 40%)" : "hsl(210 30% 35%)",
-              color: musicOn ? "hsl(185 100% 60%)" : "hsl(210 30% 45%)",
-              transition: "background 200ms ease, box-shadow 200ms ease, transform 180ms ease-out",
-              "--ix-stagger-index": staggerIndex++,
-            } as React.CSSProperties}
-            onMouseEnter={(e) => {
-              if (musicOn) {
-                e.currentTarget.style.background = "hsl(185 80% 25%)";
-                e.currentTarget.style.boxShadow = "0 0 15px hsl(185 100% 50% / 0.4), inset 0 0 10px hsl(185 100% 50% / 0.1)";
-              } else {
-                e.currentTarget.style.background = "hsl(210 25% 30%)";
-                e.currentTarget.style.boxShadow = "0 0 15px hsl(210 30% 50% / 0.3), inset 0 0 10px hsl(210 30% 50% / 0.05)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = musicOn ? "hsl(185 70% 20%)" : "hsl(210 20% 25%)";
-              e.currentTarget.style.boxShadow = "none";
-            }}
-            aria-label={musicOn ? "Mute music" : "Unmute music"}
-          >
-            <span style={{ fontSize: "1.2em" }}>{musicOn ? "🔊" : "🔇"}</span>
-            <span className="flex-1">SOUND</span>
-            <span style={{ fontSize: "0.7em", fontWeight: "bold", opacity: 0.8 }}>{musicOn ? "ON" : "OFF"}</span>
-          </button>
         </div>
       )}
 
       {/* How to Play Modal */}
       {showHowToPlay && <HowToPlayModal onClose={() => setShowHowToPlay(false)} />}
 
-      {/* Quit Game Confirm Modal - rendered outside dropdown so it persists after menu closes */}
+      {/* Quit Game Confirm Modal */}
       {showQuitButton && (
         <ConfirmModal
           isOpen={showConfirm}

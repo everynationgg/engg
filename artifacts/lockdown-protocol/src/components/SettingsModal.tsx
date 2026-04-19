@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { usePreferences } from "@/hooks/usePreferences";
 import { setMusicVolume } from "@/lib/music";
 import { setSfxVolume, playSciFiClick } from "@/lib/sound";
+import { usePerformanceMode } from "@/hooks/usePerformanceMode";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -14,6 +15,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [localSfxVolume, setLocalSfxVolume] = useState(70);
   const [localNotifications, setLocalNotifications] = useState(true);
   const [localColorblindMode, setLocalColorblindMode] = useState(false);
+  const { lowGraphics, setLowGraphics } = usePerformanceMode();
+  const [localLowGraphics, setLocalLowGraphics] = useState(lowGraphics);
   const [saveMessage, setSaveMessage] = useState("");
 
   // Sync local state with preferences
@@ -53,6 +56,10 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       await updateSfxVolume(localSfxVolume);
       if ('notificationsEnabled' in updates) await updateNotifications(localNotifications);
       if ('colorblindMode' in updates) await updateColorblindMode(localColorblindMode);
+      
+      if (localLowGraphics !== lowGraphics) {
+        setLowGraphics(localLowGraphics);
+      }
 
       setSaveMessage("✓ Settings saved!");
       setTimeout(() => {
@@ -227,8 +234,28 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </span>
                 </label>
                 <p className="font-orbitron text-xs mt-2 leading-relaxed" style={{ color: "hsl(210 30% 45%)" }}>
-                  Adds distinct icons to teams and roles to help differentiate alignments without relying entirely on color.
+                  Add distinct icons to teams and roles to help differentiate alignments without relying entirely on color.
                 </p>
+
+                <div className="mt-6 border-t pt-4" style={{ borderColor: "hsl(210 30% 25%)" }}>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={localLowGraphics}
+                      onChange={(e) => setLocalLowGraphics(e.target.checked)}
+                      className="w-5 h-5 rounded"
+                      style={{
+                        accentColor: "hsl(185 100% 50%)",
+                      }}
+                    />
+                    <span className="font-orbitron text-xs tracking-[0.1em] uppercase" style={{ color: "hsl(210 30% 60%)" }}>
+                      Performance Mode (Low Graphics)
+                    </span>
+                  </label>
+                  <p className="font-orbitron text-xs mt-2 leading-relaxed" style={{ color: "hsl(210 30% 45%)" }}>
+                    Disables heavy animations (parallax, 3D tilt, screen shakes) to save battery and improve performance on older devices.
+                  </p>
+                </div>
               </div>
 
               {/* Save Message */}

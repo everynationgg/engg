@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { getSocket } from "@/lib/socket";
 import { ROLES } from "@/data/roles";
 import { playSciFiClick, playMechanicalChunk } from "@/lib/sound";
@@ -7,6 +7,7 @@ import { isPlayerConnected } from "@/lib/utils";
 import HamburgerMenu from "@/components/HamburgerMenu";
 import SettingsModal from "@/components/SettingsModal";
 import ProfileModal from "@/components/ProfileModal";
+import HolographicCard from "@/components/HolographicCard";
 
 interface LivePlayer {
   id: string;
@@ -49,6 +50,8 @@ export default function VotingPage() {
   const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
   const [roomCopyFeedback, setRoomCopyFeedback] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(60);
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
+  const typingTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -56,6 +59,37 @@ export default function VotingPage() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const socket = getSocket();
+    const onChatTyping = (evt: { gameId: string; username: string; isTyping: boolean }) => {
+      if (evt.gameId !== roomCode) return;
+      if (!evt.username) return;
+
+      if (evt.isTyping) {
+        setTypingUsers((prev) => (prev.includes(evt.username) ? prev : [...prev, evt.username]));
+        const prevTimer = typingTimeoutsRef.current.get(evt.username);
+        if (prevTimer) clearTimeout(prevTimer);
+        const timer = setTimeout(() => {
+          setTypingUsers((prev) => prev.filter((u) => u !== evt.username));
+          typingTimeoutsRef.current.delete(evt.username);
+        }, 2500);
+        typingTimeoutsRef.current.set(evt.username, timer);
+      } else {
+        const prevTimer = typingTimeoutsRef.current.get(evt.username);
+        if (prevTimer) clearTimeout(prevTimer);
+        typingTimeoutsRef.current.delete(evt.username);
+        setTypingUsers((prev) => prev.filter((u) => u !== evt.username));
+      }
+    };
+
+    socket.on("chat_typing", onChatTyping);
+    return () => {
+      socket.off("chat_typing", onChatTyping);
+      for (const timer of typingTimeoutsRef.current.values()) clearTimeout(timer);
+      typingTimeoutsRef.current.clear();
+    };
+  }, [roomCode]);
 
   const handleCopyRoomCode = useCallback(() => {
     playSciFiClick();
@@ -142,8 +176,63 @@ export default function VotingPage() {
   const votesIn = waitingCount;
   const pendingVoters = activePlayers.filter((p) => !voterIds.has(p.id));
 
+  // Determine who has the most votes for the Heartbeat Tension effect
+  const [leadingVoteGetters, setLeadingVoteGetters] = useState<Set<string>>(new Set());
+  
+  useEffect(() => {
+    const socket = getSocket();
+    const handlePhaseUpdate = (session: any) => {
+      if (session.votes) {
+        const counts: Record<string, number> = {};
+        for (const target of Object.values(session.votes) as string[]) {
+          if (target !== "abstain") {
+            counts[target] = (counts[target] || 0) + 1;
+          }
+        }
+        let maxVotes = 0;
+        let leaders = new Set<string>();
+        for (const [id, count] of Object.entries(counts)) {
+          if (count > maxVotes) {
+            maxVotes = count;
+            leaders = new Set([id]);
+          } else if (count === maxVotes && maxVotes > 0) {
+            leaders.add(id);
+          }
+        }
+        setLeadingVoteGetters(leaders);
+        
+        // Dynamic Vignette for the person receiving the most votes
+        const vignette = document.getElementById("tension-vignette");
+        if (vignette) {
+          if (leaders.has(myId)) {
+            vignette.style.opacity = "1";
+          } else {
+            vignette.style.opacity = "0";
+          }
+        }
+      }
+    };
+    
+    socket.on("phase_update", handlePhaseUpdate);
+    return () => {
+      socket.off("phase_update", handlePhaseUpdate);
+      const vignette = document.getElementById("tension-vignette");
+      if (vignette) vignette.style.opacity = "0";
+    };
+  }, [myId]);
+
   return (
-    <div className="relative min-h-screen w-full flex flex-col" style={{ background: bgTint, color: "hsl(190 80% 90%)" }}>
+    <div className={`relative min-h-screen w-full flex flex-col transition-transform duration-1000 ${votesIn > 0 ? "scale-[1.02]" : "scale-100"} ${isAlien ? "ix-glitch-bg" : ""}`} style={{ background: bgTint, color: "hsl(190 80% 90%)" }}>
+      {/* Alien Corruption Overlays */}
+      {isAlien && (
+        <div className="absolute inset-0 pointer-events-none z-0">
+          <div className="absolute inset-0 opacity-20 mix-blend-overlay" style={{ background: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,0,0,0.2) 2px, rgba(255,0,0,0.2) 4px)" }} />
+          <div className="absolute top-1/4 left-10 opacity-[0.03] font-mono text-8xl text-red-500 font-bold rotate-12 select-none tracking-[0.5em] uppercase">INFEST</div>
+          <div className="absolute bottom-1/4 right-10 opacity-[0.03] font-mono text-8xl text-red-500 font-bold -rotate-12 select-none tracking-[0.5em] uppercase">CONSUME</div>
+        </div>
+      )}
+      
+      <div className="relative z-10 flex flex-col flex-1 h-full">
       {/* Hamburger Menu */}
       <HamburgerMenu
         onShowSettings={() => setShowSettingsModal(true)}
@@ -255,12 +344,16 @@ export default function VotingPage() {
             </div>
             {activePlayers.map((p) => {
               const isSelf = p.id === myId;
+              const isPulsing = leadingVoteGetters.has(p.id) && votesIn > 0;
+              const isTyping = typingUsers.includes(p.name);
+              
               return (
-                <button
+                <HolographicCard
                   key={p.id}
                   data-testid={`vote-player-${p.name}`}
                   onClick={() => { if (!isSelf) { playSciFiClick(); setPendingVote(p.id); } }}
                   disabled={isSelf}
+                  isPulsing={isPulsing}
                   className="w-full py-4 font-orbitron font-bold text-sm tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-150 active:scale-95"
                   style={{
                     background: isSelf ? "hsl(220 28% 8%)" : accentColor.replace(")", " / 0.12)"),
@@ -269,13 +362,20 @@ export default function VotingPage() {
                     cursor: isSelf ? "not-allowed" : "pointer",
                     boxShadow: isSelf ? "none" : `0 0 6px ${accentGlow}`,
                   }}
-                  onMouseEnter={(e) => { if (!isSelf) e.currentTarget.style.boxShadow = `0 0 16px ${accentGlow.replace("0.4", "0.65")}`; }}
-                  onMouseLeave={(e) => { if (!isSelf) e.currentTarget.style.boxShadow = `0 0 6px ${accentGlow}`; }}
+                  onMouseEnter={(e) => { if (!isSelf && !isPulsing) e.currentTarget.style.boxShadow = `0 0 16px ${accentGlow.replace("0.4", "0.65")}`; }}
+                  onMouseLeave={(e) => { if (!isSelf && !isPulsing) e.currentTarget.style.boxShadow = `0 0 6px ${accentGlow}`; }}
                 >
-                  {p.name}
-                  {isSelf ? " (YOU)" : ""}
-                  {/* Status suffixes ([ALIVE]/[ELIMINATED]/[OFFLINE]) disabled for now. */}
-                </button>
+                  <div className="flex items-center justify-center gap-2 relative">
+                    {isTyping && (
+                      <span className="absolute left-[-20px] text-[10px] text-cyan-400 ix-typing-dots">
+                        <span>.</span><span>.</span><span>.</span>
+                      </span>
+                    )}
+                    {p.name}
+                    {isSelf && " (YOU)"}
+                    {isPulsing && <span className="text-[10px] text-red-500 animate-pulse">⚠️ TARGET</span>}
+                  </div>
+                </HolographicCard>
               );
             })}
 
@@ -384,6 +484,7 @@ export default function VotingPage() {
           </div>
         )}
 
+      </div>
       </div>
     </div>
   );

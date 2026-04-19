@@ -277,9 +277,6 @@
     pointer-events: none;
   }
 
-  .no-default-hover-elevate {}
-  .no-default-active-elevate {}
-
   .toggle-elevate::before,
   .toggle-elevate-2::before {
     content: "";
@@ -990,4 +987,39 @@ body[data-chat-open="true"] .ix-player-status-list {
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid hsl(185 100% 50% / 0.15);
   box-shadow: 0 8px 32px 0 hsl(0 0% 0% / 0.3);
+}
+
+/* --- CUSTOM CURSOR --- */
+body:not(.low-graphics),
+body:not(.low-graphics) * {
+  cursor: none !important;
+}
+
+.ix-cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  margin-left: -3px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99999;
+  transition: transform 0.1s ease-out, background-color 0.2s, box-shadow 0.2s;
+}
+
+.ix-cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 32px;
+  height: 32px;
+  margin-top: -16px;
+  margin-left: -16px;
+  border-radius: 50%;
+  border: 1px solid;
+  pointer-events: none;
+  z-index: 99998;
+  transition: transform 0.15s ease-out, border-color 0.2s;
 }

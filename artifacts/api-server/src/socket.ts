@@ -892,6 +892,12 @@ export function attachSocketIO(httpServer: HttpServer) {
         return;
       }
 
+      // Reject messages from eliminated players
+      if (player.alive === false) {
+        ack?.({ success: false, error: "Eliminated players cannot send messages" });
+        return;
+      }
+
       try {
         const inserted = await db
           .insert(gameChatsTable)

@@ -7,6 +7,7 @@ import HamburgerMenu from "@/components/HamburgerMenu";
 import SettingsModal from "@/components/SettingsModal";
 import ProfileModal from "@/components/ProfileModal";
 import { TeamIcon } from "@/components/TeamIcon";
+import ScratchOffCard from "@/components/ScratchOffCard";
 
 function getAssignedRole(): Role {
   const roleId = sessionStorage.getItem("lp_assignedRole");
@@ -25,7 +26,7 @@ function getTotalPlayers(): number {
 
 export default function RoleRevealPage() {
   const [acknowledged, setAcknowledged] = useState(false);
-  const [revealState, setRevealState] = useState<"black" | "flash" | "ready">("black");
+  const [revealState, setRevealState] = useState<"black" | "flash" | "scratch" | "ready">("black");
 
   const role = getAssignedRole();
   const isAlien = role.team === "alien";
@@ -34,17 +35,21 @@ export default function RoleRevealPage() {
     // Brief delay to build tension without feeling broken
     const t1 = setTimeout(() => {
       setRevealState("flash");
-      if (isAlien) {
-        playBassDrop();
-      } else {
-        playSciFiClick(1.0);
-      }
       // Flash lasts 150ms
       setTimeout(() => {
-        setRevealState("ready");
+        setRevealState("scratch");
       }, 150);
     }, 1000);
     return () => clearTimeout(t1);
+  }, []);
+
+  const handleReveal = useCallback(() => {
+    if (isAlien) {
+      playBassDrop();
+    } else {
+      playSciFiClick(1.0);
+    }
+    setRevealState("ready");
   }, [isAlien]);
 
   const [readyCount, setReadyCount] = useState(0);
@@ -234,19 +239,26 @@ export default function RoleRevealPage() {
       </div>
 
       {/* Main content — horizontal on desktop, vertical on mobile */}
-      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden" style={{ minHeight: 0 }}>
+      <ScratchOffCard
+        onReveal={handleReveal}
+        coverColor={bgTint}
+        coverImage={role.image}
+        revealThreshold={0.4}
+        className="flex-1 w-full h-full relative"
+      >
+        <div className="flex flex-col lg:flex-row absolute inset-0 overflow-hidden" style={{ minHeight: 0 }}>
 
-        {/* LEFT — Role image */}
-        <div
-          className="lg:w-96 shrink-0 relative overflow-hidden"
-          style={{
-            minHeight: "260px",
-            opacity: revealState === "ready" ? 1 : 0,
-            transform: revealState === "ready" ? "rotateY(0deg) scale(1)" : "rotateY(16deg) scale(0.96)",
-            transformOrigin: "left center",
-            transition: "opacity 360ms ease, transform 560ms cubic-bezier(0.22, 1, 0.36, 1)",
-          }}
-        >
+          {/* LEFT — Role image */}
+          <div
+            className="lg:w-96 shrink-0 relative overflow-hidden"
+            style={{
+              minHeight: "260px",
+              opacity: revealState === "ready" ? 1 : 0.4,
+              transform: revealState === "ready" ? "rotateY(0deg) scale(1)" : "rotateY(16deg) scale(0.96)",
+              transformOrigin: "left center",
+              transition: "opacity 360ms ease, transform 560ms cubic-bezier(0.22, 1, 0.36, 1)",
+            }}
+          >
           <img
             src={role.image}
             alt={role.name}
@@ -269,6 +281,7 @@ export default function RoleRevealPage() {
             opacity: revealState === "ready" ? 1 : 0,
             transform: revealState === "ready" ? "translateY(0px)" : "translateY(18px)",
             transition: "opacity 420ms ease 120ms, transform 520ms cubic-bezier(0.22, 1, 0.36, 1) 120ms",
+            pointerEvents: revealState === "ready" ? "auto" : "none",
           }}
         >
 
@@ -387,34 +400,40 @@ export default function RoleRevealPage() {
           )}
 
           {/* Acknowledge button — desktop (inline) */}
-          <div className="hidden lg:block">
-            <AcknowledgeButton
-              acknowledged={acknowledged}
-              accentColor={accentColor}
-              accentColorLight={accentColorLight}
-              accentGlow={accentGlow}
-              onAcknowledge={handleAcknowledge}
-            />
+          <div className={`hidden lg:block transition-opacity duration-500 delay-300 ${revealState === "ready" ? "opacity-100" : "opacity-0"}`}>
+            {revealState === "ready" && (
+              <AcknowledgeButton
+                acknowledged={acknowledged}
+                accentColor={accentColor}
+                accentColorLight={accentColorLight}
+                accentGlow={accentGlow}
+                onAcknowledge={handleAcknowledge}
+              />
+            )}
           </div>
         </div>
-      </div>
+        </div>
+      </ScratchOffCard>
 
       {/* Acknowledge button — mobile (fixed bottom) */}
       <div
-        className="lg:hidden fixed bottom-0 left-0 right-0 px-6 py-4 border-t"
+        className={`lg:hidden fixed bottom-0 left-0 right-0 px-6 py-4 border-t transition-transform duration-500 delay-300 ${revealState === "ready" ? "translate-y-0" : "translate-y-full"}`}
         style={{
           background: bgTint,
           borderColor: `${accentColor.replace(")", " / 0.2)")}`,
           backdropFilter: "blur(8px)",
+          zIndex: 60,
         }}
       >
-        <AcknowledgeButton
-          acknowledged={acknowledged}
-          accentColor={accentColor}
-          accentColorLight={accentColorLight}
-          accentGlow={accentGlow}
-          onAcknowledge={handleAcknowledge}
-        />
+        {revealState === "ready" && (
+          <AcknowledgeButton
+            acknowledged={acknowledged}
+            accentColor={accentColor}
+            accentColorLight={accentColorLight}
+            accentGlow={accentGlow}
+            onAcknowledge={handleAcknowledge}
+          />
+        )}
       </div>
     </div>
   );

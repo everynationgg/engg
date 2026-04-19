@@ -59,6 +59,8 @@ export default function DiscussionPage() {
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [roomCopyFeedback, setRoomCopyFeedback] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(120);
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
+  const typingTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -66,6 +68,37 @@ export default function DiscussionPage() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const socket = getSocket();
+    const onChatTyping = (evt: { gameId: string; username: string; isTyping: boolean }) => {
+      if (evt.gameId !== roomCode) return;
+      if (!evt.username) return;
+
+      if (evt.isTyping) {
+        setTypingUsers((prev) => (prev.includes(evt.username) ? prev : [...prev, evt.username]));
+        const prevTimer = typingTimeoutsRef.current.get(evt.username);
+        if (prevTimer) clearTimeout(prevTimer);
+        const timer = setTimeout(() => {
+          setTypingUsers((prev) => prev.filter((u) => u !== evt.username));
+          typingTimeoutsRef.current.delete(evt.username);
+        }, 2500);
+        typingTimeoutsRef.current.set(evt.username, timer);
+      } else {
+        const prevTimer = typingTimeoutsRef.current.get(evt.username);
+        if (prevTimer) clearTimeout(prevTimer);
+        typingTimeoutsRef.current.delete(evt.username);
+        setTypingUsers((prev) => prev.filter((u) => u !== evt.username));
+      }
+    };
+
+    socket.on("chat_typing", onChatTyping);
+    return () => {
+      socket.off("chat_typing", onChatTyping);
+      for (const timer of typingTimeoutsRef.current.values()) clearTimeout(timer);
+      typingTimeoutsRef.current.clear();
+    };
+  }, [roomCode]);
 
   const handleCopyRoomCode = useCallback(() => {
     playSciFiClick();
@@ -199,7 +232,7 @@ export default function DiscussionPage() {
 
   return (
     <div
-      className="relative min-h-screen w-full flex flex-col"
+      className={`relative min-h-screen w-full flex flex-col ${isAlien ? "ix-glitch-bg" : ""}`}
       style={{
         backgroundImage: `linear-gradient(${bgOverlay}, ${bgOverlay}), url('${import.meta.env.BASE_URL}moon-phases.webp')`,
         backgroundSize: "cover",
@@ -208,6 +241,16 @@ export default function DiscussionPage() {
         color: "hsl(190 80% 90%)",
       }}
     >
+      {/* Alien Corruption Overlays */}
+      {isAlien && (
+        <div className="absolute inset-0 pointer-events-none z-0">
+          <div className="absolute inset-0 opacity-20 mix-blend-overlay" style={{ background: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,0,0,0.2) 2px, rgba(255,0,0,0.2) 4px)" }} />
+          <div className="absolute top-1/4 left-10 opacity-[0.03] font-mono text-8xl text-red-500 font-bold rotate-12 select-none tracking-[0.5em] uppercase">INFEST</div>
+          <div className="absolute bottom-1/4 right-10 opacity-[0.03] font-mono text-8xl text-red-500 font-bold -rotate-12 select-none tracking-[0.5em] uppercase">CONSUME</div>
+        </div>
+      )}
+      
+      <div className="relative z-10 flex flex-col flex-1 h-full">
       {/* Hamburger Menu */}
       <HamburgerMenu
         onShowSettings={() => setShowSettingsModal(true)}
@@ -341,15 +384,24 @@ export default function DiscussionPage() {
             CREW MANIFEST — {sessionPlayers.length} ABOARD
           </div>
           <div className="flex flex-col gap-2">
-            {sessionPlayers.map((p) => (
+            {sessionPlayers.map((p) => {
+              const isTyping = typingUsers.includes(p.name);
+              return (
               <div
                 key={p.id}
-                className="flex items-center justify-between px-3 py-2 rounded"
+                className="flex items-center justify-between px-3 py-2 rounded relative"
                 style={{ background: "hsl(220 28% 12%)", border: p.isYou ? `1px solid ${accentColor.replace(")", " / 0.5)")}` : "1px solid hsl(210 30% 16%)" }}
               >
-                <span className="font-orbitron text-sm tracking-wider uppercase" style={{ color: p.isYou ? accentLight : "hsl(190 60% 75%)" }}>
-                  {p.name}
-                </span>
+                <div className="flex items-center gap-2 relative">
+                  {isTyping && (
+                    <span className="absolute left-[-20px] text-[10px] text-cyan-400 ix-typing-dots">
+                      <span>.</span><span>.</span><span>.</span>
+                    </span>
+                  )}
+                  <span className="font-orbitron text-sm tracking-wider uppercase" style={{ color: p.isYou ? accentLight : "hsl(190 60% 75%)" }}>
+                    {p.name}
+                  </span>
+                </div>
                 <div className="flex items-center gap-2">
                   {/* Status chips (alive/connected) intentionally disabled for now. */}
                   {p.isYou && (
@@ -357,7 +409,7 @@ export default function DiscussionPage() {
                   )}
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         </div>
 
@@ -457,6 +509,7 @@ export default function DiscussionPage() {
         }
         .wing-shine { animation: wing-shine 4s ease-in-out infinite; }
       `}</style>
+      </div>
     </div>
   );
 }
