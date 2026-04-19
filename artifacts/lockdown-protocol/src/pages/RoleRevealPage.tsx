@@ -6,6 +6,7 @@ import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } fro
 import HamburgerMenu from "@/components/HamburgerMenu";
 import SettingsModal from "@/components/SettingsModal";
 import ProfileModal from "@/components/ProfileModal";
+import { TeamIcon } from "@/components/TeamIcon";
 
 function getAssignedRole(): Role {
   const roleId = sessionStorage.getItem("lp_assignedRole");
@@ -283,6 +284,7 @@ export default function RoleRevealPage() {
               }}
             >
               {role.team === "alien" ? "ALIEN TEAM" : role.team === "chaotic" ? "CHAOTIC" : "CREW TEAM"}
+              <TeamIcon team={role.team} className="ml-2" />
             </div>
           </div>
 

@@ -7,6 +7,7 @@ interface UserPrefs {
   sfxVolume: number;
   theme: "dark" | "light";
   notificationsEnabled: boolean;
+  colorblindMode: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -109,6 +110,10 @@ export function usePreferences() {
     return updatePreferences({ notificationsEnabled: enabled });
   }, [updatePreferences]);
 
+  const updateColorblindMode = useCallback((enabled: boolean) => {
+    return updatePreferences({ colorblindMode: enabled });
+  }, [updatePreferences]);
+
   // Fetch preferences on mount
   useEffect(() => {
     if (token && !preferences) {
@@ -126,5 +131,6 @@ export function usePreferences() {
     updateSfxVolume,
     updateTheme,
     updateNotifications,
+    updateColorblindMode,
   };
 }

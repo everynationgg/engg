@@ -23,6 +23,7 @@ router.get("/user/preferences", authMiddleware, async (req: AuthRequest, res) =>
         sfxVolume: 70,
         theme: "dark",
         notificationsEnabled: true,
+        colorblindMode: false,
       })
       .onConflictDoUpdate({
         target: userPreferencesTable.userId,
@@ -45,7 +46,7 @@ router.post("/user/preferences", authMiddleware, async (req: AuthRequest, res) =
       return;
     }
 
-    const { musicVolume, sfxVolume, theme, notificationsEnabled } = req.body;
+    const { musicVolume, sfxVolume, theme, notificationsEnabled, colorblindMode } = req.body;
 
     if (musicVolume !== undefined && (musicVolume < 0 || musicVolume > 100)) {
       res.status(400).json({ error: "Music volume must be between 0 and 100" });
@@ -68,6 +69,7 @@ router.post("/user/preferences", authMiddleware, async (req: AuthRequest, res) =
     if (sfxVolume !== undefined) patch.sfxVolume = sfxVolume;
     if (theme !== undefined) patch.theme = theme;
     if (notificationsEnabled !== undefined) patch.notificationsEnabled = notificationsEnabled;
+    if (colorblindMode !== undefined) patch.colorblindMode = colorblindMode;
 
     const [updated] = await db
       .insert(userPreferencesTable)
@@ -77,6 +79,7 @@ router.post("/user/preferences", authMiddleware, async (req: AuthRequest, res) =
         sfxVolume: sfxVolume ?? 70,
         theme: theme ?? "dark",
         notificationsEnabled: notificationsEnabled ?? true,
+        colorblindMode: colorblindMode ?? false,
       })
       .onConflictDoUpdate({
         target: userPreferencesTable.userId,

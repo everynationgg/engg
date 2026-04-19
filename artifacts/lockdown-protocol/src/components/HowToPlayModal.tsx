@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ALIEN_ROLES, CREW_ROLES, CHAOTIC_ROLES, Role } from "@/data/roles";
 import howToPlayImg from "@assets/How_to_Play.webp";
+import { TeamIcon } from "@/components/TeamIcon";
 
 interface HowToPlayModalProps {
   onClose: () => void;
@@ -179,8 +180,8 @@ function PhaseStep({ step, title, children }: { step: number; title: string; chi
 function RoleSection({ team, color, glow, roles }: { team: string; color: string; glow: string; roles: Role[] }) {
   return (
     <div>
-      <h3 className="font-orbitron font-black text-lg tracking-[0.2em] uppercase mb-4 border-b pb-2" style={{ color, borderColor: glow, textShadow: `0 0 10px ${glow}` }}>
-        {team} TEAM
+      <h3 className="font-orbitron font-black text-lg tracking-[0.2em] uppercase mb-4 border-b pb-2 flex items-center" style={{ color, borderColor: glow, textShadow: `0 0 10px ${glow}` }}>
+        {team} TEAM <TeamIcon team={team} className="ml-3" />
       </h3>
       <div className="flex flex-col gap-4">
         {roles.map((role) => (

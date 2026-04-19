@@ -9,10 +9,11 @@ interface SettingsModalProps {
 }
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
-  const { preferences, isLoading, updateMusicVolume, updateSfxVolume, updateNotifications } = usePreferences();
+  const { preferences, isLoading, updateMusicVolume, updateSfxVolume, updateNotifications, updateColorblindMode } = usePreferences();
   const [localMusicVolume, setLocalMusicVolume] = useState(70);
   const [localSfxVolume, setLocalSfxVolume] = useState(70);
   const [localNotifications, setLocalNotifications] = useState(true);
+  const [localColorblindMode, setLocalColorblindMode] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
 
   // Sync local state with preferences
@@ -21,6 +22,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       setLocalMusicVolume(preferences.musicVolume);
       setLocalSfxVolume(preferences.sfxVolume);
       setLocalNotifications(preferences.notificationsEnabled);
+      setLocalColorblindMode(preferences.colorblindMode);
     }
   }, [preferences]);
 
@@ -37,6 +39,9 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       if (localNotifications !== preferences?.notificationsEnabled) {
         updates.notificationsEnabled = localNotifications;
       }
+      if (localColorblindMode !== preferences?.colorblindMode) {
+        updates.colorblindMode = localColorblindMode;
+      }
 
       if (Object.keys(updates).length === 0) {
         setSaveMessage("No changes to save");
@@ -46,7 +51,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
       await updateMusicVolume(localMusicVolume);
       await updateSfxVolume(localSfxVolume);
-      await updateNotifications(localNotifications);
+      if ('notificationsEnabled' in updates) await updateNotifications(localNotifications);
+      if ('colorblindMode' in updates) await updateColorblindMode(localColorblindMode);
 
       setSaveMessage("✓ Settings saved!");
       setTimeout(() => {
@@ -197,6 +203,31 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 </label>
                 <p className="font-orbitron text-xs mt-2" style={{ color: "hsl(210 30% 45%)" }}>
                   Receive alerts for game invites and messages
+                </p>
+              </div>
+
+              {/* Accessibility Settings */}
+              <div className="rounded-lg p-4" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 25%)" }}>
+                <h3 className="font-orbitron font-bold text-lg tracking-[0.2em] uppercase mb-4" style={{ color: "hsl(185 100% 50%)" }}>
+                  👁️ Accessibility
+                </h3>
+
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={localColorblindMode}
+                    onChange={(e) => setLocalColorblindMode(e.target.checked)}
+                    className="w-5 h-5 rounded"
+                    style={{
+                      accentColor: "hsl(185 100% 50%)",
+                    }}
+                  />
+                  <span className="font-orbitron text-xs tracking-[0.1em] uppercase" style={{ color: "hsl(210 30% 60%)" }}>
+                    Colorblind Mode
+                  </span>
+                </label>
+                <p className="font-orbitron text-xs mt-2 leading-relaxed" style={{ color: "hsl(210 30% 45%)" }}>
+                  Adds distinct icons to teams and roles to help differentiate alignments without relying entirely on color.
                 </p>
               </div>
 

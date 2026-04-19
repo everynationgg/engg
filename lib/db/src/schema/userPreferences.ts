@@ -9,6 +9,7 @@ export const userPreferencesTable = pgTable("user_preferences", {
   sfxVolume: integer("sfx_volume").default(70).notNull(),
   theme: text("theme").default("dark").notNull(), // "dark" or "light"
   notificationsEnabled: boolean("notifications_enabled").default(true).notNull(),
+  colorblindMode: boolean("colorblind_mode").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
