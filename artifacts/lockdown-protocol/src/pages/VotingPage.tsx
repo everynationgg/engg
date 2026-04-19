@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getSocket } from "@/lib/socket";
 import { ROLES } from "@/data/roles";
-import { playSciFiClick, playVoteCast } from "@/lib/sound";
+import { playSciFiClick, playMechanicalChunk } from "@/lib/sound";
 import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
 import { isPlayerConnected } from "@/lib/utils";
 import HamburgerMenu from "@/components/HamburgerMenu";
@@ -48,6 +48,14 @@ export default function VotingPage() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
   const [roomCopyFeedback, setRoomCopyFeedback] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(60);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSecondsLeft((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleCopyRoomCode = useCallback(() => {
     playSciFiClick();
@@ -109,7 +117,7 @@ export default function VotingPage() {
     if (votedFor || (targetId !== "abstain" && targetId === myId)) return;
     const socket = getSocket();
     setVotedFor(targetId);
-    playVoteCast();
+    playMechanicalChunk();
     socket.emit("cast_vote", { sessionId: roomCode, targetId });
   };
 
@@ -178,7 +186,12 @@ export default function VotingPage() {
           </button>
         </div>
         <div className="text-right">
-          <div className="text-xs tracking-widest uppercase mb-1" style={{ color: "hsl(210 30% 50%)" }}>Phase</div>
+          <div className="text-xs tracking-widest uppercase mb-1 flex items-center justify-end gap-2" style={{ color: "hsl(210 30% 50%)" }}>
+            Phase
+            <span className={`font-mono ${secondsLeft <= 10 && secondsLeft > 0 ? 'animate-heartbeat text-red-500 font-bold' : secondsLeft === 0 ? 'text-red-500 font-bold' : 'text-[hsl(210,30%,70%)]'}`}>
+              {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, '0')}
+            </span>
+          </div>
           <div className="font-orbitron font-bold text-sm tracking-[0.2em]" style={{ color: accentLight }}>
             VOTING
           </div>
@@ -248,7 +261,7 @@ export default function VotingPage() {
                   data-testid={`vote-player-${p.name}`}
                   onClick={() => { if (!isSelf) { playSciFiClick(); setPendingVote(p.id); } }}
                   disabled={isSelf}
-                  className="w-full py-4 font-orbitron font-bold text-sm tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-150"
+                  className="w-full py-4 font-orbitron font-bold text-sm tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-150 active:scale-95"
                   style={{
                     background: isSelf ? "hsl(220 28% 8%)" : accentColor.replace(")", " / 0.12)"),
                     borderColor: isSelf ? "hsl(210 30% 16%)" : accentColor.replace(")", " / 0.6)"),
@@ -271,7 +284,7 @@ export default function VotingPage() {
               <button
                 data-testid="vote-abstain"
                 onClick={() => { playSciFiClick(); setPendingVote("abstain"); }}
-                className="w-full py-3 font-orbitron font-bold text-xs tracking-[0.25em] uppercase rounded-md border transition-all duration-150"
+                className="w-full py-3 font-orbitron font-bold text-xs tracking-[0.25em] uppercase rounded-md border transition-all duration-150 active:scale-95"
                 style={{
                   background: "hsl(220 28% 8%)",
                   borderColor: "hsl(210 30% 22%)",
@@ -314,7 +327,7 @@ export default function VotingPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => { handleVote(pendingVote); setPendingVote(null); }}
-                className="flex-1 py-3 font-orbitron font-bold text-sm tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-150"
+                className="flex-1 py-3 font-orbitron font-bold text-sm tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-150 active:scale-95"
                 style={{
                   background: accentColor.replace(")", " / 0.18)"),
                   borderColor: accentColor.replace(")", " / 0.7)"),
@@ -329,7 +342,7 @@ export default function VotingPage() {
               </button>
               <button
                 onClick={() => setPendingVote(null)}
-                className="flex-1 py-3 font-orbitron font-bold text-sm tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-150"
+                className="flex-1 py-3 font-orbitron font-bold text-sm tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-150 active:scale-95"
                 style={{
                   background: "hsl(220 28% 8%)",
                   borderColor: "hsl(210 30% 22%)",
@@ -350,7 +363,7 @@ export default function VotingPage() {
             </div>
           </div>
         ) : (
-          <div className="rounded-md p-6 text-center" style={{ background: "hsl(220 28% 10%)", border: `1px solid ${accentColor.replace(")", " / 0.3)")}` }}>
+          <div className="rounded-md p-6 text-center" style={{ background: "hsl(220 28% 10%)", border: `2px solid ${accentColor}`, boxShadow: `0 0 15px ${accentGlow}, inset 0 0 10px ${accentGlow}` }}>
             <div className="font-orbitron font-bold text-sm tracking-[0.25em] uppercase mb-2" style={{ color: accentLight }}>
               {votedFor === "abstain" ? "ABSTAINED" : "VOTE LOCKED"}
             </div>

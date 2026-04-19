@@ -164,18 +164,19 @@ export default function InterruptedPage() {
       <div className="relative z-10 w-full max-w-md flex flex-col items-center gap-6">
         {/* Warning icon + title */}
         <div className="text-center">
-          <div className="text-5xl mb-3">⚠️</div>
+          <div className="text-5xl mb-3 glitch-text" data-text="⚠️">⚠️</div>
           <h1
-            className="font-orbitron font-black text-xl tracking-[0.2em] uppercase"
+            className="font-orbitron font-black text-3xl tracking-[0.2em] uppercase glitch-text"
+            data-text="SIGNAL LOST"
             style={{ color: accentColor }}
           >
-            GAME INTERRUPTED
+            SIGNAL LOST
           </h1>
           <p
             className="mt-2 font-orbitron text-xs tracking-[0.1em]"
             style={{ color: "hsl(50 60% 70%)" }}
           >
-            A player has left the game
+            A player has disconnected from the server.
           </p>
           <p
             className="mt-1 font-orbitron text-[0.6rem] tracking-[0.1em]"

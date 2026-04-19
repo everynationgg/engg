@@ -30,6 +30,47 @@ const PHASE_LABELS: Record<string, string> = {
   interrupted: "Game Interrupted",
 };
 
+const TIMELINE_PHASES = [
+  { id: "role_reveal", label: "ROLES" },
+  { id: "orbit_action", label: "ORBIT" },
+  { id: "discussion", label: "DISCUSS" },
+  { id: "voting", label: "VOTE" },
+  { id: "result", label: "RESULT" }
+];
+
+function PhaseTimeline({ currentPhase }: { currentPhase: string }) {
+  if (currentPhase === "interrupted" || currentPhase === "role_config") return null;
+
+  const effectivePhase = currentPhase === "orbit_resolution" ? "orbit_action" : currentPhase;
+  const currentIndex = TIMELINE_PHASES.findIndex(p => p.id === effectivePhase);
+  if (currentIndex === -1) return null;
+
+  return (
+    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 hidden lg:flex items-center gap-1 pointer-events-none">
+      {TIMELINE_PHASES.map((phase, idx) => {
+        const isActive = idx === currentIndex;
+        const isPast = idx < currentIndex;
+        return (
+          <div key={phase.id} className="flex items-center">
+            <div 
+              className={`text-[0.6rem] tracking-widest uppercase font-orbitron font-bold px-2 py-0.5 rounded transition-all duration-300 ${
+                isActive ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/50 shadow-[0_0_10px_rgba(6,182,212,0.3)]" 
+                : isPast ? "text-cyan-800" 
+                : "text-gray-600/50"
+              }`}
+            >
+              {phase.label}
+            </div>
+            {idx < TIMELINE_PHASES.length - 1 && (
+              <div className={`w-3 h-[1px] mx-1 ${isPast ? "bg-cyan-800" : "bg-gray-600/30"}`} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 /** Shape of the join_session ack response used during reconnect. */
 interface JoinSessionResponse {
   success: boolean;
@@ -347,6 +388,7 @@ export default function GameShell() {
 
   return (
     <>
+      <PhaseTimeline currentPhase={displayedPhase} />
       {renderPhase()}
 
       {/* Player presence overlay — subtle during gameplay, prominent when interrupted */}

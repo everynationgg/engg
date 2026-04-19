@@ -58,6 +58,14 @@ export default function DiscussionPage() {
   const [evLoading, setEvLoading] = useState(false);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [roomCopyFeedback, setRoomCopyFeedback] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(120);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSecondsLeft((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleCopyRoomCode = useCallback(() => {
     playSciFiClick();
@@ -241,7 +249,12 @@ export default function DiscussionPage() {
           </button>
         </div>
         <div className="text-right">
-          <div className="text-xs tracking-widest uppercase mb-1" style={{ color: "hsl(210 30% 50%)" }}>Phase</div>
+          <div className="text-xs tracking-widest uppercase mb-1 flex items-center justify-end gap-2" style={{ color: "hsl(210 30% 50%)" }}>
+            Phase
+            <span className={`font-mono ${secondsLeft <= 10 && secondsLeft > 0 ? 'animate-heartbeat text-red-500 font-bold' : secondsLeft === 0 ? 'text-red-500 font-bold' : 'text-[hsl(210,30%,70%)]'}`}>
+              {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, '0')}
+            </span>
+          </div>
           <div className="font-orbitron font-bold text-sm tracking-[0.2em]" style={{ color: accentLight }}>
             DELIBERATION
           </div>

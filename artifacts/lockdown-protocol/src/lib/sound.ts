@@ -250,3 +250,81 @@ export function playGameOutcome(team: "crew" | "alien" | "tie") {
     }
   });
 }
+
+export function playMechanicalChunk() {
+  if (sfxVolume === 0) return;
+  const v = sfxVolume / 100;
+  debounced("mechanicalChunk", 150, () => {
+    try {
+      const ctx = getAudioContext();
+      const t = ctx.currentTime;
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.type = "square";
+      osc.frequency.setValueAtTime(150, t);
+      osc.frequency.exponentialRampToValueAtTime(40, t + 0.1);
+      
+      gain.gain.setValueAtTime(0.4 * v, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+      
+      osc.start(t);
+      osc.stop(t + 0.15);
+      
+      const bufferSize = ctx.sampleRate * 0.1; 
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      const noiseFilter = ctx.createBiquadFilter();
+      noiseFilter.type = "lowpass";
+      noiseFilter.frequency.value = 1000;
+      
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.3 * v, t);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+      
+      noise.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(ctx.destination);
+      
+      noise.start(t);
+    } catch {}
+  });
+}
+
+export function playBassDrop() {
+  if (sfxVolume === 0) return;
+  const v = sfxVolume / 100;
+  debounced("bassDrop", 2000, () => {
+    try {
+      const ctx = getAudioContext();
+      const t = ctx.currentTime;
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.type = "sine";
+      
+      osc.frequency.setValueAtTime(120, t);
+      osc.frequency.exponentialRampToValueAtTime(30, t + 1.5);
+      
+      gain.gain.setValueAtTime(0.001, t);
+      gain.gain.linearRampToValueAtTime(0.6 * v, t + 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 2.0);
+      
+      osc.start(t);
+      osc.stop(t + 2.0);
+    } catch {}
+  });
+}

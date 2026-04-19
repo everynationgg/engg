@@ -382,7 +382,7 @@ export default function ResultPage() {
                 <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(210 30% 50%)" }}>
                   ELIMINATED
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 animate-airlock-eject">
                   {(() => {
                     const roleDef = ROLES.find((r) => r.id === result.eliminatedRole);
                     return roleDef ? (

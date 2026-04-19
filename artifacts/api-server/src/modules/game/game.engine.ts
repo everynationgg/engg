@@ -1198,7 +1198,7 @@ export function reconnectPlayer(state: GameState, oldId: string, newId: string):
   }
 
   // Remap keyed records
-  const remap = (record: Record<string, unknown>, name: string) => {
+  const remap = (record: any, name: string) => {
     if (record[oldId] !== undefined) {
       record[newId] = record[oldId];
       delete record[oldId];

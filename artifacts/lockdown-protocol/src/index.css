@@ -906,3 +906,88 @@ body[data-chat-open="true"] .ix-player-status-list {
 .ix-card:hover {
   transform: scale(1.02);
 }
+
+/* --- NEW UI/UX INTERACTIONS --- */
+
+/* Glitch text effect for Alien and Interrupted phases */
+.glitch-text {
+  position: relative;
+  display: inline-block;
+  animation: glitch-skew 1.5s infinite linear alternate-reverse;
+}
+
+.glitch-text::before,
+.glitch-text::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.glitch-text::before {
+  left: 2px;
+  text-shadow: -2px 0 red;
+  clip: rect(24px, 550px, 90px, 0);
+  animation: glitch-anim 2.5s infinite linear alternate-reverse;
+}
+
+.glitch-text::after {
+  left: -2px;
+  text-shadow: -2px 0 blue;
+  clip: rect(85px, 550px, 140px, 0);
+  animation: glitch-anim 2s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-anim {
+  0% { clip: rect(10px, 9999px, 86px, 0); }
+  20% { clip: rect(69px, 9999px, 20px, 0); }
+  40% { clip: rect(35px, 9999px, 56px, 0); }
+  60% { clip: rect(84px, 9999px, 14px, 0); }
+  80% { clip: rect(44px, 9999px, 98px, 0); }
+  100% { clip: rect(5px, 9999px, 33px, 0); }
+}
+
+@keyframes glitch-skew {
+  0% { transform: skew(0deg); }
+  20% { transform: skew(-2deg); }
+  40% { transform: skew(2deg); }
+  60% { transform: skew(-1deg); }
+  80% { transform: skew(1deg); }
+  100% { transform: skew(0deg); }
+}
+
+/* Pulsing heartbeat for tension timers */
+.animate-heartbeat {
+  animation: heartbeat 1s infinite cubic-bezier(0.28, 0.84, 0.42, 1);
+}
+
+@keyframes heartbeat {
+  0% { transform: scale(1); opacity: 1; }
+  15% { transform: scale(1.15); opacity: 0.9; }
+  30% { transform: scale(1); opacity: 1; }
+  45% { transform: scale(1.15); opacity: 0.9; }
+  60% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Airlock ejection drifting animation */
+.animate-airlock-eject {
+  animation: airlock-eject 5s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes airlock-eject {
+  0% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
+  20% { transform: translate(20px, -10px) rotate(5deg) scale(0.9); opacity: 0.8; }
+  100% { transform: translate(150px, -50px) rotate(45deg) scale(0.3); opacity: 0; }
+}
+
+/* Glassmorphism panel */
+.glass-panel {
+  background: hsl(220 28% 10% / 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid hsl(185 100% 50% / 0.15);
+  box-shadow: 0 8px 32px 0 hsl(0 0% 0% / 0.3);
+}

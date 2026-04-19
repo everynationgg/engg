@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { ROLES, type Role } from "@/data/roles";
-import { playSciFiClick } from "@/lib/sound";
+import { playSciFiClick, playBassDrop } from "@/lib/sound";
 import { getSocket } from "@/lib/socket";
 import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
 import HamburgerMenu from "@/components/HamburgerMenu";
@@ -24,20 +24,33 @@ function getTotalPlayers(): number {
 
 export default function RoleRevealPage() {
   const [acknowledged, setAcknowledged] = useState(false);
-  const [cinematicReady, setCinematicReady] = useState(false);
+  const [revealState, setRevealState] = useState<"black" | "flash" | "ready">("black");
+
+  const role = getAssignedRole();
+  const isAlien = role.team === "alien";
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setCinematicReady(true);
-    }, 260);
-    return () => clearTimeout(timer);
-  }, []);
+    // 1.5s pitch black delay
+    const t1 = setTimeout(() => {
+      setRevealState("flash");
+      if (isAlien) {
+        playBassDrop();
+      } else {
+        playSciFiClick(1.0);
+      }
+      // Flash lasts 150ms
+      setTimeout(() => {
+        setRevealState("ready");
+      }, 150);
+    }, 1500);
+    return () => clearTimeout(t1);
+  }, [isAlien]);
+
   const [readyCount, setReadyCount] = useState(0);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
 
-  const role = getAssignedRole();
   const playerName = getPlayerName();
   const totalPlayers = getTotalPlayers();
   const roomCode = sessionStorage.getItem("lp_roomCode") || "";
@@ -88,7 +101,6 @@ export default function RoleRevealPage() {
 
   const displayName = role.salutation.replace("{username}", playerName);
 
-  const isAlien = role.team === "alien";
   const isChaotic = role.team === "chaotic";
 
   const accentColor = isAlien
@@ -144,6 +156,19 @@ export default function RoleRevealPage() {
       stopLobbyMusic();
     }
   };
+
+  if (revealState === "black") {
+    return <div className="fixed inset-0 bg-black z-[9999]" />;
+  }
+
+  if (revealState === "flash") {
+    return (
+      <div 
+        className="fixed inset-0 z-[9999]" 
+        style={{ background: isAlien ? "hsl(0 75% 55%)" : "hsl(185 100% 50%)" }} 
+      />
+    );
+  }
 
   return (
     <div
@@ -209,8 +234,8 @@ export default function RoleRevealPage() {
           className="lg:w-96 shrink-0 relative overflow-hidden"
           style={{
             minHeight: "260px",
-            opacity: cinematicReady ? 1 : 0,
-            transform: cinematicReady ? "rotateY(0deg) scale(1)" : "rotateY(16deg) scale(0.96)",
+            opacity: revealState === "ready" ? 1 : 0,
+            transform: revealState === "ready" ? "rotateY(0deg) scale(1)" : "rotateY(16deg) scale(0.96)",
             transformOrigin: "left center",
             transition: "opacity 360ms ease, transform 560ms cubic-bezier(0.22, 1, 0.36, 1)",
           }}
@@ -234,8 +259,8 @@ export default function RoleRevealPage() {
         <div
           className="flex-1 flex flex-col overflow-y-auto px-6 lg:px-10 py-6 lg:py-8 gap-5 pb-28 lg:pb-6"
           style={{
-            opacity: cinematicReady ? 1 : 0,
-            transform: cinematicReady ? "translateY(0px)" : "translateY(18px)",
+            opacity: revealState === "ready" ? 1 : 0,
+            transform: revealState === "ready" ? "translateY(0px)" : "translateY(18px)",
             transition: "opacity 420ms ease 120ms, transform 520ms cubic-bezier(0.22, 1, 0.36, 1) 120ms",
           }}
         >
@@ -264,7 +289,8 @@ export default function RoleRevealPage() {
               YOUR ROLE IS
             </div>
             <div
-              className="font-orbitron font-black text-4xl lg:text-5xl tracking-widest uppercase"
+              className={`font-orbitron font-black text-4xl lg:text-5xl tracking-widest uppercase ${isAlien ? "glitch-text" : ""}`}
+              data-text={role.name}
               style={{
                 color: accentColorLight,
                 textShadow: `0 0 16px ${accentGlow}, 0 0 40px ${accentGlow.replace("0.4", "0.2")}`,
