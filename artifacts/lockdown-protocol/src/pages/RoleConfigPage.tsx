@@ -1135,7 +1135,7 @@ function RolePreview({ role }: { role: Role }) {
         />
         {/* Team badge */}
         <div
-          className="absolute top-2 left-2 lg:top-3 lg:left-3 px-1.5 lg:px-2 py-0.5 rounded font-orbitron text-xs tracking-widest uppercase font-bold"
+          className={`absolute top-2 left-2 lg:top-3 lg:left-3 px-1.5 lg:px-2 py-0.5 rounded font-orbitron text-xs tracking-widest uppercase font-bold team-badge ${role.team}-color`}
           style={{
             background: accentColorDim,
             border: `1px solid ${accentColor}`,

@@ -276,7 +276,7 @@ export default function RoleRevealPage() {
           {/* Alignment badge */}
           <div className="flex items-start">
             <div
-              className="px-3 py-1 rounded font-orbitron text-xs tracking-widest uppercase font-bold"
+              className={`px-3 py-1 rounded font-orbitron text-xs tracking-widest uppercase font-bold team-badge ${role.team}-color`}
               style={{
                 background: accentColorDim,
                 border: `1px solid ${accentColor}`,

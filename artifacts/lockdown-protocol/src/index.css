@@ -1,3 +1,28 @@
+/* === COLORBLIND MODE === */
+.colorblind .crew-color,
+.colorblind .alien-color,
+.colorblind .chaotic-color {
+  /* Use colorblind-safe palettes */
+}
+.colorblind .crew-color {
+  background: #0072B2 !important; /* blue */
+  color: #fff !important;
+  border-color: #005885 !important;
+}
+.colorblind .alien-color {
+  background: #E69F00 !important; /* orange */
+  color: #222 !important;
+  border-color: #b97a00 !important;
+}
+.colorblind .chaotic-color {
+  background: #009E73 !important; /* green */
+  color: #fff !important;
+  border-color: #007a56 !important;
+}
+.colorblind .team-badge {
+  /* Add pattern for extra clarity */
+  background-image: repeating-linear-gradient(135deg, rgba(255,255,255,0.12) 0 4px, transparent 4px 8px);
+}
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -990,10 +1015,7 @@ body[data-chat-open="true"] .ix-player-status-list {
 }
 
 /* --- CUSTOM CURSOR --- */
-body:not(.low-graphics),
-body:not(.low-graphics) * {
-  cursor: none !important;
-}
+/* Custom cursor removed: allow default cursor */
 
 .ix-cursor-dot {
   position: fixed;

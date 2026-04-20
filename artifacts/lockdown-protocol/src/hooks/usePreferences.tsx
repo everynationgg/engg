@@ -35,7 +35,28 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
 
   const fetchPreferences = useCallback(async () => {
     if (!token) {
-      setError("Not authenticated");
+      const localPrefs = localStorage.getItem("lp_guest_preferences");
+      if (localPrefs) {
+        try {
+          const parsed = JSON.parse(localPrefs);
+          setPreferences(parsed);
+          if (parsed.theme) {
+            document.documentElement.classList.remove("dark", "light");
+            document.documentElement.classList.add(parsed.theme);
+          }
+        } catch (e) {
+          // ignore
+        }
+      } else {
+        setPreferences({
+          userId: "guest",
+          musicVolume: 70,
+          sfxVolume: 70,
+          theme: "dark",
+          notificationsEnabled: true,
+          colorblindMode: false,
+        });
+      }
       return;
     }
 
@@ -71,8 +92,22 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
   const updatePreferences = useCallback(
     async (updates: Partial<Omit<UserPrefs, "userId" | "createdAt" | "updatedAt">>) => {
       if (!token) {
-        setError("Not authenticated");
-        return;
+        return new Promise<any>((resolve) => {
+          setPreferences((prev) => {
+            const defaultPrefs: UserPrefs = {
+              userId: "guest",
+              musicVolume: 70,
+              sfxVolume: 70,
+              theme: "dark",
+              notificationsEnabled: true,
+              colorblindMode: false,
+            };
+            const nextPrefs = { ...(prev || defaultPrefs), ...updates } as UserPrefs;
+            localStorage.setItem("lp_guest_preferences", JSON.stringify(nextPrefs));
+            resolve(nextPrefs);
+            return nextPrefs;
+          });
+        });
       }
 
       setIsLoading(true);
@@ -129,12 +164,22 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     return updatePreferences({ colorblindMode: enabled });
   }, [updatePreferences]);
 
+
   // Fetch preferences on mount
   useEffect(() => {
     if (token && !preferences) {
       fetchPreferences();
     }
   }, [token, preferences, fetchPreferences]);
+
+  // Colorblind mode: toggle class on <body>
+  useEffect(() => {
+    if (preferences?.colorblindMode) {
+      document.body.classList.add('colorblind');
+    } else {
+      document.body.classList.remove('colorblind');
+    }
+  }, [preferences?.colorblindMode]);
 
   return (
     <PreferencesContext.Provider

@@ -360,7 +360,7 @@ export default function DiscussionPage() {
                   return (
                     <div
                       key={roleId}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded"
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded team-badge ${r?.team}-color`}
                       style={{ background: "hsl(220 28% 12%)", border: `1px solid ${teamColor.replace(")", " / 0.3)")}` }}
                     >
                       <span className="font-orbitron text-xs tracking-wider uppercase" style={{ color: teamColor }}>

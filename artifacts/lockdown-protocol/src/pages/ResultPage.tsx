@@ -812,7 +812,7 @@ function EjectionCinematic({
               {result.eliminatedName} WAS EJECTED
             </div>
             
-            <div className={`font-orbitron font-bold text-xl tracking-[0.2em] uppercase transition-all duration-1000 flex items-center justify-center gap-3 ${phase >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ color: isAlien ? "hsl(0 75% 60%)" : "hsl(185 100% 60%)" }}>
+            <div className={`font-orbitron font-bold text-xl tracking-[0.2em] uppercase transition-all duration-1000 flex items-center justify-center gap-3 team-badge ${roleDef?.team || 'crew'}-color ${phase >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ color: isAlien ? "hsl(0 75% 60%)" : "hsl(185 100% 60%)" }}>
               THEY WERE {isAlien ? "AN ALIEN" : "A CREWMEMBER"} <TeamIcon team={roleDef?.team || "crew"} />
             </div>
           </div>

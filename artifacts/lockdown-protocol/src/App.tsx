@@ -15,7 +15,7 @@ import JoinPage from "@/pages/JoinPage";
 import GameShell from "@/pages/GameShell";
 import NotFound from "@/pages/not-found";
 import GlobalControls from "@/components/GlobalControls";
-import CustomCursor from "@/components/CustomCursor";
+// ...existing code...
 import ShipOSBoot from "@/components/ShipOSBoot";
 import ParallaxBackground from "@/components/ParallaxBackground";
 
@@ -49,7 +49,7 @@ function Router() {
       <ParallaxBackground />
       {/* This is now the ONLY component controlling lobby-music.mp3 */}
       <GlobalControls />
-      <CustomCursor />
+      {/* <CustomCursor /> removed */}
 
       <Switch>
         <Route path="/" component={LandingPage} />

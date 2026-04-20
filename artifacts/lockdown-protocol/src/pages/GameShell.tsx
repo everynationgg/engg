@@ -423,15 +423,16 @@ export default function GameShell() {
       {/* Phase transition overlay */}
       {transition && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center px-6 ix-backdrop ix-backdrop-blur"
-          style={{ background: "hsl(220 30% 3% / 0.92)", backdropFilter: "blur(3px)" }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center px-6 transition-opacity duration-500 ix-backdrop ix-backdrop-blur"
+          style={{ background: "hsl(220 30% 3% / 0.60)", backdropFilter: "blur(2px)", transition: 'background 0.5s' }}
         >
           <div
             className="rounded-lg px-6 py-5 text-center ix-modal-enter"
             style={{
-              background: "hsl(220 28% 10%)",
-              border: "1px solid hsl(185 100% 50% / 0.45)",
-              boxShadow: "0 0 28px hsl(185 100% 50% / 0.4)",
+              background: "hsl(220 28% 10% / 0.85)",
+              border: "1px solid hsl(185 100% 50% / 0.25)",
+              boxShadow: "0 0 12px hsl(185 100% 50% / 0.18)",
+              transition: 'background 0.5s, box-shadow 0.5s',
             }}
           >
             <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-2" style={{ color: "hsl(210 30% 55%)" }}>
