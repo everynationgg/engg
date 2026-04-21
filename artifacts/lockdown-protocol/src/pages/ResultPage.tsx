@@ -808,13 +808,17 @@ function EjectionCinematic({
               <div className="relative">
                 <video 
                   src={roleDef.video} 
+                  poster={roleDef.image}
                   autoPlay 
                   loop 
                   muted 
                   playsInline
                   className={`w-48 h-48 sm:w-64 sm:h-64 rounded-full object-cover transition-all duration-1000 ${phase >= 1 ? 'animate-airlock-eject-cinematic' : 'opacity-0'}`}
                   style={{ border: `4px solid ${isAlien ? 'hsl(0 75% 55%)' : 'hsl(185 100% 50%)'}`, boxShadow: `0 0 50px ${isAlien ? 'hsl(0 75% 55% / 0.8)' : 'hsl(185 100% 50% / 0.8)'}` }}
-                />
+                  onCanPlay={(e) => e.currentTarget.play()}
+                >
+                  <img src={roleDef.image} alt={roleDef.name} className="w-full h-full rounded-full object-cover" />
+                </video>
                 {/* HUD Overlay on character */}
                 <div className={`absolute inset-0 rounded-full border-[10px] border-black/20 pointer-events-none transition-opacity duration-1000 ${phase >= 1 ? 'opacity-100' : 'opacity-0'}`}>
                   <div className="absolute top-1/2 left-0 w-full h-[2px] bg-red-500/40 animate-scanline" />
