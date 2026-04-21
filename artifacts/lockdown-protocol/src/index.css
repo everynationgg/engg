@@ -1,3 +1,130 @@
+/* Modal and Settings Styles Refactor */
+.ix-modal-bg {
+  border: 1px solid hsl(270 80% 55% / 0.4);
+  box-shadow: 0 0 40px hsl(270 80% 55% / 0.2);
+  background: hsl(220 28% 4%);
+}
+.ix-modal-close {
+  background: hsl(220 28% 10% / 0.9);
+  border: 1px solid hsl(210 30% 25%);
+  color: hsl(190 60% 70%);
+}
+.ix-accent-text {
+  color: hsl(185 100% 50%) !important;
+}
+.ix-label-text {
+  color: hsl(210 30% 60%);
+}
+.ix-desc-text {
+  color: hsl(210 30% 45%);
+}
+.ix-modal-section {
+  background: hsl(220 28% 9%);
+  border: 1px solid hsl(210 30% 25%);
+}
+.ix-modal-divider {
+  border-color: hsl(210 30% 25%);
+}
+.ix-slider {
+  background: linear-gradient(to right, hsl(185 100% 50%) 0%, hsl(185 100% 50%) var(--slider-value, 70)%, hsl(210 30% 25%) var(--slider-value, 70)%, hsl(210 30% 25%) 100%);
+}
+.ix-spinner {
+  border-top-color: hsl(185 100% 50%);
+  border-right-color: hsl(270 70% 60%);
+}
+.ix-save-message {
+  background: hsl(0 70% 20%);
+  color: hsl(0 100% 60%);
+  border: 1px solid hsl(0 100% 40%);
+}
+.ix-save-success {
+  background: hsl(120 70% 20%);
+  color: hsl(120 100% 60%);
+  border: 1px solid hsl(120 100% 40%);
+}
+.ix-save-fail {
+  background: hsl(0 70% 20%);
+  color: hsl(0 100% 60%);
+  border: 1px solid hsl(0 100% 40%);
+}
+.ix-save-btn {
+  background: hsl(120 70% 20%);
+  border-color: hsl(120 100% 40%);
+  color: hsl(120 100% 60%);
+}
+.ix-save-btn:hover {
+  background: hsl(120 75% 25%);
+  box-shadow: 0 0 15px hsl(120 100% 50% / 0.4);
+}
+.ix-close-btn {
+  background: hsl(210 30% 20%);
+  border-color: hsl(210 30% 35%);
+  color: hsl(210 30% 60%);
+}
+.ix-close-btn:hover {
+  background: hsl(210 30% 25%);
+  border-color: hsl(210 30% 50%);
+}
+/* Reduced Motion: disables most transitions/animations */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition: none !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+.reduced-motion *,
+.reduced-motion *::before,
+.reduced-motion *::after {
+  transition: none !important;
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+}
+/* Performance Mode: Low Graphics */
+.low-graphics *,
+.low-graphics *::before,
+.low-graphics *::after {
+  transition: none !important;
+  animation: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+.low-graphics .glitch-text,
+.low-graphics .scanline,
+.low-graphics .ix-glitch-bg,
+.low-graphics .animate-pulse,
+.low-graphics .ix-parallax,
+.low-graphics .ix-tilt,
+.low-graphics .ix-shake,
+.low-graphics .ix-shine,
+.low-graphics .ix-particle,
+.low-graphics .ix-noise,
+.low-graphics .ix-wave,
+.low-graphics .ix-flicker,
+.low-graphics .ix-fade,
+.low-graphics .ix-slide,
+.low-graphics .ix-zoom,
+.low-graphics .ix-spin,
+.low-graphics .ix-loop {
+  animation: none !important;
+  transition: none !important;
+  filter: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+.low-graphics .parallax-bg,
+.low-graphics .holo-card,
+.low-graphics .wing-shine,
+.low-graphics .scanline,
+.low-graphics .glitch-text {
+  animation: none !important;
+  filter: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
 /* === COLORBLIND MODE === */
 .colorblind .crew-color,
 .colorblind .alien-color,

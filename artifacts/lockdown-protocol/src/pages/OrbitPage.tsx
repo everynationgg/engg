@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ROLES, type Role } from "@/data/roles";
+import { getAssignedRole, getRoomCode, getMySocketId } from "@/lib/gameHelpers";
 import { playSciFiClick, playActionConfirm } from "@/lib/sound";
 import { getSocket } from "@/lib/socket";
 import HamburgerMenu from "@/components/HamburgerMenu";
@@ -85,18 +86,7 @@ const ROLE_ORBIT: Record<string, RoleOrbitConfig> = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function getAssignedRole(): Role {
-  const roleId = sessionStorage.getItem("lp_assignedRole");
-  return ROLES.find((r) => r.id === roleId) ?? ROLES[6];
-}
 
-function getRoomCode(): string {
-  return sessionStorage.getItem("lp_roomCode") || "------";
-}
-
-function getMySocketId(): string {
-  return getSocket().id ?? "";
-}
 
 const CENTER_LABELS = ["CARD ALPHA", "CARD BETA", "CARD GAMMA"];
 

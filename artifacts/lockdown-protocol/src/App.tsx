@@ -15,9 +15,9 @@ import JoinPage from "@/pages/JoinPage";
 import GameShell from "@/pages/GameShell";
 import NotFound from "@/pages/not-found";
 import GlobalControls from "@/components/GlobalControls";
-// ...existing code...
 import ShipOSBoot from "@/components/ShipOSBoot";
 import ParallaxBackground from "@/components/ParallaxBackground";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -82,8 +82,10 @@ function App() {
       <AuthProvider>
         <TooltipProvider>
           <PreferencesProvider>
-            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-              <Router />
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}> 
+              <ErrorBoundary>
+                <Router />
+              </ErrorBoundary>
             </WouterRouter>
             <Toaster />
             <SystemToastContainer />

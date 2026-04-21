@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, createContext, useContext } from "react";
 import { useAuth } from "./useAuth";
+import { STORAGE_KEYS, DEFAULTS } from "@/lib/constants";
 
 export interface UserPrefs {
   userId: string;
@@ -35,7 +36,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
 
   const fetchPreferences = useCallback(async () => {
     if (!token) {
-      const localPrefs = localStorage.getItem("lp_guest_preferences");
+      const localPrefs = localStorage.getItem(STORAGE_KEYS.guestPreferences);
       if (localPrefs) {
         try {
           const parsed = JSON.parse(localPrefs);
@@ -50,11 +51,11 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
       } else {
         setPreferences({
           userId: "guest",
-          musicVolume: 70,
-          sfxVolume: 70,
-          theme: "dark",
-          notificationsEnabled: true,
-          colorblindMode: false,
+          musicVolume: DEFAULTS.musicVolume,
+          sfxVolume: DEFAULTS.sfxVolume,
+          theme: DEFAULTS.theme,
+          notificationsEnabled: DEFAULTS.notificationsEnabled,
+          colorblindMode: DEFAULTS.colorblindMode,
         });
       }
       return;
@@ -96,14 +97,14 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
           setPreferences((prev) => {
             const defaultPrefs: UserPrefs = {
               userId: "guest",
-              musicVolume: 70,
-              sfxVolume: 70,
-              theme: "dark",
-              notificationsEnabled: true,
-              colorblindMode: false,
+              musicVolume: DEFAULTS.musicVolume,
+              sfxVolume: DEFAULTS.sfxVolume,
+              theme: DEFAULTS.theme,
+              notificationsEnabled: DEFAULTS.notificationsEnabled,
+              colorblindMode: DEFAULTS.colorblindMode,
             };
             const nextPrefs = { ...(prev || defaultPrefs), ...updates } as UserPrefs;
-            localStorage.setItem("lp_guest_preferences", JSON.stringify(nextPrefs));
+            localStorage.setItem(STORAGE_KEYS.guestPreferences, JSON.stringify(nextPrefs));
             resolve(nextPrefs);
             return nextPrefs;
           });

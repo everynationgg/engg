@@ -33,8 +33,10 @@ const PRIORITY: Record<SystemToastVariant, number> = {
 /* ---- Store (module‑level, framework‑agnostic) ---- */
 
 /** Must match .ix-system-toast--exiting animation duration in index.css */
+import { UI } from "@/lib/constants";
 const TOAST_EXIT_MS = 160;
-const MAX_VISIBLE = 3;
+export const MAX_VISIBLE_TOASTS = UI.toastLimit ?? 3;
+const DEFAULT_TOAST_DURATION = UI.toastDuration ?? 3000;
 const DEDUP_WINDOW_MS = 2000;
 
 let nextId = 0;
@@ -88,7 +90,7 @@ function addToast(
 
   /* --- Evict oldest when we already have MAX_VISIBLE toasts --- */
   const visible = toasts.filter((t) => !t.exiting);
-  if (visible.length >= MAX_VISIBLE) {
+  if (visible.length >= MAX_VISIBLE_TOASTS) {
     // Evict the lowest‑priority (then oldest) non‑exiting toast
     const sorted = [...visible].sort(
       (a, b) => PRIORITY[a.variant] - PRIORITY[b.variant] || a.id - b.id,
@@ -105,7 +107,7 @@ function addToast(
   emit();
 
   // Auto‑dismiss
-  const timer = setTimeout(() => dismissToast(id), duration);
+  const timer = setTimeout(() => dismissToast(id), duration ?? DEFAULT_TOAST_DURATION);
   dismissTimers.set(id, timer);
 
   return id;
@@ -150,7 +152,7 @@ export function systemToast(
   duration?: number,
   group?: string,
 ) {
-  return addToast(message, variant, duration, group);
+  return addToast(message, variant, duration ?? DEFAULT_TOAST_DURATION, group);
 }
 
 /* ---- React component ---- */

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { getSocket } from "@/lib/socket";
 import { ROLES } from "@/data/roles";
+import { getRoomCode, getCallsign, getInitialRoleId, getOrbitResult } from "@/lib/gameHelpers";
 import { playSciFiClick, playEmergencyVoteCalled } from "@/lib/sound";
 import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
 import HamburgerMenu from "@/components/HamburgerMenu";
@@ -17,18 +18,7 @@ interface LivePlayer {
   alive?: boolean;
 }
 
-function getRoomCode(): string {
-  return sessionStorage.getItem("lp_roomCode") || "------";
-}
-function getCallsign(): string {
-  return sessionStorage.getItem("lp_callsign") || "UNKNOWN";
-}
-function getInitialRoleId(): string {
-  return sessionStorage.getItem("lp_assignedRole") || "crew";
-}
-function getOrbitResult(): { type: string; data?: unknown } | null {
-  try { return JSON.parse(sessionStorage.getItem("lp_orbit_result") ?? "null"); } catch { return null; }
-}
+
 
 export default function DiscussionPage() {
   const roomCode = getRoomCode();
