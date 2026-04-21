@@ -242,6 +242,9 @@ export default function PlayerStatusList({ phase, roomCode }: PlayerStatusListPr
             {tag === "safe" && <span className="ml-1.5 text-[0.8rem]">🟢</span>}
             {tag === "unsure" && <span className="ml-1.5 text-[0.8rem]">🟡</span>}
             {tag === "suspect" && <span className="ml-1.5 text-[0.8rem]">🔴</span>}
+            {typingPlayers.has(p.name) && (
+              <span className="ml-2 w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#22d3ee]" title="Typing..." />
+            )}
           </span>
         </div>
       )})}

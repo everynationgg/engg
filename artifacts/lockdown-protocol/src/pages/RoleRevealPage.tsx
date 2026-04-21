@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { motion } from "framer-motion";
 import { ROLES, type Role } from "@/data/roles";
 import { playSciFiClick, playBassDrop } from "@/lib/sound";
 import { getSocket } from "@/lib/socket";

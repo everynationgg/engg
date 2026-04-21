@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useParams } from "wouter";
 import { getSocket, disconnectSocket } from "@/lib/socket";
 import { playPhaseTransition } from "@/lib/sound";
