@@ -247,6 +247,7 @@ export default function RoleRevealPage() {
 
               <video
                 src={role.video}
+                poster={role.image}
                 autoPlay
                 loop
                 muted

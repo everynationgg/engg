@@ -1136,7 +1136,9 @@ function RolePreview({ role }: { role: Role }) {
       <div className="relative w-full aspect-square overflow-hidden shrink-0 p-4">
         <div className="relative w-full h-full rounded-lg border border-white/10 overflow-hidden">
           <video
+            key={role.id}
             src={role.video}
+            poster={role.image}
             autoPlay
             loop
             muted
