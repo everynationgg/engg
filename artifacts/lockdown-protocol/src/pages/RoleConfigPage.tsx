@@ -672,7 +672,7 @@ export default function RoleConfigPage() {
 
           {/* Role summary: only show in lobby, hide after game starts */}
           {showActiveRoles && (
-            <div className="px-4 pt-4 pb-4 border-t" style={{ borderColor: "hsl(210 30% 14%)" }}>
+            <div className="px-4 pt-4 mt-auto pb-4 border-t" style={{ borderColor: "hsl(210 30% 14%)" }}>
               <div className="text-xs tracking-widest uppercase mb-3" style={{ color: "hsl(210 30% 45%)" }}>Active Roles</div>
               <div className="flex flex-col gap-1">
                 {ROLES.filter((r) => (roleCounts[r.id] || 0) > 0).map((r) => (
