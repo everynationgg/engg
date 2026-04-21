@@ -391,8 +391,8 @@ export default function GameShell() {
       <PhaseTimeline currentPhase={displayedPhase} />
       {renderPhase()}
 
-      {/* Player presence overlay — subtle during gameplay, prominent when interrupted */}
-      {displayedPhase !== "role_config" && (
+      {/* Player presence overlay — subtle during gameplay, hidden in lobby since sidebar has a list */}
+      {displayedPhase !== "role_config" && displayedPhase !== "lobby" && (
         <PlayerStatusList phase={displayedPhase} roomCode={roomCode} />
       )}
 
