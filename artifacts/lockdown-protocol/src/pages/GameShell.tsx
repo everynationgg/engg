@@ -16,6 +16,8 @@ import PlayerStatusList from "@/components/PlayerStatusList";
 import HostGameControls from "@/components/HostGameControls";
 import ChatModal from "@/components/ChatModal";
 import FloatingChatButton from "@/components/FloatingChatButton";
+import GlobalHUD from "@/components/GlobalHUD";
+import { AnimatePresence, motion } from "framer-motion";
 
 // Phases that warrant a dramatic countdown overlay before switching
 const DRAMATIC_PHASES = new Set(["voting", "result", "discussion"]);
@@ -100,8 +102,27 @@ export default function GameShell() {
   const [chatOpen, setChatOpen] = useState(false);
   const [chatUnread, setChatUnread] = useState(0);
   const [chatTypingActive, setChatTypingActive] = useState(false);
+  const [isGlitching, setIsGlitching] = useState(false);
+  const touchStartX = useRef<number | null>(null);
 
   const toggleChat = useCallback(() => setChatOpen((o) => !o), []);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    
+    // Swipe left (to the left) -> Open/Close Chat depending on direction
+    if (deltaX < -100) { // Swipe Left
+      if (!chatOpen) setChatOpen(true);
+    } else if (deltaX > 100) { // Swipe Right
+      if (chatOpen) setChatOpen(false);
+    }
+    touchStartX.current = null;
+  };
 
   const prevPhaseRef = useRef<string | null>(null);
   const displayedPhaseRef = useRef<string>(displayedPhase);
@@ -146,6 +167,9 @@ export default function GameShell() {
       const needsDramatic = prevPhase !== null && DRAMATIC_PHASES.has(newPhase) && prevPhase !== "role_config";
 
       if (needsDramatic && !transitionTimeoutRef.current) {
+        setIsGlitching(true);
+        setTimeout(() => setIsGlitching(false), 300);
+
         setTransition({ label: PHASE_LABELS[newPhase] ?? "Next Phase", secondsLeft: 2 });
         transitionTickRef.current = setInterval(() => {
           setTransition((prev) => prev ? { ...prev, secondsLeft: Math.max(1, prev.secondsLeft - 1) } : prev);
@@ -158,6 +182,9 @@ export default function GameShell() {
           setDisplayedPhase(newPhase);
         }, 1400);
       } else if (!transitionTimeoutRef.current) {
+        // Subtle glitch even for non-dramatic transitions
+        setIsGlitching(true);
+        setTimeout(() => setIsGlitching(false), 200);
         setDisplayedPhase(newPhase);
       }
     };
@@ -387,7 +414,28 @@ export default function GameShell() {
   };
 
   return (
-    <>
+    <div 
+      className="relative min-h-screen flex flex-col"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      <GlobalHUD />
+      
+      <AnimatePresence>
+        {isGlitching && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[10000] pointer-events-none mix-blend-screen bg-cyan-500/10 backdrop-invert-[0.05]"
+            style={{
+              backgroundImage: `repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(0,255,255,0.1) 2px, rgba(0,255,255,0.1) 4px)`,
+              backgroundSize: '100% 4px'
+            }}
+          />
+        )}
+      </AnimatePresence>
+
       <PhaseTimeline currentPhase={displayedPhase} />
       {renderPhase()}
 
@@ -447,6 +495,6 @@ export default function GameShell() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
