@@ -671,7 +671,15 @@ export default function RoleConfigPage() {
             <div className="flex flex-col gap-1">
               {ROLES.filter((r) => (roleCounts[r.id] || 0) > 0).map((r) => (
                 <div key={r.id} className="flex items-center justify-between">
-                  <span className="text-xs" style={{ color: r.team === "alien" ? "hsl(270 80% 65%)" : r.team === "chaotic" ? "hsl(300 70% 65%)" : "hsl(185 100% 60%)" }}>
+                  <span
+                    className="text-xs"
+                    style={{
+                      color: r.team === "alien" ? "hsl(270 80% 65%)" : r.team === "chaotic" ? "hsl(300 70% 65%)" : "hsl(185 100% 60%)",
+                      textShadow: "none",
+                      filter: "none",
+                      mixBlendMode: "normal"
+                    }}
+                  >
                     {r.name}
                   </span>
                   <span className="font-orbitron text-xs" style={{ color: "hsl(190 60% 75%)" }}>x{roleCounts[r.id]}</span>
