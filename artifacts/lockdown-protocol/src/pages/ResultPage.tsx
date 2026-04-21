@@ -817,11 +817,11 @@ function EjectionCinematic({
           <div className="absolute w-full h-full pointer-events-none flex items-center justify-center">
             {roleDef && (
               <div 
-                className="relative w-64 h-64 sm:w-80 sm:h-80 flex items-center justify-center"
+                className={`relative w-64 h-64 sm:w-80 sm:h-80 flex items-center justify-center ${phase >= 2 ? 'animate-airlock-eject-cinematic' : ''}`}
                 style={{ 
                   opacity: phase >= 1 ? 1 : 0, 
-                  transform: phase >= 1 ? "scale(1)" : "scale(0.8)",
-                  transition: "all 1s cubic-bezier(0.34, 1.56, 0.64, 1)"
+                  transform: phase === 1 ? "scale(1)" : undefined,
+                  transition: "opacity 1s, transform 1s cubic-bezier(0.34, 1.56, 0.64, 1)"
                 }}
               >
                 {/* Silhouette Fallback (High Contrast) */}
