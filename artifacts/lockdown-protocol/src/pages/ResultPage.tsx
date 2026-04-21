@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { getSocket } from "@/lib/socket";
 import { ROLES } from "@/data/roles";
-import { playGameOutcome, playSciFiClick } from "@/lib/sound";
+import { playGameOutcome, playSciFiClick, playBassDrop } from "@/lib/sound";
 import { useAuth } from "@/hooks/useAuth";
+import { useGameChat } from "@/hooks/useGameChat";
 import { useRecordGameResult, determinePlayerWon, generateGameId } from "@/hooks/useRecordGameResult";
 import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
 import HamburgerMenu from "@/components/HamburgerMenu";
@@ -97,6 +98,7 @@ export default function ResultPage() {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
+  const { messages } = useGameChat(roomCode);
   const [revealedVoteRows, setRevealedVoteRows] = useState(0);
   const [revealedCountRows, setRevealedCountRows] = useState(0);
   const [showWinParticles, setShowWinParticles] = useState(false);
@@ -719,7 +721,14 @@ export default function ResultPage() {
       </div>
       
       {result && !cinematicPlayed && (
-        <EjectionCinematic result={result} onComplete={handleCinematicComplete} />
+        <EjectionCinematic 
+          result={result} 
+          onComplete={handleCinematicComplete} 
+          lastMessage={(() => {
+            const last = messages.filter(m => m.type === 'player' && m.username === result.eliminatedName).pop();
+            return last?.type === 'player' ? last.message : undefined;
+          })()}
+        />
       )}
     </div>
   );
@@ -773,9 +782,11 @@ function WinParticles({ hue }: { hue: number }) {
 function EjectionCinematic({
   result,
   onComplete,
+  lastMessage,
 }: {
   result: VoteResult;
   onComplete: () => void;
+  lastMessage?: string;
 }) {
   const [phase, setPhase] = useState(0);
 
@@ -822,12 +833,24 @@ function EjectionCinematic({
                 {/* HUD Overlay on character */}
                 <div className={`absolute inset-0 rounded-full border-[10px] border-black/20 pointer-events-none transition-opacity duration-1000 ${phase >= 1 ? 'opacity-100' : 'opacity-0'}`}>
                   <div className="absolute top-1/2 left-0 w-full h-[2px] bg-red-500/40 animate-scanline" />
+                  {/* Heartbeat pulse */}
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-end gap-0.5 h-4 opacity-40">
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                      <div key={i} className="w-1 bg-red-500 animate-pulse" style={{ height: `${20 + Math.random() * 80}%`, animationDelay: `${i * 0.1}s` }} />
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
           </div>
 
           <div className="mt-48 text-center flex flex-col gap-4">
+            {lastMessage && (
+              <div className={`italic text-sm tracking-widest transition-all duration-1000 ${phase >= 1 ? 'opacity-40' : 'opacity-0'}`} style={{ color: "hsl(190 60% 80%)", fontFamily: "'Exo 2', sans-serif" }}>
+                " {lastMessage.toUpperCase()} "
+                <div className="text-[8px] mt-1 opacity-60">LAST TRANSMISSION RECEIVED</div>
+              </div>
+            )}
             <div className={`font-orbitron font-black text-3xl sm:text-4xl tracking-[0.4em] uppercase transition-all duration-1000 ${phase >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ color: "white", textShadow: `0 0 20px ${isAlien ? 'hsl(0 75% 55%)' : 'hsl(185 100% 50%)'}` }}>
               {result.eliminatedName}
             </div>

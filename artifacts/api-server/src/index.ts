@@ -15,30 +15,39 @@ if (Number.isNaN(port) || port <= 0) {
 const httpServer = http.createServer(app);
 attachSocketIO(httpServer);
 
-// Ensure required DB tables exist before restoring sessions or accepting traffic.
-// Failures are caught inside migrateDb — the server always starts.
-await migrateDb();
-
-// Restore persisted sessions from PostgreSQL into Redis before accepting traffic.
-// Failures are caught inside restoreSessionsFromDb — the server always starts.
-await restoreSessionsFromDb();
-
+// Start listening IMMEDIATELY so Fly.io/health-checks pass.
+// Initialization happens in the background.
 httpServer.listen(port, "0.0.0.0", () => {
-  logger.info({ port }, "Server listening");
+  console.log(`>>> SERVER STARTING ON PORT ${port} (0.0.0.0)`);
+  logger.info({ port }, "Server listening (initial phase)");
 
-  // Log TTS availability so operators can spot a missing key early.
+  // Start initialization tasks in the background so we don't block the health check.
+  (async () => {
+    try {
+      console.log(">>> Starting DB migrations...");
+      await migrateDb();
+      
+      console.log(">>> Restoring sessions from DB...");
+      await restoreSessionsFromDb();
+      
+      console.log(">>> Starting snapshot job...");
+      startSnapshotJob(30_000);
+      
+      console.log(">>> SERVER FULLY INITIALIZED");
+    } catch (err) {
+      console.error("!!! Background initialization failed:", err);
+      logger.error({ err }, "Background initialization failed");
+    }
+  })();
+
+  // Log TTS availability
   if (process.env.OPENAI_API_KEY) {
     logger.info("OpenAI TTS is configured");
   } else {
     logger.warn(
-      "OPENAI_API_KEY is not set — the /api/tts endpoint will return 503. " +
-        "Set it via `fly secrets set OPENAI_API_KEY=sk-...` or in your environment.",
+      "OPENAI_API_KEY is not set — the /api/tts endpoint will return 503.",
     );
   }
-
-  // Start the periodic snapshot job after the server is ready.
-  // Snapshots every 30 s; set to 60_000 to reduce DB writes in low-traffic envs.
-  startSnapshotJob(30_000);
 });
 
 httpServer.on("error", (err) => {
