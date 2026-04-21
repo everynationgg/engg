@@ -817,32 +817,27 @@ function EjectionCinematic({
           <div className="absolute w-full h-full pointer-events-none flex items-center justify-center">
             {roleDef && (
               <div 
-                className={`relative w-48 h-48 sm:w-64 sm:h-64 flex items-center justify-center transition-opacity duration-1000 ${phase >= 1 ? 'animate-airlock-eject-cinematic' : 'opacity-0'}`}
+                className={`relative w-64 h-64 sm:w-80 sm:h-80 flex items-center justify-center transition-all duration-1000 ${phase >= 1 ? 'animate-airlock-eject-cinematic' : 'opacity-0'}`}
               >
-                {/* Silhouette Fallback */}
-                <div className="absolute inset-4 rounded-full bg-cyan-500/20 border border-cyan-500/30" />
+                {/* Silhouette Fallback (Deep background layer) */}
+                <div className="absolute inset-8 rounded-full bg-cyan-400/20 border-2 border-cyan-400/30 animate-pulse" />
                 
-                <video 
-                  src={roleDef.video} 
-                  poster={roleDef.image}
-                  autoPlay 
-                  loop 
-                  muted 
-                  playsInline
-                  className="absolute inset-0 w-full h-full rounded-full object-cover z-10"
-                  style={{ border: `4px solid ${isAlien ? 'hsl(0 75% 55%)' : 'hsl(185 100% 50%)'}`, boxShadow: `0 0 50px ${isAlien ? 'hsl(0 75% 55% / 0.8)' : 'hsl(185 100% 50% / 0.8)'}` }}
-                  onCanPlay={(e) => e.currentTarget.play()}
-                />
-
+                {/* Primary WebP Character Image */}
                 <img 
                   src={roleDef.image} 
-                  alt="" 
-                  className="absolute inset-0 w-full h-full rounded-full object-cover z-0"
+                  alt={roleDef.name} 
+                  className="relative w-full h-full rounded-full object-cover z-10 shadow-[0_0_60px_rgba(0,0,0,0.5)]"
+                  style={{ 
+                    border: `6px solid ${isAlien ? 'hsl(0 75% 55%)' : 'hsl(185 100% 50%)'}`, 
+                    boxShadow: `0 0 70px ${isAlien ? 'hsl(0 75% 60% / 0.8)' : 'hsl(185 100% 60% / 0.8)'}`,
+                    filter: "contrast(1.1) brightness(1.1)"
+                  }}
                 />
 
                 {/* HUD Overlay on character */}
-                <div className="absolute inset-0 rounded-full border-[10px] border-black/20 pointer-events-none z-20">
-                  <div className="absolute top-1/2 left-0 w-full h-[2px] bg-red-500/40 animate-scanline" />
+                <div className="absolute inset-0 rounded-full border-[14px] border-white/10 pointer-events-none z-20">
+                  {/* Scan-line moving across WebP */}
+                  <div className="absolute top-1/2 left-0 w-full h-[3px] bg-red-400/60 animate-scanline shadow-[0_0_10px_red]" />
                 </div>
               </div>
             )}
@@ -886,9 +881,10 @@ function EjectionCinematic({
           100% { transform: scale(1.1) translateX(-5%); }
         }
         @keyframes airlock-eject-cinematic {
-          0% { transform: scale(1.2) translateX(-100vw) rotate(-45deg); opacity: 0; filter: blur(2px); }
-          20% { opacity: 1; filter: blur(0px); transform: scale(1) translateX(-30vw) rotate(-15deg); }
-          80% { opacity: 1; filter: blur(0px); transform: scale(1) translateX(30vw) rotate(15deg); }
+          0% { transform: scale(0.8); opacity: 0; filter: blur(10px); }
+          15% { transform: scale(1.1); opacity: 1; filter: blur(0px); }
+          40% { transform: scale(1); opacity: 1; filter: blur(0px); }
+          50% { transform: scale(1) translateX(0) rotate(0deg); opacity: 1; }
           100% { transform: scale(0.5) translateX(100vw) rotate(120deg); opacity: 0; filter: blur(4px); }
         }
         .animate-airlock-eject-cinematic {
