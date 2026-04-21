@@ -817,27 +817,34 @@ function EjectionCinematic({
           <div className="absolute w-full h-full pointer-events-none flex items-center justify-center">
             {roleDef && (
               <div 
-                className={`relative w-64 h-64 sm:w-80 sm:h-80 flex items-center justify-center transition-all duration-1000 ${phase >= 1 ? 'animate-airlock-eject-cinematic' : 'opacity-0'}`}
+                className="relative w-64 h-64 sm:w-80 sm:h-80 flex items-center justify-center"
+                style={{ 
+                  opacity: phase >= 1 ? 1 : 0, 
+                  transform: phase >= 1 ? "scale(1)" : "scale(0.8)",
+                  transition: "all 1s cubic-bezier(0.34, 1.56, 0.64, 1)"
+                }}
               >
-                {/* Silhouette Fallback (Deep background layer) */}
-                <div className="absolute inset-8 rounded-full bg-cyan-400/20 border-2 border-cyan-400/30 animate-pulse" />
+                {/* Silhouette Fallback (High Contrast) */}
+                <div className="absolute inset-8 rounded-full bg-cyan-500/40 border-4 border-cyan-500/60 shadow-[0_0_30px_cyan]" />
                 
                 {/* Primary WebP Character Image */}
                 <img 
                   src={roleDef.image} 
                   alt={roleDef.name} 
-                  className="relative w-full h-full rounded-full object-cover z-10 shadow-[0_0_60px_rgba(0,0,0,0.5)]"
+                  className="relative w-full h-full rounded-full object-cover z-10"
                   style={{ 
-                    border: `6px solid ${isAlien ? 'hsl(0 75% 55%)' : 'hsl(185 100% 50%)'}`, 
-                    boxShadow: `0 0 70px ${isAlien ? 'hsl(0 75% 60% / 0.8)' : 'hsl(185 100% 60% / 0.8)'}`,
-                    filter: "contrast(1.1) brightness(1.1)"
+                    border: `8px solid ${isAlien ? 'hsl(0 75% 55%)' : 'hsl(185 100% 50%)'}`, 
+                    boxShadow: `0 0 80px ${isAlien ? 'hsl(0 75% 60%)' : 'hsl(185 100% 60%)'}`,
+                    filter: "contrast(1.2) brightness(1.2)"
                   }}
                 />
 
                 {/* HUD Overlay on character */}
-                <div className="absolute inset-0 rounded-full border-[14px] border-white/10 pointer-events-none z-20">
-                  {/* Scan-line moving across WebP */}
-                  <div className="absolute top-1/2 left-0 w-full h-[3px] bg-red-400/60 animate-scanline shadow-[0_0_10px_red]" />
+                <div 
+                  className="absolute inset-0 rounded-full border-[16px] border-white/20 pointer-events-none z-20"
+                  style={{ boxShadow: "inset 0 0 40px rgba(0,0,0,0.8)" }}
+                >
+                  <div className="absolute top-1/2 left-0 w-full h-[4px] bg-red-500/80 shadow-[0_0_15px_red] animate-scanline" />
                 </div>
               </div>
             )}
