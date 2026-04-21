@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import HowToPlayModal from "@/components/HowToPlayModal";
 import { useQuitGame } from "@/components/QuitGameButton";
 import ConfirmModal from "@/components/ConfirmModal";
+import { playMechanicalChunk } from "@/lib/sound";
 
 interface HamburgerMenuProps {
   onShowSettings: () => void;
@@ -34,6 +35,7 @@ export default function HamburgerMenu({
 
   const closeMenu = useCallback(() => {
     if (!menuOpen || menuClosing) return;
+    playMechanicalChunk();
     setMenuClosing(true);
     setTimeout(() => {
       setMenuOpen(false);
@@ -71,6 +73,7 @@ export default function HamburgerMenu({
     if (menuOpen) {
       closeMenu();
     } else {
+      playMechanicalChunk();
       setMenuOpen(true);
     }
   };
@@ -181,8 +184,8 @@ export default function HamburgerMenu({
                   color: item.color,
                   backdropFilter: "blur(6px)",
                   boxShadow: `0 0 15px ${item.color.replace(')', ' / 0.2)')}, inset 0 0 5px ${item.color.replace(')', ' / 0.1)')}`,
-                  transform: menuClosing ? "translate(0px, 0px) scale(0)" : `translate(${x}px, ${y}px) scale(1)`,
-                  transition: `transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) ${menuClosing ? 0 : index * 0.05}s, box-shadow 0.2s, background 0.2s`,
+                  transform: menuClosing ? "translate(0px, 0px) scale(0) rotate(-90deg)" : `translate(${x}px, ${y}px) scale(1) rotate(0deg)`,
+                  transition: `transform 0.4s cubic-bezier(0.19, 1, 0.22, 1) ${menuClosing ? 0 : index * 0.04}s, box-shadow 0.2s, background 0.2s`,
                   opacity: menuClosing ? 0 : 1,
                   transformOrigin: "center"
                 }}

@@ -419,7 +419,7 @@ export default function GameShell() {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      <GlobalHUD />
+      <GlobalHUD isWarping={!!transition} />
       
       <AnimatePresence>
         {isGlitching && (

@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import { ROLES, ALIEN_ROLES, CHAOTIC_ROLES, CREW_ROLES, type Role } from "@/data/roles";
 import { playSciFiClick, playLobbyJoin } from "@/lib/sound";
@@ -634,8 +635,11 @@ export default function RoleConfigPage() {
             )}
             <div className="flex flex-col gap-2">
               {players.map((player) => (
-                <div
+                <motion.div
                   key={player.id}
+                  initial={{ opacity: 0, x: -20, filter: "brightness(2) contrast(2)" }}
+                  animate={{ opacity: 1, x: 0, filter: "brightness(1) contrast(1)" }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
                   className="flex items-center gap-2 px-3 py-2 rounded"
                   style={{ background: "hsl(220 28% 10%)", border: "1px solid hsl(210 30% 15%)" }}
                   data-testid={`player-row-${player.id}`}
@@ -665,7 +669,7 @@ export default function RoleConfigPage() {
                       </button>
                     )}
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>

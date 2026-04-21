@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ROLES, type Role } from "@/data/roles";
 import { getAssignedRole, getRoomCode, getMySocketId } from "@/lib/gameHelpers";
 import { playSciFiClick, playActionConfirm } from "@/lib/sound";
@@ -104,6 +105,7 @@ export default function OrbitPage() {
   const [selectedAction, setSelectedAction] = useState<OrbitActionDef | null>(null);
   const [selectedTargets, setSelectedTargets] = useState<string[]>([]);
   const [orbitInfoData, setOrbitInfoData] = useState<{ type: string; data?: unknown } | null>(null);
+  const [isSurging, setIsSurging] = useState(false);
   const autoSubmittedRef = useRef(false);
 
   // Hamburger menu states
@@ -137,6 +139,10 @@ export default function OrbitPage() {
     const socket = getSocket();
     socket.emit("submit_action", { sessionId: roomCode, action: { type, targets } });
     playActionConfirm();
+    if (type !== "skip" && type !== "passive" && type !== "none") {
+      setIsSurging(true);
+      setTimeout(() => setIsSurging(false), 500);
+    }
     setPageState("waiting");
   }, [roomCode]);
 
@@ -282,7 +288,16 @@ export default function OrbitPage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div
+    <motion.div
+      animate={isSurging ? { 
+        x: [0, -5, 5, -5, 5, 0],
+        filter: [
+          "none", 
+          "drop-shadow(2px 0 0 rgba(255,0,0,0.5)) drop-shadow(-2px 0 0 rgba(0,255,255,0.5))",
+          "none"
+        ]
+      } : { x: 0, filter: "none" }}
+      transition={{ duration: 0.4 }}
       className="min-h-screen w-full flex flex-col relative"
       style={{
         backgroundImage: `linear-gradient(${bgOverlay}, ${bgOverlay}), url('${import.meta.env.BASE_URL}moon-phases.webp')`,
@@ -470,7 +485,7 @@ export default function OrbitPage() {
         )}
 
       </div>
-    </div>
+    </motion.div>
   );
 }
 

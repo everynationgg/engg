@@ -256,6 +256,13 @@ export default function RoleRevealPage() {
                 className="w-full h-full object-contain rounded-lg relative z-0"
                 style={{ background: "black" }}
               />
+              {/* Bio-Scan Overlay */}
+              <motion.div 
+                animate={{ top: ["0%", "100%", "0%"] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                className="absolute left-0 right-0 h-[2px] bg-cyan-400/50 shadow-[0_0_15px_#22d3ee] z-10 pointer-events-none"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/5 to-transparent pointer-events-none z-10" />
             </div>
           </div>
 

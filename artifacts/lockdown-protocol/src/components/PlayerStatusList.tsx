@@ -43,7 +43,9 @@ interface PlayerStatusListProps {
 
 export default function PlayerStatusList({ phase, roomCode }: PlayerStatusListProps) {
   const [players, setPlayers] = useState<PlayerPresence[]>([]);
+  const [typingPlayers, setTypingPlayers] = useState<Set<string>>(new Set());
   const mountedRef = useRef(true);
+  const typingTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   useEffect(() => {
     mountedRef.current = true;
@@ -110,8 +112,37 @@ export default function PlayerStatusList({ phase, roomCode }: PlayerStatusListPr
       );
     };
 
+    const handleChatTyping = (evt: { username: string; isTyping: boolean }) => {
+      if (!mountedRef.current) return;
+      const name = evt.username;
+      if (evt.isTyping) {
+        setTypingPlayers((prev) => new Set([...prev, name]));
+        const prevTimer = typingTimersRef.current.get(name);
+        if (prevTimer) clearTimeout(prevTimer);
+        const timer = setTimeout(() => {
+          setTypingPlayers((prev) => {
+            const next = new Set(prev);
+            next.delete(name);
+            return next;
+          });
+          typingTimersRef.current.delete(name);
+        }, 3000);
+        typingTimersRef.current.set(name, timer);
+      } else {
+        const prevTimer = typingTimersRef.current.get(name);
+        if (prevTimer) clearTimeout(prevTimer);
+        typingTimersRef.current.delete(name);
+        setTypingPlayers((prev) => {
+          const next = new Set(prev);
+          next.delete(name);
+          return next;
+        });
+      }
+    };
+
     socket.on("phase_update", handlePhaseUpdate);
     socket.on("grace_update", handleGraceUpdate);
+    socket.on("chat_typing", handleChatTyping);
 
     // Shared sync helper
     const fetchSession = () => {
@@ -135,6 +166,9 @@ export default function PlayerStatusList({ phase, roomCode }: PlayerStatusListPr
       mountedRef.current = false;
       socket.off("phase_update", handlePhaseUpdate);
       socket.off("grace_update", handleGraceUpdate);
+      socket.off("chat_typing", handleChatTyping);
+      for (const timer of typingTimersRef.current.values()) clearTimeout(timer);
+      typingTimersRef.current.clear();
       clearInterval(pollId);
     };
   }, [roomCode]);
