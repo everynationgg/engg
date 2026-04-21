@@ -816,9 +816,11 @@ function EjectionCinematic({
           {/* Character drifting across screen */}
           <div className="absolute w-full h-full pointer-events-none flex items-center justify-center">
             {roleDef && (
-              <div className="relative w-48 h-48 sm:w-64 sm:h-64 flex items-center justify-center">
-                {/* Silhouette Fallback (shows if image/video fail) */}
-                <div className="absolute inset-4 rounded-full bg-cyan-500/10 animate-pulse border border-cyan-500/20" />
+              <div 
+                className={`relative w-48 h-48 sm:w-64 sm:h-64 flex items-center justify-center transition-opacity duration-1000 ${phase >= 1 ? 'animate-airlock-eject-cinematic' : 'opacity-0'}`}
+              >
+                {/* Silhouette Fallback */}
+                <div className="absolute inset-4 rounded-full bg-cyan-500/20 border border-cyan-500/30" />
                 
                 <video 
                   src={roleDef.video} 
@@ -827,27 +829,20 @@ function EjectionCinematic({
                   loop 
                   muted 
                   playsInline
-                  className={`absolute inset-0 w-full h-full rounded-full object-cover transition-all duration-1000 z-10 ${phase >= 1 ? 'animate-airlock-eject-cinematic' : 'opacity-0'}`}
+                  className="absolute inset-0 w-full h-full rounded-full object-cover z-10"
                   style={{ border: `4px solid ${isAlien ? 'hsl(0 75% 55%)' : 'hsl(185 100% 50%)'}`, boxShadow: `0 0 50px ${isAlien ? 'hsl(0 75% 55% / 0.8)' : 'hsl(185 100% 50% / 0.8)'}` }}
                   onCanPlay={(e) => e.currentTarget.play()}
                 />
 
-                {/* Fail-safe Image (Absolute fallback) */}
                 <img 
                   src={roleDef.image} 
                   alt="" 
-                  className={`absolute inset-0 w-full h-full rounded-full object-cover transition-all duration-1000 z-0 ${phase >= 1 ? 'animate-airlock-eject-cinematic' : 'opacity-0'}`}
+                  className="absolute inset-0 w-full h-full rounded-full object-cover z-0"
                 />
 
                 {/* HUD Overlay on character */}
-                <div className={`absolute inset-0 rounded-full border-[10px] border-black/20 pointer-events-none transition-opacity duration-1000 z-20 ${phase >= 1 ? 'opacity-100' : 'opacity-0'}`}>
+                <div className="absolute inset-0 rounded-full border-[10px] border-black/20 pointer-events-none z-20">
                   <div className="absolute top-1/2 left-0 w-full h-[2px] bg-red-500/40 animate-scanline" />
-                  {/* Heartbeat pulse */}
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-end gap-0.5 h-4 opacity-40">
-                    {[1, 2, 3, 4, 5, 6].map(i => (
-                      <div key={i} className="w-1 bg-red-500 animate-pulse" style={{ height: `${20 + Math.random() * 80}%`, animationDelay: `${i * 0.1}s` }} />
-                    ))}
-                  </div>
                 </div>
               </div>
             )}
