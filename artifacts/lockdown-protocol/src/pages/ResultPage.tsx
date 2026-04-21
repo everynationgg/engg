@@ -405,23 +405,30 @@ export default function ResultPage() {
 
             {/* Eliminated player */}
             {result.eliminatedId ? (
-              <div className="rounded-md p-4" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 18%)" }}>
-                <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(210 30% 50%)" }}>
-                  ELIMINATED
+              <div className="rounded-md p-4 relative overflow-hidden" style={{ background: "hsl(0 40% 12% / 0.5)", border: "1px solid hsl(0 75% 45% / 0.6)", boxShadow: "0 0 20px hsl(0 75% 55% / 0.2)" }}>
+                {/* Glitchy stamp overlay */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-[-15deg] border-4 border-red-600/80 px-6 py-2 font-orbitron font-black text-3xl text-red-600/80 tracking-[0.3em] uppercase pointer-events-none z-10 select-none">
+                  EJECTED
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(0 75% 60%)" }}>
+                  TERMINATED SUBJECT
+                </div>
+                <div className="flex items-center gap-4 relative">
                   {(() => {
                     const roleDef = ROLES.find((r) => r.id === result.eliminatedRole);
                     return roleDef ? (
-                      <img src={roleDef.image} alt={roleDef.name} className="w-14 h-14 rounded-md object-cover shrink-0" loading="lazy" style={{ border: "1px solid hsl(210 30% 25%)" }} />
+                      <div className="relative w-16 h-16 shrink-0">
+                        <img src={roleDef.image} alt={roleDef.name} className="w-full h-full rounded-md object-cover" loading="lazy" style={{ border: "1px solid hsl(0 75% 45%)" }} />
+                        <div className="absolute inset-0 bg-red-900/20 mix-blend-color" />
+                      </div>
                     ) : null;
                   })()}
                   <div>
-                    <div className="font-orbitron font-black text-xl tracking-widest uppercase" style={{ color: "hsl(190 80% 85%)" }}>
+                    <div className="font-orbitron font-black text-xl tracking-widest uppercase" style={{ color: "hsl(0 75% 85%)" }}>
                       {result.eliminatedName}
                     </div>
-                    <div className="text-xs tracking-widest uppercase mt-1" style={{ color: "hsl(210 30% 50%)" }}>
-                      ROLE: <span className="font-orbitron font-bold" style={{ color: bannerColor }}>
+                    <div className="text-xs tracking-widest uppercase mt-1" style={{ color: "hsl(0 75% 60%)" }}>
+                      ROLE: <span className="font-orbitron font-bold" style={{ color: "white" }}>
                         {ROLES.find((r) => r.id === result.eliminatedRole)?.name?.toUpperCase() ?? result.eliminatedRole?.toUpperCase()}
                       </span>
                     </div>
@@ -502,7 +509,7 @@ export default function ResultPage() {
                           </span>
                           {/* Alive/eliminated badge intentionally disabled for now. */}
                           {isEliminated && (
-                            <span className="text-xs shrink-0" style={{ color: "hsl(0 60% 50%)" }}>✕</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-950/40 border border-red-500/50 text-red-400 font-orbitron font-bold tracking-widest uppercase scale-75 origin-right">EJECTED</span>
                           )}
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
@@ -798,22 +805,36 @@ function EjectionCinematic({
           {/* Character drifting across screen */}
           <div className="absolute w-full h-full pointer-events-none flex items-center justify-center">
             {roleDef && (
-              <img 
-                src={roleDef.image} 
-                alt={roleDef.name}
-                className={`w-32 h-32 rounded-lg object-cover transition-all ${phase >= 1 ? 'animate-airlock-eject-cinematic' : 'opacity-0'}`}
-                style={{ border: `2px solid ${isAlien ? 'hsl(0 75% 55%)' : 'hsl(185 100% 50%)'}`, boxShadow: `0 0 30px ${isAlien ? 'hsl(0 75% 55% / 0.5)' : 'hsl(185 100% 50% / 0.5)'}` }}
-              />
+              <div className="relative">
+                <video 
+                  src={roleDef.video} 
+                  autoPlay 
+                  loop 
+                  muted 
+                  playsInline
+                  className={`w-48 h-48 sm:w-64 sm:h-64 rounded-full object-cover transition-all duration-1000 ${phase >= 1 ? 'animate-airlock-eject-cinematic' : 'opacity-0'}`}
+                  style={{ border: `4px solid ${isAlien ? 'hsl(0 75% 55%)' : 'hsl(185 100% 50%)'}`, boxShadow: `0 0 50px ${isAlien ? 'hsl(0 75% 55% / 0.8)' : 'hsl(185 100% 50% / 0.8)'}` }}
+                />
+                {/* HUD Overlay on character */}
+                <div className={`absolute inset-0 rounded-full border-[10px] border-black/20 pointer-events-none transition-opacity duration-1000 ${phase >= 1 ? 'opacity-100' : 'opacity-0'}`}>
+                  <div className="absolute top-1/2 left-0 w-full h-[2px] bg-red-500/40 animate-scanline" />
+                </div>
+              </div>
             )}
           </div>
 
           <div className="mt-48 text-center flex flex-col gap-4">
-            <div className={`font-orbitron font-black text-2xl tracking-[0.3em] uppercase transition-all duration-1000 ${phase >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ color: "hsl(190 80% 90%)" }}>
-              {result.eliminatedName} WAS EJECTED
+            <div className={`font-orbitron font-black text-3xl sm:text-4xl tracking-[0.4em] uppercase transition-all duration-1000 ${phase >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ color: "white", textShadow: `0 0 20px ${isAlien ? 'hsl(0 75% 55%)' : 'hsl(185 100% 50%)'}` }}>
+              {result.eliminatedName}
+            </div>
+            <div className={`font-orbitron font-bold text-lg tracking-[0.2em] uppercase transition-all duration-1000 ${phase >= 1 ? 'opacity-80' : 'opacity-0'}`} style={{ color: "hsl(0 0% 80%)" }}>
+              WAS EJECTED FROM THE SHIP
             </div>
             
-            <div className={`font-orbitron font-bold text-xl tracking-[0.2em] uppercase transition-all duration-1000 flex items-center justify-center gap-3 team-badge ${roleDef?.team || 'crew'}-color ${phase >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ color: isAlien ? "hsl(0 75% 60%)" : "hsl(185 100% 60%)" }}>
-              THEY WERE {isAlien ? "AN ALIEN" : "A CREWMEMBER"} <TeamIcon team={roleDef?.team || "crew"} />
+            <div className={`mt-4 font-orbitron font-bold text-xl tracking-[0.3em] uppercase transition-all duration-1000 flex items-center justify-center gap-4 ${phase >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ color: isAlien ? "hsl(0 75% 60%)" : "hsl(185 100% 60%)" }}>
+              <span className="w-12 h-[1px] bg-current opacity-30" />
+              {isAlien ? "AN ALIEN" : "A CREWMEMBER"}
+              <span className="w-12 h-[1px] bg-current opacity-30" />
             </div>
           </div>
         </div>
