@@ -9,6 +9,17 @@ import disruptorImg from "@assets/role-disruptor_1776003488684.webp";
 import shifterImg from "@assets/role-shifter_1776003488682.webp";
 import warperImg from "@assets/role-warper_1776003488682.webp";
 
+import alienVid from "@assets/role-alien.webm";
+import parasiteVid from "@assets/role-parasite.webm";
+import commanderVid from "@assets/role-commander.webm";
+import crewVid from "@assets/role-crew.webm";
+import sentinelVid from "@assets/role-sentinel.webm";
+import scannerVid from "@assets/role-scanner.webm";
+import seekerVid from "@assets/role-seeker.webm";
+import disruptorVid from "@assets/role-disruptor.webm";
+import shifterVid from "@assets/role-shifter.webm";
+import warperVid from "@assets/role-warper.webm";
+
 export type RoleTeam = "alien" | "crew" | "chaotic";
 
 export interface Role {
@@ -17,6 +28,7 @@ export interface Role {
   team: RoleTeam;
   alignment: string;
   image: string;
+  video: string;
   winCondition: string;
   ability: string;
   notes: string;
@@ -32,6 +44,7 @@ export const ROLES: Role[] = [
     team: "alien",
     alignment: "Alien Team",
     image: alienImg,
+    video: alienVid,
     winCondition: "Do not get voted out",
     ability: "View 1 center card",
     notes: "None",
@@ -45,6 +58,7 @@ export const ROLES: Role[] = [
     team: "alien",
     alignment: "Alien Team",
     image: parasiteImg,
+    video: parasiteVid,
     winCondition: "Get voted out",
     ability: "See Alien(s)",
     notes: "Alien cannot see you",
@@ -58,6 +72,7 @@ export const ROLES: Role[] = [
     team: "chaotic",
     alignment: "Chaotic",
     image: disruptorImg,
+    video: disruptorVid,
     winCondition: "Depends on chosen alignment",
     ability: "Block 1 player's ability",
     notes: "None",
@@ -71,6 +86,7 @@ export const ROLES: Role[] = [
     team: "chaotic",
     alignment: "Chaotic",
     image: shifterImg,
+    video: shifterVid,
     winCondition: "Depends on chosen alignment",
     ability: "Steal another player's role",
     notes: "None",
@@ -84,6 +100,7 @@ export const ROLES: Role[] = [
     team: "chaotic",
     alignment: "Chaotic",
     image: warperImg,
+    video: warperVid,
     winCondition: "Depends on chosen alignment",
     ability: "Swap 2 players' roles",
     notes: "None",
@@ -97,6 +114,7 @@ export const ROLES: Role[] = [
     team: "crew",
     alignment: "Crew Team",
     image: commanderImg,
+    video: commanderVid,
     winCondition: "Eliminate Alien",
     ability: "Obtain +1 additional vote",
     notes: "Activate during the ability phase. If blocked, bonus is lost.",
@@ -110,6 +128,7 @@ export const ROLES: Role[] = [
     team: "crew",
     alignment: "Crew Team",
     image: crewImg,
+    video: crewVid,
     winCondition: "Eliminate Alien",
     ability: "None",
     notes: "None",
@@ -123,6 +142,7 @@ export const ROLES: Role[] = [
     team: "crew",
     alignment: "Crew Team",
     image: sentinelImg,
+    video: sentinelVid,
     winCondition: "Eliminate Alien",
     ability: "See all actions affecting 1 player in order",
     notes: "None",
@@ -136,6 +156,7 @@ export const ROLES: Role[] = [
     team: "crew",
     alignment: "Crew Team",
     image: scannerImg,
+    video: scannerVid,
     winCondition: "Eliminate Alien",
     ability: "View 2 center cards OR view 1 player's original role",
     notes: "Cannot be blocked",
@@ -149,6 +170,7 @@ export const ROLES: Role[] = [
     team: "crew",
     alignment: "Crew Team",
     image: seekerImg,
+    video: seekerVid,
     winCondition: "Eliminate Alien",
     ability: "Learn if a player is Good or Bad",
     notes: "None",

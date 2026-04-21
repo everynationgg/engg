@@ -133,9 +133,11 @@ export default function RoleConfigPage() {
       // Store role assignment when server transitions to role_reveal or any later
       // in-game phase (covers reconnect scenarios where phase is already past role_reveal)
       if (session.phase !== "role_config") {
-        const myRole = session.rolesAssigned[mySocketId ?? ""];
-        if (myRole) {
-          sessionStorage.setItem("lp_assignedRole", myRole);
+        if (session.rolesAssigned && mySocketId) {
+          const myRole = session.rolesAssigned[mySocketId];
+          if (myRole) {
+            sessionStorage.setItem("lp_assignedRole", myRole);
+          }
         }
         sessionStorage.setItem("lp_totalPlayers", String(session.players.length));
       }
@@ -478,7 +480,7 @@ export default function RoleConfigPage() {
       <HamburgerMenu
         onShowSettings={() => setShowSettingsModal(true)}
         onShowProfile={() => setShowProfileModal(true)}
-        onShowHowToPlay={() => {}} // No how to play in role config
+        onShowHowToPlay={() => { }} // No how to play in role config
         musicOn={musicOn}
         onToggleMusic={handleToggleMusic}
         playSound={playSciFiClick}
@@ -1006,14 +1008,14 @@ function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRe
     role.team === "alien"
       ? "hsl(270 80% 55%)"
       : role.team === "chaotic"
-      ? "hsl(300 70% 50%)"
-      : "hsl(185 100% 50%)";
+        ? "hsl(300 70% 50%)"
+        : "hsl(185 100% 50%)";
   const accentColorLight =
     role.team === "alien"
       ? "hsl(270 80% 70%)"
       : role.team === "chaotic"
-      ? "hsl(300 70% 65%)"
-      : "hsl(185 100% 70%)";
+        ? "hsl(300 70% 65%)"
+        : "hsl(185 100% 70%)";
 
   return (
     <div
@@ -1127,8 +1129,8 @@ function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRe
           minWidth: "170px",
           maxWidth: "220px",
           background: "hsl(220 28% 8% / 0.97)",
-          border: `1px solid ${accentColor.replace(")", " / 0.55)")}`,
-          boxShadow: `0 0 16px ${accentColor.replace(")", " / 0.25)")}`,
+          border: `1px solid ${accentColor.replace(")", " / 0.55")}`,
+          boxShadow: `0 0 16px ${accentColor.replace(")", " / 0.25")}`,
           borderRadius: "8px",
           padding: "8px",
         }}
@@ -1149,44 +1151,43 @@ function RolePreview({ role }: { role: Role }) {
     role.team === "alien"
       ? "hsl(270 80% 55%)"
       : role.team === "chaotic"
-      ? "hsl(300 70% 50%)"
-      : "hsl(185 100% 50%)";
+        ? "hsl(300 70% 50%)"
+        : "hsl(185 100% 50%)";
   const accentColorLight =
     role.team === "alien"
       ? "hsl(270 80% 70%)"
       : role.team === "chaotic"
-      ? "hsl(300 70% 65%)"
-      : "hsl(185 100% 70%)";
+        ? "hsl(300 70% 65%)"
+        : "hsl(185 100% 70%)";
   const accentColorDim =
     role.team === "alien"
       ? "hsl(270 80% 55% / 0.25)"
       : role.team === "chaotic"
-      ? "hsl(300 70% 50% / 0.25)"
-      : "hsl(185 100% 50% / 0.25)";
+        ? "hsl(300 70% 50% / 0.25)"
+        : "hsl(185 100% 50% / 0.25)";
   const teamLabel =
     role.team === "alien" ? "ALIEN TEAM" : role.team === "chaotic" ? "CHAOTIC" : "CREW TEAM";
 
   return (
     <div className="flex flex-row lg:flex-col h-full">
-      {/* Role image — small fixed square on mobile, full-width on desktop */}
-      <div className="relative w-32 h-32 lg:w-full lg:h-auto lg:aspect-square overflow-hidden shrink-0">
-        <img
-          src={role.image}
-          alt={role.name}
-          className="w-full h-full object-cover"
-          loading="lazy"
-          style={{ filter: "brightness(0.95)" }}
-          data-testid="img-role-preview"
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(to bottom, transparent 50%, hsl(220 28% 7%) 100%)`,
-          }}
-        />
+      {/* Role image/video — square frame */}
+      <div className="relative w-full aspect-square overflow-hidden shrink-0 p-4">
+        <div className="relative w-full h-full rounded-lg border border-white/10 overflow-hidden">
+          <video
+            src={role.video}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            className="w-full h-full object-contain"
+            style={{ background: "black" }}
+            data-testid="video-role-preview"
+          />
+        </div>
         {/* Team badge */}
         <div
-          className={`absolute top-2 left-2 lg:top-3 lg:left-3 px-1.5 lg:px-2 py-0.5 rounded font-orbitron text-xs tracking-widest uppercase font-bold team-badge ${role.team}-color`}
+          className={`absolute top-6 left-6 px-1.5 lg:px-2 py-0.5 rounded font-orbitron text-xs tracking-widest uppercase font-bold team-badge ${role.team}-color`}
           style={{
             background: accentColorDim,
             border: `1px solid ${accentColor}`,
@@ -1245,3 +1246,6 @@ function InfoBlock({ label, value, accentColor, dim }: { label: string; value: s
     </div>
   );
 }
+
+// Show active roles only in lobby phase (before game starts)
+const showActiveRoles = livePlayers.length > 0 && (typeof window !== "undefined" ? (sessionStorage.getItem("lp_assignedRole") === null) : true);

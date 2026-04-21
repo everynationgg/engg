@@ -222,7 +222,10 @@ export default function VotingPage() {
   }, [myId]);
 
   return (
-    <div className={`relative h-[100dvh] overflow-hidden w-full flex flex-col transition-transform duration-1000 ${votesIn > 0 ? "scale-[1.02]" : "scale-100"} ${isAlien ? "ix-glitch-bg" : ""}`} style={{ background: bgTint, color: "hsl(190 80% 90%)" }}>
+    <div
+      className={`relative min-h-0 h-screen max-h-screen w-full flex flex-col transition-transform duration-1000 ${votesIn > 0 ? "scale-[1.02]" : "scale-100"} ${isAlien ? "ix-glitch-bg" : ""}`}
+      style={{ background: bgTint, color: "hsl(190 80% 90%)", overflow: "hidden" }}
+    >
       {/* Alien Corruption Overlays */}
       {isAlien && (
         <div className="absolute inset-0 pointer-events-none z-0">
@@ -287,7 +290,7 @@ export default function VotingPage() {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col px-6 py-6 gap-5 overflow-y-auto pb-32 lg:pb-8 max-w-2xl mx-auto w-full">
+      <div className="flex-1 flex flex-col px-4 sm:px-6 py-6 gap-5 overflow-y-auto pb-32 lg:pb-8 max-w-2xl mx-auto w-full min-h-0" style={{ WebkitOverflowScrolling: "touch" }}>
 
         {/* Title */}
         <div>

@@ -106,28 +106,28 @@ export default function RoleRevealPage() {
   const accentColor = isAlien
     ? "hsl(0 75% 55%)"
     : isChaotic
-    ? "hsl(300 70% 55%)"
-    : "hsl(185 100% 50%)";
+      ? "hsl(300 70% 55%)"
+      : "hsl(185 100% 50%)";
   const accentColorLight = isAlien
     ? "hsl(0 75% 70%)"
     : isChaotic
-    ? "hsl(300 70% 70%)"
-    : "hsl(185 100% 70%)";
+      ? "hsl(300 70% 70%)"
+      : "hsl(185 100% 70%)";
   const accentColorDim = isAlien
     ? "hsl(0 75% 55% / 0.15)"
     : isChaotic
-    ? "hsl(300 70% 55% / 0.15)"
-    : "hsl(185 100% 50% / 0.15)";
+      ? "hsl(300 70% 55% / 0.15)"
+      : "hsl(185 100% 50% / 0.15)";
   const accentGlow = isAlien
     ? "hsl(0 75% 55% / 0.4)"
     : isChaotic
-    ? "hsl(300 70% 55% / 0.4)"
-    : "hsl(185 100% 50% / 0.4)";
+      ? "hsl(300 70% 55% / 0.4)"
+      : "hsl(185 100% 50% / 0.4)";
   const bgTint = isAlien
     ? "hsl(0 40% 6%)"
     : isChaotic
-    ? "hsl(290 30% 6%)"
-    : "hsl(200 30% 6%)";
+      ? "hsl(290 30% 6%)"
+      : "hsl(200 30% 6%)";
 
   const handleAcknowledge = useCallback(() => {
     if (acknowledged) return;
@@ -169,9 +169,9 @@ export default function RoleRevealPage() {
 
   if (revealState === "flash") {
     return (
-      <div 
-        className="fixed inset-0 z-[9999]" 
-        style={{ background: isAlien ? "hsl(0 75% 55%)" : "hsl(185 100% 50%)" }} 
+      <div
+        className="fixed inset-0 z-[9999]"
+        style={{ background: isAlien ? "hsl(0 75% 55%)" : "hsl(185 100% 50%)" }}
       />
     );
   }
@@ -185,7 +185,7 @@ export default function RoleRevealPage() {
       <HamburgerMenu
         onShowSettings={() => setShowSettingsModal(true)}
         onShowProfile={() => setShowProfileModal(true)}
-        onShowHowToPlay={() => {}} // No how to play in role reveal
+        onShowHowToPlay={() => { }} // No how to play in role reveal
         musicOn={musicOn}
         onToggleMusic={handleToggleMusic}
         playSound={playSciFiClick}
@@ -236,170 +236,178 @@ export default function RoleRevealPage() {
       <div className="flex-1 w-full h-full relative">
         <div className="flex flex-col lg:flex-row absolute inset-0 overflow-hidden" style={{ minHeight: 0 }}>
 
-          {/* LEFT — Role image */}
+          {/* LEFT — Role image/video */}
           <div
-            className="lg:w-96 shrink-0 relative overflow-hidden"
+            className="lg:w-[45%] shrink-0 relative flex items-center justify-center p-6 lg:p-12"
             style={{
-              minHeight: "260px",
               opacity: revealState === "ready" ? 1 : 0.4,
               transform: revealState === "ready" ? "rotateY(0deg) scale(1)" : "rotateY(16deg) scale(0.96)",
               transformOrigin: "left center",
               transition: "opacity 360ms ease, transform 560ms cubic-bezier(0.22, 1, 0.36, 1)",
             }}
           >
-          <img
-            src={role.image}
-            alt={role.name}
-            className="w-full h-full object-cover"
-            style={{ minHeight: "260px", maxHeight: "100vh" }}
-          />
-          {/* Gradient fade to bg */}
+            <div className="relative w-full aspect-square max-w-[500px]">
+              {/* Futuristic frame border */}
+              <div
+                className="absolute -inset-1 rounded-lg blur-sm opacity-50"
+                style={{ background: accentColor }}
+              />
+              <div
+                className="absolute inset-0 rounded-lg border-2 z-10 pointer-events-none"
+                style={{ borderColor: accentColor, boxShadow: `inset 0 0 20px ${accentGlow}` }}
+              />
+
+              <video
+                src={role.video}
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
+                className="w-full h-full object-contain rounded-lg relative z-0"
+                style={{ background: "black" }}
+              />
+            </div>
+          </div>
+
+          {/* RIGHT — Role info stack */}
           <div
-            className="absolute inset-0"
+            className="flex-1 flex flex-col overflow-y-auto px-6 lg:px-10 py-6 lg:py-8 gap-5 pb-28 lg:pb-6"
             style={{
-              background: `linear-gradient(to bottom, transparent 40%, ${bgTint} 100%), linear-gradient(to right, transparent 70%, ${bgTint} 100%)`,
+              opacity: revealState === "ready" ? 1 : 0,
+              transform: revealState === "ready" ? "translateY(0px)" : "translateY(18px)",
+              transition: "opacity 420ms ease 120ms, transform 520ms cubic-bezier(0.22, 1, 0.36, 1) 120ms",
+              pointerEvents: revealState === "ready" ? "auto" : "none",
             }}
-          />
-        </div>
+          >
 
-        {/* RIGHT — Role info stack */}
-        <div
-          className="flex-1 flex flex-col overflow-y-auto px-6 lg:px-10 py-6 lg:py-8 gap-5 pb-28 lg:pb-6"
-          style={{
-            opacity: revealState === "ready" ? 1 : 0,
-            transform: revealState === "ready" ? "translateY(0px)" : "translateY(18px)",
-            transition: "opacity 420ms ease 120ms, transform 520ms cubic-bezier(0.22, 1, 0.36, 1) 120ms",
-            pointerEvents: revealState === "ready" ? "auto" : "none",
-          }}
-        >
+            {/* Alignment badge */}
+            <div className="flex items-start">
+              <div
+                className={`px-3 py-1 rounded font-orbitron text-xs tracking-widest uppercase font-bold team-badge ${role.team}-color`}
+                style={{
+                  background: accentColorDim,
+                  border: `1px solid ${accentColor}`,
+                  color: accentColorLight,
+                  boxShadow: `0 0 12px ${accentGlow}`,
+                }}
+              >
+                {role.team === "alien" ? "ALIEN TEAM" : role.team === "chaotic" ? "CHAOTIC" : "CREW TEAM"}
+                <TeamIcon team={role.team} className="ml-2" />
+              </div>
+            </div>
 
-          {/* Alignment badge */}
-          <div className="flex items-start">
+            {/* YOUR ROLE IS */}
+            <div>
+              <div
+                className="font-orbitron text-xs tracking-[0.35em] uppercase mb-1"
+                style={{ color: "hsl(210 30% 45%)" }}
+              >
+                YOUR ROLE IS
+              </div>
+              <div
+                className={`font-orbitron font-black text-4xl lg:text-5xl tracking-widest uppercase ${isAlien ? "glitch-text" : ""}`}
+                data-text={role.name}
+                style={{
+                  color: accentColorLight,
+                  textShadow: `0 0 16px ${accentGlow}, 0 0 40px ${accentGlow.replace("0.4", "0.2")}`,
+                }}
+              >
+                {role.name}
+              </div>
+            </div>
+
+            {/* Display name / salutation */}
             <div
-              className={`px-3 py-1 rounded font-orbitron text-xs tracking-widest uppercase font-bold team-badge ${role.team}-color`}
+              className="font-orbitron text-sm tracking-[0.15em] uppercase"
+              style={{ color: "hsl(190 60% 65%)" }}
+            >
+              {displayName}
+            </div>
+
+            {/* Divider */}
+            <div
+              className="h-px w-full"
+              style={{
+                background: `linear-gradient(90deg, ${accentColor.replace(")", " / 0.5)")}, transparent)`,
+              }}
+            />
+
+            {/* Ability panel */}
+            <div
+              className="rounded-md p-4"
               style={{
                 background: accentColorDim,
-                border: `1px solid ${accentColor}`,
-                color: accentColorLight,
-                boxShadow: `0 0 12px ${accentGlow}`,
+                border: `1px solid ${accentColor.replace(")", " / 0.3)")}`,
               }}
             >
-              {role.team === "alien" ? "ALIEN TEAM" : role.team === "chaotic" ? "CHAOTIC" : "CREW TEAM"}
-              <TeamIcon team={role.team} className="ml-2" />
+              <div
+                className="font-orbitron text-xs tracking-[0.25em] uppercase mb-2 font-bold"
+                style={{ color: accentColorLight }}
+              >
+                ABILITY
+              </div>
+              <p
+                className="text-sm leading-relaxed"
+                style={{
+                  color: "hsl(190 60% 78%)",
+                  fontFamily: "'Exo 2', sans-serif",
+                  whiteSpace: "pre-line",
+                }}
+              >
+                {role.ability}
+              </p>
             </div>
-          </div>
 
-          {/* YOUR ROLE IS */}
-          <div>
+            {/* Lore panel */}
             <div
-              className="font-orbitron text-xs tracking-[0.35em] uppercase mb-1"
-              style={{ color: "hsl(210 30% 45%)" }}
-            >
-              YOUR ROLE IS
-            </div>
-            <div
-              className={`font-orbitron font-black text-4xl lg:text-5xl tracking-widest uppercase ${isAlien ? "glitch-text" : ""}`}
-              data-text={role.name}
+              className="rounded-md p-4"
               style={{
-                color: accentColorLight,
-                textShadow: `0 0 16px ${accentGlow}, 0 0 40px ${accentGlow.replace("0.4", "0.2")}`,
+                background: "hsl(220 28% 8%)",
+                border: "1px solid hsl(210 30% 16%)",
               }}
             >
-              {role.name}
+              <div
+                className="font-orbitron text-xs tracking-[0.25em] uppercase mb-2 font-bold"
+                style={{ color: "hsl(210 30% 50%)" }}
+              >
+                INTEL FILE
+              </div>
+              <p
+                className="text-sm leading-relaxed"
+                style={{
+                  color: "hsl(210 30% 60%)",
+                  fontFamily: "'Exo 2', sans-serif",
+                  whiteSpace: "pre-line",
+                }}
+              >
+                {role.lore}
+              </p>
             </div>
-          </div>
 
-          {/* Display name / salutation */}
-          <div
-            className="font-orbitron text-sm tracking-[0.15em] uppercase"
-            style={{ color: "hsl(190 60% 65%)" }}
-          >
-            {displayName}
-          </div>
-
-          {/* Divider */}
-          <div
-            className="h-px w-full"
-            style={{
-              background: `linear-gradient(90deg, ${accentColor.replace(")", " / 0.5)")}, transparent)`,
-            }}
-          />
-
-          {/* Ability panel */}
-          <div
-            className="rounded-md p-4"
-            style={{
-              background: accentColorDim,
-              border: `1px solid ${accentColor.replace(")", " / 0.3)")}`,
-            }}
-          >
-            <div
-              className="font-orbitron text-xs tracking-[0.25em] uppercase mb-2 font-bold"
-              style={{ color: accentColorLight }}
-            >
-              ABILITY
-            </div>
-            <p
-              className="text-sm leading-relaxed"
-              style={{
-                color: "hsl(190 60% 78%)",
-                fontFamily: "'Exo 2', sans-serif",
-                whiteSpace: "pre-line",
-              }}
-            >
-              {role.ability}
-            </p>
-          </div>
-
-          {/* Lore panel */}
-          <div
-            className="rounded-md p-4"
-            style={{
-              background: "hsl(220 28% 8%)",
-              border: "1px solid hsl(210 30% 16%)",
-            }}
-          >
-            <div
-              className="font-orbitron text-xs tracking-[0.25em] uppercase mb-2 font-bold"
-              style={{ color: "hsl(210 30% 50%)" }}
-            >
-              INTEL FILE
-            </div>
-            <p
-              className="text-sm leading-relaxed"
-              style={{
-                color: "hsl(210 30% 60%)",
-                fontFamily: "'Exo 2', sans-serif",
-                whiteSpace: "pre-line",
-              }}
-            >
-              {role.lore}
-            </p>
-          </div>
-
-          {/* Ready count */}
-          {acknowledged && (
-            <div
-              className="text-xs tracking-wider text-center"
-              style={{ color: "hsl(210 30% 45%)", fontFamily: "'Exo 2', sans-serif" }}
-            >
-              {readyCount} / {totalPlayers} players ready
-            </div>
-          )}
-
-          {/* Acknowledge button — desktop (inline) */}
-          <div className={`hidden lg:block transition-opacity duration-500 delay-300 ${revealState === "ready" ? "opacity-100" : "opacity-0"}`}>
-            {revealState === "ready" && (
-              <AcknowledgeButton
-                acknowledged={acknowledged}
-                accentColor={accentColor}
-                accentColorLight={accentColorLight}
-                accentGlow={accentGlow}
-                onAcknowledge={handleAcknowledge}
-              />
+            {/* Ready count */}
+            {acknowledged && (
+              <div
+                className="text-xs tracking-wider text-center"
+                style={{ color: "hsl(210 30% 45%)", fontFamily: "'Exo 2', sans-serif" }}
+              >
+                {readyCount} / {totalPlayers} players ready
+              </div>
             )}
+
+            {/* Acknowledge button — desktop (inline) */}
+            <div className={`hidden lg:block transition-opacity duration-500 delay-300 ${revealState === "ready" ? "opacity-100" : "opacity-0"}`}>
+              {revealState === "ready" && (
+                <AcknowledgeButton
+                  acknowledged={acknowledged}
+                  accentColor={accentColor}
+                  accentColorLight={accentColorLight}
+                  accentGlow={accentGlow}
+                  onAcknowledge={handleAcknowledge}
+                />
+              )}
+            </div>
           </div>
-        </div>
         </div>
       </div>
 
