@@ -351,6 +351,9 @@ export default function RoleConfigPage() {
     };
   }, [roomCode, myCallsign, isCreating]);
 
+  // Show active roles only in lobby phase (before game starts)
+  const showActiveRoles = livePlayers.length > 0 && (typeof window !== "undefined" ? (sessionStorage.getItem("lp_assignedRole") === null) : true);
+
   // Derive host status from server-provided player list.  Falls back to
   // isCreating only before the first server response arrives.
   const amIHost = livePlayers.find((p) => p.isYou)?.isHost ?? isCreating;
@@ -1247,5 +1250,3 @@ function InfoBlock({ label, value, accentColor, dim }: { label: string; value: s
   );
 }
 
-// Show active roles only in lobby phase (before game starts)
-const showActiveRoles = livePlayers.length > 0 && (typeof window !== "undefined" ? (sessionStorage.getItem("lp_assignedRole") === null) : true);
