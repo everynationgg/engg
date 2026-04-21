@@ -30,19 +30,15 @@ export default function RoleRevealPage() {
   const isAlien = role.team === "alien";
 
   useEffect(() => {
-    // Brief delay to build tension without feeling broken
+    // Brief delay to build tension, then transition smoothly
     const t1 = setTimeout(() => {
-      setRevealState("flash");
-      // Flash lasts 150ms
-      setTimeout(() => {
-        setRevealState("ready");
-        if (isAlien) {
-          playBassDrop();
-        } else {
-          playSciFiClick(1.0);
-        }
-      }, 150);
-    }, 1000);
+      setRevealState("ready");
+      if (isAlien) {
+        playBassDrop();
+      } else {
+        playSciFiClick(1.0);
+      }
+    }, 1200);
     return () => clearTimeout(t1);
   }, [isAlien]);
 
@@ -167,18 +163,10 @@ export default function RoleRevealPage() {
     );
   }
 
-  if (revealState === "flash") {
-    return (
-      <div
-        className="fixed inset-0 z-[9999]"
-        style={{ background: isAlien ? "hsl(0 75% 55%)" : "hsl(185 100% 50%)" }}
-      />
-    );
-  }
 
   return (
     <div
-      className="relative min-h-screen w-full flex flex-col"
+      className="relative min-h-screen w-full flex flex-col ix-page-enter"
       style={{ background: bgTint, color: "hsl(190 80% 90%)" }}
     >
       {/* Hamburger Menu */}
