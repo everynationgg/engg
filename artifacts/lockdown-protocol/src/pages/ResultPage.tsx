@@ -847,7 +847,7 @@ function EjectionCinematic({
           
           {/* Main Visual: Video Container */}
           <div 
-            className={`relative w-full aspect-square max-h-[35vh] sm:max-h-[50vh] rounded-lg overflow-hidden border-2 transition-all duration-1000 ${phase >= 1 ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}
+            className={`relative aspect-square h-[40vh] sm:h-[55vh] max-w-full mx-auto rounded-lg overflow-hidden border-2 transition-all duration-1000 ${phase >= 1 ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}
             style={{ 
               borderColor: `${themeColor}44`,
               boxShadow: `0 0 40px ${themeColor}22`,
@@ -857,7 +857,7 @@ function EjectionCinematic({
               <video
                 ref={videoRef}
                 src={roleDef.evictionVideo}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 muted
                 playsInline
               />
