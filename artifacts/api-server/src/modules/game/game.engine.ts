@@ -1155,7 +1155,8 @@ export function tallyVotes(state: GameState): VoteResult {
   const eliminatedId = topTargets[0];
   const eliminated = state.players.find((p) => p.id === eliminatedId);
   const eliminatedRole = state.rolesAssigned[eliminatedId] ?? "unknown";
-  const winTeam = eliminatedRole === "alien" ? "crew" : "alien";
+  const isAlienInPlay = Object.values(state.rolesAssigned).includes("alien");
+  const winTeam = (eliminatedRole === "alien" || (!isAlienInPlay && eliminatedRole === "parasite")) ? "crew" : "alien";
 
   return {
     eliminatedId,
