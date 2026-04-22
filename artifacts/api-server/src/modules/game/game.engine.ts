@@ -231,10 +231,10 @@ const ROLE_ORDER = [
   "alien",
   "disruptor",
   "parasite",
-  "seeker",
   "commander",
   "warper",
   "shifter",
+  "seeker",
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════

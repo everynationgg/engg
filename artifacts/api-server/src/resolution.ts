@@ -22,17 +22,17 @@ export interface PrivateFeedback {
 // Strict resolution order. Sentinel fires first so it can see every subsequent
 // action that affects its watch target. Its feedback is compiled in a second
 // pass after all other abilities have executed and the actionLog is complete.
-// Seeker is placed between Parasite and Commander (information before manipulation).
+// Seeker is placed at the end to reflect the 'last' role after any swaps/shifts.
 const ROLE_ORDER = [
   "sentinel",
   "scanner",
   "alien",
   "disruptor",
   "parasite",
-  "seeker",
   "commander",
   "warper",
   "shifter",
+  "seeker",
 ];
 
 export function runResolution(
