@@ -9,6 +9,7 @@ import disruptorImg from "@assets/role-disruptor_1776003488684.webp";
 import shifterImg from "@assets/role-shifter_1776003488682.webp";
 import warperImg from "@assets/role-warper_1776003488682.webp";
 
+
 import alienVid from "@assets/role-alien.webm";
 import parasiteVid from "@assets/role-parasite.webm";
 import commanderVid from "@assets/role-commander.webm";
@@ -19,6 +20,9 @@ import seekerVid from "@assets/role-seeker.webm";
 import disruptorVid from "@assets/role-disruptor.webm";
 import shifterVid from "@assets/role-shifter.webm";
 import warperVid from "@assets/role-warper.webm";
+import virusVid from "@assets/role-virus.webm";
+import routerVid from "@assets/role-router.webm";
+
 
 import alienEvictionVid from "@assets/role-alien-eviction.webm";
 import parasiteEvictionVid from "@assets/role-parasite-eviction.webm";
@@ -30,6 +34,8 @@ import seekerEvictionVid from "@assets/role-seeker-eviction.webm";
 import disruptorEvictionVid from "@assets/role-disruptor-eviction.webm";
 import shifterEvictionVid from "@assets/role-shifter-eviction.webm";
 import warperEvictionVid from "@assets/role-warper-eviction.webm";
+import virusEvictionVid from "@assets/role-virus-eviction.webm";
+import routerEvictionVid from "@assets/role-router-eviction.webm";
 
 export type RoleTeam = "alien" | "crew" | "chaotic";
 
@@ -58,8 +64,8 @@ export const ROLES: Role[] = [
     team: "alien",
     alignment: "Alien Team",
     image: alienImg,
-    video: alienVid,
-    evictionVideo: alienEvictionVid,
+    video: virusVid,
+    evictionVideo: virusEvictionVid,
     winCondition: "Do not get voted out",
     ability: "View 1 center card",
     notes: "None",
@@ -88,8 +94,8 @@ export const ROLES: Role[] = [
     team: "chaotic",
     alignment: "Chaotic",
     image: disruptorImg,
-    video: disruptorVid,
-    evictionVideo: disruptorEvictionVid,
+    video: routerVid,
+    evictionVideo: routerEvictionVid,
     winCondition: "Depends on chosen alignment",
     ability: "Block 1 player's ability",
     notes: "None",
