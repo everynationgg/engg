@@ -249,6 +249,12 @@ function deserialise(raw: string): Session {
   const parsed = JSON.parse(raw) as unknown as Session;
   return {
     ...parsed,
+    settings: parsed.settings ?? {
+      anonymousVoting: false,
+      blindEjections: false,
+      discussionTime: 60,
+      votingTime: 30,
+    },
     discussionStartedAt: parsed.discussionStartedAt ?? null,
     voteResult:          parsed.voteResult ?? null,
     kickedPlayerIds:     parsed.kickedPlayerIds ?? [],
@@ -507,6 +513,12 @@ function freshRoundSummary(): RoundSummary {
 export function createSession(sessionId: string, hostPlayer: Player): VersionedSession {
   return {
     sessionId,
+    settings: {
+      anonymousVoting: false,
+      blindEjections: false,
+      discussionTime: 60,
+      votingTime: 30,
+    },
     phase: "lobby",
     players: [hostPlayer],
     rolesAssigned: {},

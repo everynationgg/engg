@@ -1695,7 +1695,7 @@ export function computeSanitizedState(state: GameState, viewerSocketId: string):
     sanitized.orbitActions = {};
 
     // Anonymous voting: hide voter targets
-    if (state.settings.anonymousVoting && state.phase === "voting") {
+    if (state.settings?.anonymousVoting && state.phase === "voting") {
       sanitized.votes = Object.keys(state.votes).reduce((acc, id) => {
         acc[id] = "voted";
         return acc;
@@ -1725,8 +1725,9 @@ export function computeSanitizedState(state: GameState, viewerSocketId: string):
       }
 
       // Alien Team Visibility: Aliens see each other.
-      // They see the CURRENT assigned role if it is 'alien' or 'parasite'.
-      if (myRole === "alien" || myRole === "parasite") {
+      // You only see the team if your PERCEIVED role is part of it.
+      const perceivedRole = sanitizedRoles[viewerSocketId];
+      if (perceivedRole === "alien" || perceivedRole === "parasite") {
         for (const [id, r] of Object.entries(state.rolesAssigned)) {
           if (r === "alien" || r === "parasite") {
             sanitizedRoles[id] = r;

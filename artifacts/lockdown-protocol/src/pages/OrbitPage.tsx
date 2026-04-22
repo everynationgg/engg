@@ -307,7 +307,7 @@ export default function OrbitPage() {
 
 
   // Other players for target selection (exclude self)
-  const otherPlayers = sessionPlayers.filter((p) => p.id !== getMySocketId());
+  const otherPlayers = sessionPlayers.filter((p) => !p.isYou);
 
   // ── Render ────────────────────────────────────────────────────────────────
 
