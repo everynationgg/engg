@@ -244,6 +244,14 @@ export default function OrbitPage() {
         socket.emit("submit_action", { sessionId: roomCode, action: { type: "passive", targets: [] } });
       }
       setPageState("passive_info");
+    } else if (role.id === "virus" || role.id === "router") {
+      // Virus and Router act during Role Reveal — they have no Orbit action.
+      // Auto-submit so they don't block resolution.
+      if (!autoSubmittedRef.current) {
+        autoSubmittedRef.current = true;
+        socket.emit("submit_action", { sessionId: roomCode, action: { type: "none", targets: [] } });
+      }
+      setPageState("waiting");
     } else {
       // All other roles (Alien, Scanner, Sentinel, Disruptor, Seeker, Warper, Shifter, Commander)
       // must interact — either use their ability or click SKIP

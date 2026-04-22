@@ -90,7 +90,7 @@ export default function RoleRevealPage() {
     // Periodic fallback: poll every 3 seconds so the UI stays in sync even when
     // phase_update socket events are missed (e.g. transport hiccups).
     const syncSession = () => {
-      socket.emit("get_session", { sessionId: roomCode }, (resp: { success: boolean; session?: { phase: string; players: { id: string }[]; roleAcknowledgements?: string[] } }) => {
+      socket.emit("get_session", { sessionId: roomCode }, (resp: any) => {
         if (resp.success && resp.session) {
           if (resp.session.roleAcknowledgements !== undefined) {
             setReadyCount(resp.session.roleAcknowledgements.length);
@@ -446,34 +446,39 @@ export default function RoleRevealPage() {
             )}
 
             {/* Target Selection for Virus/Router */}
-            {!acknowledged && (role.id === "virus" || role.id === "router") && (
-              <div className="flex flex-col gap-4 mb-4">
-                <TargetSelector
-                  label={role.id === "virus" ? "JAM INTERFACE" : "GATEWAY SOURCE"}
-                  players={livePlayers.filter(p => {
-                    const isSelf = p.id === getSocket().id;
-                    const r = rolesAssigned[p.id];
-                    const isAlienTeam = r === "alien" || r === "parasite" || r === "virus";
-                    if (role.id === "virus") {
-                      return !isSelf && !isAlienTeam;
-                    }
-                    return !isSelf;
-                  })}
-                  selectedId={selectedTargetId}
-                  onSelect={setSelectedTargetId}
-                  accentColor={accentColor}
-                />
-                {role.id === "router" && (
+            {!acknowledged && revealState === "ready" && (role.id === "virus" || role.id === "router") && (() => {
+              const myPlayerId = sessionStorage.getItem("lp_playerId");
+              const mySocketId = getSocket().id;
+              const isSelf = (p: any) =>
+                (myPlayerId && p.playerId === myPlayerId) || p.id === mySocketId;
+              return (
+                <div className="flex flex-col gap-4 mb-4">
                   <TargetSelector
-                    label="GATEWAY DESTINATION"
-                    players={livePlayers.filter(p => p.id !== getSocket().id && p.id !== selectedTargetId)}
-                    selectedId={selectedRouterDestId}
-                    onSelect={setSelectedRouterDestId}
+                    label={role.id === "virus" ? "JAM INTERFACE" : "GATEWAY SOURCE"}
+                    players={livePlayers.filter(p => {
+                      if (isSelf(p)) return false;
+                      if (role.id === "virus") {
+                        const r = rolesAssigned[p.id];
+                        return r !== "alien" && r !== "parasite" && r !== "virus";
+                      }
+                      return true;
+                    })}
+                    selectedId={selectedTargetId}
+                    onSelect={setSelectedTargetId}
                     accentColor={accentColor}
                   />
-                )}
-              </div>
-            )}
+                  {role.id === "router" && (
+                    <TargetSelector
+                      label="GATEWAY DESTINATION"
+                      players={livePlayers.filter(p => !isSelf(p) && p.id !== selectedTargetId)}
+                      selectedId={selectedRouterDestId}
+                      onSelect={setSelectedRouterDestId}
+                      accentColor={accentColor}
+                    />
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Acknowledge button — desktop (inline) */}
             <div className={`hidden lg:block transition-opacity duration-500 delay-300 ${revealState === "ready" ? "opacity-100" : "opacity-0"}`}>

@@ -584,8 +584,34 @@ export function resolveRound(state: GameState): ResolutionResult {
         continue;
       }
 
-      // Passive/none submission (crew, parasite auto-submit)
+      // Passive/none submission (crew, parasite, and reveal-phase roles auto-submit)
       if (action.type === "passive" || action.type === "none") {
+        // Virus and Router act during Role Reveal — log their reveal action in the summary
+        if (roleId === "virus") {
+          const revealAction = state.revealActions[actor.id];
+          if (revealAction && revealAction.targets[0]) {
+            const target = state.players.find(p => p.id === revealAction.targets[0]);
+            feedback[actor.id] = { type: "no_ability" };
+            logActor(actor.name, actor.id, `jammed ${target?.name ?? "a player"}'s interface during the reveal`);
+          } else {
+            feedback[actor.id] = { type: "no_ability" };
+            logActor(actor.name, actor.id, "did not jam anyone during the reveal");
+          }
+          continue;
+        }
+        if (roleId === "router") {
+          const revealAction = state.revealActions[actor.id];
+          if (revealAction && revealAction.targets[0] && revealAction.targets[1]) {
+            const source = state.players.find(p => p.id === revealAction.targets[0]);
+            const dest = state.players.find(p => p.id === revealAction.targets[1]);
+            feedback[actor.id] = { type: "no_ability" };
+            logActor(actor.name, actor.id, `hijacked ${source?.name ?? "a player"}'s ability to redirect to ${dest?.name ?? "another player"}`);
+          } else {
+            feedback[actor.id] = { type: "no_ability" };
+            logActor(actor.name, actor.id, "did not set a gateway hijack during the reveal");
+          }
+          continue;
+        }
         feedback[actor.id] = { type: roleId === "parasite" ? "passive" : "no_ability" };
         logActor(
           actor.name,
