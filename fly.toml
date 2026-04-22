@@ -2,7 +2,7 @@
 # Deploy from repo root: fly deploy
 
 app = 'errornewformdetected'
-primary_region = 'ams'
+primary_region = 'sin'
 
 [build]
 
@@ -27,7 +27,16 @@ primary_region = 'ams'
   grace_period = '10s'
   interval = '15s'
   method = 'GET'
-  path = '/health'
+  path = '/health'  fly secrets set REDIS_URL="your_redis_connection_string" -a errornewformdetected  CREATE TABLE achievements (
+    id TEXT PRIMARY KEY,
+    slug TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL,
+    icon TEXT NOT NULL,
+    rarity TEXT NOT NULL,
+    points_required INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+  );
   timeout = '5s'
 
 [[vm]]
