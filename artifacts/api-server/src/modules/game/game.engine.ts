@@ -710,9 +710,9 @@ export function resolveRound(state: GameState): ResolutionResult {
             const playerA = state.players.find((p) => p.id === tA);
             const playerB = state.players.find((p) => p.id === tB);
 
-            if (!playerA || !playerB) {
+            if (!playerA || !playerB || tA === actor.id || tB === actor.id) {
               feedback[actor.id] = { type: "no_action" };
-              logActor(actor.name, actor.id, "attempted an invalid swap");
+              logActor(actor.name, actor.id, "attempted an invalid swap (cannot swap self)");
               break;
             }
 
@@ -1663,4 +1663,81 @@ export function checkSinglePlayerEdgeCase(
   state.hostEndedInterrupt = true;
   restartGame(state);
   return { shouldEnd: true, message: "Not enough players to continue" };
+}
+
+/**
+ * Create a privacy-preserving view of the game state for a specific player.
+ *
+ * This prevents information leaks during the game:
+ * - centerCards and orbitActions are hidden until the result phase.
+ * - rolesAssigned only contains the player's own "perceived" role.
+ * - Players who are swapped by a Warper see their INITIAL role until the end.
+ * - Shifters see their NEW role after an exchange.
+ * - Aliens/Parasites see other members of the Alien team.
+ */
+export function computeSanitizedState(state: GameState, viewerSocketId: string): GameState {
+  // Deep clone state (simple version for this object structure)
+  const sanitized = {
+    ...state,
+    centerCards: [...(state.centerCards || [])],
+    players: [...(state.players || [])],
+    roleCounts: { ...(state.roleCounts || {}) },
+    rolesAssigned: { ...(state.rolesAssigned || {}) },
+    initialRoles: { ...(state.initialRoles || {}) },
+    orbitActions: { ...(state.orbitActions || {}) },
+    orbitCompleted: [...(state.orbitCompleted || [])],
+    votes: { ...(state.votes || {}) },
+  };
+
+  // 1. Clear globally sensitive data unless in result phase
+  if (state.phase !== "result") {
+    sanitized.centerCards = [];
+    sanitized.orbitActions = {};
+
+    // Anonymous voting: hide voter targets
+    if (state.settings.anonymousVoting && state.phase === "voting") {
+      sanitized.votes = Object.keys(state.votes).reduce((acc, id) => {
+        acc[id] = "voted";
+        return acc;
+      }, {} as Record<string, string>);
+    }
+  }
+
+  // 2. Roles Sanitization — hide other players' roles and swap info
+  if (state.phase !== "result" && state.phase !== "role_config" && state.phase !== "lobby") {
+    const sanitizedRoles: Record<string, string> = {};
+    
+    // Find the player entry to check their ID mapping (socket ID vs persistent ID)
+    const viewer = state.players.find(p => p.id === viewerSocketId);
+    
+    // We use socketId (key in rolesAssigned) for lookup
+    const myRole = state.rolesAssigned[viewerSocketId];
+    const myInitialRole = state.initialRoles[viewerSocketId];
+
+    if (myRole) {
+      // RULE: You see your initial role unless you are a Shifter.
+      // Shifters exchange roles and are aware of it.
+      // Warper targets are NOT aware they were swapped.
+      if (myInitialRole === "shifter") {
+        sanitizedRoles[viewerSocketId] = myRole;
+      } else {
+        sanitizedRoles[viewerSocketId] = myInitialRole;
+      }
+
+      // Alien Team Visibility: Aliens see each other.
+      // They see the CURRENT assigned role if it is 'alien' or 'parasite'.
+      if (myRole === "alien" || myRole === "parasite") {
+        for (const [id, r] of Object.entries(state.rolesAssigned)) {
+          if (r === "alien" || r === "parasite") {
+            sanitizedRoles[id] = r;
+          }
+        }
+      }
+    }
+    
+    sanitized.rolesAssigned = sanitizedRoles;
+    sanitized.initialRoles = {}; // Hide everyone else's initial roles
+  }
+
+  return sanitized;
 }

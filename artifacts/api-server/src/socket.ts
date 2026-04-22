@@ -45,6 +45,7 @@ import {
   checkSinglePlayerEdgeCase as engineCheckSinglePlayerEdgeCase,
   recheckVotingCompletion as engineRecheckVotingCompletion,
   removePlayer as engineRemovePlayer,
+  computeSanitizedState as engineComputeSanitizedState,
   type PlayerAction,
 } from "./modules/game/game.engine.js";
 import { logger } from "./lib/logger.js";
@@ -226,9 +227,20 @@ function phaseUpdate(
   engineSortPlayersByStatus(session);
   logger.info(
     { sessionId, phase: session.phase, players: session.players.length },
-    "phase_update broadcast",
+    "phase_update broadcast (sanitized)",
   );
-  io.to(sessionId).emit("phase_update", session);
+
+  // Get all sockets currently in this session room
+  const room = io.sockets.adapter.rooms.get(sessionId);
+  if (room) {
+    for (const socketId of room) {
+      const socket = io.sockets.sockets.get(socketId);
+      if (socket) {
+        const sanitized = engineComputeSanitizedState(session, socketId);
+        socket.emit("phase_update", sanitized);
+      }
+    }
+  }
 }
 
 /**
@@ -830,7 +842,8 @@ export function attachSocketIO(httpServer: HttpServer) {
 
         phaseUpdate(io, sessionId, cas.session);
         // Return the resolved token so the client can cache it for future reconnects.
-        ack?.({ success: true, session: cas.session, playerToken: resolvedToken });
+        const sanitized = engineComputeSanitizedState(cas.session, socket.id);
+        ack?.({ success: true, session: sanitized, playerToken: resolvedToken });
       },
     );
 
@@ -841,7 +854,8 @@ export function attachSocketIO(httpServer: HttpServer) {
       const session = await getSession(parsed.sessionId);
       if (session) {
         engineSortPlayersByStatus(session);
-        ack?.({ success: true, session });
+        const sanitized = engineComputeSanitizedState(session, socket.id);
+        ack?.({ success: true, session: sanitized });
       } else {
         ack?.({ success: false });
       }
