@@ -47,6 +47,8 @@ export interface Role {
   salutation: string;
   lore: string;
   canAct: boolean;
+  isLocked?: boolean;
+  price?: string;
 }
 
 export const ROLES: Role[] = [
@@ -199,6 +201,57 @@ export const ROLES: Role[] = [
     salutation: "{username}, the hunt begins now.",
     lore: "You can sense alignment where others see only faces.\nOne question, one player — good or bad.\n\nYour instincts are your compass.\nFollow them, and the alien cannot hide forever.",
     canAct: true,
+  },
+  {
+    id: "vip_agent",
+    name: "VIP Agent",
+    team: "crew",
+    alignment: "Crew Team",
+    image: seekerImg,
+    video: seekerVid,
+    evictionVideo: seekerEvictionVid,
+    winCondition: "Eliminate Alien",
+    ability: "Master Strategist — View 1 player's role AND 1 center card.",
+    notes: "Requires VIP Lobby status",
+    salutation: "Welcome, {username}. Your clearance level is absolute.",
+    lore: "You are a high-level operative with access to restricted data.\n deception is your enemy, and information is your weapon.\n\nYou see what others cannot.\nYou know what others hide.\nUse your clearance to lead the crew to victory.",
+    canAct: true,
+    isLocked: true,
+    price: "$4.99",
+  },
+  {
+    id: "virus",
+    name: "Virus",
+    team: "alien",
+    alignment: "Alien Team",
+    image: alienImg,
+    video: alienVid,
+    evictionVideo: alienEvictionVid,
+    winCondition: "Alien Team Wins",
+    ability: "Packet Loss — Scramble one crew member's interface during the Reveal phase. They cannot see target names in the next round.",
+    notes: "Acts during Role Reveal. Cannot target Aliens.",
+    salutation: "System compromised. Target identified: {username}.",
+    lore: "You are a ghost in the machine. A digital plague.\nDuring the reveal, choose a crew member to disconnect from reality.\n\nIn the next round, they will wander blind,\ntargeting ghosts in a glitched interface.",
+    canAct: true,
+    isLocked: true,
+    price: "$2.99",
+  },
+  {
+    id: "router",
+    name: "Router",
+    team: "chaotic",
+    alignment: "Chaotic",
+    image: disruptorImg,
+    video: disruptorVid,
+    evictionVideo: disruptorEvictionVid,
+    winCondition: "Chaotic Victory",
+    ability: "Gateway Hijack — During Reveal, select a 'Source' player and a 'Destination' player. The Source's next ability will be forced onto the Destination.",
+    notes: "Acts during Role Reveal.",
+    salutation: "Traffic intercepted. Where shall we send them, {username}?",
+    lore: "Information is traffic, and you own the hub.\nDuring the reveal, build a bridge between two players.\n\nOne will reach out, the other will receive.\nThey will never know the path was altered until it's too late.",
+    canAct: true,
+    isLocked: true,
+    price: "$2.99",
   },
 ];
 

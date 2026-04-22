@@ -1079,7 +1079,8 @@ export function attachSocketIO(httpServer: HttpServer) {
 
         let engineError: string | undefined;
         const cas = await withCasRetry(parsed.sessionId, (session) => {
-          const result = engineAcknowledgeRole(session, socket.id);
+          const actionData = (data as any).action;
+          const result = engineAcknowledgeRole(session, socket.id, actionData);
           if (!result.accepted) { engineError = result.error; return CAS_SKIP; }
           return result;
         });

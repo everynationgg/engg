@@ -260,6 +260,10 @@ function deserialise(raw: string): Session {
     kickedPlayerIds:     parsed.kickedPlayerIds ?? [],
     status:              parsed.status ?? "active",
     joinable:            parsed.joinable ?? true,
+    revealActions:       parsed.revealActions ?? {},
+    revealCompleted:     parsed.revealCompleted ?? [],
+    jammedPlayerId:      parsed.jammedPlayerId ?? null,
+    hijackedTargets:     parsed.hijackedTargets ?? {},
   };
 }
 
@@ -541,6 +545,10 @@ export function createSession(sessionId: string, hostPlayer: Player): VersionedS
     hostEndedInterrupt: undefined,
     status: "active",
     joinable: true,
+    revealActions: {},
+    revealCompleted: [],
+    jammedPlayerId: null,
+    hijackedTargets: {},
     __v: 0,
   };
 }

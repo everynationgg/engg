@@ -136,6 +136,10 @@ export interface GameState {
   orbitFeedback: Record<string, { type: string; data?: unknown }>;
   roleAcknowledgements: string[];
   resolutionAcknowledgements: string[];
+  revealActions: Record<string, PlayerAction>;
+  revealCompleted: string[];
+  jammedPlayerId: string | null;
+  hijackedTargets: Record<string, string>; // actorId -> targetId
   discussionStartedAt: number | null;
   emergencyVote: EmergencyVoteState;
   votes: Record<string, string>;
@@ -235,6 +239,7 @@ const ROLE_ORDER = [
   "warper",
   "shifter",
   "seeker",
+  "vip_agent",
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -386,7 +391,11 @@ export function startGame(
  *
  * MUTATION: modifies `state` in place.
  */
-export function acknowledgeRole(state: GameState, playerId: string): AcknowledgeRoleResult {
+export function acknowledgeRole(
+  state: GameState,
+  playerId: string,
+  revealAction?: PlayerAction,
+): AcknowledgeRoleResult {
   if (state.phase !== "role_reveal") {
     return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "wrong phase" };
   }
@@ -395,6 +404,9 @@ export function acknowledgeRole(state: GameState, playerId: string): Acknowledge
   }
   if (!state.roleAcknowledgements.includes(playerId)) {
     state.roleAcknowledgements.push(playerId);
+  }
+  if (revealAction) {
+    state.revealActions[playerId] = revealAction;
   }
 
   const orbitInfo = computeOrbitInfo(state, playerId);
@@ -425,6 +437,7 @@ export function acknowledgeRole(state: GameState, playerId: string): Acknowledge
   }
 
   // All acknowledged → advance to orbit_action
+  processRevealActions(state);
   state.phase = "orbit_action";
 
   const autoActions: Array<{ playerId: string; roleId: string; action: PlayerAction }> = [];
@@ -585,6 +598,18 @@ export function resolveRound(state: GameState): ResolutionResult {
         continue;
       }
 
+      let targets = [...action.targets];
+
+      // Router Effect: Gateway Hijack
+      if (state.hijackedTargets[actor.id]) {
+        const destinationId = state.hijackedTargets[actor.id];
+        const destination = state.players.find(p => p.id === destinationId);
+        if (destination) {
+          targets = [destinationId];
+          logActor(actor.name, actor.id, `gateway was hijacked (redirected to ${destination.name})`);
+        }
+      }
+
       // Block check — Sentinel and Scanner are immune
       const immuneToBlock = roleId === "scanner" || roleId === "sentinel";
       if (!immuneToBlock && blockedPlayers.has(actor.id)) {
@@ -596,7 +621,7 @@ export function resolveRound(state: GameState): ResolutionResult {
       switch (roleId) {
         // ── Sentinel ─────────────────────────────────────────────────────
         case "sentinel": {
-          const targetId = action.targets[0];
+          const targetId = targets[0];
           if (targetId) {
             sentinelWatchTargets[actor.id] = targetId;
             const target = state.players.find((p) => p.id === targetId);
@@ -611,7 +636,7 @@ export function resolveRound(state: GameState): ResolutionResult {
         // ── Scanner ──────────────────────────────────────────────────────
         case "scanner": {
           if (action.type === "scan_player") {
-            const target = state.players.find((p) => p.id === action.targets[0]);
+            const target = state.players.find((p) => p.id === targets[0]);
             if (target) {
               const initialRole = state.initialRoles[target.id] ?? "unknown";
               feedback[actor.id] = {
@@ -622,7 +647,7 @@ export function resolveRound(state: GameState): ResolutionResult {
               logActor(actor.name, actor.id, `scanned ${target.name}`);
             }
           } else if (action.type === "scan_deck") {
-            const roles = action.targets.slice(0, 2).map((t) => {
+            const roles = targets.slice(0, 2).map((t) => {
               const idx = parseInt(t.replace("center_", ""), 10);
               return state.centerCards[idx] ?? "unknown";
             });
@@ -638,7 +663,7 @@ export function resolveRound(state: GameState): ResolutionResult {
         case "alien": {
           if (action.type === "alien_view") {
             const idx = parseInt(
-              (action.targets[0] ?? "center_0").replace("center_", ""),
+              (targets[0] ?? "center_0").replace("center_", ""),
               10,
             );
             const cardRole = state.centerCards[idx] ?? "unknown";
@@ -656,7 +681,7 @@ export function resolveRound(state: GameState): ResolutionResult {
 
         // ── Disruptor ────────────────────────────────────────────────────
         case "disruptor": {
-          const targetId = action.targets[0];
+          const targetId = targets[0];
           const targetRole = state.rolesAssigned[targetId];
           const targetPlayer = state.players.find((p) => p.id === targetId);
           if (targetRole === "scanner") {
@@ -679,7 +704,7 @@ export function resolveRound(state: GameState): ResolutionResult {
 
         // ── Seeker ───────────────────────────────────────────────────────
         case "seeker": {
-          const target = state.players.find((p) => p.id === action.targets[0]);
+          const target = state.players.find((p) => p.id === targets[0]);
           if (target) {
             const role = state.rolesAssigned[target.id];
             const alignment = role === "alien" || role === "parasite" ? "Bad" : "Good";
@@ -705,7 +730,7 @@ export function resolveRound(state: GameState): ResolutionResult {
 
         // ── Warper (MUTATES state.rolesAssigned) ─────────────────────────
         case "warper": {
-          const [tA, tB] = action.targets;
+          const [tA, tB] = targets;
           if (tA && tB) {
             const playerA = state.players.find((p) => p.id === tA);
             const playerB = state.players.find((p) => p.id === tB);
@@ -740,7 +765,7 @@ export function resolveRound(state: GameState): ResolutionResult {
 
         // ── Shifter (MUTATES state.rolesAssigned) ────────────────────────
         case "shifter": {
-          const targetId = action.targets[0];
+          const targetId = targets[0];
           const targetPlayer = state.players.find((p) => p.id === targetId);
 
           if (!targetPlayer) {
@@ -761,6 +786,26 @@ export function resolveRound(state: GameState): ResolutionResult {
             data: { targetName: targetPlayer.name, acquiredRole: targetRole },
           };
           logActor(actor.name, actor.id, `exchanged roles with ${targetPlayer.name}`);
+          break;
+        }
+
+        // ── VIP Agent ────────────────────────────────────────────────────
+        case "vip_agent": {
+          const targetPlayerId = targets[0];
+          const targetCardIdx = parseInt((targets[1] ?? "center_0").replace("center_", ""), 10);
+          const targetPlayer = state.players.find(p => p.id === targetPlayerId);
+          const playerRole = state.rolesAssigned[targetPlayerId] ?? "unknown";
+          const cardRole = state.centerCards[targetCardIdx] ?? "unknown";
+          feedback[actor.id] = {
+            type: "vip_agent",
+            data: {
+              targetPlayerName: targetPlayer?.name ?? "Unknown",
+              playerRole,
+              cardIndex: targetCardIdx,
+              cardRole
+            }
+          };
+          logActor(actor.name, actor.id, `accessed high-level clearance data`);
           break;
         }
 
@@ -1389,6 +1434,29 @@ export function kickPlayer(
   return { accepted: true, kickedSocketId, kickedPlayerName };
 }
 
+/**
+ * Process abilities used during the Role Reveal phase (Virus, Router).
+ * Sets up effects (jamming, hijacking) for the subsequent round.
+ *
+ * MUTATION: modifies `state` in place.
+ */
+export function processRevealActions(state: GameState): void {
+  state.jammedPlayerId = null;
+  state.hijackedTargets = {};
+
+  for (const [actorId, action] of Object.entries(state.revealActions)) {
+    const role = state.rolesAssigned[actorId];
+    if (role === "virus") {
+      state.jammedPlayerId = action.targets[0] || null;
+    } else if (role === "router") {
+      const [sourceId, destId] = action.targets;
+      if (sourceId && destId) {
+        state.hijackedTargets[sourceId] = destId;
+      }
+    }
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // Player list ordering — stable, deterministic sort for all payloads
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1690,6 +1758,14 @@ export function computeSanitizedState(state: GameState, viewerSocketId: string):
     votes: { ...(state.votes || {}) },
   };
 
+  // 0. Jamming Effect (Virus) — Mask identities for the jammed player
+  if (state.jammedPlayerId === viewerSocketId && state.phase === "orbit_action") {
+    sanitized.players = state.players.map(p => ({
+      ...p,
+      name: p.id === viewerSocketId ? p.name : "DATA CORRUPTED",
+    }));
+  }
+
   // 1. Clear globally sensitive data unless in result phase
   if (state.phase !== "result") {
     sanitized.centerCards = [];
@@ -1728,9 +1804,9 @@ export function computeSanitizedState(state: GameState, viewerSocketId: string):
       // Alien Team Visibility: Aliens see each other.
       // You only see the team if your PERCEIVED role is part of it.
       const perceivedRole = sanitizedRoles[viewerSocketId];
-      if (perceivedRole === "alien" || perceivedRole === "parasite") {
+      if (perceivedRole === "alien" || perceivedRole === "parasite" || perceivedRole === "virus") {
         for (const [id, r] of Object.entries(state.rolesAssigned)) {
-          if (r === "alien" || r === "parasite") {
+          if (r === "alien" || r === "parasite" || r === "virus") {
             sanitizedRoles[id] = r;
           }
         }

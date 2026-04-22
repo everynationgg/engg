@@ -48,6 +48,9 @@ export default function RoleRevealPage() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
   const [isHost, setIsHost] = useState(false);
+  const [livePlayers, setLivePlayers] = useState<any[]>([]);
+  const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
+  const [selectedRouterDestId, setSelectedRouterDestId] = useState<string | null>(null);
 
   const playerName = getPlayerName();
   const totalPlayers = getTotalPlayers();
@@ -58,6 +61,9 @@ export default function RoleRevealPage() {
     const handlePhaseUpdate = (session: any) => {
       if (session.roleAcknowledgements !== undefined) {
         setReadyCount(session.roleAcknowledgements.length);
+      }
+      if (session.players) {
+        setLivePlayers(session.players);
       }
 
       const myPlayerId = sessionStorage.getItem("lp_playerId");
@@ -135,20 +141,39 @@ export default function RoleRevealPage() {
 
   const handleAcknowledge = useCallback(() => {
     if (acknowledged) return;
+
+    // Validation for acting roles
+    if (role.id === "virus" && !selectedTargetId) {
+      alert("Please select a target to jam.");
+      return;
+    }
+    if (role.id === "router" && (!selectedTargetId || !selectedRouterDestId)) {
+      alert("Please select both Source and Destination.");
+      return;
+    }
+
     playSciFiClick();
     setAcknowledged(true);
     setReadyCount((prev) => prev + 1);
+
+    let action: any = null;
+    if (role.id === "virus") {
+      action = { type: "packet_loss", targets: [selectedTargetId] };
+    } else if (role.id === "router") {
+      action = { type: "gateway_hijack", targets: [selectedTargetId, selectedRouterDestId] };
+    }
+
     const socket = getSocket();
     socket.emit(
       "acknowledge_role",
-      { sessionId: roomCode },
+      { sessionId: roomCode, action },
       (resp: { success: boolean; orbitInfo?: unknown }) => {
         if (resp?.orbitInfo) {
           sessionStorage.setItem("lp_orbit_info", JSON.stringify(resp.orbitInfo));
         }
       },
     );
-  }, [acknowledged, roomCode]);
+  }, [acknowledged, roomCode, role.id, selectedTargetId, selectedRouterDestId]);
 
   const handleRestartRound = useCallback(() => {
     const socket = getSocket();
@@ -410,6 +435,28 @@ export default function RoleRevealPage() {
               </div>
             )}
 
+            {/* Target Selection for Virus/Router */}
+            {!acknowledged && (role.id === "virus" || role.id === "router") && (
+              <div className="flex flex-col gap-4 mb-4">
+                <TargetSelector
+                  label={role.id === "virus" ? "JAM INTERFACE" : "GATEWAY SOURCE"}
+                  players={livePlayers.filter(p => p.id !== getSocket().id)}
+                  selectedId={selectedTargetId}
+                  onSelect={setSelectedTargetId}
+                  accentColor={accentColor}
+                />
+                {role.id === "router" && (
+                  <TargetSelector
+                    label="GATEWAY DESTINATION"
+                    players={livePlayers.filter(p => p.id !== getSocket().id && p.id !== selectedTargetId)}
+                    selectedId={selectedRouterDestId}
+                    onSelect={setSelectedRouterDestId}
+                    accentColor={accentColor}
+                  />
+                )}
+              </div>
+            )}
+
             {/* Acknowledge button — desktop (inline) */}
             <div className={`hidden lg:block transition-opacity duration-500 delay-300 ${revealState === "ready" ? "opacity-100" : "opacity-0"}`}>
               {revealState === "ready" && (
@@ -498,5 +545,41 @@ function AcknowledgeButton({ acknowledged, accentColor, accentColorLight, accent
     >
       I ACKNOWLEDGE MY ROLE
     </button>
+  );
+}
+
+function TargetSelector({
+  label,
+  players,
+  selectedId,
+  onSelect,
+  accentColor,
+}: {
+  label: string;
+  players: any[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  accentColor: string;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="font-orbitron text-[10px] tracking-[0.2em] uppercase text-white/40">{label}</div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {players.map((p) => (
+          <button
+            key={p.id}
+            onClick={() => onSelect(p.id)}
+            className="px-3 py-2 rounded border font-orbitron text-[10px] tracking-widest uppercase transition-all"
+            style={{
+              background: selectedId === p.id ? `${accentColor}40` : "transparent",
+              borderColor: selectedId === p.id ? accentColor : "white/10",
+              color: selectedId === p.id ? "white" : "white/50",
+            }}
+          >
+            {p.name}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
