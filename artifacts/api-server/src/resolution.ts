@@ -115,7 +115,11 @@ export function runResolution(
         routerRedirected.set(action.targets[0], action.targets[1]);
         const source = session.players.find((p) => p.id === action.targets[0]);
         const dest = session.players.find((p) => p.id === action.targets[1]);
-        logActor(actor.name, actor.id, `hijacked ${source?.name ?? "a player"}'s ability to redirect to ${dest?.name ?? "another player"}`);
+        logActor(
+          actor.name,
+          actor.id,
+          `used Gateway Hijack on ${source?.name ?? "a player"} (redirected to ${dest?.name ?? "another player"})`
+        );
       }
 
       // ── ENFORCE ROUTER HIJACK: override action.targets for hijacked players ──
