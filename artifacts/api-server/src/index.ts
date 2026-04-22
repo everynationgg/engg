@@ -10,6 +10,17 @@ const port = rawPort ? Number(rawPort) : 10000;
 
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
+// Global error handlers to log all uncaught errors and promise rejections
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  if (typeof logger !== 'undefined') logger.error({ err }, 'Uncaught Exception');
+  process.exit(1);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection:', reason);
+  if (typeof logger !== 'undefined') logger.error({ reason }, 'Unhandled Rejection');
+  process.exit(1);
+});
 }
 
 const httpServer = http.createServer(app);
