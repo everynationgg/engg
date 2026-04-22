@@ -418,8 +418,8 @@ export function acknowledgeRole(state: GameState, playerId: string): Acknowledge
   state.phase = "orbit_action";
 
   const autoActions: Array<{ playerId: string; roleId: string; action: PlayerAction }> = [];
-  const activePlayers = getActivePlayers(state);
-  for (const p of activePlayers) {
+  const alivePlayers = state.players.filter((p) => p.alive);
+  for (const p of alivePlayers) {
     const roleId = state.rolesAssigned[p.id];
     if (PASSIVE_ROLE_IDS.has(roleId)) {
       const passiveAction: PlayerAction = {
