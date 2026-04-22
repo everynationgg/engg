@@ -28,10 +28,18 @@ export default function ShipOSBoot() {
     let currentIndex = 0;
     let isMounted = true;
 
+    // Defensive: clear lines if remounting
+    setLines([]);
+
     const addLine = () => {
       if (!isMounted) return;
-      if (currentIndex < bootSequence.length) {
-        setLines(prev => [...prev, bootSequence[currentIndex]]);
+      // Defensive: prevent duplicate lines
+      if (currentIndex < bootSequence.length && lines.length < bootSequence.length) {
+        setLines(prev => {
+          // Only add if not already present
+          if (prev.length > currentIndex) return prev;
+          return [...prev, bootSequence[currentIndex]];
+        });
         currentIndex++;
         const nextDelay = Math.random() * 200 + 100; // 100-300ms
         setTimeout(addLine, nextDelay);
@@ -49,6 +57,7 @@ export default function ShipOSBoot() {
     return () => {
       isMounted = false;
       clearTimeout(initialDelay);
+      setLines([]); // Defensive: clear on unmount
     };
   }, [lowGraphics]);
 

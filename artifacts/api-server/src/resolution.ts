@@ -104,13 +104,18 @@ export function runResolution(
         continue;
       }
 
-      // Virus effect: mark target as blinded
+      // Virus effect: mark target as blinded and log ability usage
       if (roleId === "virus" && action && action.targets && action.targets[0]) {
         virusBlinded.add(action.targets[0]);
+        const target = session.players.find((p) => p.id === action.targets[0]);
+        logActor(actor.name, actor.id, `jammed ${target?.name ?? "a player"}'s interface during the reveal`);
       }
-      // Router effect: mark destination as redirected
-      if (roleId === "router" && action && action.targets && action.targets[1]) {
+      // Router effect: mark destination as redirected and log ability usage
+      if (roleId === "router" && action && action.targets && action.targets[0] && action.targets[1]) {
         routerRedirected.add(action.targets[1]);
+        const source = session.players.find((p) => p.id === action.targets[0]);
+        const dest = session.players.find((p) => p.id === action.targets[1]);
+        logActor(actor.name, actor.id, `hijacked ${source?.name ?? "a player"}'s ability to redirect to ${dest?.name ?? "another player"}`);
       }
 
       // Block check — Sentinel and Scanner are immune (Sentinel fires before Disruptor;
