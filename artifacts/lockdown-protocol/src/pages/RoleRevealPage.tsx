@@ -227,7 +227,7 @@ export default function RoleRevealPage() {
 
           {/* LEFT — Role image/video */}
           <div
-            className="lg:w-[45%] shrink-0 relative flex items-center justify-center p-6 lg:p-12"
+            className="lg:w-[45%] shrink-0 relative flex items-center justify-center p-4 lg:p-12"
             style={{
               opacity: revealState === "ready" ? 1 : 0.4,
               transform: revealState === "ready" ? "rotateY(0deg) scale(1)" : "rotateY(16deg) scale(0.96)",
@@ -235,7 +235,7 @@ export default function RoleRevealPage() {
               transition: "opacity 360ms ease, transform 560ms cubic-bezier(0.22, 1, 0.36, 1)",
             }}
           >
-            <div className="relative w-full aspect-square max-w-[500px]">
+            <div className="relative w-full aspect-square max-w-[500px] max-h-[30vh] lg:max-h-none">
               {/* Futuristic frame border */}
               <div
                 className="absolute -inset-1 rounded-lg blur-sm opacity-50"
@@ -303,7 +303,7 @@ export default function RoleRevealPage() {
                 YOUR ROLE IS
               </div>
               <div
-                className={`font-orbitron font-black text-4xl lg:text-5xl tracking-widest uppercase ${isAlien ? "glitch-text" : ""}`}
+                className={`font-orbitron font-black text-3xl lg:text-5xl tracking-widest uppercase ${isAlien ? "glitch-text" : ""}`}
                 data-text={role.name}
                 style={{
                   color: accentColorLight,

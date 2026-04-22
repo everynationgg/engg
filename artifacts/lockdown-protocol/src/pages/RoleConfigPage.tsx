@@ -1137,7 +1137,7 @@ function RolePreview({ role }: { role: Role }) {
   return (
     <div className="flex flex-row lg:flex-col h-full">
       {/* Role image/video — square frame */}
-      <div className="relative w-full aspect-square overflow-hidden shrink-0 p-4">
+      <div className="relative w-1/3 lg:w-full aspect-square overflow-hidden shrink-0 p-2 lg:p-4">
         <div className="relative w-full h-full rounded-lg border border-white/10 overflow-hidden">
           <video
             key={role.id}
@@ -1176,7 +1176,7 @@ function RolePreview({ role }: { role: Role }) {
           style={{ borderColor: "hsl(210 30% 14%)" }}
         >
           <div
-            className="font-orbitron font-black text-base lg:text-xl tracking-widest uppercase"
+            className="font-orbitron font-black text-sm lg:text-xl tracking-widest uppercase"
             style={{ color: accentColorLight, textShadow: `0 0 10px ${accentColor}` }}
             data-testid="text-preview-name"
           >

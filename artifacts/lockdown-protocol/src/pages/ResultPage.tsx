@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { getSocket } from "@/lib/socket";
 import { ROLES } from "@/data/roles";
-import { playGameOutcome, playSciFiClick, playBassDrop } from "@/lib/sound";
+import { playGameOutcome, playSciFiClick, playBassDrop, playMechanicalChunk } from "@/lib/sound";
 import { useAuth } from "@/hooks/useAuth";
 import { useGameChat } from "@/hooks/useGameChat";
 import { useRecordGameResult, determinePlayerWon, generateGameId } from "@/hooks/useRecordGameResult";
@@ -789,113 +789,190 @@ function EjectionCinematic({
   lastMessage?: string;
 }) {
   const [phase, setPhase] = useState(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    // phase 0: initial blank/stars
-    // phase 1: text appears + character drifts
-    // phase 2: role reveal text appears
-    // phase 3: fade out
-    const t1 = setTimeout(() => setPhase(1), 500);
-    const t2 = setTimeout(() => setPhase(2), 3000);
-    const t3 = setTimeout(() => setPhase(3), 6000);
-    const t4 = setTimeout(onComplete, 6500);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
+    // phase 0: Initial silence/vignette
+    // phase 1: Video starts + Name appears
+    // phase 2: Video reaches climax + Role Reveal
+    // phase 3: Transition out
+    const t1 = setTimeout(() => {
+      setPhase(1);
+      playMechanicalChunk();
+      if (videoRef.current) {
+        videoRef.current.currentTime = 0;
+        videoRef.current.play().catch(e => console.error("Video play failed:", e));
+      }
+    }, 800);
+    
+    const t2 = setTimeout(() => {
+      setPhase(2);
+      playBassDrop();
+    }, 3800);
+    
+    const t3 = setTimeout(() => setPhase(3), 7200);
+    const t4 = setTimeout(onComplete, 7800);
+    
+    return () => { 
+      clearTimeout(t1); 
+      clearTimeout(t2); 
+      clearTimeout(t3); 
+      clearTimeout(t4); 
+    };
   }, [onComplete]);
 
   const roleDef = ROLES.find((r) => r.id === result.eliminatedRole);
   const isAlien = roleDef?.team === "alien";
+  const isChaotic = roleDef?.team === "chaotic";
+  
+  const themeColor = isAlien ? 'hsl(0 75% 55%)' : isChaotic ? 'hsl(270 70% 60%)' : 'hsl(185 100% 50%)';
+  const themeGlow = isAlien ? 'hsl(0 75% 60% / 0.5)' : isChaotic ? 'hsl(270 70% 65% / 0.5)' : 'hsl(185 100% 60% / 0.5)';
 
   return (
-    <div className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden bg-black transition-opacity duration-500 ${phase === 3 ? 'opacity-0' : 'opacity-100'}`}>
+    <div className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden bg-black transition-opacity duration-700 ${phase === 3 ? 'opacity-0' : 'opacity-100'}`}>
       
-      {/* Deep space background */}
-      <div className="absolute inset-0 opacity-80" style={{ background: "radial-gradient(circle at center, hsl(210 40% 12%), black 80%)" }} />
+      {/* Cinematic Overlays */}
+      <div className="absolute inset-0 pointer-events-none z-50">
+        {/* Vignette */}
+        <div className="absolute inset-0 shadow-[inset_0_0_150px_rgba(0,0,0,1)]" />
+        {/* CRT Scanlines */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ background: "linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))", backgroundSize: "100% 4px, 3px 100%" }} />
+      </div>
+
+      {/* Background Ambience */}
+      <div className="absolute inset-0 opacity-40" style={{ background: `radial-gradient(circle at center, ${themeColor}11, transparent 70%)` }} />
 
       {result.eliminatedId ? (
-        <div className="relative z-10 flex flex-col items-center w-full">
-          {/* Character drifting across screen */}
-          <div className="absolute w-full h-full pointer-events-none flex items-center justify-center">
+        <div className="relative z-10 w-full max-w-4xl h-full flex flex-col items-center justify-center px-6">
+          
+          {/* Main Visual: Video Container */}
+          <div 
+            className={`relative w-full aspect-video max-h-[50vh] rounded-lg overflow-hidden border-2 transition-all duration-1000 ${phase >= 1 ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}
+            style={{ 
+              borderColor: `${themeColor}44`,
+              boxShadow: `0 0 40px ${themeColor}22`,
+            }}
+          >
             {roleDef && (
-              <div 
-                className={`relative w-64 h-64 sm:w-80 sm:h-80 flex items-center justify-center ${phase >= 2 ? 'animate-airlock-eject-cinematic' : ''}`}
-                style={{ 
-                  opacity: phase >= 1 ? 1 : 0, 
-                  transform: phase === 1 ? "scale(1)" : undefined,
-                  transition: "opacity 1s, transform 1s cubic-bezier(0.34, 1.56, 0.64, 1)"
-                }}
-              >
-                {/* Silhouette Fallback (High Contrast) */}
-                <div className="absolute inset-8 rounded-full bg-cyan-500/40 border-4 border-cyan-500/60 shadow-[0_0_30px_cyan]" />
-                
-                {/* Primary WebP Character Image */}
-                <img 
-                  src={roleDef.image} 
-                  alt={roleDef.name} 
-                  className="relative w-full h-full rounded-full object-cover z-10"
-                  style={{ 
-                    border: `8px solid ${isAlien ? 'hsl(0 75% 55%)' : 'hsl(185 100% 50%)'}`, 
-                    boxShadow: `0 0 80px ${isAlien ? 'hsl(0 75% 60%)' : 'hsl(185 100% 60%)'}`,
-                    filter: "contrast(1.2) brightness(1.2)"
-                  }}
-                />
-
-                {/* HUD Overlay on character */}
-                <div 
-                  className="absolute inset-0 rounded-full border-[16px] border-white/20 pointer-events-none z-20"
-                  style={{ boxShadow: "inset 0 0 40px rgba(0,0,0,0.8)" }}
-                >
-                  <div className="absolute top-1/2 left-0 w-full h-[4px] bg-red-500/80 shadow-[0_0_15px_red] animate-scanline" />
-                </div>
-              </div>
+              <video
+                ref={videoRef}
+                src={roleDef.evictionVideo}
+                className="w-full h-full object-cover"
+                muted
+                playsInline
+              />
             )}
+            
+            {/* Cinematic HUD Elements */}
+            <div className="absolute top-4 left-4 flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
+                <div className="font-mono text-[10px] text-white/60 tracking-widest uppercase">REC // EXTERIOR_HATCH_04</div>
+              </div>
+              <div className="font-mono text-[8px] text-white/40 tracking-tighter">COORD: 42.091 // -11.084 // SPD: 0.00km/s</div>
+            </div>
+
+            {/* Glitch Overlay on Reveal */}
+            <div className={`absolute inset-0 bg-white pointer-events-none z-20 mix-blend-overlay transition-opacity duration-300 ${phase === 2 ? 'opacity-20 animate-glitch-flash' : 'opacity-0'}`} />
           </div>
 
-          <div className="mt-48 text-center flex flex-col gap-4">
-            {lastMessage && (
-              <div className={`italic text-sm tracking-widest transition-all duration-1000 ${phase >= 1 ? 'opacity-40' : 'opacity-0'}`} style={{ color: "hsl(190 60% 80%)", fontFamily: "'Exo 2', sans-serif" }}>
-                " {lastMessage.toUpperCase()} "
-                <div className="text-[8px] mt-1 opacity-60">LAST TRANSMISSION RECEIVED</div>
-              </div>
-            )}
-            <div className={`font-orbitron font-black text-3xl sm:text-4xl tracking-[0.4em] uppercase transition-all duration-1000 ${phase >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ color: "white", textShadow: `0 0 20px ${isAlien ? 'hsl(0 75% 55%)' : 'hsl(185 100% 50%)'}` }}>
-              {result.eliminatedName}
-            </div>
-            <div className={`font-orbitron font-bold text-lg tracking-[0.2em] uppercase transition-all duration-1000 ${phase >= 1 ? 'opacity-80' : 'opacity-0'}`} style={{ color: "hsl(0 0% 80%)" }}>
-              WAS EJECTED FROM THE SHIP
-            </div>
+          {/* Text Information Container */}
+          <div className="mt-8 text-center flex flex-col items-center w-full">
             
-            <div className={`mt-4 font-orbitron font-bold text-xl tracking-[0.3em] uppercase transition-all duration-1000 flex items-center justify-center gap-4 ${phase >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ color: isAlien ? "hsl(0 75% 60%)" : "hsl(185 100% 60%)" }}>
-              <span className="w-12 h-[1px] bg-current opacity-30" />
-              {isAlien ? "AN ALIEN" : "A CREWMEMBER"}
-              <span className="w-12 h-[1px] bg-current opacity-30" />
+            {/* Last Transmission */}
+            <div className={`h-12 flex flex-col items-center justify-center transition-all duration-1000 ${phase >= 1 ? 'opacity-100' : 'opacity-0'}`}>
+              {lastMessage ? (
+                <div className="relative">
+                  <div className="italic text-cyan-200/60 text-xs tracking-[0.2em] uppercase font-light max-w-md line-clamp-1" style={{ fontFamily: "'Exo 2', sans-serif" }}>
+                    " {lastMessage} "
+                  </div>
+                  <div className="text-[7px] mt-1 text-cyan-400/40 tracking-[0.4em] font-bold">LAST TRANSMISSION INTERCEPTED</div>
+                </div>
+              ) : (
+                <div className="text-[7px] text-white/20 tracking-[0.5em] font-bold">COMMUNICATION LINK SEVERED</div>
+              )}
+            </div>
+
+            {/* Subject Name */}
+            <div className="mt-4 relative group">
+              <div 
+                className={`font-orbitron font-black text-3xl sm:text-5xl tracking-[0.3em] uppercase transition-all duration-1000 ${phase >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+                style={{ 
+                  color: "white", 
+                  textShadow: `0 0 30px ${themeColor}`,
+                }}
+              >
+                {result.eliminatedName}
+              </div>
+              {/* Decorative side brackets */}
+              <div className={`absolute -left-8 top-1/2 -translate-y-1/2 w-4 h-full border-l-2 border-t-2 border-b-2 transition-all duration-1000 delay-300 ${phase >= 1 ? 'opacity-30 scale-y-100' : 'opacity-0 scale-y-0'}`} style={{ borderColor: themeColor }} />
+              <div className={`absolute -right-8 top-1/2 -translate-y-1/2 w-4 h-full border-r-2 border-t-2 border-b-2 transition-all duration-1000 delay-300 ${phase >= 1 ? 'opacity-30 scale-y-100' : 'opacity-0 scale-y-0'}`} style={{ borderColor: themeColor }} />
+            </div>
+
+            {/* Status Text */}
+            <div className={`mt-4 font-orbitron font-bold text-sm tracking-[0.5em] uppercase transition-all duration-1000 delay-500 ${phase >= 1 ? 'opacity-60' : 'opacity-0'}`} style={{ color: "hsl(0 0% 90%)" }}>
+              REMOVED FROM SYSTEM
+            </div>
+
+            {/* Role Reveal */}
+            <div className="mt-8 h-16 flex items-center justify-center">
+              <div 
+                className={`relative px-8 py-3 flex items-center gap-6 transition-all duration-700 ${phase >= 2 ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}
+              >
+                {/* Reveal Background Glow */}
+                <div className="absolute inset-0 blur-2xl opacity-20" style={{ background: themeColor }} />
+                
+                {/* Left Line */}
+                <div className="w-16 h-[1px] opacity-40" style={{ background: `linear-gradient(90deg, transparent, ${themeColor})` }} />
+                
+                <div className="flex flex-col items-center">
+                  <div className="font-orbitron font-black text-2xl tracking-[0.4em] uppercase" style={{ color: themeColor, textShadow: `0 0 15px ${themeGlow}` }}>
+                    {isAlien ? "ALIEN" : isChaotic ? "CHAOTIC" : "CREWMEMBER"}
+                  </div>
+                  <div className="text-[9px] tracking-[0.8em] font-bold text-white/40 mt-1 uppercase">VERIFIED IDENTITY</div>
+                </div>
+
+                {/* Right Line */}
+                <div className="w-16 h-[1px] opacity-40" style={{ background: `linear-gradient(90deg, ${themeColor}, transparent)` }} />
+              </div>
             </div>
           </div>
         </div>
       ) : (
-        <div className="relative z-10 text-center">
-          <div className={`font-orbitron font-black text-2xl tracking-[0.3em] uppercase transition-all duration-1000 ${phase >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ color: "hsl(210 30% 60%)" }}>
-            NO ONE WAS EJECTED
+        <div className="relative z-10 text-center px-6">
+          <div className="w-24 h-24 mx-auto mb-8 relative">
+            <div className="absolute inset-0 rounded-full border-4 border-white/10 animate-ping" />
+            <div className="absolute inset-0 rounded-full border-2 border-white/20 flex items-center justify-center">
+              <div className="w-12 h-1 bg-white/40 rotate-45" />
+              <div className="absolute w-12 h-1 bg-white/40 -rotate-45" />
+            </div>
           </div>
-          <div className={`mt-4 font-orbitron font-bold text-xl tracking-[0.2em] uppercase transition-all duration-1000 ${phase >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ color: "hsl(210 30% 50%)" }}>
-            TIED VOTE
+          <div className={`font-orbitron font-black text-3xl tracking-[0.5em] uppercase transition-all duration-1000 ${phase >= 1 ? 'opacity-100' : 'opacity-0'}`} style={{ color: "hsl(210 30% 60%)" }}>
+            EJECTION ABORTED
+          </div>
+          <div className={`mt-6 font-orbitron font-bold text-lg tracking-[0.3em] uppercase transition-all duration-1000 delay-300 ${phase >= 2 ? 'opacity-100' : 'opacity-0'}`} style={{ color: "hsl(210 30% 40%)" }}>
+            NO CONSENSUS REACHED
           </div>
         </div>
       )}
 
       <style>{`
-        @keyframes drift-bg {
-          0% { transform: scale(1.1) translateX(0); }
-          100% { transform: scale(1.1) translateX(-5%); }
+        @keyframes glitch-flash {
+          0% { opacity: 0; transform: skewX(0deg); }
+          20% { opacity: 0.5; transform: skewX(10deg); }
+          40% { opacity: 0.3; transform: skewX(-10deg); }
+          60% { opacity: 0.6; transform: skewX(5deg); }
+          100% { opacity: 0; transform: skewX(0deg); }
         }
-        @keyframes airlock-eject-cinematic {
-          0% { transform: scale(0.8); opacity: 0; filter: blur(10px); }
-          15% { transform: scale(1.1); opacity: 1; filter: blur(0px); }
-          40% { transform: scale(1); opacity: 1; filter: blur(0px); }
-          50% { transform: scale(1) translateX(0) rotate(0deg); opacity: 1; }
-          100% { transform: scale(0.5) translateX(100vw) rotate(120deg); opacity: 0; filter: blur(4px); }
+        .animate-glitch-flash {
+          animation: glitch-flash 0.4s ease-out;
         }
-        .animate-airlock-eject-cinematic {
-          animation: airlock-eject-cinematic 6s linear forwards;
+        @keyframes scanline {
+          0% { top: 0%; }
+          100% { top: 100%; }
+        }
+        .animate-scanline {
+          animation: scanline 4s linear infinite;
         }
       `}</style>
     </div>
