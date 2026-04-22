@@ -464,7 +464,7 @@ export default function RoleRevealPage() {
                       return true;
                     })}
                     selectedId={selectedTargetId}
-                    onSelect={setSelectedTargetId}
+                    onSelect={(id) => setSelectedTargetId(id)}
                     accentColor={accentColor}
                   />
                   {role.id === "router" && (
@@ -472,7 +472,7 @@ export default function RoleRevealPage() {
                       label="GATEWAY DESTINATION"
                       players={livePlayers.filter(p => !isSelf(p) && p.id !== selectedTargetId)}
                       selectedId={selectedRouterDestId}
-                      onSelect={setSelectedRouterDestId}
+                      onSelect={(id) => setSelectedRouterDestId(id)}
                       accentColor={accentColor}
                     />
                   )}
@@ -581,28 +581,43 @@ function TargetSelector({
   label: string;
   players: any[];
   selectedId: string | null;
-  onSelect: (id: string) => void;
+  onSelect: (id: string | null) => void;
   accentColor: string;
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <div className="font-orbitron text-[10px] tracking-[0.2em] uppercase text-white/40">{label}</div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-        {players.map((p) => (
-          <button
-            key={p.id}
-            onClick={() => onSelect(p.id)}
-            className="px-3 py-2 rounded border font-orbitron text-[10px] tracking-widest uppercase transition-all"
-            style={{
-              background: selectedId === p.id ? `${accentColor}40` : "transparent",
-              borderColor: selectedId === p.id ? accentColor : "white/10",
-              color: selectedId === p.id ? "white" : "white/50",
-            }}
-          >
-            {p.name}
-          </button>
-        ))}
+      <div className="font-orbitron text-[10px] tracking-[0.2em] uppercase" style={{ color: accentColor }}>
+        {label}
       </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {players.map((p) => {
+          const isSelected = selectedId === p.id;
+          const isLocked = selectedId !== null && !isSelected;
+          return (
+            <button
+              key={p.id}
+              onClick={() => onSelect(isSelected ? null : p.id)}
+              disabled={isLocked}
+              className="px-3 py-2 rounded border font-orbitron text-[10px] tracking-widest uppercase transition-all duration-200"
+              style={{
+                background: isSelected ? `${accentColor}33` : "transparent",
+                borderColor: isSelected ? accentColor : "rgba(255,255,255,0.12)",
+                color: isSelected ? "white" : isLocked ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.5)",
+                opacity: isLocked ? 0.35 : 1,
+                cursor: isLocked ? "not-allowed" : "pointer",
+                boxShadow: isSelected ? `0 0 8px ${accentColor}66` : "none",
+              }}
+            >
+              {p.name}
+            </button>
+          );
+        })}
+      </div>
+      {selectedId && (
+        <div className="font-orbitron text-[9px] tracking-widest uppercase mt-1" style={{ color: accentColor }}>
+          ✓ {players.find(p => p.id === selectedId)?.name ?? "TARGET"} LOCKED
+        </div>
+      )}
     </div>
   );
 }

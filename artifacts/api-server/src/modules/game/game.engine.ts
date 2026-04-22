@@ -371,6 +371,10 @@ export function startGame(
   state.orbitCompleted = [];
   state.roleAcknowledgements = [];
   state.resolutionAcknowledgements = [];
+  state.revealActions = {};
+  state.revealCompleted = [];
+  state.jammedPlayerId = null;
+  state.hijackedTargets = {};
   state.discussionStartedAt = null;
   state.emergencyVote = freshEmergencyVote();
   state.votes = {};

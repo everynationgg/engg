@@ -235,7 +235,7 @@ export default function DiscussionPage() {
     }
   };
 
-  const abilityResultText = renderOrbitResultSummary(orbitResultState, accentLight);
+  const abilityResultText = renderOrbitResultSummary(orbitResultState, accentLight, role.id);
 
   return (
     <div
@@ -548,11 +548,20 @@ function WingIcon({ accentColor }: { accentColor: string }) {
 function renderOrbitResultSummary(
   result: { type: string; data?: unknown } | null,
   accentLight: string,
+  roleId?: string,
 ): React.ReactNode {
   const muted: React.CSSProperties = { color: "hsl(210 30% 50%)", fontFamily: "'Exo 2', sans-serif" };
   const info: React.CSSProperties = { color: "hsl(190 60% 78%)", fontFamily: "'Exo 2', sans-serif" };
   const warn: React.CSSProperties = { color: "hsl(45 80% 65%)", fontFamily: "'Exo 2', sans-serif" };
   const good: React.CSSProperties = { color: "hsl(140 70% 60%)", fontFamily: "'Exo 2', sans-serif" };
+
+  // Virus and Router act during Role Reveal, not during Orbit
+  if (roleId === "virus") {
+    return <p className="text-sm" style={info}>You used <strong>Packet Loss</strong> during the Role Reveal phase. Your target cannot see player identities this round.</p>;
+  }
+  if (roleId === "router") {
+    return <p className="text-sm" style={info}>You used <strong>Gateway Hijack</strong> during the Role Reveal phase. The Source player's ability has been redirected.</p>;
+  }
 
   if (!result || result.type === "no_ability") {
     return <p className="text-sm" style={muted}>You have no active ability — you observed the orbit phase.</p>;

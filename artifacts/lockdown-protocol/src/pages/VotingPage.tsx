@@ -310,7 +310,7 @@ export default function VotingPage() {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col px-4 sm:px-6 py-6 gap-5 overflow-y-auto pb-32 lg:pb-8 max-w-2xl mx-auto w-full min-h-0" style={{ WebkitOverflowScrolling: "touch" }}>
+      <div className="flex-1 flex flex-col px-4 sm:px-6 py-3 gap-3 overflow-y-auto pb-24 lg:pb-6 max-w-2xl mx-auto w-full min-h-0" style={{ WebkitOverflowScrolling: "touch" }}>
 
         {/* Title */}
         <div>
@@ -377,7 +377,7 @@ export default function VotingPage() {
                   onClick={() => { if (!isSelf) { playSciFiClick(); setPendingVote(p.id); } }}
                   disabled={isSelf}
                   isPulsing={isPulsing}
-                  className="w-full py-4 font-orbitron font-bold text-sm tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-150 active:scale-95"
+                  className="w-full py-2.5 font-orbitron font-bold text-sm tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-150 active:scale-95"
                   style={{
                     background: isSelf ? "hsl(220 28% 8%)" : accentColor.replace(")", " / 0.12)"),
                     borderColor: isSelf ? "hsl(210 30% 16%)" : accentColor.replace(")", " / 0.6)"),
@@ -407,7 +407,7 @@ export default function VotingPage() {
               <button
                 data-testid="vote-abstain"
                 onClick={() => { playSciFiClick(); setPendingVote("abstain"); }}
-                className="w-full py-3 font-orbitron font-bold text-xs tracking-[0.25em] uppercase rounded-md border transition-all duration-150 active:scale-95"
+                className="w-full py-2 font-orbitron font-bold text-xs tracking-[0.25em] uppercase rounded-md border transition-all duration-150 active:scale-95"
                 style={{
                   background: "hsl(220 28% 8%)",
                   borderColor: "hsl(210 30% 22%)",
