@@ -15,6 +15,7 @@ interface HamburgerMenuProps {
   playSound: () => void;
   showQuitButton?: boolean;
   isHost?: boolean;
+  onRestartRound?: () => void;
 }
 
 export default function HamburgerMenu({
@@ -26,6 +27,7 @@ export default function HamburgerMenu({
   playSound,
   showQuitButton = false,
   isHost = false,
+  onRestartRound,
 }: HamburgerMenuProps) {
   const { isLoggedIn, logout, username } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -133,9 +135,19 @@ export default function HamburgerMenu({
     menuItems.push({
       id: "quit",
       icon: "🚪",
-      label: "QUIT",
+      label: midGame ? "QUIT GAME" : "QUIT",
       onClick: () => { playSound(); closeMenu(); openConfirm(); },
       color: "hsl(0 75% 55%)"
+    });
+  }
+
+  if (isHost && onRestartRound) {
+    menuItems.push({
+      id: "restart",
+      icon: "🔄",
+      label: "RESTART",
+      onClick: () => handleMenuItemClick(onRestartRound),
+      color: "hsl(185 100% 50%)"
     });
   }
 

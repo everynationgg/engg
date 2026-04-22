@@ -240,6 +240,15 @@ export default function ResultPage() {
     };
   }, [fetchLeaderboard, maybeRecordMyResult, roomCode]);
 
+  const handleRestartRound = useCallback(() => {
+    const socket = getSocket();
+    socket.emit("restart_game", { sessionId: roomCode }, (resp: { success: boolean; error?: string }) => {
+      if (!resp.success) {
+        console.error("Restart failed:", resp.error);
+      }
+    });
+  }, [roomCode]);
+
   const handleToggleMusic = () => {
     const next = !musicOn;
     setMusicOn(next);
@@ -355,6 +364,8 @@ export default function ResultPage() {
         onToggleMusic={handleToggleMusic}
         playSound={playSciFiClick}
         showQuitButton
+        isHost={isHost}
+        onRestartRound={handleRestartRound}
       />
 
       {/* Settings Modal */}

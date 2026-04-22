@@ -49,6 +49,7 @@ export default function VotingPage() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
   const [roomCopyFeedback, setRoomCopyFeedback] = useState(false);
+  const [isHost, setIsHost] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(60);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const typingTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
@@ -108,6 +109,10 @@ export default function VotingPage() {
       const myPlayerId = sessionStorage.getItem("lp_playerId");
       const id = socket.id;
       setSessionPlayers(session.players.map((p) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === id })));
+
+      const me = session.players.find((p) => myPlayerId ? p.playerId === myPlayerId : p.id === id);
+      if (me) setIsHost(me.isHost);
+
       if (session.votes) {
         setWaitingCount(Object.keys(session.votes).length);
         setVoterIds(new Set(Object.keys(session.votes)));
@@ -123,7 +128,11 @@ export default function VotingPage() {
         if (resp.success && resp.session) {
           const myPlayerId = sessionStorage.getItem("lp_playerId");
           const id = socket.id;
-          setSessionPlayers(resp.session.players.map((p) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === id })));
+          if (resp.session.players) {
+            setSessionPlayers(resp.session.players.map((p: LivePlayer) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === id })));
+            const me = resp.session.players.find((p: LivePlayer) => myPlayerId ? p.playerId === myPlayerId : p.id === id);
+            if (me) setIsHost(me.isHost);
+          }
           if (resp.session.votes) {
             setWaitingCount(Object.keys(resp.session.votes).length);
             setVoterIds(new Set(Object.keys(resp.session.votes)));
@@ -170,6 +179,15 @@ export default function VotingPage() {
       stopLobbyMusic();
     }
   };
+
+  const handleRestartRound = useCallback(() => {
+    const socket = getSocket();
+    socket.emit("restart_game", { sessionId: roomCode }, (resp: { success: boolean; error?: string }) => {
+      if (!resp.success) {
+        console.error("Restart failed:", resp.error);
+      }
+    });
+  }, [roomCode]);
 
   const activePlayers = sessionPlayers.filter(isPlayerConnected);
   const totalPlayers = activePlayers.length;
@@ -245,6 +263,8 @@ export default function VotingPage() {
         onToggleMusic={handleToggleMusic}
         playSound={playSciFiClick}
         showQuitButton
+        isHost={isHost}
+        onRestartRound={handleRestartRound}
       />
 
       {/* Settings Modal */}

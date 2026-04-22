@@ -100,6 +100,15 @@ export default function RoleConfigPage() {
     }
   };
 
+  const handleRestartRound = useCallback(() => {
+    const socket = getSocket();
+    socket.emit("restart_game", { sessionId: roomCode }, (resp: { success: boolean; error?: string }) => {
+      if (!resp.success) {
+        console.error("Restart failed:", resp.error);
+      }
+    });
+  }, [roomCode]);
+
   // Socket connection — server is the single source of truth for phase
   useEffect(() => {
     const socket = getSocket();
@@ -490,6 +499,7 @@ export default function RoleConfigPage() {
         playSound={playSciFiClick}
         showQuitButton
         isHost={amIHost}
+        onRestartRound={handleRestartRound}
       />
 
       {/* Settings Modal */}

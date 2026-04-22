@@ -107,6 +107,7 @@ export default function OrbitPage() {
   const [orbitInfoData, setOrbitInfoData] = useState<{ type: string; data?: unknown } | null>(null);
   const [isSurging, setIsSurging] = useState(false);
   const autoSubmittedRef = useRef(false);
+  const [isHost, setIsHost] = useState(false);
 
   // Hamburger menu states
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -146,6 +147,15 @@ export default function OrbitPage() {
     setPageState("waiting");
   }, [roomCode]);
 
+  const handleRestartRound = useCallback(() => {
+    const socket = getSocket();
+    socket.emit("restart_game", { sessionId: roomCode }, (resp: { success: boolean; error?: string }) => {
+      if (!resp.success) {
+        console.error("Restart failed:", resp.error);
+      }
+    });
+  }, [roomCode]);
+
   // ── Socket setup ──────────────────────────────────────────────────────────
   useEffect(() => {
     const socket = getSocket();
@@ -157,6 +167,11 @@ export default function OrbitPage() {
       setSessionPlayers(
         session.players.map((p) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId })),
       );
+
+      // Identify host status from session player list
+      const me = session.players.find((p) => myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId);
+      if (me) setIsHost(me.isHost);
+
       if (session.orbitCompleted) setCompletedCount(session.orbitCompleted.length);
       if (session.phase === "orbit_resolution") setPageState("resolving");
       // GameShell handles navigation to discussion/voting/result/role_config
@@ -189,6 +204,10 @@ export default function OrbitPage() {
               isYou: myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId,
             })),
           );
+
+          const me = (resp.session.players ?? []).find((p: LivePlayer) => myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId);
+          if (me) setIsHost(me.isHost);
+
           if (resp.session.orbitCompleted) setCompletedCount(resp.session.orbitCompleted.length);
           if (resp.session.phase === "orbit_resolution") setPageState("resolving");
           // GameShell handles navigation for other phases
@@ -219,6 +238,11 @@ export default function OrbitPage() {
       }
       setPageState("waiting");
     } else if (role.id === "parasite") {
+      // Parasite sees alien team — auto-submit so they don't block, but show info page
+      if (!autoSubmittedRef.current) {
+        autoSubmittedRef.current = true;
+        socket.emit("submit_action", { sessionId: roomCode, action: { type: "passive", targets: [] } });
+      }
       setPageState("passive_info");
     } else {
       // All other roles (Alien, Scanner, Sentinel, Disruptor, Seeker, Warper, Shifter, Commander)
@@ -316,6 +340,8 @@ export default function OrbitPage() {
         onToggleMusic={handleToggleMusic}
         playSound={playSciFiClick}
         showQuitButton
+        isHost={isHost}
+        onRestartRound={handleRestartRound}
       />
 
       {/* Settings Modal */}

@@ -40,6 +40,7 @@ export default function DiscussionPage() {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
+  const [isHost, setIsHost] = useState(false);
 
   const [evPopup, setEvPopup] = useState<{ callerName: string } | null>(null);
   const [evCast, setEvCast] = useState<"yes" | "no" | null>(null);
@@ -117,6 +118,9 @@ export default function DiscussionPage() {
       const myPlayerId = sessionStorage.getItem("lp_playerId");
       const myId = socket.id;
       setSessionPlayers(session.players.map((p) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === myId })));
+      
+      const me = session.players.find((p) => myPlayerId ? p.playerId === myPlayerId : p.id === myId);
+      if (me) setIsHost(me.isHost);
       // GameShell handles phase navigation
     };
 
@@ -154,7 +158,11 @@ export default function DiscussionPage() {
         if (resp.success && resp.session) {
           const myPlayerId = sessionStorage.getItem("lp_playerId");
           const myId = socket.id;
-          setSessionPlayers(resp.session.players.map((p) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === myId })));
+          if (resp.session.players) {
+            setSessionPlayers(resp.session.players.map((p: LivePlayer) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === myId })));
+            const me = resp.session.players.find((p: LivePlayer) => myPlayerId ? p.playerId === myPlayerId : p.id === myId);
+            if (me) setIsHost(me.isHost);
+          }
 
           // Populate roles-in-play from session config
           if (resp.session.roleCounts) setRoleCounts(resp.session.roleCounts);
@@ -207,6 +215,15 @@ export default function DiscussionPage() {
     socket.emit("cast_emergency_vote", { sessionId: roomCode, vote });
   }, [roomCode]);
 
+  const handleRestartRound = useCallback(() => {
+    const socket = getSocket();
+    socket.emit("restart_game", { sessionId: roomCode }, (resp: { success: boolean; error?: string }) => {
+      if (!resp.success) {
+        console.error("Restart failed:", resp.error);
+      }
+    });
+  }, [roomCode]);
+
   const handleToggleMusic = () => {
     const next = !musicOn;
     setMusicOn(next);
@@ -250,6 +267,8 @@ export default function DiscussionPage() {
         onToggleMusic={handleToggleMusic}
         playSound={playSciFiClick}
         showQuitButton
+        isHost={isHost}
+        onRestartRound={handleRestartRound}
       />
 
       {/* Settings Modal */}

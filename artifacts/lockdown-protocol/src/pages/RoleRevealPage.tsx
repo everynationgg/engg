@@ -47,6 +47,7 @@ export default function RoleRevealPage() {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
+  const [isHost, setIsHost] = useState(false);
 
   const playerName = getPlayerName();
   const totalPlayers = getTotalPlayers();
@@ -54,11 +55,14 @@ export default function RoleRevealPage() {
 
   useEffect(() => {
     const socket = getSocket();
-
-    const handlePhaseUpdate = (session: { phase: string; players: { id: string }[]; roleAcknowledgements?: string[] }) => {
+    const handlePhaseUpdate = (session: any) => {
       if (session.roleAcknowledgements !== undefined) {
         setReadyCount(session.roleAcknowledgements.length);
       }
+
+      const myPlayerId = sessionStorage.getItem("lp_playerId");
+      const me = session.players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === socket.id);
+      if (me) setIsHost(me.isHost);
       // Clear orbit cache when transitioning to orbit (GameShell handles navigation)
       if (session.phase === "orbit_action") {
         sessionStorage.removeItem("lp_orbit_info");
@@ -81,6 +85,9 @@ export default function RoleRevealPage() {
           if (resp.session.roleAcknowledgements !== undefined) {
             setReadyCount(resp.session.roleAcknowledgements.length);
           }
+          const myPlayerId = sessionStorage.getItem("lp_playerId");
+          const me = resp.session.players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === socket.id);
+          if (me) setIsHost(me.isHost);
         }
       });
     };
@@ -143,6 +150,15 @@ export default function RoleRevealPage() {
     );
   }, [acknowledged, roomCode]);
 
+  const handleRestartRound = useCallback(() => {
+    const socket = getSocket();
+    socket.emit("restart_game", { sessionId: roomCode }, (resp: { success: boolean; error?: string }) => {
+      if (!resp.success) {
+        console.error("Restart failed:", resp.error);
+      }
+    });
+  }, [roomCode]);
+
   const handleToggleMusic = () => {
     const next = !musicOn;
     setMusicOn(next);
@@ -179,6 +195,8 @@ export default function RoleRevealPage() {
         onToggleMusic={handleToggleMusic}
         playSound={playSciFiClick}
         showQuitButton
+        isHost={isHost}
+        onRestartRound={handleRestartRound}
       />
 
       {/* Settings Modal */}

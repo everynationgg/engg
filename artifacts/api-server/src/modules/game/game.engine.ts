@@ -399,6 +399,16 @@ export function acknowledgeRole(state: GameState, playerId: string): Acknowledge
 
   const orbitInfo = computeOrbitInfo(state, playerId);
 
+  // Auto-submit for the acknowledging player if they have a passive role
+  const roleId = state.rolesAssigned[playerId];
+  if (PASSIVE_ROLE_IDS.has(roleId) && !state.orbitCompleted.includes(playerId)) {
+    const passiveAction: PlayerAction = {
+      type: roleId === "parasite" ? "passive" : "none",
+      targets: [],
+    };
+    submitActionInternal(state, playerId, passiveAction);
+  }
+
   // Block phase advance while game is frozen (grace period or interrupted)
   if (isGameFrozen(state)) {
     return { accepted: true, orbitInfo, allAcknowledged: false };
@@ -420,14 +430,17 @@ export function acknowledgeRole(state: GameState, playerId: string): Acknowledge
   const autoActions: Array<{ playerId: string; roleId: string; action: PlayerAction }> = [];
   const alivePlayers = state.players.filter((p) => p.alive);
   for (const p of alivePlayers) {
-    const roleId = state.rolesAssigned[p.id];
-    if (PASSIVE_ROLE_IDS.has(roleId)) {
-      const passiveAction: PlayerAction = {
-        type: roleId === "parasite" ? "passive" : "none",
-        targets: [],
-      };
-      submitActionInternal(state, p.id, passiveAction);
-      autoActions.push({ playerId: p.id, roleId, action: passiveAction });
+    const rId = state.rolesAssigned[p.id];
+    if (PASSIVE_ROLE_IDS.has(rId)) {
+      // If they haven't submitted yet (e.g. disconnected or just didn't acknowledge yet)
+      if (!state.orbitCompleted.includes(p.id)) {
+        const passiveAction: PlayerAction = {
+          type: rId === "parasite" ? "passive" : "none",
+          targets: [],
+        };
+        submitActionInternal(state, p.id, passiveAction);
+        autoActions.push({ playerId: p.id, roleId: rId, action: passiveAction });
+      }
     }
   }
 
