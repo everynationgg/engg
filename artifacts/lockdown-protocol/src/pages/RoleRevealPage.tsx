@@ -487,7 +487,7 @@ export default function RoleRevealPage() {
                       const socket = getSocket();
                       socket.emit(
                         "acknowledge_role",
-                        { sessionId: roomCode, action: { type: "skip" } },
+                        { sessionId: roomCode, action: { type: "skip", targets: [] } },
                         (resp: { success: boolean; orbitInfo?: unknown }) => {
                           if (resp?.orbitInfo) {
                             sessionStorage.setItem("lp_orbit_info", JSON.stringify(resp.orbitInfo));

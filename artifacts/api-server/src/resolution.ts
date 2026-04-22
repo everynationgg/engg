@@ -77,7 +77,10 @@ export function runResolution(
     );
 
     for (const actor of actors) {
-      const action = session.orbitActions[actor.id];
+
+      let action = session.orbitActions[actor.id];
+      // Defensive: ensure action.targets is always an array
+      if (action && !Array.isArray(action.targets)) action.targets = [];
 
       // No submission
       if (!action) {
