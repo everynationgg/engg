@@ -8,6 +8,8 @@ import seekerImg from "@assets/role-seeker_1776003488685.webp";
 import disruptorImg from "@assets/role-disruptor_1776003488684.webp";
 import shifterImg from "@assets/role-shifter_1776003488682.webp";
 import warperImg from "@assets/role-warper_1776003488682.webp";
+import virusImg from "@assets/role-virus.webp";
+import routerImg from "@assets/role-router.webp";
 
 
 import alienVid from "@assets/role-alien.webm";
@@ -64,8 +66,8 @@ export const ROLES: Role[] = [
     team: "alien",
     alignment: "Alien Team",
     image: alienImg,
-    video: virusVid,
-    evictionVideo: virusEvictionVid,
+    video: alienVid,
+    evictionVideo: alienEvictionVid,
     winCondition: "Do not get voted out",
     ability: "View 1 center card",
     notes: "None",
@@ -94,8 +96,8 @@ export const ROLES: Role[] = [
     team: "chaotic",
     alignment: "Chaotic",
     image: disruptorImg,
-    video: routerVid,
-    evictionVideo: routerEvictionVid,
+    video: disruptorVid,
+    evictionVideo: disruptorEvictionVid,
     winCondition: "Depends on chosen alignment",
     ability: "Block 1 player's ability",
     notes: "None",
@@ -213,9 +215,9 @@ export const ROLES: Role[] = [
     name: "Virus",
     team: "alien",
     alignment: "Alien Team",
-    image: alienImg,
-    video: alienVid,
-    evictionVideo: alienEvictionVid,
+    image: virusImg,
+    video: virusVid,
+    evictionVideo: virusEvictionVid,
     winCondition: "Alien Team Wins",
     ability: "Packet Loss — Scramble one crew member's interface during the Reveal phase. They cannot see target names in the next round.",
     notes: "Acts during Role Reveal. Cannot target Aliens.",
@@ -230,9 +232,9 @@ export const ROLES: Role[] = [
     name: "Router",
     team: "chaotic",
     alignment: "Chaotic",
-    image: disruptorImg,
-    video: disruptorVid,
-    evictionVideo: disruptorEvictionVid,
+    image: routerImg,
+    video: routerVid,
+    evictionVideo: routerEvictionVid,
     winCondition: "Chaotic Victory",
     ability: "Gateway Hijack — During Reveal, select a 'Source' player and a 'Destination' player. The Source's next ability will be forced onto the Destination.",
     notes: "Acts during Role Reveal.",
