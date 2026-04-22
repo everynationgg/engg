@@ -51,6 +51,7 @@ export default function RoleRevealPage() {
   const [livePlayers, setLivePlayers] = useState<any[]>([]);
   const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
   const [selectedRouterDestId, setSelectedRouterDestId] = useState<string | null>(null);
+  const [rolesAssigned, setRolesAssigned] = useState<Record<string, string>>({});
 
   const playerName = getPlayerName();
   const totalPlayers = getTotalPlayers();
@@ -64,6 +65,9 @@ export default function RoleRevealPage() {
       }
       if (session.players) {
         setLivePlayers(session.players);
+      }
+      if (session.rolesAssigned) {
+        setRolesAssigned(session.rolesAssigned);
       }
 
       const myPlayerId = sessionStorage.getItem("lp_playerId");
@@ -90,6 +94,12 @@ export default function RoleRevealPage() {
         if (resp.success && resp.session) {
           if (resp.session.roleAcknowledgements !== undefined) {
             setReadyCount(resp.session.roleAcknowledgements.length);
+          }
+          if (resp.session.players) {
+            setLivePlayers(resp.session.players);
+          }
+          if (resp.session.rolesAssigned) {
+            setRolesAssigned(resp.session.rolesAssigned);
           }
           const myPlayerId = sessionStorage.getItem("lp_playerId");
           const me = resp.session.players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === socket.id);
@@ -440,7 +450,15 @@ export default function RoleRevealPage() {
               <div className="flex flex-col gap-4 mb-4">
                 <TargetSelector
                   label={role.id === "virus" ? "JAM INTERFACE" : "GATEWAY SOURCE"}
-                  players={livePlayers.filter(p => p.id !== getSocket().id)}
+                  players={livePlayers.filter(p => {
+                    const isSelf = p.id === getSocket().id;
+                    const r = rolesAssigned[p.id];
+                    const isAlienTeam = r === "alien" || r === "parasite" || r === "virus";
+                    if (role.id === "virus") {
+                      return !isSelf && !isAlienTeam;
+                    }
+                    return !isSelf;
+                  })}
                   selectedId={selectedTargetId}
                   onSelect={setSelectedTargetId}
                   accentColor={accentColor}

@@ -239,7 +239,6 @@ const ROLE_ORDER = [
   "warper",
   "shifter",
   "seeker",
-  "vip_agent",
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -786,26 +785,6 @@ export function resolveRound(state: GameState): ResolutionResult {
             data: { targetName: targetPlayer.name, acquiredRole: targetRole },
           };
           logActor(actor.name, actor.id, `exchanged roles with ${targetPlayer.name}`);
-          break;
-        }
-
-        // ── VIP Agent ────────────────────────────────────────────────────
-        case "vip_agent": {
-          const targetPlayerId = targets[0];
-          const targetCardIdx = parseInt((targets[1] ?? "center_0").replace("center_", ""), 10);
-          const targetPlayer = state.players.find(p => p.id === targetPlayerId);
-          const playerRole = state.rolesAssigned[targetPlayerId] ?? "unknown";
-          const cardRole = state.centerCards[targetCardIdx] ?? "unknown";
-          feedback[actor.id] = {
-            type: "vip_agent",
-            data: {
-              targetPlayerName: targetPlayer?.name ?? "Unknown",
-              playerRole,
-              cardIndex: targetCardIdx,
-              cardRole
-            }
-          };
-          logActor(actor.name, actor.id, `accessed high-level clearance data`);
           break;
         }
 
