@@ -306,7 +306,7 @@ export default function RoleRevealPage() {
                 loop
                 muted
                 playsInline
-                preload={revealState === "ready" ? "auto" : "none"}
+                preload="auto"
                 className="w-full h-full object-contain rounded-lg relative z-0"
                 style={{ background: "black" }}
               />

@@ -1157,7 +1157,7 @@ function RolePreview({ role }: { role: Role }) {
             loop
             muted
             playsInline
-            preload="none"
+            preload="auto"
             className="w-full h-full object-contain"
             style={{ background: "black" }}
             data-testid="video-role-preview"
