@@ -445,7 +445,7 @@ export default function RoleRevealPage() {
               </div>
             )}
 
-            {/* Target Selection for Virus/Router */}
+            {/* Target Selection for Virus/Router + Skip Button */}
             {!acknowledged && revealState === "ready" && (role.id === "virus" || role.id === "router") && (() => {
               const myPlayerId = sessionStorage.getItem("lp_playerId");
               const mySocketId = getSocket().id;
@@ -476,6 +476,28 @@ export default function RoleRevealPage() {
                       accentColor={accentColor}
                     />
                   )}
+                  {/* Skip Button */}
+                  <button
+                    className="mt-2 px-4 py-2 rounded bg-gray-800 border border-gray-600 text-xs font-orbitron tracking-widest uppercase hover:bg-gray-700"
+                    style={{ color: accentColorLight, borderColor: accentColor }}
+                    onClick={() => {
+                      playSciFiClick();
+                      setAcknowledged(true);
+                      setReadyCount((prev) => prev + 1);
+                      const socket = getSocket();
+                      socket.emit(
+                        "acknowledge_role",
+                        { sessionId: roomCode, action: { type: "skip" } },
+                        (resp: { success: boolean; orbitInfo?: unknown }) => {
+                          if (resp?.orbitInfo) {
+                            sessionStorage.setItem("lp_orbit_info", JSON.stringify(resp.orbitInfo));
+                          }
+                        }
+                      );
+                    }}
+                  >
+                    Skip
+                  </button>
                 </div>
               );
             })()}

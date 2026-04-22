@@ -19,11 +19,10 @@ export interface PrivateFeedback {
   data?: unknown;
 }
 
-// Strict resolution order. Sentinel fires first so it can see every subsequent
-// action that affects its watch target. Its feedback is compiled in a second
-// pass after all other abilities have executed and the actionLog is complete.
-// Seeker is placed at the end to reflect the 'last' role after any swaps/shifts.
+// Strict resolution order. Virus and Router act first, then others.
 const ROLE_ORDER = [
+  "virus",
+  "router",
   "sentinel",
   "scanner",
   "alien",
@@ -34,6 +33,10 @@ const ROLE_ORDER = [
   "shifter",
   "seeker",
 ];
+
+// Track players affected by Virus/Router
+const virusBlinded = new Set<string>();
+const routerRedirected = new Set<string>();
 
 export function runResolution(
   session: Session,
@@ -101,12 +104,27 @@ export function runResolution(
         continue;
       }
 
+      // Virus effect: mark target as blinded
+      if (roleId === "virus" && action && action.targets && action.targets[0]) {
+        virusBlinded.add(action.targets[0]);
+      }
+      // Router effect: mark destination as redirected
+      if (roleId === "router" && action && action.targets && action.targets[1]) {
+        routerRedirected.add(action.targets[1]);
+      }
+
       // Block check — Sentinel and Scanner are immune (Sentinel fires before Disruptor;
       // Scanner is explicitly unblockable by design)
       const immuneToBlock = roleId === "scanner" || roleId === "sentinel";
       if (!immuneToBlock && blockedPlayers.has(actor.id)) {
         feedback[actor.id] = { type: "blocked" };
         logActor(actor.name, actor.id, "ability was blocked");
+        continue;
+      }
+      // Virus/Router effect: block Seeker if targeted
+      if (roleId === "seeker" && (virusBlinded.has(actor.id) || routerRedirected.has(actor.id))) {
+        feedback[actor.id] = { type: "blocked" };
+        logActor(actor.name, actor.id, "ability was blocked by Virus/Router");
         continue;
       }
 
@@ -204,7 +222,8 @@ export function runResolution(
           const target = session.players.find((p) => p.id === action.targets[0]);
           if (target) {
             const role = session.rolesAssigned[target.id];
-            const alignment = role === "alien" || role === "parasite" ? "Bad" : "Good";
+            // Virus is now considered Bad alignment
+            const alignment = role === "alien" || role === "parasite" || role === "virus" ? "Bad" : "Good";
             feedback[actor.id] = {
               type: "seek_result",
               data: { targetName: target.name, alignment },
