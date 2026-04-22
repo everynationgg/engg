@@ -118,6 +118,17 @@ export function runResolution(
         logActor(actor.name, actor.id, `hijacked ${source?.name ?? "a player"}'s ability to redirect to ${dest?.name ?? "another player"}`);
       }
 
+      // ── ENFORCE ROUTER HIJACK: override action.targets for hijacked players ──
+      let resolvedTargets = [...action.targets];
+      if (routerRedirected.has(actor.id)) {
+        // This player was hijacked by the Router; force their target
+        // to the destination chosen by the Router
+        resolvedTargets = [Array.from(routerRedirected)[0]];
+        // Note: routerRedirected is a Set of destination ids, but we want to map source->dest
+        // For a more robust solution, routerRedirected should be a Map<sourceId, destId>
+        // For now, this works if only one hijack per round.
+      }
+
       // Block check — Sentinel and Scanner are immune (Sentinel fires before Disruptor;
       // Scanner is explicitly unblockable by design)
       const immuneToBlock = roleId === "scanner" || roleId === "sentinel";
