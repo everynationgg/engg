@@ -843,11 +843,11 @@ function EjectionCinematic({
       <div className="absolute inset-0 opacity-40" style={{ background: `radial-gradient(circle at center, ${themeColor}11, transparent 70%)` }} />
 
       {result.eliminatedId ? (
-        <div className="relative z-10 w-full max-w-4xl h-full flex flex-col items-center justify-center px-6">
+        <div className="relative z-10 w-full max-w-4xl flex flex-col items-center justify-center px-6 gap-2 sm:gap-6">
           
           {/* Main Visual: Video Container */}
           <div 
-            className={`relative w-full aspect-video max-h-[50vh] rounded-lg overflow-hidden border-2 transition-all duration-1000 ${phase >= 1 ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}
+            className={`relative w-full aspect-square max-h-[35vh] sm:max-h-[50vh] rounded-lg overflow-hidden border-2 transition-all duration-1000 ${phase >= 1 ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}
             style={{ 
               borderColor: `${themeColor}44`,
               boxShadow: `0 0 40px ${themeColor}22`,
@@ -877,7 +877,7 @@ function EjectionCinematic({
           </div>
 
           {/* Text Information Container */}
-          <div className="mt-8 text-center flex flex-col items-center w-full">
+          <div className="text-center flex flex-col items-center w-full gap-2 sm:gap-4">
             
             {/* Last Transmission */}
             <div className={`h-12 flex flex-col items-center justify-center transition-all duration-1000 ${phase >= 1 ? 'opacity-100' : 'opacity-0'}`}>
@@ -894,7 +894,7 @@ function EjectionCinematic({
             </div>
 
             {/* Subject Name */}
-            <div className="mt-4 relative group">
+            <div className="relative group">
               <div 
                 className={`font-orbitron font-black text-3xl sm:text-5xl tracking-[0.3em] uppercase transition-all duration-1000 ${phase >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
                 style={{ 
@@ -910,14 +910,14 @@ function EjectionCinematic({
             </div>
 
             {/* Status Text */}
-            <div className={`mt-4 font-orbitron font-bold text-sm tracking-[0.5em] uppercase transition-all duration-1000 delay-500 ${phase >= 1 ? 'opacity-60' : 'opacity-0'}`} style={{ color: "hsl(0 0% 90%)" }}>
+            <div className={`font-orbitron font-bold text-[10px] sm:text-sm tracking-[0.5em] uppercase transition-all duration-1000 delay-500 ${phase >= 1 ? 'opacity-60' : 'opacity-0'}`} style={{ color: "hsl(0 0% 90%)" }}>
               REMOVED FROM SYSTEM
             </div>
 
             {/* Role Reveal */}
-            <div className="mt-8 h-16 flex items-center justify-center">
+            <div className="h-12 sm:h-16 flex items-center justify-center">
               <div 
-                className={`relative px-8 py-3 flex items-center gap-6 transition-all duration-700 ${phase >= 2 ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}
+                className={`relative px-8 py-2 sm:py-3 flex items-center gap-4 sm:gap-6 transition-all duration-700 ${phase >= 2 ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}
               >
                 {/* Reveal Background Glow */}
                 <div className="absolute inset-0 blur-2xl opacity-20" style={{ background: themeColor }} />
