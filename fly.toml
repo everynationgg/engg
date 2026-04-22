@@ -27,7 +27,7 @@ primary_region = 'sin'
   grace_period = '10s'
   interval = '15s'
   method = 'GET'
-  path = '/health'  fly secrets set REDIS_URL="your_redis_connection_string" -a errornewformdetected  
+  path = '/health'
   timeout = '5s'
 
 [[vm]]
