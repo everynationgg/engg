@@ -1,3 +1,4 @@
+
 import http from "node:http";
 import app from "./app.js";
 import { attachSocketIO } from "./socket.js";
@@ -5,11 +6,18 @@ import { logger } from "./lib/logger.js";
 import { restoreSessionsFromDb, startSnapshotJob } from "./lib/session-persistence.js";
 import { migrateDb } from "./lib/migrate.js";
 
+// Add /health endpoint for instant health checks
+app.get && app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
+
+
 const rawPort = process.env["PORT"];
 const port = rawPort ? Number(rawPort) : 10000;
-
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
+}
+
 // Global error handlers to log all uncaught errors and promise rejections
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
@@ -21,13 +29,12 @@ process.on('unhandledRejection', (reason, promise) => {
   if (typeof logger !== 'undefined') logger.error({ reason }, 'Unhandled Rejection');
   process.exit(1);
 });
-}
+
 
 const httpServer = http.createServer(app);
 attachSocketIO(httpServer);
 
 // Start listening IMMEDIATELY so Fly.io/health-checks pass.
-// Initialization happens in the background.
 httpServer.listen(port, "0.0.0.0", () => {
   console.log(`>>> SERVER STARTING ON PORT ${port} (0.0.0.0)`);
   logger.info({ port }, "Server listening (initial phase)");
@@ -37,13 +44,13 @@ httpServer.listen(port, "0.0.0.0", () => {
     try {
       console.log(">>> Starting DB migrations...");
       await migrateDb();
-      
+
       console.log(">>> Restoring sessions from DB...");
       await restoreSessionsFromDb();
-      
+
       console.log(">>> Starting snapshot job...");
       startSnapshotJob(30_000);
-      
+
       console.log(">>> SERVER FULLY INITIALIZED");
     } catch (err) {
       console.error("!!! Background initialization failed:", err);
