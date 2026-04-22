@@ -36,7 +36,7 @@ const ROLE_ORDER = [
 
 // Track players affected by Virus/Router
 const virusBlinded = new Set<string>();
-const routerRedirected = new Set<string>();
+const routerRedirected = new Map<string, string>(); // sourceId -> destId
 
 export function runResolution(
   session: Session,
@@ -110,9 +110,9 @@ export function runResolution(
         const target = session.players.find((p) => p.id === action.targets[0]);
         logActor(actor.name, actor.id, `jammed ${target?.name ?? "a player"}'s interface during the reveal`);
       }
-      // Router effect: mark destination as redirected and log ability usage
+      // Router effect: mark source->destination and log ability usage
       if (roleId === "router" && action && action.targets && action.targets[0] && action.targets[1]) {
-        routerRedirected.add(action.targets[1]);
+        routerRedirected.set(action.targets[0], action.targets[1]);
         const source = session.players.find((p) => p.id === action.targets[0]);
         const dest = session.players.find((p) => p.id === action.targets[1]);
         logActor(actor.name, actor.id, `hijacked ${source?.name ?? "a player"}'s ability to redirect to ${dest?.name ?? "another player"}`);
@@ -122,11 +122,7 @@ export function runResolution(
       let resolvedTargets = [...action.targets];
       if (routerRedirected.has(actor.id)) {
         // This player was hijacked by the Router; force their target
-        // to the destination chosen by the Router
-        resolvedTargets = [Array.from(routerRedirected)[0]];
-        // Note: routerRedirected is a Set of destination ids, but we want to map source->dest
-        // For a more robust solution, routerRedirected should be a Map<sourceId, destId>
-        // For now, this works if only one hijack per round.
+        resolvedTargets = [routerRedirected.get(actor.id)!];
       }
 
       // Block check — Sentinel and Scanner are immune (Sentinel fires before Disruptor;
@@ -147,7 +143,7 @@ export function runResolution(
       switch (roleId) {
         // ── Sentinel: register watch target now; compile report in pass 2 ──
         case "sentinel": {
-          const targetId = action.targets[0];
+          const targetId = resolvedTargets[0];
           if (targetId) {
             sentinelWatchTargets[actor.id] = targetId;
             const target = session.players.find((p) => p.id === targetId);
@@ -166,7 +162,7 @@ export function runResolution(
         // ── Scanner ──────────────────────────────────────────────────────
         case "scanner": {
           if (action.type === "scan_player") {
-            const target = session.players.find((p) => p.id === action.targets[0]);
+            const target = session.players.find((p) => p.id === resolvedTargets[0]);
             if (target) {
               const initialRole = session.initialRoles[target.id] ?? "unknown";
               feedback[actor.id] = {
@@ -177,7 +173,7 @@ export function runResolution(
               logActor(actor.name, actor.id, `scanned ${target.name}`);
             }
           } else if (action.type === "scan_deck") {
-            const roles = action.targets.map((t) => {
+            const roles = resolvedTargets.map((t) => {
               const idx = parseInt(t.replace("center_", ""), 10);
               return session.centerCards[idx] ?? "unknown";
             });
@@ -193,7 +189,7 @@ export function runResolution(
         case "alien": {
           if (action.type === "alien_view") {
             const idx = parseInt(
-              (action.targets[0] ?? "center_0").replace("center_", ""),
+              (resolvedTargets[0] ?? "center_0").replace("center_", ""),
               10,
             );
             const cardRole = session.centerCards[idx] ?? "unknown";
@@ -211,7 +207,7 @@ export function runResolution(
 
         // ── Disruptor ─────────────────────────────────────────────────────
         case "disruptor": {
-          const targetId = action.targets[0];
+          const targetId = resolvedTargets[0];
           const targetRole = session.rolesAssigned[targetId];
           const targetPlayer = session.players.find((p) => p.id === targetId);
           if (targetRole === "scanner") {
@@ -235,7 +231,7 @@ export function runResolution(
 
         // ── Seeker ────────────────────────────────────────────────────────
         case "seeker": {
-          const target = session.players.find((p) => p.id === action.targets[0]);
+          const target = session.players.find((p) => p.id === resolvedTargets[0]);
           if (target) {
             const role = session.rolesAssigned[target.id];
             // Virus is now considered Bad alignment
