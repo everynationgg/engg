@@ -39,7 +39,7 @@ import warperEvictionVid from "@assets/role-warper-eviction.webm";
 import virusEvictionVid from "@assets/role-virus-eviction.webm";
 import routerEvictionVid from "@assets/role-router-eviction.webm";
 
-export type RoleTeam = "alien" | "crew" | "chaotic";
+export type RoleTeam = "alien" | "crew" | "chaotic" | "spectator";
 
 export interface Role {
   id: string;
@@ -60,6 +60,21 @@ export interface Role {
 }
 
 export const ROLES: Role[] = [
+  {
+    id: "spectator",
+    name: "Spectator",
+    team: "spectator",
+    alignment: "Spectator",
+    image: require("@assets/role-spectator.webp"),
+    video: require("@assets/role-spectator.webm"),
+    evictionVideo: require("@assets/role-spectator-eviction.webm"),
+    winCondition: "Just watching. No win/lose.",
+    ability: "Observe the game. No actions.",
+    notes: "Cannot interact, vote, or act. Only sees the game.",
+    salutation: "You are a Spectator, {username}. Enjoy the show!",
+    lore: "You are here to watch, not to play. You see everything, but cannot interact or influence the outcome. Sit back and enjoy the chaos.",
+    canAct: false,
+  },
   {
     id: "alien",
     name: "Alien",
@@ -256,3 +271,4 @@ Object.entries(ROLES).forEach(([, role]) => {
 export const ALIEN_ROLES = ROLES.filter((r) => r.team === "alien");
 export const CHAOTIC_ROLES = ROLES.filter((r) => r.team === "chaotic");
 export const CREW_ROLES = ROLES.filter((r) => r.team === "crew");
+export const SPECTATOR_ROLES = ROLES.filter((r) => r.team === "spectator");

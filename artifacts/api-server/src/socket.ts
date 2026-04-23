@@ -43,11 +43,11 @@ import {
   resumeFromInterrupt as engineResumeFromInterrupt,
   sortPlayersByStatus as engineSortPlayersByStatus,
   continueGame as engineContinueGame,
-  getActivePlayers as engineGetActivePlayers,
   checkSinglePlayerEdgeCase as engineCheckSinglePlayerEdgeCase,
   recheckVotingCompletion as engineRecheckVotingCompletion,
   removePlayer as engineRemovePlayer,
   computeSanitizedState as engineComputeSanitizedState,
+  getActivePlayers as engineGetActivePlayers,
   type PlayerAction,
 } from "./modules/game/game.engine.js";
 import { logger } from "./lib/logger.js";
@@ -139,22 +139,16 @@ const createSessionSchema = z.object({
   playerName: playerNameSchema,
   playerId: z.string().uuid().optional(),
   userId: z.string().max(128).optional(),
+  isSpectator: z.boolean().optional(),
 });
 
 const joinSessionSchema = z.object({
   sessionId: sessionIdSchema,
   playerName: playerNameSchema,
-  // Stable persistent identity from the client (stored in localStorage).
-  // Must be a UUID v4 to prevent collision attacks and injection via crafted identifiers.
   playerId: z.string().uuid(),
-  // HMAC-SHA256 token issued by the server for this playerId.
-  // Optional: if the client failed to obtain a token (e.g. timeout on
-  // request_player_token), the server will generate one server-side so the
-  // join never partially fails.  If provided but invalid, the join is rejected.
   playerToken: z.string().min(1).max(128).optional(),
-  // Optional persistent user ID — used as the rate-limit key so the limit
-  // persists across reconnects (socket.id changes on every new connection).
   userId: z.string().max(128).optional(),
+  isSpectator: z.boolean().optional(),
 });
 
 /** Schema for the token-issuance event. */
@@ -279,7 +273,10 @@ function graceUpdate(
 ) {
   if (!session) return;
   io.to(sessionId).emit("grace_update", {
-    playersInGrace: session.playersInGrace ?? [],
+    playersInGrace: (session.playersInGrace ?? []).filter(id => {
+      const p = session.players.find(pl => pl.id === id);
+      return p && !p.isSpectator;
+    }),
     playerName,
     players: session.players.map((p) => ({
       id: p.id,
@@ -287,6 +284,7 @@ function graceUpdate(
       connectionStatus: p.connectionStatus ?? "connected",
       isHost: p.isHost,
       didQuit: p.didQuit,
+      isSpectator: !!p.isSpectator,
     })),
   });
 }
@@ -554,6 +552,7 @@ export function attachSocketIO(httpServer: HttpServer) {
                 playerId,
                 name: playerName,
                 isHost: false,
+                isSpectator: !!parsed.isSpectator,
                 connectionStatus: "connected",
               });
               if (!await saveSession(session)) {
@@ -597,6 +596,7 @@ export function attachSocketIO(httpServer: HttpServer) {
             playerId,
             name: playerName,
             isHost: true,
+            isSpectator: !!parsed.isSpectator,
             userId: parsed.userId,
             connectionStatus: "connected",
           });
@@ -756,6 +756,7 @@ export function attachSocketIO(httpServer: HttpServer) {
             playerId,
             name: playerName,
             isHost: false,
+            isSpectator: !!parsed.isSpectator,
             userId: parsed.userId,
             connected: true,
             connectionStatus: "connected",
@@ -1038,9 +1039,21 @@ export function attachSocketIO(httpServer: HttpServer) {
           const assignedRoles = new Set(Object.values(customRoles));
           const deckValid = customDeck.length === 3 && customDeck.every(roleId => typeof roleId === "string" && roleId.length > 0 && !assignedRoles.has(roleId));
           if (!deckValid) { invalidCustomDeck = true; return CAS_SKIP; }
-          // Assign roles and deck
-          session.rolesAssigned = { ...customRoles };
-          session.initialRoles = { ...customRoles };
+
+          // Mark spectators and exclude them from rolesAssigned/initialRoles
+          for (const p of session.players) {
+            if (customRoles[p.id] === "spectator") {
+              p.isSpectator = true;
+            } else {
+              p.isSpectator = false;
+            }
+          }
+          // Only assign roles to non-spectators
+          const filteredRoles = Object.fromEntries(
+            Object.entries(customRoles).filter(([pid, role]) => role !== "spectator")
+          );
+          session.rolesAssigned = { ...filteredRoles };
+          session.initialRoles = { ...filteredRoles };
           session.centerCards = [...customDeck];
           session.roleCounts = {};
           // Reset round state

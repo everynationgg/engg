@@ -21,6 +21,7 @@ export interface Player {
   id: string;
   name: string;
   isHost: boolean;
+  isSpectator?: boolean;
   userId?: string;
   /** Stable persistent identity supplied by the client (stored in localStorage). */
   playerId?: string;
@@ -256,7 +257,9 @@ function freshEmergencyVote(): EmergencyVoteState {
  * disconnected/reconnecting players never block game flow.
  */
 export function getActivePlayers(state: GameState): Player[] {
-  return state.players.filter((p) => p.connectionStatus === "connected");
+  // Only non-spectators are considered active for game logic
+  return state.players.filter((p) => !p.isSpectator && p.connectionStatus === "connected");
+}
 }
 
 function freshRoundSummary(): RoundSummary {
