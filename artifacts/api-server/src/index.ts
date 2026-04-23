@@ -6,6 +6,10 @@ import { logger } from "./lib/logger.js";
 import { restoreSessionsFromDb, startSnapshotJob } from "./lib/session-persistence.js";
 import { migrateDb } from "./lib/migrate.js";
 
+// Register SMTP email provider
+import { setupSmtpEmailProvider } from "./setup-email-provider.js";
+setupSmtpEmailProvider();
+
 // Add /health endpoint for instant health checks
 app.get && app.get("/health", (req, res) => {
   res.status(200).send("OK");
