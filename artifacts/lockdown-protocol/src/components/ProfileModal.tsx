@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRecordGameResult } from "@/hooks/useRecordGameResult";
 import { useAchievements } from "@/hooks/useAchievements";
 import { ROLES } from "@/data/roles";
+import { playSciFiClick } from "@/lib/sound";
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -26,10 +27,12 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const [loading, setLoading] = useState(true);
   const [resendError, setResendError] = useState<string | null>(null);
   const [resendSuccess, setResendSuccess] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       setLoading(true);
+      playSciFiClick();
       Promise.all([fetchPersonalStats(), fetchRoleStats()]).finally(() => setLoading(false));
     }
   }, [isOpen, fetchPersonalStats, fetchRoleStats]);
@@ -50,188 +53,141 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
-      style={{ background: "hsl(220 30% 4% / 0.9)" }}
-      onClick={onClose}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm transition-all duration-300"
+      style={{ background: "hsl(220 30% 2% / 0.85)" }}
+      onClick={() => { playSciFiClick(); onClose(); }}
     >
       <div
-        className="relative w-full max-w-lg max-h-96 overflow-y-auto rounded-lg"
-        style={{
-          border: "1px solid hsl(185 100% 50% / 0.4)",
-          boxShadow: "0 0 40px hsl(185 100% 50% / 0.2)",
-          background: "hsl(220 28% 4%)",
-        }}
+        ref={modalRef}
+        className="relative w-full max-w-lg bg-[#0c1016] border border-white/10 shadow-[0_0_50px_rgba(0,243,255,0.1)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close button */}
+        {/* HUD Elements */}
+        <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-cyan-500/40" />
+        <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-cyan-500/40" />
+        <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-cyan-500/40" />
+        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-cyan-500/40" />
+        
+        {/* Animated Scanline */}
+        <div className="absolute inset-x-0 top-0 h-[2px] bg-cyan-500/20 shadow-[0_0_15px_rgba(0,243,255,0.5)] animate-[scan_4s_linear_infinite]" />
+
         <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded font-orbitron font-bold text-sm cursor-pointer hover:opacity-80 transition-opacity"
-          style={{
-            background: "hsl(220 28% 10% / 0.9)",
-            border: "1px solid hsl(210 30% 25%)",
-            color: "hsl(190 60% 70%)",
-          }}
+          onClick={() => { playSciFiClick(); onClose(); }}
+          className="absolute top-4 right-4 z-20 w-8 h-8 flex items-center justify-center border border-white/10 hover:border-cyan-500/50 hover:bg-cyan-500/10 transition-all text-white/40 hover:text-cyan-400 font-mono text-lg"
           aria-label="Close"
         >
           ✕
         </button>
 
-        {/* Content */}
-        <div className="p-6">
+        <div className="p-8">
           {/* Header */}
-          <div className="mb-6">
-            <h2 className="font-orbitron font-bold text-2xl tracking-[0.2em] uppercase" style={{ color: "hsl(185 100% 50%)" }}>
-              📊 PROFILE
-            </h2>
-            <p className="font-orbitron text-lg tracking-[0.2em] uppercase mt-2" style={{ color: "hsl(185 100% 60%)" }}>
-              {username}
-            </p>
+          <div className="mb-10 relative">
+            <div className="flex items-center gap-4 mb-2">
+               <div className="w-1.5 h-6 bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
+               <h2 className="font-orbitron font-black text-xl tracking-[0.3em] uppercase">
+                 Profile
+               </h2>
+            </div>
+            <div className="flex items-baseline gap-3">
+              <span className="font-mono text-2xl text-cyan-400 tracking-wider">{username}</span>
+              <div className="flex items-center gap-2 px-2 py-0.5 bg-white/5 border border-white/10 rounded-sm">
+                <div className={`w-1.5 h-1.5 rounded-full ${isVerified ? "bg-cyan-500 animate-pulse" : "bg-amber-500"}`} />
+                <span className="font-mono text-[8px] tracking-widest uppercase opacity-40">
+                  {isVerified ? "SECURED" : "PENDING"}
+                </span>
+              </div>
+            </div>
+
             {!isVerified && (
-              <div className="mt-3 rounded p-3" style={{ background: "hsl(40 90% 12%)", border: "1px solid hsl(40 100% 50%)" }}>
-                <div className="flex items-center justify-between gap-2">
-                  <div>
-                    <p className="font-orbitron text-xs tracking-[0.1em] uppercase" style={{ color: "hsl(40 100% 60%)" }}>
-                      ⚠️ Email not verified
-                    </p>
-                    {resendError && <p className="font-orbitron text-xs text-red-400 mt-1">{resendError}</p>}
-                    {resendSuccess && <p className="font-orbitron text-xs text-cyan-400 mt-1">✓ Verification email sent!</p>}
-                  </div>
-                  <button
-                    onClick={handleResendVerificationEmail}
-                    disabled={authLoading}
-                    className="px-3 py-1 font-orbitron text-xs tracking-[0.1em] uppercase rounded border transition-all whitespace-nowrap disabled:opacity-50"
-                    style={{
-                      borderColor: "hsl(40 100% 50%)",
-                      color: "hsl(40 100% 60%)",
-                      background: "hsl(220 28% 12%)",
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!authLoading) {
-                        e.currentTarget.style.borderColor = "hsl(40 100% 70%)";
-                        e.currentTarget.style.color = "hsl(40 100% 70%)";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = "hsl(40 100% 50%)";
-                      e.currentTarget.style.color = "hsl(40 100% 60%)";
-                    }}
-                  >
-                    {authLoading ? "SENDING..." : "REVERIFY"}
-                  </button>
+              <div className="mt-6 p-4 bg-amber-500/5 border border-amber-500/20 flex items-center justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="font-orbitron text-[9px] tracking-[0.1em] uppercase text-amber-500 mb-1">
+                    Identity Unverified
+                  </p>
+                  {resendError && <p className="font-mono text-[8px] text-red-400">{resendError.toUpperCase()}</p>}
+                  {resendSuccess && <p className="font-mono text-[8px] text-cyan-400">TRANSMISSION SENT</p>}
                 </div>
+                <button
+                  onClick={handleResendVerificationEmail}
+                  disabled={authLoading}
+                  className="px-4 py-1.5 border border-amber-500/40 text-amber-500 font-orbitron text-[9px] tracking-[0.2em] uppercase hover:bg-amber-500/10 transition-all disabled:opacity-30"
+                >
+                  {authLoading ? "---" : "REVERIFY"}
+                </button>
               </div>
             )}
           </div>
 
           {loading ? (
-            <div className="text-center py-8">
-              <div
-                className="w-6 h-6 mx-auto mb-3 border-3 border-transparent rounded-full animate-spin"
-                style={{
-                  borderTopColor: "hsl(185 100% 50%)",
-                  borderRightColor: "hsl(270 70% 60%)",
-                }}
-              />
-              <p className="font-orbitron text-xs" style={{ color: "hsl(210 30% 60%)" }}>
-                Loading profile...
-              </p>
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="w-12 h-12 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
+              <p className="mt-4 font-mono text-[10px] tracking-widest uppercase opacity-40">Accessing Data...</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {/* Personal Stats */}
-              {personalStats && (
-                <div className="rounded-lg p-3" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 25%)" }}>
-                  <h3 className="font-orbitron text-xs tracking-[0.1em] uppercase mb-3" style={{ color: "hsl(185 100% 60%)" }}>
-                    Overall Stats
-                  </h3>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <p style={{ color: "hsl(210 30% 60%)" }}>Games Played</p>
-                      <p className="font-orbitron font-bold text-lg" style={{ color: "hsl(185 100% 50%)" }}>
-                        {personalStats.gamesPlayed || 0}
-                      </p>
+            <div className="space-y-6">
+              {/* Overall Stats HUD */}
+              <div className="p-6 bg-white/5 border border-white/5 relative">
+                <div className="absolute top-0 right-0 p-2 font-mono text-[8px] opacity-20">STATS_v2.1</div>
+                <h3 className="font-orbitron text-[10px] tracking-[0.3em] uppercase opacity-40 mb-6 border-b border-white/5 pb-2">Operational Data</h3>
+                
+                <div className="grid grid-cols-2 gap-8">
+                  <div>
+                    <p className="font-mono text-[9px] uppercase opacity-40 mb-1">Win Rate</p>
+                    <p className="font-orbitron text-2xl text-cyan-400">
+                      {(personalStats?.winRate ?? 0).toFixed(1)}%
+                    </p>
+                    <div className="h-1 w-full bg-white/5 mt-2 overflow-hidden">
+                       <div className="h-full bg-cyan-500" style={{ width: `${personalStats?.winRate ?? 0}%` }} />
                     </div>
-                    <div>
-                      <p style={{ color: "hsl(210 30% 60%)" }}>Win Rate</p>
-                      <p className="font-orbitron font-bold text-lg" style={{ color: "hsl(120 100% 50%)" }}>
-                        {personalStats.winRate ? `${(personalStats.winRate * 100).toFixed(1)}%` : "0%"}
-                      </p>
-                    </div>
-                    <div>
-                      <p style={{ color: "hsl(210 30% 60%)" }}>Wins</p>
-                      <p className="font-orbitron font-bold" style={{ color: "hsl(120 100% 50%)" }}>
-                        {personalStats.gamesWon || 0}
-                      </p>
-                    </div>
-                    <div>
-                      <p style={{ color: "hsl(210 30% 60%)" }}>Losses</p>
-                      <p className="font-orbitron font-bold" style={{ color: "hsl(0 75% 60%)" }}>
-                        {personalStats.gamesLost || 0}
-                      </p>
+                  </div>
+                  <div>
+                    <p className="font-mono text-[9px] uppercase opacity-40 mb-1">Engagements</p>
+                    <p className="font-orbitron text-2xl">{personalStats?.gamesPlayed ?? 0}</p>
+                    <div className="flex gap-4 mt-2 font-mono text-[9px]">
+                       <span className="text-cyan-400/60">W: {personalStats?.gamesWon ?? 0}</span>
+                       <span className="text-red-400/60">L: {personalStats?.gamesLost ?? 0}</span>
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
 
-              {/* Achievements Preview */}
-              {achievements && (
-                <div className="rounded-lg p-3" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 25%)" }}>
-                  <h3 className="font-orbitron text-xs tracking-[0.1em] uppercase mb-2" style={{ color: "hsl(270 100% 60%)" }}>
-                    Achievements
-                  </h3>
-                  <p className="font-orbitron text-sm" style={{ color: "hsl(185 100% 50%)" }}>
-                    {achievements.unlockedCount}/{achievements.totalAchievements}
+              {/* Achievements HUD */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-white/5 border border-white/5">
+                  <p className="font-mono text-[9px] uppercase opacity-40 mb-1">Achievements</p>
+                  <p className="font-orbitron text-lg text-cyan-400">
+                    {achievements?.unlockedCount}/{achievements?.totalAchievements}
                   </p>
                 </div>
-              )}
-            {/* Top Role Stats */}
-            {roleStats && roleStats.length > 0 && (
-            <div className="rounded-lg p-3" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 25%)" }}>
-                <h3 className="font-orbitron text-xs tracking-[0.1em] uppercase mb-2" style={{ color: "hsl(270 100% 60%)" }}>
-                Most Played Role
-                </h3>
-                <div className="space-y-1 text-xs">
-                {[...roleStats]
-                    .sort((a, b) => (b.gamesPlayed || 0) - (a.gamesPlayed || 0))
-                    .slice(0, 3)
-                    .map((stats) => (
-                    <div key={stats.role} className="flex justify-between">
-                      <span style={{ color: "hsl(210 30% 60%)" }}>{formatRoleName(stats.role)}</span>
-                        <span style={{ color: "hsl(185 100% 50%)" }}>
-                      {stats.gamesPlayed || 0} games · {stats.winRate ? `${(stats.winRate * 100).toFixed(0)}%` : "0%"} WR
-                        </span>
-                    </div>
-                    ))}
-                </div>
-            </div>
-            )}
-              {/* Close Button */}
-              <div className="pt-2">
-                <button
-                  onClick={onClose}
-                  className="w-full py-2 font-orbitron font-bold text-xs tracking-[0.2em] uppercase rounded border-2 transition-all duration-150"
-                  style={{
-                    background: "hsl(210 30% 20%)",
-                    borderColor: "hsl(210 30% 35%)",
-                    color: "hsl(210 30% 60%)",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "hsl(210 30% 25%)";
-                    e.currentTarget.style.borderColor = "hsl(210 30% 50%)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "hsl(210 30% 20%)";
-                    e.currentTarget.style.borderColor = "hsl(210 30% 35%)";
-                  }}
-                >
-                  CLOSE
-                </button>
+                {roleStats && roleStats.length > 0 && (
+                  <div className="p-4 bg-white/5 border border-white/5">
+                    <p className="font-mono text-[9px] uppercase opacity-40 mb-1">Top Role</p>
+                    <p className="font-orbitron text-lg truncate">
+                      {formatRoleName([...roleStats].sort((a, b) => (b.gamesPlayed || 0) - (a.gamesPlayed || 0))[0]?.role)}
+                    </p>
+                  </div>
+                )}
               </div>
+
+              <button
+                onClick={() => { playSciFiClick(); onClose(); }}
+                className="w-full py-3 mt-4 border border-white/10 hover:border-cyan-500/40 font-orbitron text-[10px] tracking-[0.4em] uppercase hover:bg-cyan-500/5 transition-all text-white/60 hover:text-white"
+              >
+                Close Terminal
+              </button>
             </div>
           )}
         </div>
       </div>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes scan {
+          0% { top: 0%; opacity: 0; }
+          5% { opacity: 1; }
+          95% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
+      `}} />
     </div>
   );
 }

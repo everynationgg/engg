@@ -12,22 +12,6 @@ import HamburgerMenu from "@/components/HamburgerMenu";
 import SettingsModal from "@/components/SettingsModal";
 import { playSciFiClick } from "@/lib/sound";
 import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
-import { useEffect, useState } from "react";
-
-import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
-import { useRecordGameResult } from "@/hooks/useRecordGameResult";
-import { useAchievements } from "@/hooks/useAchievements";
-import { useFriends } from "@/hooks/useFriends";
-import RoleStatsDisplay from "@/components/RoleStatsDisplay";
-import GameHistoryDisplay from "@/components/GameHistoryDisplay";
-import AggregateStats from "@/components/AggregateStats";
-import { AchievementsDisplay } from "@/components/AchievementsDisplay";
-import { FriendsDisplay } from "@/components/FriendsDisplay";
-import HamburgerMenu from "@/components/HamburgerMenu";
-import SettingsModal from "@/components/SettingsModal";
-import { playSciFiClick } from "@/lib/sound";
-import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
 import { useEffect, useState, useMemo } from "react";
 
 export default function ProfilePage() {
