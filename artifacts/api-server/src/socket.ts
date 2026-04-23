@@ -1044,6 +1044,9 @@ export function attachSocketIO(httpServer: HttpServer) {
           for (const p of session.players) {
             if (customRoles[p.id] === "spectator") {
               p.isSpectator = true;
+              // Spectators should not have a role assigned
+              delete session.rolesAssigned?.[p.id];
+              delete session.initialRoles?.[p.id];
             } else {
               p.isSpectator = false;
             }
@@ -1067,6 +1070,8 @@ export function attachSocketIO(httpServer: HttpServer) {
           session.voteResult = null;
           session.roundSummary = freshRoundSummary();
           session.phase = "role_reveal";
+          // Ensure isSpectator is always included in phase_update
+          engineSortPlayersByStatus(session);
           return true as const;
         });
         if (notHost) {

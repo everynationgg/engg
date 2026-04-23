@@ -30,11 +30,12 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY tsconfig.base.json tsconfig.json ./
 
-# Copy workspace packages
-COPY lib/ lib/
+
+# Only copy the api-server package.json for production install
 COPY artifacts/api-server/package.json artifacts/api-server/package.json
 
 RUN pnpm install --frozen-lockfile --prod
+
 
 # Copy built output from build stage
 COPY --from=build /app/artifacts/api-server/dist artifacts/api-server/dist

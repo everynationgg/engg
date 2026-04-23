@@ -56,6 +56,7 @@ function randomizeRoles(playerCount: number): RoleCounts {
 }
 
 export default function RoleConfigPage() {
+  const [isSpectator, setIsSpectator] = useState(false);
   const [, setLocation] = useLocation();
   const [customGameOpen, setCustomGameOpen] = useState(false);
   const [customRoles, setCustomRoles] = useState<{ [playerId: string]: string }>({});
@@ -142,6 +143,10 @@ export default function RoleConfigPage() {
         isYou: myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId,
       }));
       setLivePlayers(updated);
+
+      // Detect if I am a spectator
+      const me = session.players.find((p) => (myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId));
+      setIsSpectator(!!me?.isSpectator);
 
       // Store role assignment when server transitions to role_reveal or any later
       // in-game phase (covers reconnect scenarios where phase is already past role_reveal)
@@ -518,6 +523,15 @@ export default function RoleConfigPage() {
     setLocation(`/join/${roomCode}`);
   }, [roomCode, setLocation]);
 
+
+  if (isSpectator) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen w-full bg-black text-cyan-200">
+        <h1 className="text-3xl font-orbitron mb-4">Spectator Mode</h1>
+        <p className="text-lg">You are a spectator. Enjoy watching the game!</p>
+      </div>
+    );
+  }
 
   return (
     <div

@@ -8,8 +8,22 @@
 .gitignore
 .vscode
 
+
 artifacts/lockdown-protocol
 mockup-sandbox
 attached_assets
+lib/
+scripts/
+*.ts
+*.tsx
+*.md
+*.log
+*.test.*
+*.spec.*
+node_modules/
+coverage/
+dist/
+__tests__/
+__mocks__/
 
 *.log
