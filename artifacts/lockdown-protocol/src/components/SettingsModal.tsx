@@ -5,7 +5,6 @@ import { setSfxVolume, playSciFiClick } from "@/lib/sound";
 import { STORAGE_KEYS, DEFAULTS } from "@/lib/constants";
 import { usePerformanceMode } from "@/hooks/usePerformanceMode";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
-import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -24,7 +23,6 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [localReducedMotion, setLocalReducedMotion] = useState(reducedMotion);
   const [saveMessage, setSaveMessage] = useState("");
 
-  // Sync local state with preferences
   useEffect(() => {
     if (preferences) {
       setLocalMusicVolume(preferences.musicVolume);
@@ -35,259 +33,205 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   }, [preferences]);
 
   const handleSaveSettings = async () => {
+    playSciFiClick();
     try {
-      const updates: Record<string, any> = {};
-
-      if (localMusicVolume !== preferences?.musicVolume) {
-        updates.musicVolume = localMusicVolume;
-      }
-      if (localSfxVolume !== preferences?.sfxVolume) {
-        updates.sfxVolume = localSfxVolume;
-      }
-      if (localNotifications !== preferences?.notificationsEnabled) {
-        updates.notificationsEnabled = localNotifications;
-      }
-      if (localColorblindMode !== preferences?.colorblindMode) {
-        updates.colorblindMode = localColorblindMode;
-      }
-
-      if (Object.keys(updates).length === 0) {
-        setSaveMessage("No changes to save");
-        setTimeout(() => setSaveMessage(""), 3000);
-        return;
-      }
-
       await updateMusicVolume(localMusicVolume);
       await updateSfxVolume(localSfxVolume);
-      if ('notificationsEnabled' in updates) await updateNotifications(localNotifications);
-      if ('colorblindMode' in updates) await updateColorblindMode(localColorblindMode);
-      
+      await updateNotifications(localNotifications);
+      await updateColorblindMode(localColorblindMode);
+      setLowGraphics(localLowGraphics);
+      setReducedMotion(localReducedMotion);
 
-      if (localLowGraphics !== lowGraphics) {
-        setLowGraphics(localLowGraphics);
-      }
-      if (localReducedMotion !== reducedMotion) {
-        setReducedMotion(localReducedMotion);
-      }
-              {/* Reduced Motion Toggle */}
-              <div className="mt-6 border-t pt-4" style={{ borderColor: "hsl(210 30% 25%)" }}>
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={localReducedMotion}
-                    onChange={e => setLocalReducedMotion(e.target.checked)}
-                    className="w-5 h-5 rounded"
-                    style={{ accentColor: "hsl(185 100% 50%)" }}
-                  />
-                  <span className="font-orbitron text-xs tracking-[0.1em] uppercase" style={{ color: "hsl(210 30% 60%)" }}>
-                    Reduced Motion
-                  </span>
-                </label>
-                <p className="font-orbitron text-xs mt-2 leading-relaxed" style={{ color: "hsl(210 30% 45%)" }}>
-                  Disables most UI animations and transitions for accessibility and comfort.
-                </p>
-              </div>
-
-      setSaveMessage("✓ Settings saved!");
+      setSaveMessage("SYSTEM_SYNC_SUCCESSFUL");
       setTimeout(() => {
         setSaveMessage("");
         onClose();
       }, 1500);
     } catch (error) {
-      setSaveMessage("✗ Failed to save settings");
+      setSaveMessage("SYNC_FAILURE_RETRY");
       setTimeout(() => setSaveMessage(""), 3000);
     }
   };
 
-  const modalRef = useFocusTrap(isOpen);
   if (!isOpen) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-2 py-2 sm:px-4 sm:py-6 ix-backdrop ix-backdrop-blur"
-      style={{ background: "hsl(220 30% 4% / 0.9)" }}
-      onClick={onClose}
+      className="fixed inset-0 z-[110] flex items-center justify-center p-4 backdrop-blur-sm transition-all duration-300"
+      style={{ background: "hsl(220 30% 2% / 0.85)" }}
+      onClick={() => { playSciFiClick(); onClose(); }}
     >
       <div
-        ref={modalRef}
-        className="relative w-full max-w-[98vw] sm:max-w-lg rounded-lg ix-modal-enter ix-modal-bg max-h-[98vh] overflow-y-auto"
+        className="relative w-full max-w-xl bg-[#0c1016] border border-white/10 shadow-[0_0_50px_rgba(0,243,255,0.1)] overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
-        tabIndex={-1}
-        aria-modal="true"
-        role="dialog"
       >
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded font-orbitron font-bold text-sm cursor-pointer hover:opacity-80 transition-opacity ix-modal-close"
-          aria-label="Close"
-        >
-          ✕
-        </button>
+        {/* HUD Elements */}
+        <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-cyan-500/40" />
+        <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-cyan-500/40" />
+        <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-cyan-500/40" />
+        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-cyan-500/40" />
+        
+        {/* Animated Scanline */}
+        <div className="absolute inset-x-0 top-0 h-[2px] bg-cyan-500/20 shadow-[0_0_15px_rgba(0,243,255,0.5)] animate-[scan_5s_linear_infinite]" />
+
+        {/* Header */}
+        <div className="p-8 border-b border-white/5 shrink-0 flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-4 mb-1">
+               <div className="w-1.5 h-6 bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
+               <h2 className="font-orbitron font-black text-xl tracking-[0.3em] uppercase">
+                 Settings
+               </h2>
+            </div>
+            <p className="font-mono text-[9px] tracking-[0.4em] uppercase opacity-40">System Configuration Override</p>
+          </div>
+          <button
+            onClick={() => { playSciFiClick(); onClose(); }}
+            className="w-10 h-10 flex items-center justify-center border border-white/10 hover:border-cyan-500/50 hover:bg-cyan-500/10 transition-all text-white/40 hover:text-cyan-400 font-mono text-xl"
+          >
+            ✕
+          </button>
+        </div>
 
         {/* Content */}
-        <div className="p-6">
-          <h2 className="font-orbitron font-bold text-2xl tracking-[0.2em] uppercase mb-6 ix-accent-text">
-            ⚙️ Settings
-          </h2>
+        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar space-y-10">
+          {/* Audio Section */}
+          <section className="space-y-6">
+             <div className="flex items-center gap-4 mb-4">
+                <span className="font-orbitron text-[10px] tracking-[0.3em] uppercase text-cyan-400">Audio_Link</span>
+                <div className="h-px flex-1 bg-white/5" />
+             </div>
+             
+             <div className="space-y-8">
+                <Slider 
+                   label="Background Transmission (Music)"
+                   value={localMusicVolume}
+                   onChange={(val) => { setLocalMusicVolume(val); setMusicVolume(val); }}
+                />
+                <Slider 
+                   label="Feedback Pings (SFX)"
+                   value={localSfxVolume}
+                   onChange={(val) => { setLocalSfxVolume(val); setSfxVolume(val); playSciFiClick(val/100); }}
+                />
+             </div>
+          </section>
 
-          {isLoading && !preferences ? (
-            <div className="text-center py-12">
-              <div className="w-8 h-8 mx-auto mb-4 border-4 border-transparent rounded-full animate-spin ix-spinner" />
-              <p className="font-orbitron text-sm" style={{ color: "hsl(210 30% 60%)" }}>
-                Loading settings...
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {/* Audio Settings */}
-              <div className="rounded-lg p-4 ix-modal-section">
-                <h3 className="font-orbitron font-bold text-lg tracking-[0.2em] uppercase mb-4 ix-accent-text">
-                  🎵 Audio
-                </h3>
+          {/* Visual/Performance Section */}
+          <section className="space-y-6">
+             <div className="flex items-center gap-4 mb-4">
+                <span className="font-orbitron text-[10px] tracking-[0.3em] uppercase text-cyan-400">Visual_Override</span>
+                <div className="h-px flex-1 bg-white/5" />
+             </div>
 
-                <div className="space-y-4">
-                  {/* Music Volume */}
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <label className="font-orbitron text-xs tracking-[0.1em] uppercase ix-label-text">
-                        Music Volume
-                      </label>
-                      <span className="font-orbitron font-bold ix-accent-text">
-                        {localMusicVolume}%
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={localMusicVolume}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        setLocalMusicVolume(val);
-                        setMusicVolume(val);
-                      }}
-                      className="w-full h-2 rounded-lg appearance-none cursor-pointer ix-slider"
-                    />
-                  </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Toggle 
+                   label="Colorblind Calibration"
+                   desc="Add distinct symbolic anchors to teams"
+                   checked={localColorblindMode}
+                   onChange={setLocalColorblindMode}
+                />
+                <Toggle 
+                   label="Performance Mode"
+                   desc="Minimize heavy kinetic processing"
+                   checked={localLowGraphics}
+                   onChange={setLocalLowGraphics}
+                />
+                <Toggle 
+                   label="Reduced Motion"
+                   desc="Stabilize UI transitions"
+                   checked={localReducedMotion}
+                   onChange={setLocalReducedMotion}
+                />
+                <Toggle 
+                   label="Encrypted Alerts"
+                   desc="Enable incoming transmissions"
+                   checked={localNotifications}
+                   onChange={setLocalNotifications}
+                />
+             </div>
+          </section>
 
-                  {/* SFX Volume */}
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <label className="font-orbitron text-xs tracking-[0.1em] uppercase ix-label-text">
-                        Sound Effects Volume
-                      </label>
-                      <span className="font-orbitron font-bold ix-accent-text">
-                        {localSfxVolume}%
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={localSfxVolume}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        setLocalSfxVolume(val);
-                        setSfxVolume(val);
-                        playSciFiClick(val / 100);
-                      }}
-                      className="w-full h-2 rounded-lg appearance-none cursor-pointer ix-slider"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Notification Settings */}
-              <div className="rounded-lg p-4 ix-modal-section">
-                <h3 className="font-orbitron font-bold text-lg tracking-[0.2em] uppercase mb-4 ix-accent-text">
-                  🔔 Notifications
-                </h3>
-
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={localNotifications}
-                    onChange={(e) => setLocalNotifications(e.target.checked)}
-                    className="w-5 h-5 rounded"
-                    style={{
-                      accentColor: "hsl(185 100% 50%)",
-                    }}
-                  />
-                  <span className="font-orbitron text-xs tracking-[0.1em] uppercase ix-label-text">
-                    Enable notifications
-                  </span>
-                </label>
-                <p className="font-orbitron text-xs mt-2 ix-desc-text">
-                  Receive alerts for game invites and messages
-                </p>
-              </div>
-
-              {/* Accessibility Settings */}
-              <div className="rounded-lg p-4 ix-modal-section">
-                <h3 className="font-orbitron font-bold text-lg tracking-[0.2em] uppercase mb-4 ix-accent-text">
-                  👁️ Accessibility
-                </h3>
-
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={localColorblindMode}
-                    onChange={(e) => setLocalColorblindMode(e.target.checked)}
-                    className="w-5 h-5 rounded"
-                    style={{
-                      accentColor: "hsl(185 100% 50%)",
-                    }}
-                  />
-                  <span className="font-orbitron text-xs tracking-[0.1em] uppercase ix-label-text">
-                    Colorblind Mode
-                  </span>
-                </label>
-                <p className="font-orbitron text-xs mt-2 leading-relaxed ix-desc-text">
-                  Add distinct icons to teams and roles to help differentiate alignments without relying entirely on color.
-                </p>
-
-                <div className="mt-6 border-t pt-4 ix-modal-divider">
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={localLowGraphics}
-                      onChange={(e) => setLocalLowGraphics(e.target.checked)}
-                      className="w-5 h-5 rounded"
-                      style={{
-                        accentColor: "hsl(185 100% 50%)",
-                      }}
-                    />
-                    <span className="font-orbitron text-xs tracking-[0.1em] uppercase ix-label-text">
-                      Performance Mode (Low Graphics)
-                    </span>
-                  </label>
-                  <p className="font-orbitron text-xs mt-2 leading-relaxed ix-desc-text">
-                    Disables heavy animations (parallax, 3D tilt, screen shakes) to save battery and improve performance on older devices.
-                  </p>
-                </div>
-              </div>
-
-              {/* Save Message */}
-              {saveMessage && (
-                <div className={`rounded-lg p-3 text-center font-orbitron text-sm ix-save-message ${saveMessage.includes("✓") ? "ix-save-success" : "ix-save-fail"}`}>{saveMessage}</div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex gap-3 pt-4">
-                <button
-                  onClick={handleSaveSettings}
-                  className="ix-btn flex-1 py-2.5 font-orbitron text-xs tracking-[0.2em] uppercase rounded border-2 transition-all duration-150 ix-save-btn"
-                >✓ SAVE</button>
-                <button
-                  onClick={onClose}
-                  className="ix-btn flex-1 py-2.5 font-orbitron text-xs tracking-[0.2em] uppercase rounded border-2 transition-all duration-150 ix-close-btn"
-                >CLOSE</button>
-              </div>
+          {saveMessage && (
+            <div className="p-4 bg-cyan-500/5 border border-cyan-500/20 text-center">
+               <p className="font-mono text-[10px] tracking-[0.3em] text-cyan-400 uppercase animate-pulse">{saveMessage}</p>
             </div>
           )}
         </div>
+
+        {/* Actions */}
+        <div className="p-8 border-t border-white/5 bg-white/[0.02] flex gap-4">
+           <button
+             onClick={handleSaveSettings}
+             className="flex-1 py-4 bg-cyan-500/10 border border-cyan-500/40 text-cyan-400 font-orbitron text-xs tracking-[0.4em] uppercase hover:bg-cyan-500/20 transition-all relative overflow-hidden group"
+           >
+             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+             Sync_Changes
+           </button>
+           <button
+             onClick={() => { playSciFiClick(); onClose(); }}
+             className="px-8 py-4 bg-white/5 border border-white/10 text-white/40 font-orbitron text-xs tracking-[0.4em] uppercase hover:bg-white/10 hover:text-white transition-all"
+           >
+             Dismiss
+           </button>
+        </div>
       </div>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes scan {
+          0% { top: 0%; opacity: 0; }
+          5% { opacity: 1; }
+          95% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,243,255,0.2); }
+      `}} />
     </div>
+  );
+}
+
+function Slider({ label, value, onChange }: { label: string; value: number; onChange: (val: number) => void }) {
+  return (
+    <div className="space-y-4">
+       <div className="flex justify-between items-end">
+          <label className="font-mono text-[9px] tracking-[0.2em] uppercase opacity-40">{label}</label>
+          <span className="font-orbitron text-xs text-cyan-400">{value}%</span>
+       </div>
+       <div className="relative h-6 flex items-center group">
+          <div className="absolute inset-x-0 h-px bg-white/10" />
+          <div className="absolute left-0 h-px bg-cyan-500 shadow-[0_0_10px_#00f3ff]" style={{ width: `${value}%` }} />
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={value}
+            onChange={(e) => onChange(Number(e.target.value))}
+            className="absolute inset-x-0 w-full opacity-0 cursor-pointer z-10"
+          />
+          <div 
+             className="absolute w-1 h-4 bg-cyan-400 shadow-[0_0_10px_#00f3ff] transition-all group-hover:scale-y-150"
+             style={{ left: `calc(${value}% - 2px)` }}
+          />
+       </div>
+    </div>
+  );
+}
+
+function Toggle({ label, desc, checked, onChange }: { label: string; desc: string; checked: boolean; onChange: (val: boolean) => void }) {
+  return (
+    <button 
+      onClick={() => { playSciFiClick(); onChange(!checked); }}
+      className="flex gap-4 p-4 bg-white/5 border border-white/5 hover:border-white/10 transition-all text-left group"
+    >
+       <div className={`w-5 h-5 border transition-all flex items-center justify-center shrink-0 ${checked ? "border-cyan-500 bg-cyan-500/20" : "border-white/10"}`}>
+          {checked && <div className="w-2 h-2 bg-cyan-400 shadow-[0_0_5px_#00f3ff]" />}
+       </div>
+       <div>
+          <h4 className={`font-orbitron text-[10px] tracking-widest uppercase transition-colors ${checked ? "text-cyan-400" : "opacity-60 group-hover:opacity-100"}`}>{label}</h4>
+          <p className="font-mono text-[9px] opacity-30 mt-1 leading-tight uppercase">{desc}</p>
+       </div>
+    </button>
   );
 }

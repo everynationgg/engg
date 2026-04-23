@@ -29,7 +29,7 @@ export default function HamburgerMenu({
   isHost = false,
   onRestartRound,
 }: HamburgerMenuProps) {
-  const { isLoggedIn, logout, username } = useAuth();
+  const { isLoggedIn, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuClosing, setMenuClosing] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
@@ -42,10 +42,9 @@ export default function HamburgerMenu({
     setTimeout(() => {
       setMenuOpen(false);
       setMenuClosing(false);
-    }, 400); // Wait for radial animation to finish
+    }, 400);
   }, [menuOpen, menuClosing]);
 
-  // Close on ESC key
   useEffect(() => {
     if (!menuOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -85,69 +84,69 @@ export default function HamburgerMenu({
   if (isLoggedIn) {
     menuItems.push({
       id: "profile",
-      icon: "📊",
+      icon: <ProfileIcon />,
       label: "PROFILE",
       onClick: () => handleMenuItemClick(onShowProfile),
-      color: "hsl(185 100% 50%)"
+      color: "#00f3ff"
     });
     menuItems.push({
       id: "logout",
-      icon: "👤",
+      icon: <LogoutIcon />,
       label: "LOGOUT",
       onClick: handleLogout,
-      color: "hsl(50 100% 50%)"
+      color: "#ffaa00"
     });
   } else if (onShowAuth) {
     menuItems.push({
       id: "login",
-      icon: "🔐",
+      icon: <LoginIcon />,
       label: "LOGIN",
       onClick: () => handleMenuItemClick(onShowAuth),
-      color: "hsl(50 100% 50%)"
+      color: "#ffaa00"
     });
   }
 
   menuItems.push({
     id: "settings",
-    icon: "⚙️",
+    icon: <SettingsIcon />,
     label: "SETTINGS",
     onClick: () => handleMenuItemClick(onShowSettings),
-    color: "hsl(270 80% 55%)"
+    color: "#c084fc"
   });
 
   menuItems.push({
     id: "howtoplay",
-    icon: "📖",
-    label: "HOW TO PLAY",
+    icon: <ManualIcon />,
+    label: "MANUAL",
     onClick: () => { playSound(); closeMenu(); setShowHowToPlay(true); },
-    color: "hsl(270 80% 55%)"
+    color: "#00f3ff"
   });
 
   menuItems.push({
     id: "sound",
-    icon: musicOn ? "🔊" : "🔇",
-    label: "SOUND",
+    icon: musicOn ? <SoundOnIcon /> : <SoundOffIcon />,
+    label: "AUDIO",
     onClick: () => { playSound(); onToggleMusic(); },
-    color: musicOn ? "hsl(185 100% 50%)" : "hsl(210 30% 50%)"
+    color: musicOn ? "#00f3ff" : "rgba(255,255,255,0.3)"
   });
 
   if (showQuitButton) {
     menuItems.push({
       id: "quit",
-      icon: "🚪",
+      icon: <ExitIcon />,
       label: midGame ? "QUIT GAME" : "QUIT",
       onClick: () => { playSound(); closeMenu(); openConfirm(); },
-      color: "hsl(0 75% 55%)"
+      color: "#ff4e4e"
     });
   }
 
   if (isHost && onRestartRound) {
     menuItems.push({
       id: "restart",
-      icon: "🔄",
+      icon: <RestartIcon />,
       label: "RESTART",
       onClick: () => handleMenuItemClick(onRestartRound),
-      color: "hsl(185 100% 50%)"
+      color: "#00f3ff"
     });
   }
 
@@ -159,14 +158,10 @@ export default function HamburgerMenu({
         bottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))",
       }}
     >
-      {/* Backdrop overlay — click outside to close */}
+      {/* Backdrop overlay */}
       {menuOpen && (
         <div
-          className={`fixed inset-0 -z-10 ${menuClosing ? "ix-backdrop" : "ix-backdrop ix-backdrop-blur"}`}
-          style={{
-            background: "rgba(0, 0, 0, 0.5)",
-            animation: menuClosing ? "ix-fade-out 200ms ease-in both" : undefined,
-          }}
+          className={`fixed inset-0 -z-10 transition-all duration-500 ${menuClosing ? "opacity-0" : "opacity-100 backdrop-blur-[2px] bg-black/40"}`}
           onClick={closeMenu}
         />
       )}
@@ -174,14 +169,17 @@ export default function HamburgerMenu({
       {/* Radial Menu Items */}
       {menuOpen && (
         <div className="absolute inset-0 pointer-events-none -z-10 flex items-center justify-center">
+           {/* Tactical Ring Background */}
+           <div className={`absolute w-[280px] h-[280px] border border-cyan-500/10 rounded-full transition-all duration-700 ${menuClosing ? "scale-0 opacity-0" : "scale-100 opacity-100"}`}>
+              <div className="absolute inset-0 border-t-2 border-cyan-500/20 rounded-full animate-[spin_20s_linear_infinite]" />
+              <div className="absolute inset-4 border border-white/5 rounded-full" />
+           </div>
+
           {menuItems.map((item, index) => {
-            // Spread evenly from 180deg (Left) to 270deg (Top)
             const angleOffset = menuItems.length > 1 ? 90 / (menuItems.length - 1) : 0;
             const angle = 180 + (index * angleOffset);
-            const radius = 130; // Distance from center
+            const radius = 135;
             const rad = angle * (Math.PI / 180);
-            
-            // Offset logic so it works on mobile devices too
             const x = radius * Math.cos(rad);
             const y = radius * Math.sin(rad);
 
@@ -189,38 +187,35 @@ export default function HamburgerMenu({
               <button
                 key={item.id}
                 onClick={item.onClick}
-                className="absolute flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full cursor-pointer pointer-events-auto ix-btn group/item hover:z-50"
+                className="absolute flex items-center justify-center w-14 h-14 rounded-full cursor-pointer pointer-events-auto group overflow-hidden"
                 style={{
-                  background: "hsl(220 28% 10% / 0.85)",
-                  border: `2px solid ${item.color}`,
+                  background: "rgba(12, 16, 22, 0.9)",
+                  border: `1px solid ${item.color}40`,
                   color: item.color,
-                  backdropFilter: "blur(6px)",
-                  boxShadow: `0 0 15px ${item.color.replace(')', ' / 0.2)')}, inset 0 0 5px ${item.color.replace(')', ' / 0.1)')}`,
+                  backdropFilter: "blur(10px)",
+                  boxShadow: `0 0 20px ${item.color}15`,
                   transform: menuClosing ? "translate(0px, 0px) scale(0) rotate(-90deg)" : `translate(${x}px, ${y}px) scale(1) rotate(0deg)`,
-                  transition: `transform 0.4s cubic-bezier(0.19, 1, 0.22, 1) ${menuClosing ? 0 : index * 0.04}s, box-shadow 0.2s, background 0.2s`,
+                  transition: `transform 0.5s cubic-bezier(0.19, 1, 0.22, 1) ${menuClosing ? 0 : index * 0.04}s, border-color 0.2s, box-shadow 0.2s`,
                   opacity: menuClosing ? 0 : 1,
-                  transformOrigin: "center"
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = item.color.replace(')', ' / 0.2)');
-                  e.currentTarget.style.boxShadow = `0 0 20px ${item.color.replace(')', ' / 0.4)')}, inset 0 0 10px ${item.color.replace(')', ' / 0.2)')}`;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "hsl(220 28% 10% / 0.85)";
-                  e.currentTarget.style.boxShadow = `0 0 15px ${item.color.replace(')', ' / 0.2)')}, inset 0 0 5px ${item.color.replace(')', ' / 0.1)')}`;
                 }}
               >
-                <span style={{ fontSize: "1.4em" }}>{item.icon}</span>
+                {/* Animated Scanline for each button */}
+                <div className="absolute inset-x-0 top-0 h-px bg-white/20 shadow-[0_0_5px_white] animate-[scan_2s_linear_infinite]" />
                 
-                {/* Tooltip label (Desktop only) */}
-                <span className="hidden sm:block absolute whitespace-nowrap px-2 py-1 bg-black/80 rounded border text-[10px] font-orbitron tracking-widest opacity-0 group-hover/item:opacity-100 transition-opacity pointer-events-none shadow-lg"
+                <div className="relative z-10 transition-transform group-hover:scale-110">
+                   {item.icon}
+                </div>
+                
+                <div className="absolute inset-0 bg-white/0 group-hover:bg-white/5 transition-colors" />
+
+                {/* Label */}
+                <span className="absolute whitespace-nowrap px-3 py-1 bg-black/90 border border-white/10 text-[8px] font-orbitron tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-all pointer-events-none translate-y-2 group-hover:translate-y-0"
                       style={{ 
-                        borderColor: item.color,
                         color: item.color,
-                        top: "-35px",
+                        top: "-40px",
                         left: "50%",
                         transform: "translateX(-50%)",
-                        boxShadow: `0 0 10px ${item.color.replace(')', ' / 0.3)')}`
+                        boxShadow: `0 0 15px ${item.color}20`
                       }}>
                   {item.label}
                 </span>
@@ -230,66 +225,76 @@ export default function HamburgerMenu({
         </div>
       )}
 
-      {/* Hamburger Button */}
+      {/* Main Hamburger Trigger */}
       <button
         onClick={toggleMenu}
-        className="ix-btn flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 font-orbitron cursor-pointer relative group z-10"
+        className="flex items-center justify-center w-16 h-16 rounded-full border border-white/10 relative group z-10 overflow-hidden transition-all duration-300"
         style={{
-          background: menuOpen ? "hsl(185 100% 15%)" : "hsl(220 28% 8% / 0.85)",
-          borderColor: menuOpen ? "hsl(185 100% 50%)" : "hsl(210 30% 35%)",
-          color: menuOpen ? "hsl(185 100% 60%)" : "hsl(210 30% 60%)",
-          backdropFilter: "blur(6px)",
-          boxShadow: menuOpen ? "0 0 20px hsl(185 100% 50% / 0.4), inset 0 0 10px hsl(185 100% 50% / 0.1)" : "0 0 10px hsl(210 30% 35% / 0.2)",
-          transition: "box-shadow 300ms ease, background-color 300ms ease, border-color 300ms ease, color 300ms ease",
+          background: menuOpen ? "rgba(0, 243, 255, 0.1)" : "rgba(12, 16, 22, 0.8)",
+          borderColor: menuOpen ? "#00f3ff" : "rgba(255,255,255,0.1)",
+          boxShadow: menuOpen ? "0 0 30px rgba(0, 243, 255, 0.2), inset 0 0 10px rgba(0, 243, 255, 0.1)" : "0 0 15px rgba(0,0,0,0.3)",
         }}
-        aria-label="Toggle menu"
       >
-        <svg viewBox="0 0 100 100" width="30" height="30" className="stroke-current fill-none transition-transform duration-300" style={{ transform: menuOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
+        <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/5 to-transparent" />
+        
+        <svg viewBox="0 0 100 100" width="28" height="28" className="relative z-10 transition-all duration-500" style={{ transform: menuOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
            {menuOpen ? (
-              <>
-                 <line x1="30" y1="30" x2="70" y2="70" strokeWidth="8" strokeLinecap="round" />
-                 <line x1="70" y1="30" x2="30" y2="70" strokeWidth="8" strokeLinecap="round" />
-              </>
+              <path d="M30 30 L70 70 M70 30 L30 70" stroke={menuOpen ? "#00f3ff" : "white"} strokeWidth="6" strokeLinecap="square" />
            ) : (
               <>
-                 <line x1="20" y1="35" x2="80" y2="35" strokeWidth="8" strokeLinecap="round" />
-                 <line x1="20" y1="50" x2="80" y2="50" strokeWidth="8" strokeLinecap="round" />
-                 <line x1="20" y1="65" x2="50" y2="65" strokeWidth="8" strokeLinecap="round" />
+                 <path d="M20 35 L80 35" stroke="white" strokeWidth="4" strokeLinecap="square" className="opacity-40" />
+                 <path d="M20 50 L80 50" stroke="#00f3ff" strokeWidth="4" strokeLinecap="square" />
+                 <path d="M20 65 L50 65" stroke="white" strokeWidth="4" strokeLinecap="square" className="opacity-40" />
               </>
            )}
         </svg>
+
+        {/* Pulse Effect when closed */}
+        {!menuOpen && (
+           <div className="absolute inset-0 border border-cyan-500/20 rounded-full animate-ping opacity-20" />
+        )}
       </button>
 
-      {/* Menu label on hover */}
-      {!menuOpen && (
-        <div className="absolute top-[-30px] right-0 bg-black/80 text-cyan-400 px-2 py-1 rounded border border-cyan-500/50 text-[10px] font-orbitron tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none"
-          style={{ boxShadow: "0 0 10px hsl(185 100% 50% / 0.3)" }}>
-          MENU
-        </div>
-      )}
-
-      {/* How to Play Modal */}
       {showHowToPlay && <HowToPlayModal onClose={() => setShowHowToPlay(false)} />}
 
-      {/* Quit Game Confirm Modal */}
       {showQuitButton && (
         <ConfirmModal
           isOpen={showConfirm}
-          title="Quit Game?"
-          message="Are you sure you want to leave this game?"
+          title="TERMINATE SESSION"
+          message="Confirm intentional disconnect from current operation?"
           warning={
             isHost
-              ? "⚠ You are the host. Quitting may end the game for all players."
+              ? "WARNING: HOST_STATUS ACTIVE. SESSION WILL TERMINATE FOR ALL OPERATORS."
               : midGame
-                ? "⚠ Leaving will interrupt the game for all players."
+                ? "WARNING: MID_ENGAGEMENT. DISCONNECT WILL IMPACT UNIT COHESION."
                 : undefined
           }
-          confirmLabel="Quit"
-          cancelLabel="Cancel"
+          confirmLabel="TERMINATE"
+          cancelLabel="RESUME"
           onConfirm={handleConfirmQuit}
           onCancel={closeConfirm}
         />
       )}
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes scan {
+          0% { top: 0%; opacity: 0; }
+          5% { opacity: 1; }
+          95% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
+      `}} />
     </div>
   );
 }
+
+/* --- High Fidelity SVG Icons --- */
+function ProfileIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /><path d="M20 8l-2 2-2-2" opacity="0.4" /></svg>; }
+function LogoutIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>; }
+function LoginIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 5 12 10 7" /><line x1="15" y1="12" x2="5" y2="12" /></svg>; }
+function SettingsIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>; }
+function ManualIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>; }
+function SoundOnIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" /></svg>; }
+function SoundOffIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></svg>; }
+function ExitIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter"><path d="M18.36 6.64a9 9 0 1 1-12.73 0" /><line x1="12" y1="2" x2="12" y2="12" /></svg>; }
+function RestartIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter"><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" /></svg>; }

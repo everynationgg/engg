@@ -40,199 +40,144 @@ export default function AuthModal({ onClose, onSuccess }: AuthModalProps) {
   const toggleMode = () => {
     setMode(mode === "login" ? "register" : "login");
     setLocalError("");
+    playSciFiClick();
   };
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 ix-backdrop ix-backdrop-blur"
-      style={{ background: "hsl(220 30% 4% / 0.9)" }}
-      onClick={onClose}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm transition-all duration-300"
+      style={{ background: "hsl(220 30% 2% / 0.85)" }}
+      onClick={() => { playSciFiClick(); onClose(); }}
     >
       <div
-        className="relative w-full max-w-md rounded-lg p-8 ix-modal-enter"
-        style={{
-          border: "1px solid hsl(270 80% 55% / 0.4)",
-          boxShadow: "0 0 40px hsl(270 80% 55% / 0.2)",
-          background: "hsl(220 28% 10%)",
-        }}
+        className="relative w-full max-w-md bg-[#0c1016] border border-white/10 shadow-[0_0_50px_rgba(0,243,255,0.1)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close button */}
+        {/* HUD Elements */}
+        <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-cyan-500/40" />
+        <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-cyan-500/40" />
+        <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-cyan-500/40" />
+        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-cyan-500/40" />
+        
+        {/* Animated Scanline */}
+        <div className="absolute inset-x-0 top-0 h-[2px] bg-cyan-500/20 shadow-[0_0_15px_rgba(0,243,255,0.5)] animate-[scan_4s_linear_infinite]" />
+
         <button
-          onClick={() => {
-            setShowForgotPassword(false);
-            onClose();
-          }}
-          className="absolute top-4 right-4 text-xs font-orbitron"
-          style={{ color: "hsl(270 80% 55%)" }}
+          onClick={() => { playSciFiClick(); onClose(); }}
+          className="absolute top-4 right-4 z-20 w-8 h-8 flex items-center justify-center border border-white/10 hover:border-cyan-500/50 hover:bg-cyan-500/10 transition-all text-white/40 hover:text-cyan-400 font-mono text-lg"
+          aria-label="Close"
         >
           ✕
         </button>
 
-        {/* Title */}
-        <h2
-          className="font-orbitron font-bold text-xl tracking-[0.15em] mb-6 text-center"
-          style={{ color: "hsl(270 80% 70%)" }}
-        >
-          {showForgotPassword ? "RESET PASSWORD" : mode === "login" ? "LOGIN" : "REGISTER"}
-        </h2>
-
-        {/* Forgot Password Modal */}
-        {showForgotPassword ? (
-          <div>
-            <ForgotPasswordModal
-              onClose={() => {
-                setShowForgotPassword(false);
-              }}
-            />
-            <button
-              onClick={() => setShowForgotPassword(false)}
-              className="w-full mt-4 py-2 rounded font-orbitron text-sm tracking-[0.1em] uppercase transition-all duration-150"
-              style={{
-                background: "hsl(220 28% 15%)",
-                color: "hsl(210 30% 60%)",
-                border: "1px solid hsl(210 30% 25%)",
-              }}
-            >
-              BACK TO LOGIN
-            </button>
+        <div className="p-8 md:p-10">
+          {/* Header */}
+          <div className="mb-8 relative">
+            <div className="flex items-center gap-4 mb-2">
+               <div className="w-1.5 h-6 bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
+               <h2 className="font-orbitron font-black text-xl tracking-[0.3em] uppercase">
+                 {showForgotPassword ? "RECOVERY" : mode === "login" ? "ACCESS" : "ENLIST"}
+               </h2>
+            </div>
+            <p className="font-mono text-[9px] tracking-[0.2em] uppercase opacity-40">
+               {showForgotPassword ? "System Authorization Override" : mode === "login" ? "Identity Verification Required" : "New Operator Protocol Initialized"}
+            </p>
           </div>
-        ) : (
-          <>
-            {/* Error message */}
-            {localError && (
-              <div
-                className="mb-4 p-3 rounded text-sm font-mono"
-                style={{
-                  background: "hsl(0 100% 50% / 0.15)",
-                  borderLeft: "2px solid hsl(0 100% 50%)",
-                  color: "hsl(0 100% 70%)",
-                }}
-              >
-                {localError}
-              </div>
-            )}
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Email */}
-              <div>
-                <label
-                  className="block text-xs font-orbitron tracking-[0.1em] mb-2"
-                  style={{ color: "hsl(185 100% 60%)" }}
-                >
-                  EMAIL
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full px-3 py-2 rounded border text-sm font-mono ix-input"
-                  style={{
-                    background: "hsl(220 28% 5%)",
-                    borderColor: "hsl(270 80% 55% / 0.3)",
-                    color: "hsl(0 0% 95%)",
-                  }}
-                  placeholder="user@example.com"
-                />
-              </div>
-
-              {/* Username (register only) */}
-              {mode === "register" && (
-                <div>
-                  <label
-                    className="block text-xs font-orbitron tracking-[0.1em] mb-2"
-                    style={{ color: "hsl(185 100% 60%)" }}
-                  >
-                    USERNAME
-                  </label>
-                  <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required={mode === "register"}
-                    className="w-full px-3 py-2 rounded border text-sm font-mono ix-input"
-                    style={{
-                      background: "hsl(220 28% 5%)",
-                      borderColor: "hsl(270 80% 55% / 0.3)",
-                      color: "hsl(0 0% 95%)",
-                    }}
-                    placeholder="your_username"
-                    minLength={3}
-                  />
+          {showForgotPassword ? (
+            <ForgotPasswordModal onClose={() => setShowForgotPassword(false)} />
+          ) : (
+            <>
+              {localError && (
+                <div className="mb-6 p-4 bg-red-500/5 border border-red-500/20 flex items-start gap-3">
+                   <span className="text-red-500 font-bold">!</span>
+                   <p className="font-mono text-[10px] text-red-400 uppercase tracking-widest leading-relaxed">{localError}</p>
                 </div>
               )}
 
-              {/* Password */}
-              <div>
-                <label
-                  className="block text-xs font-orbitron tracking-[0.1em] mb-2"
-                  style={{ color: "hsl(185 100% 60%)" }}
-                >
-                  PASSWORD
-                </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="w-full px-3 py-2 rounded border text-sm font-mono ix-input"
-                  style={{
-                    background: "hsl(220 28% 5%)",
-                    borderColor: "hsl(270 80% 55% / 0.3)",
-                    color: "hsl(0 0% 95%)",
-                  }}
-                  placeholder="••••••••"
-                  minLength={6}
-                />
-                {/* Forgot Password link (login only) */}
-                {mode === "login" && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setShowForgotPassword(true);
-                    }}
-                    className="text-xs mt-2 transition-colors hover:opacity-80"
-                    style={{ color: "hsl(40 100% 50%)" }}
-                  >
-                    Forgot password?
-                  </button>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label className="block font-mono text-[9px] tracking-[0.2em] uppercase opacity-40 mb-2">Network Address (Email)</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="w-full bg-white/5 border border-white/10 px-4 py-3 font-mono text-xs focus:border-cyan-500/50 focus:bg-cyan-500/5 outline-none transition-all placeholder:opacity-20"
+                    placeholder="ENTER_ADDRESS"
+                  />
+                </div>
+
+                {mode === "register" && (
+                  <div>
+                    <label className="block font-mono text-[9px] tracking-[0.2em] uppercase opacity-40 mb-2">Callsign (Username)</label>
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      required
+                      className="w-full bg-white/5 border border-white/10 px-4 py-3 font-mono text-xs focus:border-cyan-500/50 focus:bg-cyan-500/5 outline-none transition-all placeholder:opacity-20"
+                      placeholder="CHOOSE_CALLSIGN"
+                      minLength={3}
+                    />
+                  </div>
                 )}
+
+                <div>
+                  <div className="flex justify-between items-end mb-2">
+                    <label className="block font-mono text-[9px] tracking-[0.2em] uppercase opacity-40">Secure Key (Password)</label>
+                    {mode === "login" && (
+                      <button
+                        type="button"
+                        onClick={() => setShowForgotPassword(true)}
+                        className="font-mono text-[8px] uppercase text-amber-500/60 hover:text-amber-500 transition-colors"
+                      >
+                        Lost Key?
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="w-full bg-white/5 border border-white/10 px-4 py-3 font-mono text-xs focus:border-cyan-500/50 focus:bg-cyan-500/5 outline-none transition-all placeholder:opacity-20"
+                    placeholder="ENCRYPTED"
+                    minLength={6}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full py-4 bg-cyan-500/10 border border-cyan-500/40 text-cyan-400 font-orbitron text-xs tracking-[0.4em] uppercase hover:bg-cyan-500/20 transition-all disabled:opacity-30 relative overflow-hidden group"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                  {isLoading ? "AUTHORIZING..." : mode === "login" ? "AUTHORIZE" : "INITIALIZE"}
+                </button>
+              </form>
+
+              <div className="mt-8 text-center">
+                <button
+                  onClick={toggleMode}
+                  className="font-mono text-[10px] tracking-[0.1em] uppercase opacity-40 hover:opacity-100 hover:text-cyan-400 transition-all"
+                >
+                  {mode === "login" ? "Need Authorization? Enlist Here" : "Existing Operator? Authorize"}
+                </button>
               </div>
-
-              {/* Submit button */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="ix-btn w-full py-2 rounded font-orbitron text-sm tracking-[0.1em] uppercase transition-all duration-150 disabled:opacity-50"
-                style={{
-                  background: "hsl(270 80% 55%)",
-                  color: "hsl(220 28% 10%)",
-                  cursor: isLoading ? "not-allowed" : "pointer",
-                }}
-              >
-                {isLoading ? "PROCESSING..." : mode === "login" ? "LOGIN" : "CREATE ACCOUNT"}
-              </button>
-            </form>
-
-            {/* Toggle mode link */}
-            <div className="mt-4 text-center text-xs font-mono">
-              <span style={{ color: "hsl(210 30% 45%)" }}>
-                {mode === "login" ? "Don't have an account? " : "Already have an account? "}
-              </span>
-              <button
-                onClick={toggleMode}
-                className="transition-colors hover:opacity-80"
-                style={{ color: "hsl(185 100% 60%)" }}
-              >
-                {mode === "login" ? "Register" : "Login"}
-              </button>
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </div>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes scan {
+          0% { top: 0%; opacity: 0; }
+          5% { opacity: 1; }
+          95% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
+      `}} />
     </div>
   );
 }
