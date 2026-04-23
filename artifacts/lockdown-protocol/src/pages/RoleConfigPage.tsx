@@ -538,14 +538,8 @@ export default function RoleConfigPage() {
   }, [roomCode, setLocation]);
 
 
-  if (isSpectator && !amIHost) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen w-full bg-black text-cyan-200">
-        <h1 className="text-3xl font-orbitron mb-4">Spectator Mode</h1>
-        <p className="text-lg">You are a spectator. Enjoy watching the game!</p>
-      </div>
-    );
-  }
+  // Spectators see the same HUD as the host, just without controls.
+  // We'll let them fall through to the main render.
 
   return (
     <div

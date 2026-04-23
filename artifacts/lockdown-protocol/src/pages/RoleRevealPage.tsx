@@ -529,7 +529,7 @@ export default function RoleRevealPage() {
                   <TargetSelector
                     label={role.id === "virus" ? "JAM INTERFACE" : "GATEWAY SOURCE"}
                     players={livePlayers.filter(p => {
-                      if (isSelf(p)) return false;
+                      if (isSelf(p) || p.isSpectator) return false;
                       if (role.id === "virus") {
                         const r = rolesAssigned[p.id];
                         return r !== "alien" && r !== "parasite" && r !== "virus";
@@ -543,7 +543,7 @@ export default function RoleRevealPage() {
                   {role.id === "router" && (
                     <TargetSelector
                       label="GATEWAY DESTINATION"
-                      players={livePlayers.filter(p => !isSelf(p) && p.id !== selectedTargetId)}
+                      players={livePlayers.filter(p => !isSelf(p) && !p.isSpectator && p.id !== selectedTargetId)}
                       selectedId={selectedRouterDestId}
                       onSelect={(id) => setSelectedRouterDestId(id)}
                       accentColor={accentColor}

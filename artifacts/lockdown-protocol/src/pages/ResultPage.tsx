@@ -91,6 +91,7 @@ export default function ResultPage() {
   // Host status is derived from the server's session player list — not from
   // sessionStorage — so it is always accurate regardless of page reloads.
   const [isHost, setIsHost] = useState(false);
+  const [isSpectator, setIsSpectator] = useState(false);
 
   const [result, setResult] = useState<VoteResult | null>(null);
   const [summary, setSummary] = useState<RoundSummary | null>(null);
@@ -176,7 +177,7 @@ export default function ResultPage() {
       success: boolean;
       session?: {
         phase: string;
-        players?: { id: string; name: string; isHost: boolean }[];
+        players?: { id: string; name: string; isHost: boolean; isSpectator?: boolean }[];
         voteResult?: VoteResult | null;
         roundSummary?: RoundSummary;
       };
@@ -196,10 +197,13 @@ export default function ResultPage() {
         if (sess.players) {
           const mySocketId = socket.id;
           const myPlayerId = sessionStorage.getItem("lp_playerId") ?? null;
-          const myPlayer = sess.players.find(
+          const me = sess.players.find(
             (p) => p.id === mySocketId || (myPlayerId && (p as { playerId?: string }).playerId === myPlayerId),
           );
-          if (myPlayer?.isHost === true) setIsHost(true);
+          if (me) {
+            setIsHost(!!me.isHost);
+            setIsSpectator(!!me.isSpectator);
+          }
         }
       }
     });
@@ -211,7 +215,7 @@ export default function ResultPage() {
         success: boolean;
         session?: {
           phase: string;
-          players?: { id: string; name: string; isHost: boolean }[];
+          players?: { id: string; name: string; isHost: boolean; isSpectator?: boolean }[];
           voteResult?: VoteResult | null;
           roundSummary?: RoundSummary;
         };
@@ -223,10 +227,13 @@ export default function ResultPage() {
           if (sess.players) {
             const mySocketId = socket.id;
             const myPlayerId = sessionStorage.getItem("lp_playerId") ?? null;
-            const myPlayer = sess.players.find(
+            const me = sess.players.find(
               (p) => p.id === mySocketId || (myPlayerId && (p as { playerId?: string }).playerId === myPlayerId),
             );
-            if (myPlayer?.isHost === true) setIsHost(true);
+            if (me) {
+              setIsHost(!!me.isHost);
+              setIsSpectator(!!me.isSpectator);
+            }
           }
         }
       });

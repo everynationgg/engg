@@ -626,41 +626,42 @@ export function resolveRound(state: GameState): ResolutionResult {
         continue;
       }
 
-      // Passive/none submission (crew, parasite, and reveal-phase roles auto-submit)
-      if (action.type === "passive" || action.type === "none") {
-        // Virus and Router act during Role Reveal — log their reveal action in the summary
-        if (roleId === "virus") {
-          const revealAction = state.revealActions[actor.id];
-          if (revealAction && revealAction.targets[0]) {
-            const target = state.players.find(p => p.id === revealAction.targets[0]);
-            feedback[actor.id] = { type: "virus_result", data: { targetName: target?.name ?? "a player" } };
-            logActor(actor.name, actor.id, `(Virus) used Packet Loss on ${target?.name ?? "a player"}`);
-          } else {
-            feedback[actor.id] = { type: "skipped" };
-            logActor(actor.name, actor.id, "(Virus) skipped their ability");
-          }
-          continue;
+      // Virus and Router act during Role Reveal — log their reveal action in the summary
+      if (roleId === "virus") {
+        const revealAction = state.revealActions[actor.id];
+        if (revealAction && revealAction.targets[0]) {
+          const target = state.players.find(p => p.id === revealAction.targets[0]);
+          feedback[actor.id] = { type: "virus_result", data: { targetName: target?.name ?? "a player" } };
+          logActor(actor.name, actor.id, `(Virus) used Packet Loss on ${target?.name ?? "a player"}`);
+        } else {
+          feedback[actor.id] = { type: "skipped" };
+          logActor(actor.name, actor.id, "(Virus) skipped their ability");
         }
-        if (roleId === "router") {
-          const revealAction = state.revealActions[actor.id];
-          if (revealAction && revealAction.targets[0] && revealAction.targets[1]) {
-            const source = state.players.find(p => p.id === revealAction.targets[0]);
-            const dest = state.players.find(p => p.id === revealAction.targets[1]);
-            feedback[actor.id] = { type: "router_result", data: { sourceName: source?.name ?? "a player", destName: dest?.name ?? "another player" } };
-            logActor(actor.name, actor.id, `(Router) hijacked ${source?.name ?? "a player"}'s ability to redirect to ${dest?.name ?? "another player"}`);
-          } else {
-            feedback[actor.id] = { type: "skipped" };
-            logActor(actor.name, actor.id, "(Router) skipped their ability");
-          }
-          continue;
+        continue;
+      }
+      if (roleId === "router") {
+        const revealAction = state.revealActions[actor.id];
+        if (revealAction && revealAction.targets[0] && revealAction.targets[1]) {
+          const source = state.players.find(p => p.id === revealAction.targets[0]);
+          const dest = state.players.find(p => p.id === revealAction.targets[1]);
+          feedback[actor.id] = { type: "router_result", data: { sourceName: source?.name ?? "a player", destName: dest?.name ?? "another player" } };
+          logActor(actor.name, actor.id, `(Router) hijacked ${source?.name ?? "a player"}'s ability to redirect to ${dest?.name ?? "another player"}`);
+        } else {
+          feedback[actor.id] = { type: "skipped" };
+          logActor(actor.name, actor.id, "(Router) skipped their ability");
         }
+        continue;
+      }
+
+      // No submission (or auto-submit)
+      if (!action || action.type === "passive" || action.type === "none") {
         feedback[actor.id] = { type: roleId === "parasite" ? "passive" : "no_ability" };
         logActor(
           actor.name,
           actor.id,
           roleId === "parasite"
             ? "(Parasite) monitored via passive ability"
-            : "has no active ability this round",
+            : "skipped their ability",
         );
         continue;
       }

@@ -53,6 +53,7 @@ export default function VotingPage() {
   const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
   const [roomCopyFeedback, setRoomCopyFeedback] = useState(false);
   const [isHost, setIsHost] = useState(false);
+  const [isSpectator, setIsSpectator] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(60);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const typingTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
@@ -135,11 +136,15 @@ export default function VotingPage() {
 
     const handlePhaseUpdate = (session: { phase: string; players: LivePlayer[]; votes?: Record<string, string>; roundSummary?: any }) => {
       const myPlayerId = sessionStorage.getItem("lp_playerId");
-      const id = socket.id;
-      setSessionPlayers(session.players.map((p) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === id })));
+      const myId = socket.id;
+      const players = session.players.map((p) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === myId }));
+      setSessionPlayers(players);
 
-      const me = session.players.find((p) => myPlayerId ? p.playerId === myPlayerId : p.id === id);
-      if (me) setIsHost(me.isHost);
+      const me = players.find((p) => p.isYou);
+      if (me) {
+        setIsHost(!!me.isHost);
+        setIsSpectator(!!me.isSpectator);
+      }
 
       if (session.votes) {
         setWaitingCount(Object.keys(session.votes).length);
@@ -187,9 +192,6 @@ export default function VotingPage() {
     };
   }, [roomCode]);
 
-  const myPlayerId = sessionStorage.getItem("lp_playerId");
-  const me = sessionPlayers.find((p) => myPlayerId ? p.playerId === myPlayerId : p.id === getSocket().id);
-  const isSpectator = (!!me && !!me.isSpectator) || (initialRoleId === "spectator");
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -294,7 +296,7 @@ export default function VotingPage() {
         <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
         
         {/* Header */}
-        <div className="w-full px-6 py-4 flex items-center justify-between border-b" style={{ background: "hsl(220 28% 5%)", borderColor: "hsl(185 100% 50% / 0.2)" }}>
+        <div className="w-full px-4 sm:px-6 py-4 flex items-center justify-between border-b shrink-0" style={{ background: "hsl(220 28% 5%)", borderColor: "hsl(185 100% 50% / 0.2)" }}>
           <div className="flex items-center gap-4">
             <div className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
             <div className="font-orbitron font-black text-lg tracking-[0.3em] uppercase leading-none">
@@ -309,8 +311,8 @@ export default function VotingPage() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 lg:p-10">
-          <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
             
             {/* Left Column: Live Vote Tally */}
             <div className="lg:col-span-5 flex flex-col gap-6">
@@ -319,18 +321,23 @@ export default function VotingPage() {
                 Live Transmission
               </h3>
               <div className="rounded-2xl p-5 space-y-3" style={{ background: "hsl(220 28% 9%)", border: "1px solid white/5" }}>
-                {roundSummary && roundSummary.voteTally.length > 0 ? (
-                  roundSummary.voteTally.map((entry, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/[0.05]">
-                      <span className="font-orbitron text-xs font-bold text-cyan-400">{entry.voterName}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[9px] text-white/20 uppercase tracking-tighter">targeting</span>
-                        <span className="font-orbitron text-xs font-black" style={{ color: entry.isAbstain ? "hsl(210 20% 40%)" : "hsl(185 100% 70%)" }}>
-                          {entry.isAbstain ? "ABSTAIN" : entry.targetName}
-                        </span>
+                {Object.keys(votes).length > 0 ? (
+                  Object.entries(votes).map(([voterId, targetId], idx) => {
+                    const voter = sessionPlayers.find(p => p.id === voterId);
+                    const target = sessionPlayers.find(p => p.id === targetId);
+                    const isAbstain = targetId === "abstain";
+                    return (
+                      <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/[0.05]">
+                        <span className="font-orbitron text-xs font-bold text-cyan-400">{voter?.name || "Unknown"}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] text-white/20 uppercase tracking-tighter">targeting</span>
+                          <span className="font-orbitron text-xs font-black" style={{ color: isAbstain ? "hsl(210 20% 40%)" : "hsl(185 100% 70%)" }}>
+                            {isAbstain ? "ABSTAIN" : (target?.name || "---")}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
                   <div className="py-12 text-center text-white/10 font-orbitron text-[10px] tracking-[0.4em] uppercase animate-pulse">
                     Scanning for votes...
@@ -386,6 +393,28 @@ export default function VotingPage() {
                     </div>
                   );
                 })}
+
+                {/* Abstain Count */}
+                {Object.values(votes).filter(v => v === "abstain").length > 0 && (
+                  <div className="p-4 rounded-xl border bg-white/[0.01] border-white/[0.03]">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-white/10" />
+                        <span className="font-orbitron text-sm font-bold tracking-widest text-white/30 italic">ABSTAINED</span>
+                      </div>
+                      <div className="font-orbitron font-black text-lg text-white/20">
+                        {Object.values(votes).filter(v => v === "abstain").length}
+                      </div>
+                    </div>
+                    <div className="w-full h-1 bg-white/[0.02] rounded-full overflow-hidden">
+                      <div 
+                        className="h-full transition-all duration-500 rounded-full bg-white/10" 
+                        style={{ width: `${(Object.values(votes).filter(v => v === "abstain").length / (totalPlayers || 1)) * 100}%` }} 
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
               </div>
 
               {/* Pending Voters */}
@@ -403,7 +432,6 @@ export default function VotingPage() {
               )}
             </div>
 
-          </div>
         </div>
       </div>
     );

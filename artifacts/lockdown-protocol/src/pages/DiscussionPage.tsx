@@ -147,15 +147,19 @@ export default function DiscussionPage() {
     const handlePhaseUpdate = (session: { phase: string; players: LivePlayer[]; roleCounts?: Record<string, number>; rolesAssigned?: Record<string, string>; initialRoles?: Record<string, string>; roundSummary?: any }) => {
       const myPlayerId = sessionStorage.getItem("lp_playerId");
       const myId = socket.id;
-      setSessionPlayers(session.players.map((p) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === myId })));
+      const players = session.players.map((p) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === myId }));
+      setSessionPlayers(players);
       
+      const me = players.find((p) => p.isYou);
+      if (me) {
+        setIsHost(!!me.isHost);
+      }
+
       if (session.roleCounts) setRoleCounts(session.roleCounts);
       if (session.rolesAssigned) setRolesAssigned(session.rolesAssigned);
       if (session.initialRoles) setInitialRoles(session.initialRoles);
       if (session.roundSummary) setRoundSummary(session.roundSummary);
       
-      const me = session.players.find((p) => myPlayerId ? p.playerId === myPlayerId : p.id === myId);
-      if (me) setIsHost(me.isHost);
       // GameShell handles phase navigation
     };
 
@@ -276,7 +280,7 @@ export default function DiscussionPage() {
   // ── Render ────────────────────────────────────────────────────────────────
   if (isSpectator) {
     return (
-      <div className="relative min-h-screen w-full flex flex-col ix-page-enter" style={{ background: "hsl(210 30% 6%)", color: "hsl(190 80% 90%)" }}>
+      <div className="relative min-h-screen w-full flex flex-col ix-page-enter" style={{ background: "hsl(210 30% 6%)", color: "hsl(190 80% 90%)", overflow: "hidden" }}>
         <HamburgerMenu
           onShowSettings={() => setShowSettingsModal(true)}
           onShowProfile={() => setShowProfileModal(true)}
@@ -292,7 +296,7 @@ export default function DiscussionPage() {
         <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
 
         {/* Header Bar */}
-        <div className="w-full px-6 py-4 flex items-center justify-between border-b" style={{ background: "hsl(220 28% 5%)", borderColor: "hsl(185 100% 50% / 0.2)", boxShadow: "0 4px 20px rgba(0,0,0,0.4)" }}>
+        <div className="w-full px-4 sm:px-6 py-4 flex items-center justify-between border-b shrink-0" style={{ background: "hsl(220 28% 5%)", borderColor: "hsl(185 100% 50% / 0.2)", boxShadow: "0 4px 20px rgba(0,0,0,0.4)" }}>
           <div className="flex items-center gap-4">
             <div className="w-3 h-3 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_10px_hsl(185,100%,50%)]" />
             <div className="font-orbitron font-black text-xl tracking-[0.25em] uppercase leading-none" style={{ color: "hsl(185 100% 70%)" }}>
@@ -307,8 +311,8 @@ export default function DiscussionPage() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 lg:p-10">
-          <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
             
             {/* Left Column: Ability Intel */}
             <div className="lg:col-span-5 flex flex-col gap-6">
