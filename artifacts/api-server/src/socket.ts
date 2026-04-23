@@ -7,7 +7,6 @@ import {
   getSession,
   saveSession,
   addPlayerToSession,
-  assignRoles,
   scheduleRemovePlayer,
   cancelRemovePlayer,
   scheduleGraceExpiry,
@@ -42,6 +41,7 @@ import {
   consumeJustUnfrozen as engineConsumeJustUnfrozen,
   resumeFromInterrupt as engineResumeFromInterrupt,
   sortPlayersByStatus as engineSortPlayersByStatus,
+  startGame as engineStartGame,
   continueGame as engineContinueGame,
   checkSinglePlayerEdgeCase as engineCheckSinglePlayerEdgeCase,
   recheckVotingCompletion as engineRecheckVotingCompletion,
@@ -1059,7 +1059,15 @@ export function attachSocketIO(httpServer: HttpServer) {
             Object.entries(customRoles).filter(([pid, role]) => role !== "spectator")
           );
           session.rolesAssigned = { ...filteredRoles };
-          session.initialRoles = { ...filteredRoles };
+          
+          // Ensure spectators have the "spectator" role explicitly in rolesAssigned
+          for (const p of session.players) {
+            if (p.isSpectator) {
+              session.rolesAssigned[p.id] = "spectator";
+            }
+          }
+          
+          session.initialRoles = { ...session.rolesAssigned };
           session.centerCards = [...customDeck];
           session.roleCounts = {};
           // Reset round state
@@ -1140,9 +1148,10 @@ export function attachSocketIO(httpServer: HttpServer) {
           if (!player?.isHost) { notHost = true; return CAS_SKIP; }
           // Phase guard: game may only be started from lobby or role_config
           if (session.phase !== "lobby" && session.phase !== "role_config") { wrongPhase = true; return CAS_SKIP; }
-          // Pool size guard: total role count must cover all players
+          // Pool size guard: total role count must cover all active players
+          const activePlayers = session.players.filter(p => !p.isSpectator);
           const totalRoles = Object.values(roleCounts).reduce((s, n) => s + n, 0);
-          if (totalRoles < session.players.length) { invalidRoleCounts = true; return CAS_SKIP; }
+          if (totalRoles < activePlayers.length) { invalidRoleCounts = true; return CAS_SKIP; }
 
           // If customRoles is provided, validate and assign directly
           if (customRoles) {
@@ -1174,7 +1183,7 @@ export function attachSocketIO(httpServer: HttpServer) {
             session.voteResult = null;
             session.roundSummary = freshRoundSummary();
           } else {
-            assignRoles(session, roleCounts);
+            engineStartGame(session, roleCounts, session.settings);
           }
           session.phase = "role_reveal";
           return true as const;

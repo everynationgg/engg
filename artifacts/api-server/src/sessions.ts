@@ -535,6 +535,7 @@ export function createSession(sessionId: string, hostPlayer: Player): VersionedS
     roleAcknowledgements: [],
     resolutionAcknowledgements: [],
     discussionStartedAt: null,
+    votingStartedAt: null,
     emergencyVote: freshEmergencyVote(),
     votes: {},
     voteResult: null,
@@ -659,50 +660,3 @@ export function scheduleGraceExpiry(
   disconnectTimers.set(key, timer);
 }
 
-export function assignRoles(
-  session: Session,
-  roleCounts: { [roleId: string]: number },
-): void {
-  const pool: string[] = [];
-  for (const [roleId, count] of Object.entries(roleCounts)) {
-    for (let i = 0; i < count; i++) pool.push(roleId);
-  }
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-  session.rolesAssigned = {};
-  session.players.forEach((player, idx) => {
-    session.rolesAssigned[player.id] = pool[idx] ?? pool[0];
-  });
-  session.initialRoles = { ...session.rolesAssigned };
-  session.centerCards = pool.slice(session.players.length);
-  // Snapshot the role configuration so clients can display "roles in play"
-  session.roleCounts = { ...roleCounts };
-
-  // Reset all round state for new game
-  session.orbitActions = {};
-  session.orbitCompleted = [];
-  session.roleAcknowledgements = [];
-  session.resolutionAcknowledgements = [];
-  session.discussionStartedAt = null;
-  session.emergencyVote = freshEmergencyVote();
-  session.votes = {};
-  session.voteResult = null;
-  session.roundSummary = freshRoundSummary();
-}
-
-export function computeOrbitInfo(
-  session: Session,
-  playerId: string,
-): { type: string; data?: unknown } {
-  const role = session.rolesAssigned[playerId];
-  // Alien is now ACTIVE — they pick a hidden card themselves, no pre-reveal
-  if (role === "parasite") {
-    const alienPlayers = session.players
-      .filter((p) => session.rolesAssigned[p.id] === "alien")
-      .map((p) => p.name);
-    return { type: "parasite_info", data: { alienPlayers } };
-  }
-  return { type: "none" };
-}

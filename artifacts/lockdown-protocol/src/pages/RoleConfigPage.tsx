@@ -30,6 +30,7 @@ interface LivePlayer {
   isHost: boolean;
   isYou?: boolean;
   playerId?: string;
+  isSpectator?: boolean;
 }
 
 function getRoomCode(): string {
@@ -386,7 +387,8 @@ export default function RoleConfigPage() {
     : `${base}/join/${roomCode}`;
 
   const totalRoleCount = Object.values(roleCounts).reduce((a, b) => a + b, 0);
-  const requiredRoles = players.length + 3;
+  const activePlayerCount = players.filter(p => !p.isSpectator).length;
+  const requiredRoles = activePlayerCount + 3;
   const rolesReady = totalRoleCount === requiredRoles;
 
   const handleSelectRole = useCallback((role: Role) => {
@@ -409,8 +411,9 @@ export default function RoleConfigPage() {
   const handleRandomize = useCallback(() => {
     playSciFiClick();
     setStartError(null);
-    setRoleCounts(randomizeRoles(players.length));
-  }, [players.length]);
+    const activePlayerCount = players.filter(p => !p.isSpectator).length;
+    setRoleCounts(randomizeRoles(activePlayerCount));
+  }, [players]);
 
   const handleCopyLink = useCallback(() => {
     playSciFiClick();
