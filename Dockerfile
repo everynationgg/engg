@@ -30,7 +30,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY tsconfig.base.json tsconfig.json ./
 
-
+COPY lib/ lib/
 # Only copy the api-server package.json for production install
 COPY artifacts/api-server/package.json artifacts/api-server/package.json
 
