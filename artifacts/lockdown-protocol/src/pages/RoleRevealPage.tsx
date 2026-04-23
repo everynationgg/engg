@@ -26,6 +26,15 @@ function getTotalPlayers(): number {
 export default function RoleRevealPage() {
   const [acknowledged, setAcknowledged] = useState(false);
   const [revealState, setRevealState] = useState<"black" | "flash" | "ready">("black");
+  const [readyCount, setReadyCount] = useState(0);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
+  const [isHost, setIsHost] = useState(false);
+  const [livePlayers, setLivePlayers] = useState<any[]>([]);
+  const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
+  const [selectedRouterDestId, setSelectedRouterDestId] = useState<string | null>(null);
+  const [rolesAssigned, setRolesAssigned] = useState<Record<string, string>>({});
 
   const role = getAssignedRole();
   const myPlayerId = sessionStorage.getItem("lp_playerId");
