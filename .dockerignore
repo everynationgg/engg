@@ -12,7 +12,6 @@
 artifacts/lockdown-protocol
 mockup-sandbox
 attached_assets
-lib/
 scripts/
 *.ts
 *.tsx
