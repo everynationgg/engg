@@ -1,3 +1,92 @@
+// Schema for custom game start (custom player roles + custom deck)
+const startGameCustomSchema = z.object({
+  sessionId: sessionIdSchema,
+  customRoles: z.record(z.string().uuid(), z.string().max(50)),
+  customDeck: z.array(z.string().max(50)).length(3),
+});
+    // ── START GAME CUSTOM ────────────────────────────────────────────────
+    socket.on(
+      "start_game_custom",
+      async (data: unknown, ack) => {
+        const parsed = validate(startGameCustomSchema, data, ack);
+        if (!parsed) return;
+        const { sessionId, customRoles, customDeck } = parsed;
+
+        if (currentSessionId !== sessionId) {
+          ack?.({ success: false, error: "Not in session" });
+          return;
+        }
+        if (isRedisOverloaded()) {
+          ack?.({ success: false, error: "Server busy — please try again shortly" });
+          return;
+        }
+
+        let notHost = false;
+        let wrongPhase = false;
+        let invalidCustomRoles = false;
+        let invalidCustomDeck = false;
+        const cas = await withCasRetry(sessionId, (session) => {
+          const player = session.players.find((p) => p.id === socket.id);
+          if (!player?.isHost) { notHost = true; return CAS_SKIP; }
+          if (session.phase !== "lobby" && session.phase !== "role_config") { wrongPhase = true; return CAS_SKIP; }
+          // Validate all players assigned and all roles valid
+          const playerIds = session.players.map(p => p.id);
+          const allAssigned = playerIds.every(pid => customRoles[pid]);
+          const allRolesValid = Object.values(customRoles).every(roleId => typeof roleId === "string" && roleId.length > 0);
+          if (!allAssigned || !allRolesValid) { invalidCustomRoles = true; return CAS_SKIP; }
+          // Validate customDeck: 3 roles, not assigned to any player
+          const assignedRoles = new Set(Object.values(customRoles));
+          const deckValid = customDeck.length === 3 && customDeck.every(roleId => typeof roleId === "string" && roleId.length > 0 && !assignedRoles.has(roleId));
+          if (!deckValid) { invalidCustomDeck = true; return CAS_SKIP; }
+          // Assign roles and deck
+          session.rolesAssigned = { ...customRoles };
+          session.initialRoles = { ...customRoles };
+          session.centerCards = [...customDeck];
+          session.roleCounts = {};
+          // Reset round state
+          session.orbitActions = {};
+          session.orbitCompleted = [];
+          session.roleAcknowledgements = [];
+          session.resolutionAcknowledgements = [];
+          session.discussionStartedAt = null;
+          session.emergencyVote = freshEmergencyVote();
+          session.votes = {};
+          session.voteResult = null;
+          session.roundSummary = freshRoundSummary();
+          session.phase = "role_reveal";
+          return true as const;
+        });
+        if (notHost) {
+          ack?.({ success: false, error: "Only host can start" });
+          return;
+        }
+        if (wrongPhase) {
+          ack?.({ success: false, error: "Game already in progress" });
+          return;
+        }
+        if (invalidCustomRoles) {
+          ack?.({ success: false, error: "Custom roles invalid or incomplete" });
+          return;
+        }
+        if (invalidCustomDeck) {
+          ack?.({ success: false, error: "Custom deck invalid or overlaps with player roles" });
+          return;
+        }
+        if (!cas) {
+          await handleSaveConflict(io, sessionId);
+          ack?.({ success: false });
+          return;
+        }
+        logger.info({ sessionId, players: cas.session.players.length }, "Custom game started");
+        logGameEvent("game_started_custom", sessionId, socket.id, {
+          players: cas.session.players.length,
+          customRoles: true,
+          customDeck: true,
+        });
+        phaseUpdate(io, sessionId, cas.session);
+        ack?.({ success: true });
+      },
+    );
 import { Server as SocketIOServer } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
 import type { Server as HttpServer } from "node:http";

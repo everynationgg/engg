@@ -60,6 +60,7 @@ export default function RoleConfigPage() {
   const [, setLocation] = useLocation();
   const [customGameOpen, setCustomGameOpen] = useState(false);
   const [customRoles, setCustomRoles] = useState<{ [playerId: string]: string }>({});
+  const [customDeck, setCustomDeck] = useState<[string, string, string]>(["", "", ""]);
   const [selectedRole, setSelectedRole] = useState<Role>(ROLES[0]);
   const [roleCounts, setRoleCounts] = useState<RoleCounts>(() => {
     const init: RoleCounts = {};
@@ -415,29 +416,37 @@ export default function RoleConfigPage() {
     });
   }, [joinUrl]);
 
-  const handleStartGame = useCallback(() => {
+  // For custom game: require all players and all 3 deck cards to be assigned
+  const customGameReady = players.length > 0 && Object.keys(customRoles).length === players.length && customDeck.every(Boolean);
+  const handleCustomDeckChange = (idx: number, value: string) => {
+    setCustomDeck(deck => {
+      const next = [...deck] as [string, string, string];
+      next[idx] = value;
+      return next;
+    });
+  };
+  const handleStartCustomGame = useCallback(() => {
     playSciFiClick();
-    if (players.length < 1 || !rolesReady) {
-      setStartError("Not enough roles configured");
+    if (!customGameReady) {
+      setStartError("Assign all player roles and all 3 deck cards");
       setTimeout(() => setStartError(null), 3000);
       return;
     }
     setStartError(null);
-
-    // Server is authoritative — send role counts and let the server
-    // assign roles, update phase, and broadcast phase_update to all players
     const socket = getSocket();
     socket.emit(
-      "start_game",
-      { sessionId: roomCode, roleCounts },
+      "start_game_custom",
+      { sessionId: roomCode, customRoles, customDeck },
       (resp: { success: boolean; error?: string }) => {
         if (!resp?.success) {
-          setStartError(resp?.error ?? "Failed to start — reconnecting, please try again");
+          setStartError(resp?.error ?? "Failed to start custom game");
           setTimeout(() => setStartError(null), 4000);
+        } else {
+          setCustomGameOpen(false);
         }
       },
     );
-  }, [players.length, rolesReady, roleCounts, roomCode]);
+  }, [customGameReady, customRoles, customDeck, roomCode]);
 
   const handleKickPlayer = useCallback((target: LivePlayer) => {
     if (!target.playerId) {
@@ -898,12 +907,31 @@ export default function RoleConfigPage() {
               </select>
             </div>
           ))}
+          <div className="font-orbitron text-sm mt-4 mb-2">Assign 3 center deck cards:</div>
+          <div className="flex flex-col gap-2">
+            {[0,1,2].map(idx => (
+              <div key={idx} className="flex items-center gap-3">
+                <span className="min-w-[80px] font-orbitron text-xs" style={{ color: "hsl(210 80% 70%)" }}>{`Card ${idx+1}`}</span>
+                <select
+                  className="px-2 py-1 rounded border bg-black text-white"
+                  value={customDeck[idx]}
+                  onChange={e => handleCustomDeckChange(idx, e.target.value)}
+                >
+                  <option value="">Unassigned</option>
+                  {ROLES.map(role => (
+                    <option key={role.id} value={role.id}>{role.name}</option>
+                  ))}
+                </select>
+              </div>
+            ))}
+          </div>
           <div className="flex gap-3 mt-4">
             <button
-              className="flex-1 px-4 py-2 rounded bg-green-700 text-white font-orbitron text-xs tracking-wider"
-              onClick={() => setCustomGameOpen(false)}
+              className="flex-1 px-4 py-2 rounded bg-blue-700 text-white font-orbitron text-xs tracking-wider"
+              disabled={!customGameReady}
+              onClick={handleStartCustomGame}
             >
-              Save & Close
+              Start Game
             </button>
             <button
               className="flex-1 px-4 py-2 rounded bg-gray-700 text-white font-orbitron text-xs tracking-wider"
@@ -912,6 +940,9 @@ export default function RoleConfigPage() {
               Cancel
             </button>
           </div>
+          {startError && (
+            <div className="text-xs mt-2" style={{ color: "hsl(0 75% 60%)" }}>{startError}</div>
+          )}
         </div>
       </Modal>
 
