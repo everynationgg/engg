@@ -28,6 +28,9 @@ export default function RoleRevealPage() {
   const [revealState, setRevealState] = useState<"black" | "flash" | "ready">("black");
 
   const role = getAssignedRole();
+  const myPlayerId = sessionStorage.getItem("lp_playerId");
+  const me = livePlayers.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === getSocket().id);
+  const isSpectator = me?.isSpectator;
   const isAlien = role.team === "alien";
 
   useEffect(() => {
@@ -215,6 +218,38 @@ export default function RoleRevealPage() {
     );
   }
 
+
+  if (isSpectator) {
+    // Spectator UI: Hide all role info, show only spectator message
+    return (
+      <div className="relative min-h-screen w-full flex flex-col items-center justify-center ix-page-enter" style={{ background: "hsl(210 30% 8%)", color: "hsl(190 80% 90%)" }}>
+        <HamburgerMenu
+          onShowSettings={() => setShowSettingsModal(true)}
+          onShowProfile={() => setShowProfileModal(true)}
+          onShowHowToPlay={() => { }}
+          musicOn={musicOn}
+          onToggleMusic={handleToggleMusic}
+          playSound={playSciFiClick}
+          showQuitButton
+          isHost={isHost}
+          onRestartRound={handleRestartRound}
+        />
+        <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
+        <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
+        <div className="flex flex-col items-center justify-center flex-1 w-full">
+          <div className="font-orbitron text-4xl lg:text-6xl font-black tracking-widest uppercase mb-6" style={{ color: "hsl(185 100% 70%)", textShadow: "0 0 24px hsl(185 100% 50% / 0.4)" }}>
+            Spectator
+          </div>
+          <div className="font-orbitron text-lg lg:text-2xl tracking-widest uppercase mb-4" style={{ color: "hsl(210 30% 60%)" }}>
+            You are observing this game
+          </div>
+          <div className="text-base lg:text-lg text-center max-w-xl" style={{ color: "hsl(210 30% 70%)" }}>
+            You can watch all phases but cannot participate in actions or voting.<br />Sit back, relax, and enjoy the show!
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
