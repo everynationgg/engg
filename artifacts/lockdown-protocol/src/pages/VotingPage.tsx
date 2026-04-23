@@ -512,3 +512,21 @@ export default function VotingPage() {
     </div>
   );
 }
+
+// Spectator block: show spectator message instead of voting UI
+  const isSpectator = role.team === "spectator";
+  if (isSpectator) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen w-full" style={{ background: bgTint, color: accentLight }}>
+        <div className="font-orbitron text-4xl lg:text-6xl font-black tracking-widest uppercase mb-6" style={{ color: accentLight, textShadow: `0 0 24px ${accentGlow}` }}>
+          Spectator
+        </div>
+        <div className="font-orbitron text-lg lg:text-2xl tracking-widest uppercase mb-4" style={{ color: "hsl(210 30% 60%)" }}>
+          You are observing this game
+        </div>
+        <div className="text-base lg:text-lg text-center max-w-xl" style={{ color: "hsl(210 30% 70%)" }}>
+          You can watch all phases but cannot participate in actions or voting.<br />Sit back, relax, and enjoy the show!
+        </div>
+      </div>
+    );
+  }
