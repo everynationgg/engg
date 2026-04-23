@@ -136,6 +136,10 @@ export default function OrbitPage() {
   const bgTint = isAlien ? "hsl(0 40% 6%)" : isChaotic ? "hsl(290 30% 6%)" : "hsl(200 30% 6%)";
   const bgOverlay = isAlien ? "hsl(0 35% 3% / 0.83)" : isChaotic ? "hsl(290 25% 3% / 0.83)" : "hsl(200 25% 3% / 0.83)";
 
+  const myPlayerId = sessionStorage.getItem("lp_playerId");
+  const me = sessionPlayers.find((p) => myPlayerId ? p.playerId === myPlayerId : p.id === getSocket().id);
+  const isSpectator = !!me && !!me.isSpectator;
+
   // Submit action to server
   const submitAction = useCallback((type: string, targets: string[]) => {
     const socket = getSocket();
