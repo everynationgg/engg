@@ -20,12 +20,17 @@ export function setupSmtpEmailProvider() {
   });
 
   registerEmailProvider(async (options: SendEmailOptions) => {
-    await transporter.sendMail({
-      from: `ERROR: NEWFORM DETECTED <noreply@engg.online>`,
-      to: options.to,
-      subject: options.subject,
-      html: options.html,
-      text: options.text,
-    });
+    try {
+      await transporter.sendMail({
+        from: `ERROR: NEWFORM DETECTED <noreply@engg.online>`,
+        to: options.to,
+        subject: options.subject,
+        html: options.html,
+        text: options.text,
+      });
+    } catch (err) {
+      console.error("SMTP sendMail failed:", err);
+      throw err;
+    }
   });
 }
