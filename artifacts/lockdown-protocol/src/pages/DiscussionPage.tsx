@@ -60,6 +60,30 @@ export default function DiscussionPage() {
     return () => clearInterval(timer);
   }, []);
 
+  // Sync timer with session settings and server timestamp
+  useEffect(() => {
+    const socket = getSocket();
+    const handlePhaseUpdate = (session: any) => {
+      if (session.phase === "discussion" && session.discussionStartedAt) {
+        const discussionTime = session.settings?.discussionTime ?? 120;
+        const elapsed = Math.floor((Date.now() - session.discussionStartedAt) / 1000);
+        setSecondsLeft(Math.max(0, discussionTime - elapsed));
+      }
+    };
+    socket.on("phase_update", handlePhaseUpdate);
+    
+    // Initial sync
+    socket.emit("get_session", { sessionId: roomCode }, (resp: any) => {
+      if (resp.success && resp.session) {
+        handlePhaseUpdate(resp.session);
+      }
+    });
+
+    return () => {
+      socket.off("phase_update", handlePhaseUpdate);
+    };
+  }, [roomCode]);
+
   useEffect(() => {
     const socket = getSocket();
     const onChatTyping = (evt: { gameId: string; username: string; isTyping: boolean }) => {

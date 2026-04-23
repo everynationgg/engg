@@ -142,6 +142,7 @@ export interface GameState {
   jammedPlayerId: string | null;
   hijackedTargets: Record<string, string>; // actorId -> targetId
   discussionStartedAt: number | null;
+  votingStartedAt: number | null;
   emergencyVote: EmergencyVoteState;
   votes: Record<string, string>;
   voteResult: VoteResult | null;
@@ -315,6 +316,7 @@ export function createGame(sessionId: string, hostPlayer: Player): GameState {
     roleAcknowledgements: [],
     resolutionAcknowledgements: [],
     discussionStartedAt: null,
+    votingStartedAt: null,
     emergencyVote: freshEmergencyVote(),
     votes: {},
     voteResult: null,
@@ -378,6 +380,7 @@ export function startGame(
   state.jammedPlayerId = null;
   state.hijackedTargets = {};
   state.discussionStartedAt = null;
+  state.votingStartedAt = null;
   state.emergencyVote = freshEmergencyVote();
   state.votes = {};
   state.voteResult = null;
@@ -863,6 +866,16 @@ export function applyResolution(state: GameState, result: ResolutionResult, now:
 }
 
 /**
+ * Transition the game to the voting phase.
+ *
+ * MUTATION: modifies `state` in place.
+ */
+export function startVoting(state: GameState, now: number = Date.now()): void {
+  state.phase = "voting";
+  state.votingStartedAt = now;
+}
+
+/**
  * Start an emergency vote during the discussion phase.
  *
  * MUTATION: modifies `state.emergencyVote` in place.
@@ -957,6 +970,7 @@ export function castEmergencyVote(
     if (yesReached) {
       state.emergencyVote.active = false;
       state.phase = "voting";
+      state.votingStartedAt = now;
       return { accepted: true, outcome: true };
     } else {
       state.emergencyVote.active = false;
@@ -1252,6 +1266,7 @@ export function restartGame(state: GameState): GameState {
   state.roleAcknowledgements = [];
   state.resolutionAcknowledgements = [];
   state.discussionStartedAt = null;
+  state.votingStartedAt = null;
   state.emergencyVote = freshEmergencyVote();
   state.votes = {};
   state.voteResult = null;

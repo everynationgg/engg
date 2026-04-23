@@ -48,6 +48,7 @@ import {
   removePlayer as engineRemovePlayer,
   computeSanitizedState as engineComputeSanitizedState,
   getActivePlayers as engineGetActivePlayers,
+  startVoting as engineStartVoting,
   type PlayerAction,
 } from "./modules/game/game.engine.js";
 import { logger } from "./lib/logger.js";
@@ -1480,6 +1481,57 @@ export function attachSocketIO(httpServer: HttpServer) {
           logger.info({ sessionId: parsed.sessionId }, "Emergency vote denied");
           io.to(parsed.sessionId).emit("emergency_vote_result", { passed: false });
         }
+      },
+    );
+
+    // ── START VOTING (host-only) ──────────────────────────────────────────
+    socket.on(
+      "start_voting",
+      async (data: unknown, ack) => {
+        const parsed = validate(sessionOnlySchema, data, ack);
+        if (!parsed) return;
+
+        if (currentSessionId !== parsed.sessionId) {
+          ack?.({ success: false, error: "Not in session" });
+          return;
+        }
+
+        if (isRedisOverloaded()) {
+          ack?.({ success: false, error: "Server busy — please try again shortly" });
+          return;
+        }
+
+        let notHost = false;
+        let wrongPhase = false;
+        const cas = await withCasRetry(parsed.sessionId, (session) => {
+          const player = session.players.find((p) => p.id === socket.id);
+          if (!player?.isHost) { notHost = true; return CAS_SKIP; }
+          if (session.phase !== "discussion") { wrongPhase = true; return CAS_SKIP; }
+
+          engineStartVoting(session);
+          return true as const;
+        });
+
+        if (notHost) {
+          ack?.({ success: false, error: "Only host can start voting" });
+          return;
+        }
+        if (wrongPhase) {
+          ack?.({ success: false, error: "Can only start voting from discussion phase" });
+          return;
+        }
+        if (!cas) {
+          await handleSaveConflict(io, parsed.sessionId);
+          ack?.({ success: false });
+          return;
+        }
+
+        logger.info({ sessionId: parsed.sessionId }, "Voting started by host (timer expired)");
+        logGameEvent("voting_started", parsed.sessionId, socket.id, {
+          reason: "timer_expired",
+        });
+        phaseUpdate(io, parsed.sessionId, cas.session);
+        ack?.({ success: true });
       },
     );
 

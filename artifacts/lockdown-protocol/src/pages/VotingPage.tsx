@@ -39,6 +39,8 @@ export default function VotingPage() {
   const accentGlow = isAlien ? "hsl(0 75% 55% / 0.4)" : isChaotic ? "hsl(300 70% 55% / 0.4)" : "hsl(185 100% 50% / 0.4)";
   const bgTint = isAlien ? "hsl(0 40% 6%)" : isChaotic ? "hsl(290 30% 6%)" : "hsl(200 30% 6%)";
 
+  const isSpectator = role.team === "spectator";
+  
   const [sessionPlayers, setSessionPlayers] = useState<LivePlayer[]>([]);
   const [votedFor, setVotedFor] = useState<string | null>(null);
   const [pendingVote, setPendingVote] = useState<string | null>(null);
@@ -60,6 +62,30 @@ export default function VotingPage() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Sync timer with session settings and server timestamp
+  useEffect(() => {
+    const socket = getSocket();
+    const handlePhaseUpdate = (session: any) => {
+      if (session.phase === "voting" && session.votingStartedAt) {
+        const votingTime = session.settings?.votingTime ?? 60;
+        const elapsed = Math.floor((Date.now() - session.votingStartedAt) / 1000);
+        setSecondsLeft(Math.max(0, votingTime - elapsed));
+      }
+    };
+    socket.on("phase_update", handlePhaseUpdate);
+    
+    // Initial sync
+    socket.emit("get_session", { sessionId: roomCode }, (resp: any) => {
+      if (resp.success && resp.session) {
+        handlePhaseUpdate(resp.session);
+      }
+    });
+
+    return () => {
+      socket.off("phase_update", handlePhaseUpdate);
+    };
+  }, [roomCode]);
 
   useEffect(() => {
     const socket = getSocket();
@@ -238,6 +264,42 @@ export default function VotingPage() {
       if (vignette) vignette.style.opacity = "0";
     };
   }, [myId]);
+
+  if (isSpectator) {
+    return (
+      <div
+        className="flex flex-col items-center justify-center min-h-screen w-full relative overflow-hidden"
+        style={{ background: bgTint, color: accentLight }}
+      >
+        {/* Animated background elements for spectators */}
+        <div className="absolute inset-0 pointer-events-none opacity-10">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full blur-[120px]" style={{ background: accentColor }} />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full blur-[120px]" style={{ background: "hsl(270 80% 55%)" }} />
+        </div>
+
+        <div className="relative z-10 flex flex-col items-center px-6">
+          <div className="font-orbitron text-5xl lg:text-7xl font-black tracking-[0.3em] uppercase mb-4 text-center" style={{ color: accentLight, textShadow: `0 0 30px ${accentGlow}` }}>
+            SPECTATOR
+          </div>
+          <div className="h-1 w-24 mb-8" style={{ background: accentColor, boxShadow: `0 0 15px ${accentGlow}` }} />
+          
+          <div className="font-orbitron text-xl lg:text-2xl tracking-[0.2em] uppercase mb-6 text-center" style={{ color: "hsl(185 100% 50% / 0.8)" }}>
+            OBSERVATION LINK ACTIVE
+          </div>
+          
+          <div className="text-base lg:text-lg text-center max-w-xl leading-relaxed font-light tracking-wide italic" style={{ color: "hsl(210 30% 75%)", fontFamily: "'Exo 2', sans-serif" }}>
+            "You see the strings, but you cannot pull them. Watch as the crew attempts to identify the anomaly before the countdown reaches zero."
+          </div>
+          
+          <div className="mt-12 flex items-center gap-4 text-[10px] tracking-[0.4em] uppercase opacity-40">
+            <span className="animate-pulse">●</span> LIVE FEED
+            <span className="mx-2">|</span>
+            {roomCode}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -512,21 +574,3 @@ export default function VotingPage() {
     </div>
   );
 }
-
-// Spectator block: show spectator message instead of voting UI
-  const isSpectator = role.team === "spectator";
-  if (isSpectator) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen w-full" style={{ background: bgTint, color: accentLight }}>
-        <div className="font-orbitron text-4xl lg:text-6xl font-black tracking-widest uppercase mb-6" style={{ color: accentLight, textShadow: `0 0 24px ${accentGlow}` }}>
-          Spectator
-        </div>
-        <div className="font-orbitron text-lg lg:text-2xl tracking-widest uppercase mb-4" style={{ color: "hsl(210 30% 60%)" }}>
-          You are observing this game
-        </div>
-        <div className="text-base lg:text-lg text-center max-w-xl" style={{ color: "hsl(210 30% 70%)" }}>
-          You can watch all phases but cannot participate in actions or voting.<br />Sit back, relax, and enjoy the show!
-        </div>
-      </div>
-    );
-  }
