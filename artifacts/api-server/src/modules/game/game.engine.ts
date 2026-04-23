@@ -361,12 +361,19 @@ export function startGame(
   }
 
   state.rolesAssigned = {};
-  state.players.forEach((player, idx) => {
-    state.rolesAssigned[player.id] = pool[idx] ?? pool[0];
-    player.alive = true;
+  let roleIdx = 0;
+  state.players.forEach((player) => {
+    if (player.isSpectator) {
+      state.rolesAssigned[player.id] = "spectator";
+      player.alive = false;
+    } else {
+      state.rolesAssigned[player.id] = pool[roleIdx++] ?? pool[0];
+      player.alive = true;
+    }
   });
   state.initialRoles = { ...state.rolesAssigned };
-  state.centerCards = pool.slice(state.players.length);
+  const participantCount = state.players.filter(p => !p.isSpectator).length;
+  state.centerCards = pool.slice(participantCount);
   state.roleCounts = { ...roleCounts };
   state.settings = { ...settings };
 
@@ -407,9 +414,11 @@ export function acknowledgeRole(
   if (state.phase !== "role_reveal") {
     return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "wrong phase" };
   }
-  if (!state.players.some((p) => p.id === playerId)) {
-    return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "not in session" };
+  const player = state.players.find((p) => p.id === playerId);
+  if (!player || player.isSpectator) {
+    return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "Spectators cannot acknowledge roles" };
   }
+
   if (!state.roleAcknowledgements.includes(playerId)) {
     state.roleAcknowledgements.push(playerId);
   }

@@ -11,7 +11,7 @@ import { TeamIcon } from "@/components/TeamIcon";
 function getAssignedRole(): Role {
   const roleId = sessionStorage.getItem("lp_assignedRole");
   const found = ROLES.find((r) => r.id === roleId);
-  return found ?? ROLES[6];
+  return found ?? ROLES.find((r) => r.id === "crew") ?? ROLES[0];
 }
 
 function getPlayerName(): string {

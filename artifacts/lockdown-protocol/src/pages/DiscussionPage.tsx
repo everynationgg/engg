@@ -24,7 +24,7 @@ export default function DiscussionPage() {
   const roomCode = getRoomCode();
   const callsign = getCallsign();
   const initialRoleId = getInitialRoleId();
-  const role = ROLES.find((r) => r.id === initialRoleId) ?? ROLES[6];
+  const role = ROLES.find((r) => r.id === initialRoleId) ?? ROLES.find((r) => r.id === "crew") ?? ROLES[0];
   const isAlien = role.team === "alien";
   const isChaotic = role.team === "chaotic";
   const accentColor = isAlien ? "hsl(0 75% 55%)" : isChaotic ? "hsl(300 70% 55%)" : "hsl(185 100% 50%)";
@@ -258,6 +258,96 @@ export default function DiscussionPage() {
       stopLobbyMusic();
     }
   };
+
+  // ── Render ────────────────────────────────────────────────────────────────
+  if (role.id === "spectator") {
+    return (
+      <div className="relative min-h-screen w-full flex flex-col ix-page-enter" style={{ background: "hsl(210 30% 8%)", color: "hsl(190 80% 90%)" }}>
+        <HamburgerMenu
+          onShowSettings={() => setShowSettingsModal(true)}
+          onShowProfile={() => setShowProfileModal(true)}
+          onShowHowToPlay={() => {}}
+          musicOn={musicOn}
+          onToggleMusic={handleToggleMusic}
+          playSound={playSciFiClick}
+          showQuitButton
+          isHost={isHost}
+          onRestartRound={handleRestartRound}
+        />
+        <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
+        <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
+
+        <div className="w-full px-6 py-3 flex items-center justify-between border-b shrink-0" style={{ background: "hsl(220 28% 7%)", borderColor: "hsl(185 100% 50% / 0.2)" }}>
+          <div className="font-orbitron font-black text-lg tracking-widest uppercase leading-none" style={{ color: "hsl(185 100% 70%)" }}>
+            OBSERVER LINK
+          </div>
+          <div className="text-right">
+            <div className="text-xs tracking-widest uppercase mb-1 flex items-center justify-end gap-2" style={{ color: "hsl(210 30% 50%)" }}>
+              Phase
+              <span className={`font-mono ${secondsLeft <= 10 && secondsLeft > 0 ? 'animate-heartbeat text-red-500 font-bold' : secondsLeft === 0 ? 'text-red-500 font-bold' : 'text-[hsl(210,30%,70%)]'}`}>
+                {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, '0')}
+              </span>
+            </div>
+            <div className="font-orbitron font-bold text-sm tracking-[0.2em]" style={{ color: "hsl(185 100% 70%)" }}>
+              DELIBERATION
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 flex flex-col p-6 gap-6 max-w-2xl mx-auto w-full overflow-y-auto pb-32">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full border-2 border-cyan-500/30 flex items-center justify-center bg-cyan-500/5">
+              <svg className="w-8 h-8 text-cyan-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </div>
+            <div>
+              <div className="font-orbitron font-black text-2xl tracking-widest uppercase" style={{ color: "hsl(185 100% 70%)" }}>
+                DELIBERATION
+              </div>
+              <div className="text-xs tracking-widest uppercase mt-0.5" style={{ color: "hsl(210 30% 50%)" }}>
+                MONITORING COMM-CHANNELS
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-md p-4" style={{ background: "hsl(220 28% 12%)", border: "1px solid hsl(185 100% 50% / 0.2)" }}>
+            <p className="text-sm leading-relaxed" style={{ color: "hsl(190 60% 78%)", fontFamily: "'Exo 2', sans-serif" }}>
+              The crew is currently discussing the results of the orbit. <br />
+              As an observer, you can see the roles in play and monitor the conversation, but you cannot influence the outcome.
+            </p>
+          </div>
+
+          {Object.keys(roleCounts).length > 0 && (
+            <div className="rounded-md p-4" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 15%)" }}>
+              <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(210 30% 50%)" }}>
+                ROLES IN PLAY
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(roleCounts)
+                  .filter(([, count]) => count > 0)
+                  .map(([roleId, count]) => {
+                    const r = ROLES.find((x) => x.id === roleId);
+                    return (
+                      <div key={roleId} className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-hsl(220 28% 12%) border border-white/10">
+                        <span className="font-orbitron text-xs tracking-wider uppercase" style={{ color: "hsl(185 100% 60%)" }}>
+                          {r?.name ?? roleId} x{count}
+                        </span>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+          
+          <div className="mt-4 p-4 rounded border border-cyan-500/10 bg-cyan-500/5 text-center">
+             <div className="font-orbitron text-[10px] tracking-widest uppercase text-cyan-400 mb-1">Neural Link Stable</div>
+             <div className="text-[9px] text-cyan-700 uppercase">Observer mode active • No input permitted</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const abilityResultText = renderOrbitResultSummary(orbitResultState, accentLight, role.id);
 

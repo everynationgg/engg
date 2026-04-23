@@ -318,7 +318,66 @@ export default function OrbitPage() {
   const otherPlayers = sessionPlayers.filter((p) => !p.isYou);
 
   // ── Render ────────────────────────────────────────────────────────────────
+  if (role.id === "spectator") {
+    return (
+      <div className="relative min-h-screen w-full flex flex-col ix-page-enter" style={{ background: "hsl(210 30% 8%)", color: "hsl(190 80% 90%)" }}>
+        <HamburgerMenu
+          onShowSettings={() => setShowSettingsModal(true)}
+          onShowProfile={() => setShowProfileModal(true)}
+          onShowHowToPlay={() => setShowHowToPlay(true)}
+          musicOn={musicOn}
+          onToggleMusic={handleToggleMusic}
+          playSound={playSciFiClick}
+          showQuitButton
+          isHost={isHost}
+          onRestartRound={handleRestartRound}
+        />
+        <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
+        <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
+        
+        <div className="w-full px-6 py-3 flex items-center justify-between border-b shrink-0" style={{ background: "hsl(220 28% 7%)", borderColor: "hsl(185 100% 50% / 0.2)" }}>
+          <div className="font-orbitron font-black text-lg tracking-widest uppercase leading-none" style={{ color: "hsl(185 100% 70%)" }}>
+            OBSERVER LINK
+          </div>
+          <div className="text-right">
+            <div className="text-xs tracking-widest uppercase mb-1" style={{ color: "hsl(210 30% 50%)" }}>Orbit Phase</div>
+            <div className="font-orbitron font-bold text-sm tracking-[0.2em]" style={{ color: "hsl(185 100% 70%)" }}>
+              MONITORING
+            </div>
+          </div>
+        </div>
 
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-24 h-24 mb-8 relative">
+            <div className="absolute inset-0 rounded-full border-4 border-cyan-500/20 animate-ping" />
+            <div className="absolute inset-2 rounded-full border-2 border-cyan-400 animate-spin" style={{ borderTopColor: "transparent", borderBottomColor: "transparent" }} />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <svg className="w-10 h-10 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </div>
+          </div>
+          
+          <div className="font-orbitron text-2xl lg:text-3xl font-black tracking-widest uppercase mb-4" style={{ color: "hsl(185 100% 70%)" }}>
+            ORBIT IN PROGRESS
+          </div>
+          <div className="max-w-md text-sm lg:text-base leading-relaxed mb-8" style={{ color: "hsl(210 30% 65%)", fontFamily: "'Exo 2', sans-serif" }}>
+            Players are currently executing their specialized abilities. <br />
+            As an observer, you are witnessing the tactical layer of the mission. <br />
+            Stand by for Deliberation.
+          </div>
+          
+          <WaitingPanel
+            accentColor="hsl(185 100% 50%)"
+            label="Neural sync status"
+            completedCount={completedCount}
+            totalCount={sessionPlayers.filter(p => !p.id.startsWith("spectator")).length || sessionPlayers.length}
+          />
+        </div>
+      </div>
+    );
+  }
   return (
     <motion.div
       animate={isSurging ? { 

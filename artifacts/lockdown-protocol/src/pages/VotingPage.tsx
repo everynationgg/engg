@@ -30,7 +30,7 @@ function getInitialRoleId(): string {
 export default function VotingPage() {
   const roomCode = getRoomCode();
   const initialRoleId = getInitialRoleId();
-  const role = ROLES.find((r) => r.id === initialRoleId) ?? ROLES[6];
+  const role = ROLES.find((r) => r.id === initialRoleId) ?? ROLES.find((r) => r.id === "crew") ?? ROLES[0];
 
   const isAlien = role.team === "alien";
   const isChaotic = role.team === "chaotic";

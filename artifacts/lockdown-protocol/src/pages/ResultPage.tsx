@@ -123,7 +123,7 @@ export default function ResultPage() {
       || (!!callsign && p.playerName.toUpperCase() === callsign)
     );
 
-    if (!playerData) return;
+    if (!playerData || playerData.role === "spectator") return;
 
     if (!isInitialized) {
       setPendingVoteResult(voteResult);

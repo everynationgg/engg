@@ -16,7 +16,7 @@ export function getInitialRoleId(): string {
 
 export function getAssignedRole(): Role {
   const roleId = sessionStorage.getItem("lp_assignedRole");
-  return ROLES.find((r) => r.id === roleId) ?? ROLES[6];
+  return ROLES.find((r) => r.id === roleId) ?? ROLES.find((r) => r.id === "crew") ?? ROLES[0];
 }
 
 export function getOrbitResult(): { type: string; data?: unknown } | null {
