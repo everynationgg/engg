@@ -355,6 +355,7 @@ export function startGame(
 ): GameState {
   const pool: string[] = [];
   for (const [roleId, count] of Object.entries(roleCounts)) {
+    if (roleId === "spectator") continue; // Spectators not allowed in randomized pool
     for (let i = 0; i < count; i++) pool.push(roleId);
   }
 
@@ -367,13 +368,9 @@ export function startGame(
   state.rolesAssigned = {};
   let roleIdx = 0;
   state.players.forEach((player) => {
-    if (player.isSpectator) {
-      state.rolesAssigned[player.id] = "spectator";
-      player.alive = false;
-    } else {
-      state.rolesAssigned[player.id] = pool[roleIdx++] ?? pool[0];
-      player.alive = true;
-    }
+    player.isSpectator = false; // Spectators only allowed in custom games
+    state.rolesAssigned[player.id] = pool[roleIdx++] ?? pool[0];
+    player.alive = true;
   });
   state.initialRoles = { ...state.rolesAssigned };
   const participantCount = state.players.filter(p => !p.isSpectator).length;
@@ -1325,6 +1322,7 @@ export function restartGame(state: GameState): GameState {
   state.justUnfrozen = undefined;
   state.players.forEach((player) => {
     player.alive = true;
+    player.isSpectator = false;
     player.connectionStatus = player.connected !== false ? "connected" : "disconnected";
   });
   return state;

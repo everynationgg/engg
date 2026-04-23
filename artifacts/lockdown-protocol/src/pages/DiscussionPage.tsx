@@ -34,9 +34,10 @@ export default function DiscussionPage() {
   const accentDim = isAlien ? "hsl(0 75% 55% / 0.12)" : isChaotic ? "hsl(300 70% 55% / 0.12)" : "hsl(185 100% 50% / 0.12)";
   const bgTint = isAlien ? "hsl(0 40% 6%)" : isChaotic ? "hsl(290 30% 6%)" : "hsl(200 30% 6%)";
   const bgOverlay = isAlien ? "hsl(0 35% 3% / 0.83)" : isChaotic ? "hsl(290 25% 3% / 0.83)" : "hsl(200 25% 3% / 0.83)";
-  const isSpectator = role.id === "spectator";
-
   const [sessionPlayers, setSessionPlayers] = useState<LivePlayer[]>([]);
+  const myPlayerId = sessionStorage.getItem("lp_playerId");
+  const me = sessionPlayers.find((p) => myPlayerId ? p.playerId === myPlayerId : p.id === getSocket().id);
+  const isSpectator = !!me && !!me.isSpectator;
   const [orbitResultState, setOrbitResultState] = useState<{ type: string; data?: unknown } | null>(() => getOrbitResult());
   const [roleCounts, setRoleCounts] = useState<Record<string, number>>({});
   const [rolesAssigned, setRolesAssigned] = useState<Record<string, string>>({});
@@ -275,7 +276,7 @@ export default function DiscussionPage() {
   // ── Render ────────────────────────────────────────────────────────────────
   if (isSpectator && !isHost) {
     return (
-      <div className="relative min-h-screen w-full flex flex-col ix-page-enter" style={{ background: "hsl(210 30% 8%)", color: "hsl(190 80% 90%)" }}>
+      <div className="relative min-h-screen w-full flex flex-col ix-page-enter" style={{ background: "hsl(210 30% 6%)", color: "hsl(190 80% 90%)" }}>
         <HamburgerMenu
           onShowSettings={() => setShowSettingsModal(true)}
           onShowProfile={() => setShowProfileModal(true)}
@@ -290,172 +291,142 @@ export default function DiscussionPage() {
         <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
         <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
 
-        <div className="w-full px-6 py-3 flex items-center justify-between border-b shrink-0" style={{ background: "hsl(220 28% 7%)", borderColor: "hsl(185 100% 50% / 0.3)", boxShadow: "0 0 15px hsl(185 100% 50% / 0.1)" }}>
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-            <div className="font-orbitron font-black text-lg tracking-[0.2em] uppercase leading-none" style={{ color: "hsl(185 100% 70%)", textShadow: "0 0 10px hsl(185 100% 50% / 0.5)" }}>
-              OBSERVER LINK: ACTIVE
+        {/* Header Bar */}
+        <div className="w-full px-6 py-4 flex items-center justify-between border-b" style={{ background: "hsl(220 28% 5%)", borderColor: "hsl(185 100% 50% / 0.2)", boxShadow: "0 4px 20px rgba(0,0,0,0.4)" }}>
+          <div className="flex items-center gap-4">
+            <div className="w-3 h-3 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_10px_hsl(185,100%,50%)]" />
+            <div className="font-orbitron font-black text-xl tracking-[0.25em] uppercase leading-none" style={{ color: "hsl(185 100% 70%)" }}>
+              INTEL HUB: OBSERVATION MODE
             </div>
           </div>
           <div className="text-right">
-            <div className="text-xs tracking-widest uppercase mb-1 flex items-center justify-end gap-2" style={{ color: "hsl(210 30% 50%)" }}>
-              Phase
-              <span className={`font-mono ${secondsLeft <= 10 && secondsLeft > 0 ? 'animate-heartbeat text-red-500 font-bold' : secondsLeft === 0 ? 'text-red-500 font-bold' : 'text-[hsl(210,30%,70%)]'}`}>
-                {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, '0')}
-              </span>
-            </div>
-            <div className="font-orbitron font-bold text-sm tracking-[0.2em]" style={{ color: "hsl(185 100% 70%)" }}>
-              DELIBERATION
+            <div className="text-[10px] tracking-[0.3em] uppercase mb-1 text-cyan-600">Syncing Discussion</div>
+            <div className="font-orbitron font-bold text-lg tracking-widest" style={{ color: "hsl(185 100% 70%)" }}>
+              {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, '0')}
             </div>
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col p-6 gap-6 max-w-2xl mx-auto w-full overflow-y-auto pb-32">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full border-2 border-cyan-500/30 flex items-center justify-center bg-cyan-500/5">
-              <svg className="w-8 h-8 text-cyan-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-            </div>
-            <div>
-              <div className="font-orbitron font-black text-2xl tracking-widest uppercase" style={{ color: "hsl(185 100% 70%)" }}>
-                DELIBERATION
-              </div>
-              <div className="text-xs tracking-widest uppercase mt-0.5" style={{ color: "hsl(210 30% 50%)" }}>
-                MONITORING COMM-CHANNELS
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-md p-4" style={{ background: "hsl(220 28% 12% / 0.6)", border: "1px solid hsl(185 100% 50% / 0.2)", backdropFilter: "blur(8px)" }}>
-            <div className="font-orbitron text-[10px] tracking-[0.3em] uppercase mb-2 text-cyan-400 opacity-70">Observer Protocol</div>
-            <p className="text-sm leading-relaxed" style={{ color: "hsl(190 60% 78%)", fontFamily: "'Exo 2', sans-serif" }}>
-              The crew is currently discussing the results of the orbit. <br />
-              As an observer, you have full access to current roles and ability logs. Monitor the deliberation to identify patterns and deception.
-            </p>
-          </div>
-
-          {/* Ability Phase Summary for Spectators */}
-          <div className="rounded-md p-4" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 18%)" }}>
-            <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(270 70% 60%)" }}>
-              ABILITY PHASE SUMMARY (INTEL)
-            </div>
-            {roundSummary && roundSummary.abilityLog.length > 0 ? (
-              <div className="flex flex-col gap-1.5">
-                {roundSummary.abilityLog.map((entry, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-start gap-2 px-2 py-1.5 rounded"
-                    style={{ background: "hsl(220 28% 12%)", border: "1px solid hsl(210 30% 16%)" }}
-                  >
-                    <span className="font-orbitron text-xs font-bold shrink-0 mt-0.5" style={{ color: "hsl(270 50% 50%)" }}>
-                      {String(idx + 1).padStart(2, "0")}
-                    </span>
-                    <span style={{ color: "hsl(190 60% 80%)", fontFamily: "'Exo 2', sans-serif", fontSize: "0.75rem", lineHeight: "1.4" }}>
-                      <span className="font-bold" style={{ color: "hsl(190 80% 90%)" }}>{entry.actorName}</span>
-                      {" "}{entry.event}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm" style={{ color: "hsl(210 30% 40%)", fontFamily: "'Exo 2', sans-serif" }}>
-                No ability events were recorded this round.
-              </p>
-            )}
-          </div>
-
-          {Object.keys(roleCounts).length > 0 && (
-            <div className="rounded-md p-4" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 15%)" }}>
-              <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(210 30% 50%)" }}>
-                ROLES IN PLAY
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {Object.entries(roleCounts)
-                  .filter(([, count]) => count > 0)
-                  .sort(([a], [b]) => a.localeCompare(b))
-                  .map(([roleId, count]) => {
-                    const r = ROLES.find((x) => x.id === roleId);
-                    const teamColor =
-                      r?.team === "alien" ? "hsl(0 75% 60%)" :
-                      r?.team === "chaotic" ? "hsl(300 70% 65%)" :
-                      "hsl(185 100% 55%)";
-                    return (
-                      <div
-                        key={roleId}
-                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded team-badge ${r?.team}-color`}
-                        style={{ background: "hsl(220 28% 12%)", border: `1px solid ${teamColor.replace(")", " / 0.3)")}` }}
-                      >
-                        <span className="font-orbitron text-xs tracking-wider uppercase" style={{ color: teamColor }}>
-                          {r?.name ?? roleId}
-                        </span>
-                        {count > 1 && (
-                          <span className="text-xs font-bold" style={{ color: "hsl(210 30% 50%)", fontFamily: "'Exo 2', sans-serif" }}>
-                            ×{count}
-                          </span>
-                        )}
+        <div className="flex-1 overflow-y-auto p-6 lg:p-10">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            {/* Left Column: Ability Intel */}
+            <div className="lg:col-span-5 flex flex-col gap-6">
+              <div>
+                <h3 className="font-orbitron text-xs tracking-[0.4em] uppercase mb-4 flex items-center gap-2" style={{ color: "hsl(270 70% 60%)" }}>
+                  <span className="w-1.5 h-1.5 bg-purple-500 rounded-full" />
+                  Ability Intel Log
+                </h3>
+                <div className="rounded-xl p-5 space-y-3" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(270 50% 30% / 0.3)", boxShadow: "inset 0 0 20px rgba(0,0,0,0.5)" }}>
+                  {roundSummary && roundSummary.abilityLog.filter(e => {
+                    const actor = sessionPlayers.find(p => p.name === e.actorName);
+                    return !actor?.isSpectator;
+                  }).length > 0 ? (
+                    roundSummary.abilityLog
+                      .filter(e => {
+                        const actor = sessionPlayers.find(p => p.name === e.actorName);
+                        return !actor?.isSpectator;
+                      })
+                      .map((entry, idx) => (
+                      <div key={idx} className="flex gap-4 p-3 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-colors">
+                        <span className="font-orbitron text-xs font-black text-purple-500/60 mt-0.5">{String(idx + 1).padStart(2, '0')}</span>
+                        <div className="text-sm leading-relaxed">
+                          <span className="font-bold text-cyan-400 uppercase tracking-wider text-xs">{entry.actorName}</span>
+                          <span className="text-white/60 ml-2 font-light" style={{ fontFamily: "'Exo 2', sans-serif" }}>{entry.event}</span>
+                        </div>
                       </div>
-                    );
-                  })}
+                    ))
+                  ) : (
+                    <div className="py-8 text-center text-white/20 font-orbitron text-[10px] tracking-widest uppercase">
+                      No active abilities recorded
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* Roles in play */}
+              {Object.keys(roleCounts).length > 0 && (
+                <div>
+                  <h3 className="font-orbitron text-xs tracking-[0.4em] uppercase mb-4 flex items-center gap-2" style={{ color: "hsl(210 30% 50%)" }}>
+                    <span className="w-1.5 h-1.5 bg-cyan-500/50 rounded-full" />
+                    Roles in Field
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(roleCounts)
+                      .filter(([roleId, count]) => count > 0 && roleId !== "spectator")
+                      .map(([roleId, count]) => {
+                        const r = ROLES.find(x => x.id === roleId);
+                        const teamColor = r?.team === "alien" ? "hsl(0 75% 60%)" : r?.team === "chaotic" ? "hsl(300 70% 65%)" : "hsl(185 100% 55%)";
+                        return (
+                          <div key={roleId} className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-white/[0.03]" style={{ borderColor: teamColor + "33" }}>
+                            <span className="font-orbitron text-[10px] font-bold uppercase tracking-widest" style={{ color: teamColor }}>{r?.name ?? roleId}</span>
+                            <span className="text-[10px] text-white/30 font-bold">×{count}</span>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-          
-          {Object.keys(rolesAssigned).length > 0 && (
-            <div className="rounded-md p-4" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 18%)" }}>
-              <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(210 30% 50%)" }}>
-                FULL ROLE REVEAL
-              </div>
-              <div className="flex flex-col gap-1.5">
-                {sessionPlayers.map((p) => {
+
+            {/* Right Column: Player Manifest */}
+            <div className="lg:col-span-7 flex flex-col gap-6">
+              <h3 className="font-orbitron text-xs tracking-[0.4em] uppercase mb-4 flex items-center gap-2" style={{ color: "hsl(185 100% 50%)" }}>
+                <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full" />
+                Biometric Manifest — {sessionPlayers.filter(p => !p.isSpectator).length} Active Subjects
+              </h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {sessionPlayers.filter(p => !p.isSpectator).map((p) => {
                   const roleId = rolesAssigned[p.id];
                   const initRoleId = initialRoles[p.id];
-                  if (!roleId) return null;
-
-                  const r = ROLES.find((x) => x.id === roleId);
-                  const initR = ROLES.find((x) => x.id === initRoleId);
+                  const r = ROLES.find(x => x.id === roleId);
+                  const initR = ROLES.find(x => x.id === initRoleId);
                   const roleChanged = initRoleId && roleId !== initRoleId;
-                  const isAlienTeam = r?.team === "alien";
-                  const isChaotic = r?.team === "chaotic";
-                  const teamColor = isAlienTeam ? "hsl(0 75% 60%)" : isChaotic ? "hsl(300 70% 65%)" : "hsl(185 100% 65%)";
+                  const teamColor = r?.team === "alien" ? "hsl(0 75% 60%)" : r?.team === "chaotic" ? "hsl(300 70% 65%)" : "hsl(185 100% 65%)";
 
                   return (
-                    <div
-                      key={p.id}
-                      className="flex items-center justify-between px-2 py-1.5 rounded gap-2"
-                      style={{ background: "hsl(220 28% 12%)", border: "1px solid hsl(210 30% 16%)" }}
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
+                    <div key={p.id} className="p-4 rounded-xl border relative overflow-hidden group" style={{ background: "hsl(220 28% 8%)", borderColor: "white/10" }}>
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
+                      
+                      <div className="flex items-center gap-4 relative z-10">
                         {r && (
-                          <img src={r.image} alt={r.name} className="w-6 h-6 rounded object-cover shrink-0" loading="lazy" style={{ border: "1px solid hsl(210 30% 22%)" }} />
+                          <img src={r.image} alt={r.name} className="w-10 h-10 rounded-lg object-cover border border-white/10" />
                         )}
-                        <span className="font-orbitron text-xs tracking-wide uppercase truncate" style={{ color: "hsl(190 60% 78%)" }}>
-                          {p.name}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <span className="font-orbitron text-xs uppercase font-bold" style={{ color: roleChanged ? "hsl(210 40% 55%)" : teamColor, fontSize: "0.65rem" }}>
-                          {initR?.name?.toUpperCase() ?? initRoleId?.toUpperCase() ?? "—"}
-                        </span>
-                        {roleChanged && (
-                          <>
-                            <span className="font-orbitron text-xs" style={{ color: "hsl(210 30% 40%)" }}>→</span>
-                            <span className="font-orbitron text-xs uppercase font-bold" style={{ color: teamColor, fontSize: "0.65rem" }}>
-                              {r?.name?.toUpperCase() ?? roleId.toUpperCase()}
+                        <div className="min-w-0 flex-1">
+                          <div className="font-orbitron text-xs font-black text-white/90 tracking-widest uppercase truncate">{p.name}</div>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="font-orbitron text-[9px] font-black uppercase tracking-tighter" style={{ color: teamColor }}>
+                              {initR?.name?.toUpperCase() ?? "UNKNOWN"}
                             </span>
-                          </>
-                        )}
+                            {roleChanged && (
+                              <>
+                                <span className="text-[9px] text-white/20">→</span>
+                                <span className="font-orbitron text-[9px] font-black uppercase tracking-tighter text-white" style={{ background: teamColor, padding: '0 4px', borderRadius: '2px' }}>
+                                  {r?.name?.toUpperCase() ?? "UNKNOWN"}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   );
                 })}
               </div>
+
+              {/* Observer Status */}
+              <div className="mt-auto pt-10">
+                <div className="p-6 rounded-2xl border border-dashed border-white/10 bg-white/[0.01] text-center">
+                  <div className="font-orbitron text-[10px] tracking-[0.5em] uppercase text-white/20 mb-2">Neural Observation Protocol</div>
+                  <p className="text-xs text-white/40 leading-relaxed max-w-sm mx-auto italic" style={{ fontFamily: "'Exo 2', sans-serif" }}>
+                    You are currently out of phase with the crew. <br />
+                    Direct interaction is suspended until the mission concludes.
+                  </p>
+                </div>
+              </div>
             </div>
-          )}
-          
-          <div className="mt-4 p-4 rounded border border-cyan-500/10 bg-cyan-500/5 text-center">
-             <div className="font-orbitron text-[10px] tracking-widest uppercase text-cyan-400 mb-1">Neural Link Stable</div>
-             <div className="text-[9px] text-cyan-700 uppercase">Observer mode active • No input permitted</div>
+
           </div>
         </div>
       </div>
@@ -617,7 +588,7 @@ export default function DiscussionPage() {
         {/* Player list */}
         <div className="rounded-md p-4" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 15%)" }}>
           <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(210 30% 50%)" }}>
-            CREW MANIFEST — {sessionPlayers.length} ABOARD
+            CREW MANIFEST — {sessionPlayers.filter(p => !p.isSpectator).length} ABOARD
           </div>
           <div className="flex flex-col gap-2">
             {sessionPlayers.map((p) => {

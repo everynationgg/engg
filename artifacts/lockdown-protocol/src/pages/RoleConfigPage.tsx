@@ -1106,39 +1106,6 @@ export default function RoleConfigPage() {
             </div>
           </div>
 
-          {/* SPECTATOR SECTION */}
-          <div>
-            <div className="flex items-center gap-3 mb-4 mt-8">
-              <div
-                className="h-px flex-1"
-                style={{ background: "linear-gradient(90deg, hsl(220 0% 100% / 0.6), transparent)" }}
-              />
-              <span
-                className="font-orbitron font-bold text-xs tracking-[0.3em] uppercase px-3"
-                style={{ color: "#7ecfff", textShadow: "0 0 8px #7ecfff99" }}
-              >
-                SPECTATOR
-              </span>
-              <div
-                className="h-px flex-1"
-                style={{ background: "linear-gradient(90deg, transparent, hsl(220 0% 100% / 0.6))" }}
-              />
-            </div>
-            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
-              {SPECTATOR_ROLES.map((role) => (
-                <RoleCard
-                  key={role.id}
-                  role={role}
-                  count={roleCounts[role.id] || 0}
-                  isSelected={selectedRole.id === role.id}
-                  showControls={amIHost}
-                  onSelect={handleSelectRole}
-                  onAdd={handleAdd}
-                  onRemove={handleRemove}
-                />
-              ))}
-            </div>
-          </div>
         </div>
 
         {/* RIGHT PANEL — flexible width on desktop, strip on mobile */}

@@ -40,7 +40,6 @@ export default function VotingPage() {
   const accentGlow = isAlien ? "hsl(0 75% 55% / 0.4)" : isChaotic ? "hsl(300 70% 55% / 0.4)" : "hsl(185 100% 50% / 0.4)";
   const bgTint = isAlien ? "hsl(0 40% 6%)" : isChaotic ? "hsl(290 30% 6%)" : "hsl(200 30% 6%)";
 
-  const isSpectator = role.team === "spectator";
   
   const [sessionPlayers, setSessionPlayers] = useState<LivePlayer[]>([]);
   const [votedFor, setVotedFor] = useState<string | null>(null);
@@ -185,8 +184,14 @@ export default function VotingPage() {
     };
   }, [roomCode]);
 
+  const myPlayerId = sessionStorage.getItem("lp_playerId");
+  const me = sessionPlayers.find((p) => myPlayerId ? p.playerId === myPlayerId : p.id === getSocket().id);
+  const isSpectator = !!me && !!me.isSpectator;
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
   const handleVote = (targetId: string) => {
-    if (votedFor || (targetId !== "abstain" && targetId === myId)) return;
+    if (votedFor || (targetId !== "abstain" && targetId === myId) || isSpectator) return;
     const socket = getSocket();
     setVotedFor(targetId);
     playMechanicalChunk();
@@ -194,7 +199,7 @@ export default function VotingPage() {
   };
 
   const handleAbstain = () => {
-    if (votedFor) return;
+    if (votedFor || isSpectator) return;
     handleVote("abstain");
   };
 
@@ -270,10 +275,7 @@ export default function VotingPage() {
 
   if (isSpectator && !isHost) {
     return (
-      <div
-        className="flex flex-col items-center justify-center min-h-screen w-full relative overflow-hidden"
-        style={{ background: bgTint, color: accentLight }}
-      >
+      <div className="flex flex-col min-h-screen w-full relative overflow-hidden" style={{ background: "hsl(210 30% 6%)", color: "hsl(185 100% 70%)" }}>
         <HamburgerMenu
           onShowSettings={() => setShowSettingsModal(true)}
           onShowProfile={() => setShowProfileModal(true)}
@@ -287,51 +289,120 @@ export default function VotingPage() {
         />
         <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
         <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
-        {/* Animated background elements for spectators */}
-        <div className="absolute inset-0 pointer-events-none opacity-10">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full blur-[120px]" style={{ background: accentColor }} />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full blur-[120px]" style={{ background: "hsl(270 80% 55%)" }} />
+        
+        {/* Header */}
+        <div className="w-full px-6 py-4 flex items-center justify-between border-b" style={{ background: "hsl(220 28% 5%)", borderColor: "hsl(185 100% 50% / 0.2)" }}>
+          <div className="flex items-center gap-4">
+            <div className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
+            <div className="font-orbitron font-black text-lg tracking-[0.3em] uppercase leading-none">
+              CONSENSUS MONITORING
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-[10px] tracking-[0.3em] uppercase mb-1 text-cyan-600">Syncing Votes</div>
+            <div className="font-orbitron font-bold text-lg tracking-widest text-white/90">
+              {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, '0')}
+            </div>
+          </div>
         </div>
 
-        <div className="relative z-10 flex flex-col items-center px-6 w-full max-w-lg">
-          <div className="font-orbitron text-5xl lg:text-7xl font-black tracking-[0.3em] uppercase mb-4 text-center" style={{ color: accentLight, textShadow: `0 0 30px ${accentGlow}` }}>
-            SPECTATOR
-          </div>
-          <div className="h-1 w-24 mb-8" style={{ background: accentColor, boxShadow: `0 0 15px ${accentGlow}` }} />
-          
-          <div className="font-orbitron text-sm tracking-[0.2em] uppercase mb-6 text-center text-cyan-400 opacity-80">
-            LIVE VOTING FEED
-          </div>
+        <div className="flex-1 overflow-y-auto p-6 lg:p-10">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            {/* Left Column: Live Vote Tally */}
+            <div className="lg:col-span-5 flex flex-col gap-6">
+              <h3 className="font-orbitron text-[10px] tracking-[0.4em] uppercase mb-2 text-white/40 flex items-center gap-2">
+                <span className="w-1 h-1 bg-white/40 rounded-full" />
+                Live Transmission
+              </h3>
+              <div className="rounded-2xl p-5 space-y-3" style={{ background: "hsl(220 28% 9%)", border: "1px solid white/5" }}>
+                {roundSummary && roundSummary.voteTally.length > 0 ? (
+                  roundSummary.voteTally.map((entry, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/[0.05]">
+                      <span className="font-orbitron text-xs font-bold text-cyan-400">{entry.voterName}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] text-white/20 uppercase tracking-tighter">targeting</span>
+                        <span className="font-orbitron text-xs font-black" style={{ color: entry.isAbstain ? "hsl(210 20% 40%)" : "hsl(185 100% 70%)" }}>
+                          {entry.isAbstain ? "ABSTAIN" : entry.targetName}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="py-12 text-center text-white/10 font-orbitron text-[10px] tracking-[0.4em] uppercase animate-pulse">
+                    Scanning for votes...
+                  </div>
+                )}
+              </div>
 
-          <div className="w-full flex flex-col gap-2 mb-8">
-            {roundSummary && roundSummary.voteTally.length > 0 ? (
-              roundSummary.voteTally.map((entry, idx) => (
-                <div 
-                  key={idx} 
-                  className="flex items-center justify-between px-4 py-2 rounded border border-cyan-500/20 bg-cyan-500/5 backdrop-blur-sm"
-                >
-                  <span className="font-orbitron text-xs font-bold text-cyan-100">{entry.voterName}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-cyan-700 uppercase tracking-tighter">Voted for</span>
-                    <span className="font-orbitron text-xs font-bold text-cyan-400">{entry.isAbstain ? "ABSTAIN" : entry.targetName}</span>
+              {/* Progress Summary */}
+              <div className="p-5 rounded-2xl border border-white/5 bg-white/[0.02] flex items-center justify-between">
+                <div>
+                  <div className="text-[10px] tracking-widest text-white/30 uppercase mb-1">Transmission Progress</div>
+                  <div className="font-orbitron font-black text-2xl">{votesIn} / {totalPlayers}</div>
+                </div>
+                <div className="w-16 h-16 rounded-full border-2 border-white/5 flex items-center justify-center relative">
+                   <svg className="w-12 h-12 -rotate-90">
+                      <circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="2" fill="transparent" className="text-white/5" />
+                      <circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="2" fill="transparent" className="text-cyan-500" strokeDasharray={138} strokeDashoffset={138 - (138 * (votesIn / (totalPlayers || 1)))} />
+                   </svg>
+                   <span className="absolute font-orbitron text-[10px] font-bold text-white/50">{Math.round((votesIn / (totalPlayers || 1)) * 100)}%</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Vote Distribution */}
+            <div className="lg:col-span-7 flex flex-col gap-6">
+              <h3 className="font-orbitron text-[10px] tracking-[0.4em] uppercase mb-2 text-white/40 flex items-center gap-2">
+                <span className="w-1 h-1 bg-white/40 rounded-full" />
+                Target Analysis
+              </h3>
+              
+              <div className="space-y-3">
+                {activePlayers.map((p) => {
+                  const voteCount = Array.from(voterIds).filter(voterId => {
+                    const vote = roundSummary?.voteTally.find(t => t.voterName === sessionPlayers.find(sp => sp.id === voterId)?.name);
+                    return vote?.targetName === p.name;
+                  }).length;
+                  const isLeading = leadingVoteGetters.has(p.id);
+
+                  return (
+                    <div key={p.id} className={`p-4 rounded-xl border transition-all duration-300 ${isLeading ? 'bg-red-500/5 border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.1)]' : 'bg-white/[0.03] border-white/5'}`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-2 h-2 rounded-full ${isLeading ? 'bg-red-500 animate-ping' : 'bg-white/20'}`} />
+                          <span className="font-orbitron text-sm font-bold tracking-widest">{p.name}</span>
+                        </div>
+                        <div className="font-orbitron font-black text-lg" style={{ color: isLeading ? 'hsl(0 75% 60%)' : 'inherit' }}>
+                          {voteCount}
+                        </div>
+                      </div>
+                      <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full transition-all duration-500 rounded-full ${isLeading ? 'bg-red-500' : 'bg-cyan-500'}`} 
+                          style={{ width: `${(voteCount / (totalPlayers || 1)) * 100}%` }} 
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Pending Voters */}
+              {pendingVoters.length > 0 && (
+                <div className="mt-8">
+                  <h4 className="font-orbitron text-[9px] tracking-[0.4em] uppercase mb-3 text-white/20">Pending Decision</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {pendingVoters.map(p => (
+                      <span key={p.id} className="px-3 py-1 rounded-full bg-white/[0.03] border border-white/5 font-orbitron text-[9px] text-white/40 tracking-widest uppercase">
+                        {p.name}
+                      </span>
+                    ))}
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-4 border border-dashed border-cyan-500/20 rounded text-cyan-800 text-xs uppercase tracking-widest">
-                Waiting for incoming data...
-              </div>
-            )}
-          </div>
-          
-          <div className="text-sm lg:text-base text-center leading-relaxed font-light tracking-wide italic" style={{ color: "hsl(210 30% 75%)", fontFamily: "'Exo 2', sans-serif" }}>
-            "You see the strings, but you cannot pull them. Monitor the consensus as the crew attempts to identify the anomaly."
-          </div>
-          
-          <div className="mt-12 flex items-center gap-4 text-[10px] tracking-[0.4em] uppercase opacity-40">
-            <span className="animate-pulse">●</span> LIVE FEED
-            <span className="mx-2">|</span>
-            {roomCode}
+              )}
+            </div>
+
           </div>
         </div>
       </div>

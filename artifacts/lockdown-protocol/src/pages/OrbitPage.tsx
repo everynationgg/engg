@@ -377,7 +377,7 @@ export default function OrbitPage() {
             accentColor="hsl(185 100% 50%)"
             label="Neural sync status"
             completedCount={completedCount}
-            totalCount={sessionPlayers.filter(p => !p.id.startsWith("spectator")).length || sessionPlayers.length}
+            totalCount={sessionPlayers.filter(p => !p.isSpectator).length}
           />
         </div>
       </div>

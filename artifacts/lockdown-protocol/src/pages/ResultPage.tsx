@@ -465,9 +465,17 @@ export default function ResultPage() {
                 <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(270 70% 60%)" }}>
                   ABILITY PHASE SUMMARY
                 </div>
-                {summary && summary.abilityLog.length > 0 ? (
+                {summary && summary.abilityLog.filter(e => {
+                  const actor = result?.allRoles.find(p => p.playerName === e.actorName);
+                  return actor?.role !== "spectator";
+                }).length > 0 ? (
                   <div className="flex flex-col gap-1.5">
-                    {summary.abilityLog.map((entry, idx) => (
+                    {summary.abilityLog
+                      .filter(e => {
+                        const actor = result?.allRoles.find(p => p.playerName === e.actorName);
+                        return actor?.role !== "spectator";
+                      })
+                      .map((entry, idx) => (
                       <div
                         key={idx}
                         className="flex items-start gap-2 px-2 py-1.5 rounded"
