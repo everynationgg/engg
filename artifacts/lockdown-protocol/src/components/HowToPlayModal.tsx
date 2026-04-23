@@ -100,7 +100,7 @@ export default function HowToPlayModal({ onClose }: HowToPlayModalProps) {
           {activeTab === "phases" ? (
             <div className="flex flex-col gap-8">
               <p className="text-sm leading-relaxed" style={{ color: "hsl(190 60% 75%)" }}>
-                ENfestation is a real-time social deduction game for 3–10 players. One or more players are secretly assigned Alien roles, while the rest are Crew. Your goal depends on your team — find the Alien, or stay hidden.
+                ENfestation is a real-time social deduction game for 3–16 players. One or more players are secretly assigned Alien roles, while the rest are Crew. Your goal depends on your team — find the Alien, or stay hidden.
               </p>
 
               <div className="flex flex-col gap-6">

@@ -606,7 +606,7 @@ export default function RoleConfigPage() {
                 fontFamily: "'Exo 2', sans-serif",
               }}
             >
-              {players.length}/10 players · need at least 4 to start
+              {players.length}/16 players · need at least 4 to start
             </div>
             {/* Copy link button */}
             <button
