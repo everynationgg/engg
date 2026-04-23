@@ -85,7 +85,7 @@ export function generateVerificationEmailHTML(
     </div>
     
     <div class="footer">
-      <p>&copy; 2026 Lockdown Protocol. All rights reserved.</p>
+      <p>&copy; 2026 ERROR: NEWFORM DETECTED. All rights reserved.</p>
     </div>
   </div>
 </body>
@@ -139,7 +139,7 @@ export function generatePasswordResetEmailHTML(
     </div>
     
     <div class="footer">
-      <p>&copy; 2026 Lockdown Protocol. All rights reserved.</p>
+      <p>&copy; 2026 ERROR: NEWFORM DETECTED. All rights reserved.</p>
     </div>
   </div>
 </body>

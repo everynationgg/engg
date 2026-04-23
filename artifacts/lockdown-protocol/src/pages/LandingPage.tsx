@@ -142,7 +142,7 @@ export default function LandingPage() {
           style={{ background: "hsl(220 30% 4% / 0.9)" }}
           onClick={() => setShowHowToPlay(false)}
           role="dialog"
-          aria-label="How to Play Lockdown Protocol: ENfestation"
+          aria-label="How to Play ERROR: NEWFORM DETECTED: ENfestation"
         >
           <div
             className="relative w-full max-w-sm max-h-full overflow-y-auto rounded-lg ix-modal-enter"
@@ -164,7 +164,7 @@ export default function LandingPage() {
             </button>
             <img
               src={howToPlayImg}
-              alt="How to Play Lockdown Protocol: ENfestation — step-by-step guide covering lobby creation, role assignment, orbit phase abilities, discussion, voting, and game results"
+              alt="How to Play ERROR: NEWFORM DETECTED: ENfestation — step-by-step guide covering lobby creation, role assignment, orbit phase abilities, discussion, voting, and game results"
               className="w-full block rounded-lg"
               draggable={false}
               loading="lazy"

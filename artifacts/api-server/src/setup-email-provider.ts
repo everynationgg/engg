@@ -21,7 +21,7 @@ export function setupSmtpEmailProvider() {
 
   registerEmailProvider(async (options: SendEmailOptions) => {
     await transporter.sendMail({
-      from: `Lockdown Protocol <noreply@engg.online>`,
+      from: `ERROR: NEWFORM DETECTED <noreply@engg.online>`,
       to: options.to,
       subject: options.subject,
       html: options.html,

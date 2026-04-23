@@ -107,7 +107,7 @@ router.post("/auth/register", async (req, res) => {
     try {
       await sendEmail({
         to: sanitizedEmail,
-        subject: "Verify your Lockdown Protocol email",
+        subject: "Verify your ERROR: NEWFORM DETECTED email",
         html: generateVerificationEmailHTML(sanitizedUsername, verificationLink),
       });
     } catch (emailError) {
@@ -299,7 +299,7 @@ router.post("/auth/resend-verification-email", authMiddleware, async (req: AuthR
     try {
       await sendEmail({
         to: user.email,
-        subject: "Verify your Lockdown Protocol email",
+        subject: "Verify your ERROR: NEWFORM DETECTED email",
         html: generateVerificationEmailHTML(user.username, verificationLink),
       });
       res.json({ success: true, message: "Verification email sent" });
@@ -360,7 +360,7 @@ router.post("/auth/request-password-reset", async (req, res) => {
     try {
       await sendEmail({
         to: user.email,
-        subject: "Reset your Lockdown Protocol password",
+        subject: "Reset your ERROR: NEWFORM DETECTED password",
         html: generatePasswordResetEmailHTML(user.username, resetLink),
       });
       res.json({ success: true, message: "If the email exists, a reset link has been sent" });
