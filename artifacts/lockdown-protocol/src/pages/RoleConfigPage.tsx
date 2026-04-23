@@ -448,6 +448,30 @@ export default function RoleConfigPage() {
     );
   }, [customGameReady, customRoles, customDeck, roomCode]);
 
+  const handleStartGame = useCallback(() => {
+    playSciFiClick();
+    if (players.length < 1 || !rolesReady) {
+      setStartError("Not enough roles configured");
+      setTimeout(() => setStartError(null), 3000);
+      return;
+    }
+    setStartError(null);
+
+    // Server is authoritative — send role counts and let the server
+    // assign roles, update phase, and broadcast phase_update to all players
+    const socket = getSocket();
+    socket.emit(
+      "start_game",
+      { sessionId: roomCode, roleCounts },
+      (resp: { success: boolean; error?: string }) => {
+        if (!resp?.success) {
+          setStartError(resp?.error ?? "Failed to start — reconnecting, please try again");
+          setTimeout(() => setStartError(null), 4000);
+        }
+      },
+    );
+  }, [players.length, rolesReady, roleCounts, roomCode]);
+
   const handleKickPlayer = useCallback((target: LivePlayer) => {
     if (!target.playerId) {
       setKickError("Cannot kick this player yet. Ask them to rejoin once.");
