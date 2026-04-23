@@ -22,7 +22,7 @@ export function setupSmtpEmailProvider() {
   registerEmailProvider(async (options: SendEmailOptions) => {
     try {
       await transporter.sendMail({
-        from: `ERROR: NEWFORM DETECTED <noreply@engg.online>`,
+        from: '"ERROR: NEWFORM DETECTED" <noreply@engg.online>',
         to: options.to,
         subject: options.subject,
         html: options.html,
