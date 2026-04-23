@@ -503,11 +503,11 @@ export async function acquireSessionLock(sessionId: string): Promise<() => Promi
 
 // ── Helper factories (pure; callers must saveSession after mutating) ──────────
 
-function freshEmergencyVote(): EmergencyVoteState {
+export function freshEmergencyVote(): EmergencyVoteState {
   return { active: false, callerId: null, callerName: null, yesVoters: [], noVoters: [], cooldownUntil: null };
 }
 
-function freshRoundSummary(): RoundSummary {
+export function freshRoundSummary(): RoundSummary {
   return { abilityLog: [], voteTally: [], voteCounts: [] };
 }
 
