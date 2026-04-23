@@ -9,6 +9,8 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY tsconfig.base.json tsconfig.json ./
 
+# Copy workspace packages needed by api-server
+COPY lib/ lib/
 COPY artifacts/api-server/ artifacts/api-server/
 
 RUN pnpm install --frozen-lockfile
