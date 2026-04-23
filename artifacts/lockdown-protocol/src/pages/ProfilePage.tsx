@@ -16,7 +16,7 @@ import { useEffect, useState, useMemo } from "react";
 
 export default function ProfilePage() {
   const [, setLocation] = useLocation();
-  const { isLoggedIn, username, userId, logout, isVerified, resendVerificationEmail, isLoading: authLoading } = useAuth();
+  const { isLoggedIn, username, userId, logout, isVerified, resendVerificationEmail, refreshUser, isLoading: authLoading } = useAuth();
   const { personalStats, roleStats, gameHistory, gameHistoryTotal, leaderboard, fetchLeaderboard, fetchPersonalStats, fetchRoleStats, fetchGameHistory } = useRecordGameResult();
   const { achievements, isLoading: achievementsLoading } = useAchievements();
   const { friends, friendRequests, searchResults, isLoading: friendsLoading, isSearching, sendFriendRequest, acceptFriendRequest, declineFriendRequest, removeFriend, searchFriends } = useFriends();
@@ -42,11 +42,12 @@ export default function ProfilePage() {
       setLocation("/");
       return;
     }
+    refreshUser();
     fetchPersonalStats();
     fetchRoleStats();
     fetchLeaderboard();
     fetchGameHistory(20, 0);
-  }, [isLoggedIn, setLocation, fetchLeaderboard, fetchPersonalStats, fetchRoleStats, fetchGameHistory]);
+  }, [isLoggedIn, setLocation, refreshUser, fetchLeaderboard, fetchPersonalStats, fetchRoleStats, fetchGameHistory]);
 
   const handleLogout = () => {
     playSciFiClick();

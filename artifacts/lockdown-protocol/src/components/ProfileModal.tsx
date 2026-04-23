@@ -21,7 +21,7 @@ function formatRoleName(roleId?: string | null): string {
 }
 
 export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
-  const { username, userId, isVerified, resendVerificationEmail, isLoading: authLoading } = useAuth();
+  const { username, userId, isVerified, resendVerificationEmail, refreshUser, isLoading: authLoading } = useAuth();
   const { personalStats, roleStats, fetchPersonalStats, fetchRoleStats } = useRecordGameResult();
   const { achievements } = useAchievements();
   const [loading, setLoading] = useState(true);
@@ -33,9 +33,10 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     if (isOpen) {
       setLoading(true);
       playSciFiClick();
-      Promise.all([fetchPersonalStats(), fetchRoleStats()]).finally(() => setLoading(false));
+      // Always refresh user identity state to prevent stale verification status
+      Promise.all([refreshUser(), fetchPersonalStats(), fetchRoleStats()]).finally(() => setLoading(false));
     }
-  }, [isOpen, fetchPersonalStats, fetchRoleStats]);
+  }, [isOpen, refreshUser, fetchPersonalStats, fetchRoleStats]);
 
   const handleResendVerificationEmail = async () => {
     setResendError(null);
