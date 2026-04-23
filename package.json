@@ -15,5 +15,8 @@
     "prettier": "^3.8.1",
     "typescript": "~5.9.2",
     "vite": "^5.x.x"
+  },
+  "dependencies": {
+    "@vercel/speed-insights": "^2.0.0"
   }
 }
