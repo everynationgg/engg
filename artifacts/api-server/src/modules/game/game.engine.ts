@@ -596,10 +596,10 @@ export function resolveRound(state: GameState): ResolutionResult {
           if (revealAction && revealAction.targets[0]) {
             const target = state.players.find(p => p.id === revealAction.targets[0]);
             feedback[actor.id] = { type: "no_ability" };
-            logActor(actor.name, actor.id, `jammed ${target?.name ?? "a player"}'s interface during the reveal`);
+            logActor(actor.name, actor.id, `used Packet Loss on ${target?.name ?? "a player"}`);
           } else {
             feedback[actor.id] = { type: "no_ability" };
-            logActor(actor.name, actor.id, "did not jam anyone during the reveal");
+            logActor(actor.name, actor.id, "did not use Packet Loss on anyone");
           }
           continue;
         }

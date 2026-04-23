@@ -219,7 +219,7 @@ export const ROLES: Role[] = [
     video: virusVid,
     evictionVideo: virusEvictionVid,
     winCondition: "Alien Team Wins",
-    ability: "Packet Loss — Scramble one crew member's interface during the Reveal phase. They cannot see target names in the next round.",
+    ability: "You used Packet Loss on (target). They are corrupted.",
     notes: "Acts during Role Reveal. Cannot target Aliens.",
     salutation: "System compromised. Target identified: {username}.",
     lore: "You are a ghost in the machine. A digital plague.\nDuring the reveal, choose a crew member to disconnect from reality.\n\nIn the next round, they will wander blind,\ntargeting ghosts in a glitched interface.",

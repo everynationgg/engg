@@ -1,9 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import Modal from "@/components/Modal";
-  // Custom Game Modal state
-  const [customGameOpen, setCustomGameOpen] = useState(false);
-  const [customRoles, setCustomRoles] = useState<{ [playerId: string]: string }>({});
 import { motion, AnimatePresence } from "framer-motion";
+import Modal from "@/components/Modal";
 import { useLocation } from "wouter";
 import { ROLES, ALIEN_ROLES, CHAOTIC_ROLES, CREW_ROLES, type Role } from "@/data/roles";
 import { playSciFiClick, playLobbyJoin } from "@/lib/sound";
@@ -61,6 +58,8 @@ function randomizeRoles(playerCount: number): RoleCounts {
 
 export default function RoleConfigPage() {
   const [, setLocation] = useLocation();
+  const [customGameOpen, setCustomGameOpen] = useState(false);
+  const [customRoles, setCustomRoles] = useState<{ [playerId: string]: string }>({});
   const [selectedRole, setSelectedRole] = useState<Role>(ROLES[0]);
   const [roleCounts, setRoleCounts] = useState<RoleCounts>(() => {
     const init: RoleCounts = {};
