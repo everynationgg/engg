@@ -618,30 +618,16 @@ export function resolveRound(state: GameState): ResolutionResult {
     for (const actor of actors) {
       const action = state.orbitActions[actor.id];
 
-      // No submission
-      if (!action) {
-        feedback[actor.id] = { type: "no_action" };
-        logActor(actor.name, actor.id, "skipped their ability");
-        continue;
-      }
-
-      // Voluntary skip
-      if (action.type === "skip") {
-        feedback[actor.id] = { type: "skipped" };
-        logActor(actor.name, actor.id, "skipped their ability");
-        continue;
-      }
-
       // Virus and Router act during Role Reveal — log their reveal action in the summary
       if (roleId === "virus") {
         const revealAction = state.revealActions[actor.id];
         if (revealAction && revealAction.targets[0]) {
           const target = state.players.find(p => p.id === revealAction.targets[0]);
           feedback[actor.id] = { type: "virus_result", data: { targetName: target?.name ?? "a player" } };
-          logActor(actor.name, actor.id, `(Virus) used Packet Loss on ${target?.name ?? "a player"}`);
+          logActor(actor.name, actor.id, `used Packet Loss on ${target?.name ?? "a player"}`);
         } else {
           feedback[actor.id] = { type: "skipped" };
-          logActor(actor.name, actor.id, "(Virus) skipped their ability");
+          logActor(actor.name, actor.id, "skipped their ability");
         }
         continue;
       }
@@ -651,10 +637,10 @@ export function resolveRound(state: GameState): ResolutionResult {
           const source = state.players.find(p => p.id === revealAction.targets[0]);
           const dest = state.players.find(p => p.id === revealAction.targets[1]);
           feedback[actor.id] = { type: "router_result", data: { sourceName: source?.name ?? "a player", destName: dest?.name ?? "another player" } };
-          logActor(actor.name, actor.id, `(Router) hijacked ${source?.name ?? "a player"}'s ability to redirect to ${dest?.name ?? "another player"}`);
+          logActor(actor.name, actor.id, `hijacked ${source?.name ?? "a player"}'s ability to redirect to ${dest?.name ?? "another player"}`);
         } else {
           feedback[actor.id] = { type: "skipped" };
-          logActor(actor.name, actor.id, "(Router) skipped their ability");
+          logActor(actor.name, actor.id, "skipped their ability");
         }
         continue;
       }
@@ -669,6 +655,13 @@ export function resolveRound(state: GameState): ResolutionResult {
             ? "(Parasite) monitored via passive ability"
             : "skipped their ability",
         );
+        continue;
+      }
+
+      // Voluntary skip
+      if (action.type === "skip") {
+        feedback[actor.id] = { type: "skipped" };
+        logActor(actor.name, actor.id, "skipped their ability");
         continue;
       }
 
