@@ -167,6 +167,7 @@ const sessionOnlySchema = z.object({
 const startGameSchema = z.object({
   sessionId: sessionIdSchema,
   roleCounts: z.record(z.string().max(50), z.number().int().min(0).max(20)),
+  customRoles: z.record(z.string().uuid(), z.string().max(50)).optional(),
 });
 
 const submitActionSchema = z.object({
@@ -1003,7 +1004,7 @@ export function attachSocketIO(httpServer: HttpServer) {
       ) => {
         const parsed = validate(startGameSchema, data, ack);
         if (!parsed) return;
-        const { sessionId, roleCounts } = parsed;
+        const { sessionId, roleCounts, customRoles } = parsed;
 
         // Socket-level ownership guard: only the socket that joined this session may act on it
         if (currentSessionId !== sessionId) {
@@ -1019,6 +1020,7 @@ export function attachSocketIO(httpServer: HttpServer) {
         let notHost = false;
         let wrongPhase = false;
         let invalidRoleCounts = false;
+        let invalidCustomRoles = false;
         const cas = await withCasRetry(sessionId, (session) => {
           const player = session.players.find((p) => p.id === socket.id);
           if (!player?.isHost) { notHost = true; return CAS_SKIP; }
@@ -1027,7 +1029,39 @@ export function attachSocketIO(httpServer: HttpServer) {
           // Pool size guard: total role count must cover all players
           const totalRoles = Object.values(roleCounts).reduce((s, n) => s + n, 0);
           if (totalRoles < session.players.length) { invalidRoleCounts = true; return CAS_SKIP; }
-          assignRoles(session, roleCounts);
+
+          // If customRoles is provided, validate and assign directly
+          if (customRoles) {
+            // Validate all players are assigned and roles are valid
+            const playerIds = session.players.map(p => p.id);
+            const allAssigned = playerIds.every(pid => customRoles[pid]);
+            const allRolesValid = Object.values(customRoles).every(roleId => roleCounts[roleId] > 0);
+            if (!allAssigned || !allRolesValid) { invalidCustomRoles = true; return CAS_SKIP; }
+            // Assign roles directly
+            session.rolesAssigned = { ...customRoles };
+            session.initialRoles = { ...customRoles };
+            // Remove assigned roles from pool for center cards
+            const assignedCounts = { ...roleCounts };
+            Object.values(customRoles).forEach(roleId => { assignedCounts[roleId] = (assignedCounts[roleId] || 1) - 1; });
+            const pool: string[] = [];
+            for (const [roleId, count] of Object.entries(assignedCounts)) {
+              for (let i = 0; i < count; i++) pool.push(roleId);
+            }
+            session.centerCards = pool;
+            session.roleCounts = { ...roleCounts };
+            // Reset round state
+            session.orbitActions = {};
+            session.orbitCompleted = [];
+            session.roleAcknowledgements = [];
+            session.resolutionAcknowledgements = [];
+            session.discussionStartedAt = null;
+            session.emergencyVote = freshEmergencyVote();
+            session.votes = {};
+            session.voteResult = null;
+            session.roundSummary = freshRoundSummary();
+          } else {
+            assignRoles(session, roleCounts);
+          }
           session.phase = "role_reveal";
           return true as const;
         });
@@ -1044,6 +1078,10 @@ export function attachSocketIO(httpServer: HttpServer) {
           ack?.({ success: false, error: "Role count must cover all players" });
           return;
         }
+        if (invalidCustomRoles) {
+          ack?.({ success: false, error: "Custom roles invalid or incomplete" });
+          return;
+        }
         if (!cas) {
           await handleSaveConflict(io, sessionId);
           ack?.({ success: false });
@@ -1054,6 +1092,7 @@ export function attachSocketIO(httpServer: HttpServer) {
         logGameEvent("game_started", sessionId, socket.id, {
           players: cas.session.players.length,
           roleCounts,
+          customRoles: customRoles ? true : false,
         });
         phaseUpdate(io, sessionId, cas.session);
         ack?.({ success: true });

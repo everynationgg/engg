@@ -1,4 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from "react";
+import Modal from "@/components/Modal";
+  // Custom Game Modal state
+  const [customGameOpen, setCustomGameOpen] = useState(false);
+  const [customRoles, setCustomRoles] = useState<{ [playerId: string]: string }>({});
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import { ROLES, ALIEN_ROLES, CHAOTIC_ROLES, CREW_ROLES, type Role } from "@/data/roles";
@@ -818,6 +822,32 @@ export default function RoleConfigPage() {
               >
                 RANDOMIZE ROLES
               </button>
+
+              {/* Custom Game Button */}
+              <button
+                onClick={() => setCustomGameOpen(true)}
+                data-testid="button-custom-game"
+                className="flex-1 sm:flex-none px-5 py-2 font-orbitron font-bold text-xs tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-150 cursor-pointer"
+                style={{
+                  background: "linear-gradient(135deg, hsl(270 80% 20% / 0.6), hsl(270 80% 12% / 0.8))",
+                  borderColor: "hsl(270 80% 50%)",
+                  color: "hsl(270 80% 65%)",
+                  boxShadow: "0 0 8px hsl(270 80% 50% / 0.3), 0 0 16px hsl(270 80% 50% / 0.1)",
+                }}
+                onMouseEnter={(e) => {
+                  const btn = e.currentTarget;
+                  btn.style.boxShadow = "0 0 14px hsl(270 80% 50% / 0.6), 0 0 28px hsl(270 80% 50% / 0.25)";
+                  btn.style.color = "hsl(270 80% 80%)";
+                }}
+                onMouseLeave={(e) => {
+                  const btn = e.currentTarget;
+                  btn.style.boxShadow = "0 0 8px hsl(270 80% 50% / 0.3), 0 0 16px hsl(270 80% 50% / 0.1)";
+                  btn.style.color = "hsl(270 80% 65%)";
+                }}
+              >
+                CUSTOM GAME
+              </button>
+
               <button
                 onClick={handleStartGame}
                 data-testid="button-start-game"
@@ -850,6 +880,41 @@ export default function RoleConfigPage() {
               </button>
             </div>
           )}
+      {/* Custom Game Modal */}
+      <Modal open={customGameOpen} onClose={() => setCustomGameOpen(false)} title="Custom Game Setup">
+        <div className="flex flex-col gap-4">
+          <div className="font-orbitron text-sm mb-2">Assign roles to each player:</div>
+          {players.map((player) => (
+            <div key={player.id} className="flex items-center gap-3">
+              <span className="min-w-[100px] font-orbitron text-xs" style={{ color: "hsl(185 100% 70%)" }}>{player.name}{player.isHost ? " (Host)" : ""}</span>
+              <select
+                className="px-2 py-1 rounded border bg-black text-white"
+                value={customRoles[player.id] || ""}
+                onChange={e => setCustomRoles(r => ({ ...r, [player.id]: e.target.value }))}
+              >
+                <option value="">Unassigned</option>
+                {ROLES.map(role => (
+                  <option key={role.id} value={role.id}>{role.name}</option>
+                ))}
+              </select>
+            </div>
+          ))}
+          <div className="flex gap-3 mt-4">
+            <button
+              className="flex-1 px-4 py-2 rounded bg-green-700 text-white font-orbitron text-xs tracking-wider"
+              onClick={() => setCustomGameOpen(false)}
+            >
+              Save & Close
+            </button>
+            <button
+              className="flex-1 px-4 py-2 rounded bg-gray-700 text-white font-orbitron text-xs tracking-wider"
+              onClick={() => setCustomGameOpen(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </Modal>
 
           {/* Alien Team */}
           <div className="mb-7">
