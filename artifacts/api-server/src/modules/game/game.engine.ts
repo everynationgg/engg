@@ -234,6 +234,8 @@ const PASSIVE_ROLE_IDS = new Set(["crew", "parasite"]);
 
 /** Strict resolution order for ability processing. */
 const ROLE_ORDER = [
+  "virus",
+  "router",
   "sentinel",
   "scanner",
   "alien",
@@ -879,7 +881,7 @@ export function resolveRound(state: GameState): ResolutionResult {
   for (const player of state.players) {
     if (!loggedPlayerIds.has(player.id)) {
       feedback[player.id] = { type: "no_ability" };
-      logActor(player.name, player.id, "has no active ability this round");
+      logActor(player.name, player.id, "skipped their ability");
     }
   }
 

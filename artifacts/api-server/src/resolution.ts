@@ -102,7 +102,7 @@ export function runResolution(
         logActor(actor.name, actor.id,
           roleId === "parasite"
             ? "monitored via passive ability"
-            : "has no active ability this round",
+            : "skipped their ability",
         );
         continue;
       }
@@ -333,7 +333,7 @@ export function runResolution(
   for (const player of session.players) {
     if (!loggedPlayerIds.has(player.id)) {
       feedback[player.id] = { type: "no_ability" };
-      logActor(player.name, player.id, "has no active ability this round");
+      logActor(player.name, player.id, "skipped their ability");
     }
   }
 
