@@ -260,7 +260,6 @@ export function getActivePlayers(state: GameState): Player[] {
   // Only non-spectators are considered active for game logic
   return state.players.filter((p) => !p.isSpectator && p.connectionStatus === "connected");
 }
-}
 
 function freshRoundSummary(): RoundSummary {
   return { abilityLog: [], voteTally: [], voteCounts: [] };
