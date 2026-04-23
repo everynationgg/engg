@@ -36,11 +36,12 @@ export default function RoleRevealPage() {
   const [selectedRouterDestId, setSelectedRouterDestId] = useState<string | null>(null);
   const [rolesAssigned, setRolesAssigned] = useState<Record<string, string>>({});
 
+  // Defensive: Only compute after state is initialized
   const role = getAssignedRole();
   const myPlayerId = sessionStorage.getItem("lp_playerId");
   const me = livePlayers.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === getSocket().id);
-  const isSpectator = me?.isSpectator;
-  const isAlien = role.team === "alien";
+  const isSpectator = !!me && !!me.isSpectator;
+  const isAlien = !!role && role.team === "alien";
 
   useEffect(() => {
     // Brief delay to build tension, then transition smoothly
@@ -55,15 +56,7 @@ export default function RoleRevealPage() {
     return () => clearTimeout(t1);
   }, [isAlien]);
 
-  const [readyCount, setReadyCount] = useState(0);
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [showProfileModal, setShowProfileModal] = useState(false);
-  const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
-  const [isHost, setIsHost] = useState(false);
-  const [livePlayers, setLivePlayers] = useState<any[]>([]);
-  const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
-  const [selectedRouterDestId, setSelectedRouterDestId] = useState<string | null>(null);
-  const [rolesAssigned, setRolesAssigned] = useState<Record<string, string>>({});
+  // (Removed duplicate state declarations)
 
   const playerName = getPlayerName();
   const totalPlayers = getTotalPlayers();
