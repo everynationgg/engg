@@ -75,3 +75,7 @@ attached_assets/image_*.png
 
 # Sentry Config File
 .env.sentry-build-plugin
+ 
+*.log
+.test
+largest-files.txt
