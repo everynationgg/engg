@@ -186,7 +186,7 @@ export default function VotingPage() {
 
   const myPlayerId = sessionStorage.getItem("lp_playerId");
   const me = sessionPlayers.find((p) => myPlayerId ? p.playerId === myPlayerId : p.id === getSocket().id);
-  const isSpectator = !!me && !!me.isSpectator;
+  const isSpectator = (!!me && !!me.isSpectator) || (initialRoleId === "spectator");
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -273,7 +273,7 @@ export default function VotingPage() {
     };
   }, [myId]);
 
-  if (isSpectator && !isHost) {
+  if (isSpectator) {
     return (
       <div className="flex flex-col min-h-screen w-full relative overflow-hidden" style={{ background: "hsl(210 30% 6%)", color: "hsl(185 100% 70%)" }}>
         <HamburgerMenu
@@ -530,7 +530,7 @@ export default function VotingPage() {
         )}
 
         {/* Player list */}
-        {!votedFor && !pendingVote ? (
+        {!isSpectator && !votedFor && !pendingVote ? (
           <div className="flex flex-col gap-3">
             <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-1" style={{ color: "hsl(210 30% 50%)" }}>
               CHOOSE CAREFULLY

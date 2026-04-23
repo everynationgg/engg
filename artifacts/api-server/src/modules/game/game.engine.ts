@@ -657,7 +657,7 @@ export function resolveRound(state: GameState): ResolutionResult {
           actor.name,
           actor.id,
           roleId === "parasite"
-            ? "monitored via passive ability"
+            ? "(Parasite) monitored via passive ability"
             : "has no active ability this round",
         );
         continue;
@@ -679,7 +679,7 @@ export function resolveRound(state: GameState): ResolutionResult {
       const immuneToBlock = roleId === "scanner" || roleId === "sentinel";
       if (!immuneToBlock && blockedPlayers.has(actor.id)) {
         feedback[actor.id] = { type: "blocked" };
-        logActor(actor.name, actor.id, "ability was blocked");
+        logActor(actor.name, actor.id, "(Ability) was blocked");
         continue;
       }
 
@@ -690,10 +690,10 @@ export function resolveRound(state: GameState): ResolutionResult {
           if (targetId) {
             sentinelWatchTargets[actor.id] = targetId;
             const target = state.players.find((p) => p.id === targetId);
-            logActor(actor.name, actor.id, `observed ${target?.name ?? "a player"}`);
+            logActor(actor.name, actor.id, `(Sentinel) observed ${target?.name ?? "a player"}`);
           } else {
             feedback[actor.id] = { type: "no_action" };
-            logActor(actor.name, actor.id, "did not select a watch target");
+            logActor(actor.name, actor.id, "(Sentinel) did not select a watch target");
           }
           break;
         }
@@ -709,7 +709,7 @@ export function resolveRound(state: GameState): ResolutionResult {
                 data: { targetName: target.name, roleId: initialRole },
               };
               logInternal(target.id, "role was inspected by a scanner");
-              logActor(actor.name, actor.id, `scanned ${target.name}`);
+              logActor(actor.name, actor.id, `(Scanner) scanned ${target.name}`);
             }
           } else if (action.type === "scan_deck") {
             const roles = targets.slice(0, 2).map((t) => {
@@ -717,9 +717,9 @@ export function resolveRound(state: GameState): ResolutionResult {
               return state.centerCards[idx] ?? "unknown";
             });
             feedback[actor.id] = { type: "scan_deck", data: { roles } };
-            logActor(actor.name, actor.id, "scanned the central deck");
+            logActor(actor.name, actor.id, "(Scanner) scanned the central deck");
           } else {
-            logActor(actor.name, actor.id, "used an unrecognised scan action");
+            logActor(actor.name, actor.id, "(Scanner) used an unknown scan action");
           }
           break;
         }
@@ -736,10 +736,10 @@ export function resolveRound(state: GameState): ResolutionResult {
               type: "alien_view",
               data: { cardIndex: idx, roleId: cardRole },
             };
-            logActor(actor.name, actor.id, "reviewed a hidden card from the central deck");
+            logActor(actor.name, actor.id, "(Alien) reviewed a hidden card from the central deck");
           } else {
             feedback[actor.id] = { type: "no_action" };
-            logActor(actor.name, actor.id, "used their ability");
+            logActor(actor.name, actor.id, "(Alien) used their ability");
           }
           break;
         }
@@ -751,11 +751,11 @@ export function resolveRound(state: GameState): ResolutionResult {
           const targetPlayer = state.players.find((p) => p.id === targetId);
           if (targetRole === "scanner") {
             feedback[actor.id] = { type: "disrupt_ineffective" };
-            logActor(actor.name, actor.id, "attempted a block — target was immune");
+            logActor(actor.name, actor.id, "(Disruptor) attempted to block — target was immune");
           } else {
             blockedPlayers.add(targetId);
             logInternal(targetId, "ability was blocked");
-            logActor(actor.name, actor.id, `blocked ${targetPlayer?.name ?? "a player"}'s ability`);
+            logActor(actor.name, actor.id, `(Disruptor) blocked ${targetPlayer?.name ?? "a player"}'s ability`);
           }
           break;
         }
@@ -763,7 +763,7 @@ export function resolveRound(state: GameState): ResolutionResult {
         // ── Parasite (active branch — passive already handled above) ──
         case "parasite": {
           feedback[actor.id] = { type: "passive" };
-          logActor(actor.name, actor.id, "monitored via passive ability");
+          logActor(actor.name, actor.id, "(Parasite) monitored via passive ability");
           break;
         }
 
@@ -778,10 +778,10 @@ export function resolveRound(state: GameState): ResolutionResult {
               data: { targetName: target.name, alignment },
             };
             logInternal(target.id, "alignment was checked");
-            logActor(actor.name, actor.id, `checked ${target.name}'s alignment`);
+            logActor(actor.name, actor.id, `(Seeker) checked ${target.name}'s alignment`);
           } else {
             feedback[actor.id] = { type: "no_action" };
-            logActor(actor.name, actor.id, "attempted an alignment check — no valid target");
+            logActor(actor.name, actor.id, "(Seeker) attempted an alignment check — no valid target");
           }
           break;
         }
@@ -789,7 +789,7 @@ export function resolveRound(state: GameState): ResolutionResult {
         // ── Commander ────────────────────────────────────────────────────
         case "commander": {
           feedback[actor.id] = { type: "commander_boost", data: { granted: true } };
-          logActor(actor.name, actor.id, "activated vote boost — vote counts as ×2");
+          logActor(actor.name, actor.id, "(Commander) activated vote boost");
           break;
         }
 
@@ -802,7 +802,7 @@ export function resolveRound(state: GameState): ResolutionResult {
 
             if (!playerA || !playerB || tA === actor.id || tB === actor.id) {
               feedback[actor.id] = { type: "no_action" };
-              logActor(actor.name, actor.id, "attempted an invalid swap (cannot swap self)");
+              logActor(actor.name, actor.id, "(Warper) attempted an invalid swap (cannot swap self)");
               break;
             }
 

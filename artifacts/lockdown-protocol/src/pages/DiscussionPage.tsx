@@ -37,7 +37,7 @@ export default function DiscussionPage() {
   const [sessionPlayers, setSessionPlayers] = useState<LivePlayer[]>([]);
   const myPlayerId = sessionStorage.getItem("lp_playerId");
   const me = sessionPlayers.find((p) => myPlayerId ? p.playerId === myPlayerId : p.id === getSocket().id);
-  const isSpectator = !!me && !!me.isSpectator;
+  const isSpectator = (!!me && !!me.isSpectator) || (initialRoleId === "spectator");
   const [orbitResultState, setOrbitResultState] = useState<{ type: string; data?: unknown } | null>(() => getOrbitResult());
   const [roleCounts, setRoleCounts] = useState<Record<string, number>>({});
   const [rolesAssigned, setRolesAssigned] = useState<Record<string, string>>({});
@@ -274,7 +274,7 @@ export default function DiscussionPage() {
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
-  if (isSpectator && !isHost) {
+  if (isSpectator) {
     return (
       <div className="relative min-h-screen w-full flex flex-col ix-page-enter" style={{ background: "hsl(210 30% 6%)", color: "hsl(190 80% 90%)" }}>
         <HamburgerMenu
@@ -591,7 +591,7 @@ export default function DiscussionPage() {
             CREW MANIFEST — {sessionPlayers.filter(p => !p.isSpectator).length} ABOARD
           </div>
           <div className="flex flex-col gap-2">
-            {sessionPlayers.map((p) => {
+            {sessionPlayers.filter(p => !p.isSpectator).map((p) => {
               const isTyping = typingUsers.includes(p.name);
               return (
               <div
@@ -610,7 +610,6 @@ export default function DiscussionPage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  {/* Status chips (alive/connected) intentionally disabled for now. */}
                   {p.isYou && (
                     <span className="text-xs tracking-widest uppercase" style={{ color: "hsl(210 30% 40%)" }}>YOU</span>
                   )}
@@ -641,26 +640,28 @@ export default function DiscussionPage() {
         )}
 
         {/* Emergency vote button */}
-        <button
-          data-testid="button-emergency-vote"
-          onClick={handleCallEmergencyVote}
-          disabled={evLoading || cooldownLeft > 0 || !!evPopup}
-          className="w-full py-2.5 font-orbitron font-bold text-xs tracking-[0.2em] uppercase rounded-md border transition-all duration-150 cursor-pointer"
-          style={{
-            background: (cooldownLeft > 0 || !!evPopup) ? "hsl(220 28% 8%)" : "hsl(0 60% 20% / 0.8)",
-            borderColor: (cooldownLeft > 0 || !!evPopup) ? "hsl(210 30% 18%)" : "hsl(0 75% 55%)",
-            color: (cooldownLeft > 0 || !!evPopup) ? "hsl(210 30% 35%)" : "hsl(0 75% 70%)",
-            cursor: (cooldownLeft > 0 || !!evPopup) ? "not-allowed" : "pointer",
-            boxShadow: (cooldownLeft > 0 || !!evPopup) ? "none" : "0 0 8px hsl(0 75% 55% / 0.3)",
-          }}
-        >
-          {cooldownLeft > 0 ? `EMERGENCY VOTE (${cooldownLeft}s)` : "EMERGENCY VOTE"}
-        </button>
+        {!isSpectator && (
+          <button
+            data-testid="button-emergency-vote"
+            onClick={handleCallEmergencyVote}
+            disabled={evLoading || cooldownLeft > 0 || !!evPopup}
+            className="w-full py-2.5 font-orbitron font-bold text-xs tracking-[0.2em] uppercase rounded-md border transition-all duration-150 cursor-pointer"
+            style={{
+              background: (cooldownLeft > 0 || !!evPopup) ? "hsl(220 28% 8%)" : "hsl(0 60% 20% / 0.8)",
+              borderColor: (cooldownLeft > 0 || !!evPopup) ? "hsl(210 30% 18%)" : "hsl(0 75% 55%)",
+              color: (cooldownLeft > 0 || !!evPopup) ? "hsl(210 30% 35%)" : "hsl(0 75% 70%)",
+              cursor: (cooldownLeft > 0 || !!evPopup) ? "not-allowed" : "pointer",
+              boxShadow: (cooldownLeft > 0 || !!evPopup) ? "none" : "0 0 8px hsl(0 75% 55% / 0.3)",
+            }}
+          >
+            {cooldownLeft > 0 ? `EMERGENCY VOTE (${cooldownLeft}s)` : "EMERGENCY VOTE"}
+          </button>
+        )}
 
       </div>
 
       {/* Emergency vote popup */}
-      {evPopup && (
+      {!isSpectator && evPopup && (
         <div
           className="fixed inset-0 flex items-center justify-center z-50 px-6"
           style={{ background: "hsl(220 28% 4% / 0.85)" }}
