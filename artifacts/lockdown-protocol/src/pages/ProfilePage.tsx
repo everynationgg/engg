@@ -14,9 +14,25 @@ import { playSciFiClick } from "@/lib/sound";
 import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
 import { useEffect, useState } from "react";
 
+import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
+import { useRecordGameResult } from "@/hooks/useRecordGameResult";
+import { useAchievements } from "@/hooks/useAchievements";
+import { useFriends } from "@/hooks/useFriends";
+import RoleStatsDisplay from "@/components/RoleStatsDisplay";
+import GameHistoryDisplay from "@/components/GameHistoryDisplay";
+import AggregateStats from "@/components/AggregateStats";
+import { AchievementsDisplay } from "@/components/AchievementsDisplay";
+import { FriendsDisplay } from "@/components/FriendsDisplay";
+import HamburgerMenu from "@/components/HamburgerMenu";
+import SettingsModal from "@/components/SettingsModal";
+import { playSciFiClick } from "@/lib/sound";
+import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
+import { useEffect, useState, useMemo } from "react";
+
 export default function ProfilePage() {
   const [, setLocation] = useLocation();
-  const { isLoggedIn, username, userId, logout, isVerified, resendVerificationEmail, isLoading } = useAuth();
+  const { isLoggedIn, username, userId, logout, isVerified, resendVerificationEmail, isLoading: authLoading } = useAuth();
   const { personalStats, roleStats, gameHistory, gameHistoryTotal, leaderboard, fetchLeaderboard, fetchPersonalStats, fetchRoleStats, fetchGameHistory } = useRecordGameResult();
   const { achievements, isLoading: achievementsLoading } = useAchievements();
   const { friends, friendRequests, searchResults, isLoading: friendsLoading, isSearching, sendFriendRequest, acceptFriendRequest, declineFriendRequest, removeFriend, searchFriends } = useFriends();
@@ -24,7 +40,6 @@ export default function ProfilePage() {
   const [resendError, setResendError] = useState<string | null>(null);
   const [resendSuccess, setResendSuccess] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
 
   const handleToggleMusic = () => {
@@ -38,30 +53,20 @@ export default function ProfilePage() {
     }
   };
 
-  // Redirect to home if not logged in
   useEffect(() => {
     if (!isLoggedIn) {
       setLocation("/");
       return;
     }
-    // Fetch personal stats, role stats, and leaderboard when page loads
     fetchPersonalStats();
     fetchRoleStats();
     fetchLeaderboard();
-    // Fetch game history (first page)
     fetchGameHistory(20, 0);
   }, [isLoggedIn, setLocation, fetchLeaderboard, fetchPersonalStats, fetchRoleStats, fetchGameHistory]);
 
-  if (!isLoggedIn) {
-    return null;
-  }
-
   const handleLogout = () => {
+    playSciFiClick();
     logout();
-    setLocation("/");
-  };
-
-  const handleBackHome = () => {
     setLocation("/");
   };
 
@@ -77,259 +82,209 @@ export default function ProfilePage() {
     }
   };
 
+  if (!isLoggedIn) return null;
+
   return (
-    <div className="min-h-screen text-white p-6 relative" style={{ background: "hsl(220 28% 4%)" }}>
-      {/* Hamburger Menu */}
+    <div className="min-h-screen text-white p-4 md:p-8 relative overflow-x-hidden" style={{ background: "hsl(220 28% 2%)" }}>
+      {/* Cinematic Overlays */}
+      <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-0" 
+        style={{ backgroundImage: "linear-gradient(#00f3ff 1px, transparent 1px), linear-gradient(90deg, #00f3ff 1px, transparent 1px)", backgroundSize: "60px 60px" }} 
+      />
+      <div className="fixed inset-0 pointer-events-none bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent animate-pulse" />
+
       <HamburgerMenu
         onShowSettings={() => setShowSettingsModal(true)}
-        onShowProfile={() => {}} // Already on profile page
-        onShowHowToPlay={() => setShowHowToPlay(true)}
+        onShowProfile={() => {}}
+        onShowHowToPlay={() => {}}
         musicOn={musicOn}
         onToggleMusic={handleToggleMusic}
         playSound={playSciFiClick}
       />
 
-      {/* Settings Modal */}
       <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
 
-      {/* Header */}
-      <div className="max-w-4xl mx-auto mb-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="font-orbitron font-bold text-4xl tracking-[0.3em] uppercase mb-2">
-              Player Profile
+      {/* --- HUD HEADER --- */}
+      <div className="max-w-6xl mx-auto mb-12 relative z-10">
+        <div className="flex flex-col md:flex-row items-end justify-between gap-6 pb-6 border-b border-white/10">
+          <div className="relative group">
+            <div className="absolute -left-6 top-1/2 -translate-y-1/2 w-1 h-12 bg-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.5)]" />
+            <h1 className="font-orbitron font-black text-4xl md:text-6xl tracking-[0.2em] uppercase mb-1 drop-shadow-sm">
+              Operator
             </h1>
-            <p className="font-orbitron text-lg tracking-[0.2em] uppercase" style={{ color: "hsl(185 100% 50%)" }}>
-              {username}
-            </p>
+            <div className="flex items-center gap-4">
+              <span className="font-mono text-cyan-400 text-lg tracking-[0.5em] uppercase">
+                {username}
+              </span>
+              <div className="flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-sm">
+                <div className={`w-2 h-2 rounded-full ${isVerified ? "bg-cyan-500 animate-pulse" : "bg-amber-500"}`} />
+                <span className="font-mono text-[9px] tracking-widest uppercase opacity-60">
+                  {isVerified ? "Identity Verified" : "Verification Pending"}
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="flex gap-3">
+
+          <div className="flex gap-4">
             <button
-              onClick={handleBackHome}
-              className="px-6 py-3 font-orbitron font-bold text-xs tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-150"
-              style={{
-                borderColor: "hsl(210 30% 35%)",
-                color: "hsl(210 30% 60%)",
-                background: "hsl(220 28% 9%)",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "hsl(210 30% 50%)";
-                e.currentTarget.style.color = "hsl(210 30% 80%)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "hsl(210 30% 35%)";
-                e.currentTarget.style.color = "hsl(210 30% 60%)";
-              }}
+              onClick={() => { playSciFiClick(); setLocation("/"); }}
+              className="px-8 py-3 font-orbitron text-[10px] tracking-[0.3em] uppercase border border-white/20 hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all"
             >
-              BACK HOME
+              Command Center
             </button>
             <button
               onClick={handleLogout}
-              className="px-6 py-3 font-orbitron font-bold text-xs tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-150"
-              style={{
-                borderColor: "hsl(0 75% 55%)",
-                color: "hsl(0 75% 65%)",
-                background: "hsl(220 28% 9%)",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "hsl(0 75% 70%)";
-                e.currentTarget.style.color = "hsl(0 75% 80%)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "hsl(0 75% 55%)";
-                e.currentTarget.style.color = "hsl(0 75% 65%)";
-              }}
+              className="px-8 py-3 font-orbitron text-[10px] tracking-[0.3em] uppercase border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all"
             >
-              LOGOUT
+              Sign Out
             </button>
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="h-px mb-8" style={{ background: "linear-gradient(90deg, hsl(210 30% 25%) 0%, hsl(210 30% 35%) 50%, hsl(210 30% 25%) 100%)" }} />
-
-        {/* Email Verification Banner */}
+        {/* Verification Warning HUD */}
         {!isVerified && (
-          <div className="rounded-lg p-4 mb-8 border-l-4" style={{ background: "hsl(40 90% 10%)", borderColor: "hsl(40 100% 50%)" }}>
-            <div className="flex items-center justify-between">
+          <div className="mt-6 p-6 bg-amber-500/5 border border-amber-500/20 rounded-sm flex flex-col md:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4">
+            <div className="flex items-center gap-4">
+              <div className="text-2xl text-amber-500">⚠️</div>
               <div>
-                <h3 className="font-orbitron font-bold text-sm tracking-[0.1em] uppercase mb-1" style={{ color: "hsl(40 100% 60%)" }}>
-                  ⚠️ Email Not Verified
-                </h3>
-                <p className="font-orbitron text-xs" style={{ color: "hsl(40 100% 50%)" }}>
-                  Check your inbox for a verification email or request a new one
-                </p>
-                {resendError && <p className="font-orbitron text-xs text-red-400 mt-2">{resendError}</p>}
-                {resendSuccess && <p className="font-orbitron text-xs text-cyan-400 mt-2">✓ Verification email sent!</p>}
+                <p className="font-orbitron text-xs tracking-widest uppercase text-amber-500 mb-1">Critical: Identity Desync Detected</p>
+                <p className="font-mono text-[10px] opacity-60 uppercase">Secure your connection via email link to unlock full operator privileges.</p>
+                {resendError && <p className="text-[10px] text-red-500 mt-2 font-mono">ERROR: {resendError.toUpperCase()}</p>}
+                {resendSuccess && <p className="text-[10px] text-cyan-400 mt-2 font-mono">LINK TRANSMITTED. CHECK TERMINAL.</p>}
               </div>
-              <button
-                onClick={handleResendVerificationEmail}
-                disabled={isLoading}
-                className="px-4 py-2 font-orbitron text-xs tracking-[0.1em] uppercase rounded border transition-all whitespace-nowrap ml-4 disabled:opacity-50"
-                style={{
-                  borderColor: "hsl(40 100% 50%)",
-                  color: "hsl(40 100% 60%)",
-                  background: "hsl(220 28% 12%)",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isLoading) {
-                    e.currentTarget.style.borderColor = "hsl(40 100% 70%)";
-                    e.currentTarget.style.color = "hsl(40 100% 70%)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "hsl(40 100% 50%)";
-                  e.currentTarget.style.color = "hsl(40 100% 60%)";
-                }}
-              >
-                {isLoading ? "SENDING..." : "RESEND"}
-              </button>
             </div>
+            <button
+              onClick={handleResendVerificationEmail}
+              disabled={authLoading}
+              className="px-6 py-2 bg-amber-500/10 border border-amber-500/40 text-amber-500 font-orbitron text-[10px] tracking-[0.2em] uppercase hover:bg-amber-500/20 transition-all disabled:opacity-30"
+            >
+              {authLoading ? "Transmitting..." : "Re-Initialize Link"}
+            </button>
           </div>
         )}
       </div>
 
-      {/* Stats Content */}
-      <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Personal Stats */}
-        <div className="rounded-lg p-6" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 25%)" }}>
-          <h2 className="font-orbitron font-bold text-xl tracking-[0.2em] uppercase mb-6" style={{ color: "hsl(185 100% 50%)" }}>
-            YOUR STATS
-          </h2>
-
-          <div className="space-y-4">
-            <div className="flex justify-between items-center pb-3 border-b" style={{ borderColor: "hsl(210 30% 20%)" }}>
-              <span className="font-orbitron text-sm tracking-[0.1em] uppercase" style={{ color: "hsl(210 30% 60%)" }}>
-                Games Played
-              </span>
-              <span className="font-orbitron font-bold text-lg" style={{ color: "hsl(210 30% 80%)" }}>
-                {personalStats?.gamesPlayed ?? 0}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center pb-3 border-b" style={{ borderColor: "hsl(210 30% 20%)" }}>
-              <span className="font-orbitron text-sm tracking-[0.1em] uppercase" style={{ color: "hsl(210 30% 60%)" }}>
-                Games Won
-              </span>
-              <span className="font-orbitron font-bold text-lg" style={{ color: "hsl(185 100% 50%)" }}>
-                {personalStats?.gamesWon ?? 0}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center pb-3 border-b" style={{ borderColor: "hsl(210 30% 20%)" }}>
-              <span className="font-orbitron text-sm tracking-[0.1em] uppercase" style={{ color: "hsl(210 30% 60%)" }}>
-                Games Lost
-              </span>
-              <span className="font-orbitron font-bold text-lg" style={{ color: "hsl(0 75% 60%)" }}>
-                {personalStats?.gamesLost ?? 0}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center pt-2">
-              <span className="font-orbitron text-sm tracking-[0.1em] uppercase" style={{ color: "hsl(210 30% 60%)" }}>
-                Win Rate
-              </span>
-              <span className="font-orbitron font-bold text-2xl" style={{ color: "hsl(270 70% 60%)" }}>
-                {(personalStats?.winRate ?? 0).toFixed(1)}%
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Leaderboard */}
-        <div className="rounded-lg p-6" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 25%)" }}>
-          <h2 className="font-orbitron font-bold text-xl tracking-[0.2em] uppercase mb-6" style={{ color: "hsl(185 100% 50%)" }}>
-            TOP PLAYERS
-          </h2>
-
-          <div className="space-y-2">
-            {leaderboard && leaderboard.length > 0 ? (
-              leaderboard.map((entry) => (
-                <div
-                  key={entry.userId}
-                  className="flex items-center justify-between p-3 rounded transition-all duration-150"
-                  style={{
-                    background: entry.userId === userId ? "hsl(270 70% 20%)" : "hsl(220 28% 12%)",
-                    border: entry.userId === userId ? "1px solid hsl(270 70% 50%)" : "1px solid hsl(210 30% 20%)",
-                  }}
-                >
-                  <div className="flex items-center gap-3 flex-1">
-                    <span className="font-orbitron font-bold w-6 text-center" style={{ color: entry.rank === 1 ? "hsl(55 100% 50%)" : entry.rank === 2 ? "hsl(210 30% 70%)" : entry.rank === 3 ? "hsl(25 100% 60%)" : "hsl(210 30% 60%)" }}>
-                      #{entry.rank}
-                    </span>
-                    <span className="font-orbitron text-sm" style={{ color: "hsl(210 30% 80%)" }}>
-                      {entry.username || "UNKNOWN"}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-right">
-                    <span className="font-orbitron text-xs" style={{ color: "hsl(210 30% 60%)" }}>
-                      {entry.gamesPlayed} games
-                    </span>
-                    <span className="font-orbitron font-bold text-sm" style={{ color: "hsl(270 70% 60%)" }}>
-                      {entry.winRate.toFixed(1)}%
-                    </span>
+      {/* --- MAIN GRID --- */}
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
+        
+        {/* LEFT COLUMN: PRIMARY STATS */}
+        <div className="lg:col-span-4 space-y-8">
+          {/* Identity HUD Card */}
+          <div className="p-8 relative bg-white/5 border border-white/10 backdrop-blur-md overflow-hidden">
+            <div className="absolute top-0 right-0 w-16 h-16 border-t border-r border-cyan-500/30" />
+            <h2 className="font-orbitron text-xs tracking-[0.4em] uppercase opacity-40 mb-8 border-b border-white/5 pb-2">Status Readout</h2>
+            
+            <div className="space-y-6">
+              <div>
+                <p className="font-mono text-[9px] text-white/30 uppercase mb-2">Operational Win Rate</p>
+                <div className="flex items-end gap-3">
+                  <span className="font-orbitron text-4xl text-cyan-400 drop-shadow-[0_0_10px_rgba(6,182,212,0.3)]">
+                    {(personalStats?.winRate ?? 0).toFixed(1)}%
+                  </span>
+                  <div className="flex-1 h-1 bg-white/10 mb-2 relative overflow-hidden">
+                    <div 
+                      className="absolute inset-y-0 left-0 bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)] transition-all duration-1000"
+                      style={{ width: `${personalStats?.winRate ?? 0}%` }}
+                    />
                   </div>
                 </div>
-              ))
-            ) : (
-              <p className="text-center py-8" style={{ color: "hsl(210 30% 50%)" }}>
-                Loading leaderboard...
-              </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
+                <div>
+                  <p className="font-mono text-[9px] text-white/30 uppercase mb-1">Engagements</p>
+                  <p className="font-orbitron text-xl">{personalStats?.gamesPlayed ?? 0}</p>
+                </div>
+                <div>
+                  <p className="font-mono text-[9px] text-white/30 uppercase mb-1">Successes</p>
+                  <p className="font-orbitron text-xl text-cyan-400">{personalStats?.gamesWon ?? 0}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Leaderboard Panel */}
+          <div className="bg-black/20 border border-white/5 p-6">
+            <h2 className="font-orbitron text-[10px] tracking-[0.4em] uppercase opacity-40 mb-6 flex justify-between items-center">
+              Global Standings
+              <span className="animate-pulse text-cyan-500">Live</span>
+            </h2>
+            <div className="space-y-2">
+              {leaderboard?.slice(0, 5).map((entry) => (
+                <div key={entry.userId} className={`p-3 border flex items-center justify-between transition-all ${entry.userId === userId ? "border-cyan-500/50 bg-cyan-500/5" : "border-white/5 bg-white/5"}`}>
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-[10px] w-4 opacity-40">#{entry.rank}</span>
+                    <span className="font-mono text-xs tracking-tight">{entry.username}</span>
+                  </div>
+                  <span className="font-mono text-[10px] text-cyan-400">{entry.winRate.toFixed(1)}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN: DETAILED DATA */}
+        <div className="lg:col-span-8 space-y-8">
+          
+          {/* Aggregate Stats Section */}
+          <div className="bg-white/5 border border-white/10 p-1">
+            <AggregateStats personalStats={personalStats} roleStats={roleStats} />
+          </div>
+
+          {/* Network (Friends) Node */}
+          <div className="p-8 bg-white/5 border border-white/10 relative">
+             <div className="absolute top-0 right-0 p-2 font-mono text-[8px] opacity-20">REL_ADDR: 0x21A</div>
+             <FriendsDisplay
+                friends={friends}
+                friendRequests={friendRequests}
+                isLoading={friendsLoading}
+                onRemoveFriend={removeFriend}
+                onAcceptRequest={acceptFriendRequest}
+                onDeclineRequest={declineFriendRequest}
+                onSendRequest={sendFriendRequest}
+                onSearchChange={searchFriends}
+                searchResults={searchResults}
+                isSearching={isSearching}
+              />
+          </div>
+
+          {/* Achievement Vault */}
+          <div className="bg-white/5 border border-white/10">
+            {achievements && (
+              <AchievementsDisplay
+                totalAchievements={achievements.totalAchievements}
+                unlockedCount={achievements.unlockedCount}
+                achievements={achievements.achievements}
+                isLoading={achievementsLoading}
+              />
             )}
+          </div>
+
+          {/* Historical Logs */}
+          <div className="bg-white/5 border border-white/10">
+             <GameHistoryDisplay
+              games={gameHistory}
+              canLoadMore={(historyPage + 1) * 20 < gameHistoryTotal}
+              onLoadMore={() => {
+                const nextPage = historyPage + 1;
+                setHistoryPage(nextPage);
+                fetchGameHistory(20, nextPage * 20);
+              }}
+            />
           </div>
         </div>
       </div>
 
-      {/* Aggregate Stats Display */}
-      <div className="max-w-4xl mx-auto">
-        <AggregateStats personalStats={personalStats} roleStats={roleStats} />
+      {/* Scanline Effect Overlay */}
+      <div className="fixed inset-0 pointer-events-none z-50 opacity-[0.05] overflow-hidden">
+        <div className="w-full h-1 bg-cyan-500 absolute -top-1 animate-[scan_8s_linear_infinite]" />
       </div>
 
-      {/* Achievements Display */}
-      {achievements && (
-        <div className="max-w-4xl mx-auto">
-          <AchievementsDisplay
-            totalAchievements={achievements.totalAchievements}
-            unlockedCount={achievements.unlockedCount}
-            achievements={achievements.achievements}
-            isLoading={achievementsLoading}
-          />
-        </div>
-      )}
-
-      {/* Friends Display */}
-      <div className="max-w-4xl mx-auto">
-        <FriendsDisplay
-          friends={friends}
-          friendRequests={friendRequests}
-          isLoading={friendsLoading}
-          onRemoveFriend={removeFriend}
-          onAcceptRequest={acceptFriendRequest}
-          onDeclineRequest={declineFriendRequest}
-          onSendRequest={sendFriendRequest}
-          onSearchChange={searchFriends}
-          searchResults={searchResults}
-          isSearching={isSearching}
-        />
-      </div>
-
-      {/* Role Stats Display */}
-      <div className="max-w-4xl mx-auto">
-        <RoleStatsDisplay roleStats={roleStats} />
-      </div>
-
-      {/* Game History Display */}
-      <div className="max-w-4xl mx-auto">
-        <GameHistoryDisplay
-          games={gameHistory}
-          canLoadMore={(historyPage + 1) * 20 < gameHistoryTotal}
-          onLoadMore={() => {
-            const nextPage = historyPage + 1;
-            setHistoryPage(nextPage);
-            fetchGameHistory(20, nextPage * 20);
-          }}
-        />
-      </div>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes scan {
+          from { top: -2%; }
+          to { top: 102%; }
+        }
+      `}} />
     </div>
   );
 }

@@ -181,7 +181,7 @@ router.get("/auth/me", authMiddleware, async (req: AuthRequest, res) => {
     }
 
     const users = await db
-      .select({ id: usersTable.id, email: usersTable.email, username: usersTable.username, createdAt: usersTable.createdAt })
+      .select({ id: usersTable.id, email: usersTable.email, username: usersTable.username, isVerified: usersTable.isVerified, createdAt: usersTable.createdAt })
       .from(usersTable)
       .where(eq(usersTable.id, req.userId))
       .limit(1);

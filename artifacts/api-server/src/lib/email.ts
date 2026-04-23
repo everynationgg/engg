@@ -46,46 +46,150 @@ export function generateVerificationEmailHTML(
   username: string,
   verificationLink: string
 ): string {
+  const brandColor = "#00f3ff";
+  const bgColor = "#05070a";
+  const surfaceColor = "#0c1016";
+  const borderColor = "#1a2431";
+  const textColor = "#a0aec0";
+
   return `
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: Arial, sans-serif; background-color: #0a0e27; color: #e0e0e0; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%); padding: 20px; border-radius: 8px; text-align: center; }
-    .header h1 { color: white; margin: 0; font-size: 24px; }
-    .content { background-color: #1a1f3a; padding: 20px; margin: 20px 0; border-radius: 8px; border: 1px solid #2a3f5f; }
-    .button { background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; margin: 20px 0; }
-    .footer { text-align: center; font-size: 12px; color: #888; margin-top: 30px; }
-    .warning { color: #ff6b6b; font-size: 12px; margin-top: 20px; }
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+    
+    body { 
+      margin: 0; 
+      padding: 0; 
+      background-color: ${bgColor}; 
+      font-family: 'JetBrains Mono', 'Courier New', Courier, monospace; 
+      color: ${textColor};
+    }
+    .wrapper { padding: 40px 20px; background-color: ${bgColor}; }
+    .container { 
+      max-width: 600px; 
+      margin: 0 auto; 
+      background-color: ${surfaceColor}; 
+      border: 1px solid ${borderColor};
+      position: relative;
+    }
+    .hud-header {
+      padding: 30px;
+      border-bottom: 1px solid ${borderColor};
+      text-align: left;
+      background: linear-gradient(90deg, rgba(0, 243, 255, 0.05) 0%, transparent 100%);
+    }
+    .hud-title {
+      color: ${brandColor};
+      margin: 0;
+      font-size: 14px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .hud-subtitle {
+      font-size: 10px;
+      color: #4a5568;
+      margin-top: 5px;
+      letter-spacing: 0.2em;
+    }
+    .content { padding: 40px 30px; }
+    .operator-id {
+      font-size: 12px;
+      color: ${brandColor};
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed ${borderColor};
+    }
+    .message {
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+    .action-zone {
+      text-align: center;
+      padding: 40px 0;
+      border-top: 1px solid ${borderColor};
+      border-bottom: 1px solid ${borderColor};
+      margin: 30px 0;
+    }
+    .btn-tactical {
+      display: inline-block;
+      padding: 18px 45px;
+      background-color: transparent;
+      color: ${brandColor} !important;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 12px;
+      letter-spacing: 0.3em;
+      border: 1px solid ${brandColor};
+      text-transform: uppercase;
+      box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+    }
+    .data-block {
+      background-color: #000;
+      padding: 15px;
+      border-left: 2px solid ${brandColor};
+      margin: 20px 0;
+      font-size: 11px;
+      color: #718096;
+      word-break: break-all;
+    }
+    .hud-footer {
+      padding: 20px 30px;
+      font-size: 10px;
+      color: #4a5568;
+      text-align: center;
+      letter-spacing: 0.1em;
+    }
+    .scanline {
+      height: 1px;
+      background: rgba(0, 243, 255, 0.1);
+      width: 100%;
+      margin: 5px 0;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>🛸 Verify Your Email</h1>
-    </div>
-    
-    <div class="content">
-      <p>Hello <strong>${username}</strong>,</p>
-      
-      <p>Thank you for creating an account! To get started, please verify your email address by clicking the button below:</p>
-      
-      <div style="text-align: center;">
-        <a href="${verificationLink}" class="button">VERIFY EMAIL</a>
+  <div class="wrapper">
+    <div class="container">
+      <div class="hud-header">
+        <h1 class="hud-title">Secure Transmission</h1>
+        <div class="hud-subtitle">ORIGIN: ERROR: NEWFORM_DETECTOR_NODE_01</div>
       </div>
       
-      <p>Or copy and paste this link in your browser:</p>
-      <p style="word-break: break-all; color: #888; font-size: 12px;">${verificationLink}</p>
-      
-      <div class="warning">
-        <p>This link will expire in 24 hours. If you didn't create this account, please ignore this email.</p>
+      <div class="content">
+        <div class="operator-id">SUBJECT ID: [ ${username.toUpperCase()} ]</div>
+        
+        <div class="message">
+          INITIALIZING BIOMETRIC LINK...<br>
+          ENCRYPTED IDENTITY HANDSHAKE DETECTED.<br><br>
+          WE REQUIRE FINAL SYNCHRONIZATION TO ESTABLISH YOUR OPERATOR STATUS ON THE NETWORK.
+        </div>
+        
+        <div class="action-zone">
+          <a href="${verificationLink}" class="btn-tactical">ESTABLISH LINK</a>
+        </div>
+        
+        <div class="message" style="font-size: 11px; color: #4a5568;">
+          IF THE BUTTON ABOVE FAILS TO INITIALIZE, MANUAL INPUT REQUIRED:
+        </div>
+        <div class="data-block">
+          ${verificationLink}
+        </div>
+
+        <div style="color: #ffaa00; font-size: 10px; margin-top: 40px; opacity: 0.8;">
+          [!] SECURITY WARNING: THIS LINK WILL DE-AUTHENTICATE IN 24 HOURS.<br>
+          UNAUTHORIZED ACCESS IS A BREACH OF LOCKDOWN PROTOCOL.
+        </div>
       </div>
-    </div>
-    
-    <div class="footer">
-      <p>&copy; 2026 ERROR: NEWFORM DETECTED. All rights reserved.</p>
+      
+      <div class="hud-footer">
+        PROTOCOL: LOCKDOWN // STATUS: PENDING_VERIFICATION // © 2026
+      </div>
     </div>
   </div>
 </body>
@@ -100,46 +204,133 @@ export function generatePasswordResetEmailHTML(
   username: string,
   resetLink: string
 ): string {
+  const brandColor = "#ffaa00"; // Warning Amber for reset
+  const bgColor = "#05070a";
+  const surfaceColor = "#0c1016";
+  const borderColor = "#2d2010";
+  const textColor = "#a0aec0";
+
   return `
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: Arial, sans-serif; background-color: #0a0e27; color: #e0e0e0; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #ff6b6b 0%, #ff9933 100%); padding: 20px; border-radius: 8px; text-align: center; }
-    .header h1 { color: white; margin: 0; font-size: 24px; }
-    .content { background-color: #1a1f3a; padding: 20px; margin: 20px 0; border-radius: 8px; border: 1px solid #2a3f5f; }
-    .button { background: linear-gradient(135deg, #ff6b6b 0%, #ff9933 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; margin: 20px 0; }
-    .footer { text-align: center; font-size: 12px; color: #888; margin-top: 30px; }
-    .warning { color: #ff6b6b; font-size: 12px; margin-top: 20px; }
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+    
+    body { 
+      margin: 0; 
+      padding: 0; 
+      background-color: ${bgColor}; 
+      font-family: 'JetBrains Mono', 'Courier New', Courier, monospace; 
+      color: ${textColor};
+    }
+    .wrapper { padding: 40px 20px; background-color: ${bgColor}; }
+    .container { 
+      max-width: 600px; 
+      margin: 0 auto; 
+      background-color: ${surfaceColor}; 
+      border: 1px solid ${borderColor};
+    }
+    .hud-header {
+      padding: 30px;
+      border-bottom: 1px solid ${borderColor};
+      text-align: left;
+      background: linear-gradient(90deg, rgba(255, 170, 0, 0.05) 0%, transparent 100%);
+    }
+    .hud-title {
+      color: ${brandColor};
+      margin: 0;
+      font-size: 14px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .content { padding: 40px 30px; }
+    .operator-id {
+      font-size: 12px;
+      color: ${brandColor};
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed ${borderColor};
+    }
+    .message {
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+    .action-zone {
+      text-align: center;
+      padding: 40px 0;
+      border-top: 1px solid ${borderColor};
+      border-bottom: 1px solid ${borderColor};
+      margin: 30px 0;
+    }
+    .btn-tactical {
+      display: inline-block;
+      padding: 18px 45px;
+      background-color: transparent;
+      color: ${brandColor} !important;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 12px;
+      letter-spacing: 0.3em;
+      border: 1px solid ${brandColor};
+      text-transform: uppercase;
+      box-shadow: 0 0 15px rgba(255, 170, 0, 0.1);
+    }
+    .data-block {
+      background-color: #000;
+      padding: 15px;
+      border-left: 2px solid ${brandColor};
+      margin: 20px 0;
+      font-size: 11px;
+      color: #718096;
+      word-break: break-all;
+    }
+    .hud-footer {
+      padding: 20px 30px;
+      font-size: 10px;
+      color: #4a5568;
+      text-align: center;
+      letter-spacing: 0.1em;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>🔓 Reset Your Password</h1>
-    </div>
-    
-    <div class="content">
-      <p>Hello <strong>${username}</strong>,</p>
-      
-      <p>We received a request to reset your password. Click the button below to set a new password:</p>
-      
-      <div style="text-align: center;">
-        <a href="${resetLink}" class="button">RESET PASSWORD</a>
+  <div class="wrapper">
+    <div class="container">
+      <div class="hud-header">
+        <h1 class="hud-title">Security Alert</h1>
       </div>
       
-      <p>Or copy and paste this link in your browser:</p>
-      <p style="word-break: break-all; color: #888; font-size: 12px;">${resetLink}</p>
-      
-      <div class="warning">
-        <p>This link will expire in 1 hour. If you didn't request a password reset, please ignore this email or contact us if you suspect unauthorized access.</p>
+      <div class="content">
+        <div class="operator-id">SUBJECT ID: [ ${username.toUpperCase()} ]</div>
+        
+        <div class="message">
+          PROTOCOL: PASSWORD_RESET_REQUESTED<br>
+          IDENTITY LOCK HAS BEEN OVERRIDDEN.<br><br>
+          A SECURE BYPASS CHANNEL HAS BEEN CREATED. USE THE COMMAND BELOW TO RE-ESTABLISH YOUR CREDENTIALS.
+        </div>
+        
+        <div class="action-zone">
+          <a href="${resetLink}" class="btn-tactical">OVERRIDE PASSWORD</a>
+        </div>
+        
+        <div class="data-block">
+          ${resetLink}
+        </div>
+
+        <div style="color: #ff6b6b; font-size: 10px; margin-top: 40px;">
+          [!] CRITICAL: THIS COMMAND EXPIRES IN 60 MINUTES.<br>
+          IF YOU DID NOT INITIATE THIS OVERRIDE, SECURE YOUR TERMINAL IMMEDIATELY.
+        </div>
       </div>
-    </div>
-    
-    <div class="footer">
-      <p>&copy; 2026 ERROR: NEWFORM DETECTED. All rights reserved.</p>
+      
+      <div class="hud-footer">
+        PROTOCOL: OVERRIDE // STATUS: AUTH_PENDING // © 2026
+      </div>
     </div>
   </div>
 </body>

@@ -12,6 +12,7 @@ interface AuthContextType {
   register: (email: string, username: string, password: string) => Promise<void>;
   logout: () => void;
   resendVerificationEmail: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   isLoading: boolean;
   isInitialized: boolean;
   error: string | null;
@@ -35,6 +36,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+
+  // Set up auth token getter for API client
+  useEffect(() => {
+    setAuthTokenGetter(() => token);
+  }, [token]);
+
+  const refreshUser = useCallback(async () => {
+    const currentToken = localStorage.getItem(STORAGE_KEY_TOKEN) || token;
+    if (!currentToken) return;
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${currentToken}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const newIsVerified = data.isVerified === true;
+        
+        setIsVerified(newIsVerified);
+        localStorage.setItem(STORAGE_KEY_IS_VERIFIED, String(newIsVerified));
+        
+        if (data.username) {
+          setUsername(data.username);
+          localStorage.setItem(STORAGE_KEY_USERNAME, data.username);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to refresh user:", err);
+    }
+  }, [token]);
+
   // Initialize from localStorage on mount
   useEffect(() => {
     const savedToken = localStorage.getItem(STORAGE_KEY_TOKEN);
@@ -42,6 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const savedUsername = localStorage.getItem(STORAGE_KEY_USERNAME);
     const savedEmail = localStorage.getItem(STORAGE_KEY_EMAIL);
     const savedIsVerified = localStorage.getItem(STORAGE_KEY_IS_VERIFIED) === "true";
+    
     if (savedToken && savedUserId) {
       setToken(savedToken);
       setUserId(savedUserId);
@@ -49,15 +83,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setEmail(savedEmail);
       setIsVerified(savedIsVerified);
       setIsLoggedIn(true);
+      
+      // Refresh user data from server to sync verification status
+      refreshUser();
     }
     // Always mark as initialized — including the logged-out/guest path
     setIsInitialized(true);
-  }, []);
-
-  // Set up auth token getter for API client
-  useEffect(() => {
-    setAuthTokenGetter(() => token);
-  }, [token]);
+  }, [refreshUser]);
 
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
@@ -77,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const newToken = data.token;
       const newUserId = data.id;
       const newUsername = data.username;
-      const newIsVerified = data.isVerified ?? false;
+      const newIsVerified = data.isVerified === true;
 
       // Save to localStorage
       localStorage.setItem(STORAGE_KEY_TOKEN, newToken);
@@ -122,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const newToken = data.token;
       const newUserId = data.id;
       const newUsername = data.username;
-      const newIsVerified = data.isVerified ?? false;
+      const newIsVerified = data.isVerified === true;
 
       // Save to localStorage
       localStorage.setItem(STORAGE_KEY_TOKEN, newToken);
@@ -204,6 +236,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         resendVerificationEmail,
+        refreshUser,
         isLoading,
         error,
         isInitialized,
