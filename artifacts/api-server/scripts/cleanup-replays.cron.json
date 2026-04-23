@@ -1,0 +1,5 @@
+{
+  "name": "cleanup-replays",
+  "script": "node ./artifacts/api-server/scripts/cleanup-replays.ts",
+  "schedule": "0 * * * *" // every hour
+}

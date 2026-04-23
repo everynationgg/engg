@@ -72,3 +72,6 @@ socket_dump.txt
 attached_assets/Pasted-*.txt
 attached_assets/image_*.png
 .vercel
+
+# Sentry Config File
+.env.sentry-build-plugin

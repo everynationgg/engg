@@ -5,6 +5,15 @@ import rateLimit from "express-rate-limit";
 import pinoHttp from "pino-http";
 import router from "./routes/index.js";
 import { logger } from "./lib/logger.js";
+import { logReplay } from "./replay-log";
+import * as Sentry from "@sentry/node";
+import i18next from "./i18n";
+import { BasicAIBot } from "./ai-bot";
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN || "",
+  tracesSampleRate: 1.0,
+});
 
 const app: Express = express();
 app.set("trust proxy", 1);
@@ -83,6 +92,16 @@ const authLimiter = rateLimit({
 app.use(globalLimiter);
 app.use("/api/auth", authLimiter);
 
+// Basic cheat detection middleware
+function detectCheat(req, res, next) {
+  // Example: Check for impossible moves or rate limits
+  // Log suspicious actions for review
+  // TODO: Expand with more rules as needed
+  next();
+}
+
+app.use(detectCheat);
+
 // Request logging
 app.use(
   pinoHttp({
@@ -109,10 +128,37 @@ app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 
 app.use("/api", router);
 
+// GDPR/CCPA endpoints
+app.get("/api/privacy/export", (req, res) => {
+  // TODO: Export user data
+  res.json({ message: "Data export not implemented yet." });
+});
+
+app.delete("/api/privacy/delete", (req, res) => {
+  // TODO: Delete user data
+  res.json({ message: "Data deletion not implemented yet." });
+});
+
 // Global error handler - never expose internal errors
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   logger.error({ err }, "Unhandled error");
   res.status(500).json({ error: "Internal server error" });
+});
+
+// Example: Call logReplay(gameId, replayData) at the end of each game session
+app.use(logReplay);
+
+// Example usage: i18next.t("welcome")
+// TODO: Integrate with API responses and UI
+
+// Example: Use BasicAIBot in game session logic where bots are needed
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api/games/")) {
+    const bot = new BasicAIBot();
+    bot.processRequest(req, res, next);
+  } else {
+    next();
+  }
 });
 
 export default app;

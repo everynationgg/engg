@@ -17,6 +17,10 @@
     "vite": "^5.x.x"
   },
   "dependencies": {
-    "@vercel/speed-insights": "^2.0.0"
+    "@sentry/nextjs": "^10.49.0",
+    "@sentry/node": "^10.49.0",
+    "@vercel/speed-insights": "^2.0.0",
+    "i18next": "^26.0.6",
+    "umami": "^2.10.0"
   }
 }
