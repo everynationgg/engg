@@ -437,6 +437,11 @@ export default function RoleConfigPage() {
       return;
     }
     setStartError(null);
+    // Debug log: print customRoles and player IDs before emitting
+    console.log("[DEBUG] Emitting start_game_custom", { sessionId: roomCode, customRoles, customDeck });
+    Object.entries(customRoles).forEach(([pid, role]) => {
+      console.log(`[DEBUG] PlayerID: ${pid}, Role: ${role}`);
+    });
     const socket = getSocket();
     socket.emit(
       "start_game_custom",
