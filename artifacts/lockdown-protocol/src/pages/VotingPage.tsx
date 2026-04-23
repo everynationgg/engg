@@ -56,6 +56,7 @@ export default function VotingPage() {
   const [secondsLeft, setSecondsLeft] = useState(60);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const typingTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const [roundSummary, setRoundSummary] = useState<{ voteTally: { voterName: string; targetName: string; isAbstain: boolean }[] } | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -132,7 +133,7 @@ export default function VotingPage() {
     const socket = getSocket();
     setMyId(socket.id ?? "");
 
-    const handlePhaseUpdate = (session: { phase: string; players: LivePlayer[]; votes?: Record<string, string> }) => {
+    const handlePhaseUpdate = (session: { phase: string; players: LivePlayer[]; votes?: Record<string, string>; roundSummary?: any }) => {
       const myPlayerId = sessionStorage.getItem("lp_playerId");
       const id = socket.id;
       setSessionPlayers(session.players.map((p) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === id })));
@@ -144,6 +145,7 @@ export default function VotingPage() {
         setWaitingCount(Object.keys(session.votes).length);
         setVoterIds(new Set(Object.keys(session.votes)));
       }
+      if (session.roundSummary) setRoundSummary(session.roundSummary);
       // GameShell handles phase navigation
     };
 
@@ -291,18 +293,39 @@ export default function VotingPage() {
           <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full blur-[120px]" style={{ background: "hsl(270 80% 55%)" }} />
         </div>
 
-        <div className="relative z-10 flex flex-col items-center px-6">
+        <div className="relative z-10 flex flex-col items-center px-6 w-full max-w-lg">
           <div className="font-orbitron text-5xl lg:text-7xl font-black tracking-[0.3em] uppercase mb-4 text-center" style={{ color: accentLight, textShadow: `0 0 30px ${accentGlow}` }}>
             SPECTATOR
           </div>
           <div className="h-1 w-24 mb-8" style={{ background: accentColor, boxShadow: `0 0 15px ${accentGlow}` }} />
           
-          <div className="font-orbitron text-xl lg:text-2xl tracking-[0.2em] uppercase mb-6 text-center" style={{ color: "hsl(185 100% 50% / 0.8)" }}>
-            OBSERVATION LINK ACTIVE
+          <div className="font-orbitron text-sm tracking-[0.2em] uppercase mb-6 text-center text-cyan-400 opacity-80">
+            LIVE VOTING FEED
+          </div>
+
+          <div className="w-full flex flex-col gap-2 mb-8">
+            {roundSummary && roundSummary.voteTally.length > 0 ? (
+              roundSummary.voteTally.map((entry, idx) => (
+                <div 
+                  key={idx} 
+                  className="flex items-center justify-between px-4 py-2 rounded border border-cyan-500/20 bg-cyan-500/5 backdrop-blur-sm"
+                >
+                  <span className="font-orbitron text-xs font-bold text-cyan-100">{entry.voterName}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-cyan-700 uppercase tracking-tighter">Voted for</span>
+                    <span className="font-orbitron text-xs font-bold text-cyan-400">{entry.isAbstain ? "ABSTAIN" : entry.targetName}</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-4 border border-dashed border-cyan-500/20 rounded text-cyan-800 text-xs uppercase tracking-widest">
+                Waiting for incoming data...
+              </div>
+            )}
           </div>
           
-          <div className="text-base lg:text-lg text-center max-w-xl leading-relaxed font-light tracking-wide italic" style={{ color: "hsl(210 30% 75%)", fontFamily: "'Exo 2', sans-serif" }}>
-            "You see the strings, but you cannot pull them. Watch as the crew attempts to identify the anomaly before the countdown reaches zero."
+          <div className="text-sm lg:text-base text-center leading-relaxed font-light tracking-wide italic" style={{ color: "hsl(210 30% 75%)", fontFamily: "'Exo 2', sans-serif" }}>
+            "You see the strings, but you cannot pull them. Monitor the consensus as the crew attempts to identify the anomaly."
           </div>
           
           <div className="mt-12 flex items-center gap-4 text-[10px] tracking-[0.4em] uppercase opacity-40">

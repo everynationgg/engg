@@ -41,6 +41,7 @@ export default function DiscussionPage() {
   const [roleCounts, setRoleCounts] = useState<Record<string, number>>({});
   const [rolesAssigned, setRolesAssigned] = useState<Record<string, string>>({});
   const [initialRoles, setInitialRoles] = useState<Record<string, string>>({});
+  const [roundSummary, setRoundSummary] = useState<{ abilityLog: { actorName: string; event: string }[] } | null>(null);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
@@ -142,7 +143,7 @@ export default function DiscussionPage() {
   useEffect(() => {
     const socket = getSocket();
 
-    const handlePhaseUpdate = (session: { phase: string; players: LivePlayer[]; roleCounts?: Record<string, number>; rolesAssigned?: Record<string, string>; initialRoles?: Record<string, string> }) => {
+    const handlePhaseUpdate = (session: { phase: string; players: LivePlayer[]; roleCounts?: Record<string, number>; rolesAssigned?: Record<string, string>; initialRoles?: Record<string, string>; roundSummary?: any }) => {
       const myPlayerId = sessionStorage.getItem("lp_playerId");
       const myId = socket.id;
       setSessionPlayers(session.players.map((p) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === myId })));
@@ -150,6 +151,7 @@ export default function DiscussionPage() {
       if (session.roleCounts) setRoleCounts(session.roleCounts);
       if (session.rolesAssigned) setRolesAssigned(session.rolesAssigned);
       if (session.initialRoles) setInitialRoles(session.initialRoles);
+      if (session.roundSummary) setRoundSummary(session.roundSummary);
       
       const me = session.players.find((p) => myPlayerId ? p.playerId === myPlayerId : p.id === myId);
       if (me) setIsHost(me.isHost);
@@ -186,7 +188,7 @@ export default function DiscussionPage() {
 
     // Shared sync function: fetches latest session and updates local state
     const syncSession = () => {
-      socket.emit("get_session", { sessionId: roomCode }, (resp: { success: boolean; session?: { phase: string; players: LivePlayer[]; orbitFeedback?: Record<string, unknown>; roleCounts?: Record<string, number>; rolesAssigned?: Record<string, string>; initialRoles?: Record<string, string> } }) => {
+      socket.emit("get_session", { sessionId: roomCode }, (resp: { success: boolean; session?: { phase: string; players: LivePlayer[]; orbitFeedback?: Record<string, unknown>; roleCounts?: Record<string, number>; rolesAssigned?: Record<string, string>; initialRoles?: Record<string, string>; roundSummary?: any } }) => {
         if (resp.success && resp.session) {
           const myPlayerId = sessionStorage.getItem("lp_playerId");
           const myId = socket.id;
@@ -200,6 +202,7 @@ export default function DiscussionPage() {
           if (resp.session.roleCounts) setRoleCounts(resp.session.roleCounts);
           if (resp.session.rolesAssigned) setRolesAssigned(resp.session.rolesAssigned);
           if (resp.session.initialRoles) setInitialRoles(resp.session.initialRoles);
+        if (resp.session.roundSummary) setRoundSummary(resp.session.roundSummary);
 
           // Fallback: if orbit result wasn't received via socket, read from session
           if (!orbitResultState && myId && resp.session.orbitFeedback?.[myId]) {
@@ -287,9 +290,12 @@ export default function DiscussionPage() {
         <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
         <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
 
-        <div className="w-full px-6 py-3 flex items-center justify-between border-b shrink-0" style={{ background: "hsl(220 28% 7%)", borderColor: "hsl(185 100% 50% / 0.2)" }}>
-          <div className="font-orbitron font-black text-lg tracking-widest uppercase leading-none" style={{ color: "hsl(185 100% 70%)" }}>
-            OBSERVER LINK
+        <div className="w-full px-6 py-3 flex items-center justify-between border-b shrink-0" style={{ background: "hsl(220 28% 7%)", borderColor: "hsl(185 100% 50% / 0.3)", boxShadow: "0 0 15px hsl(185 100% 50% / 0.1)" }}>
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            <div className="font-orbitron font-black text-lg tracking-[0.2em] uppercase leading-none" style={{ color: "hsl(185 100% 70%)", textShadow: "0 0 10px hsl(185 100% 50% / 0.5)" }}>
+              OBSERVER LINK: ACTIVE
+            </div>
           </div>
           <div className="text-right">
             <div className="text-xs tracking-widest uppercase mb-1 flex items-center justify-end gap-2" style={{ color: "hsl(210 30% 50%)" }}>
@@ -321,11 +327,42 @@ export default function DiscussionPage() {
             </div>
           </div>
 
-          <div className="rounded-md p-4" style={{ background: "hsl(220 28% 12%)", border: "1px solid hsl(185 100% 50% / 0.2)" }}>
+          <div className="rounded-md p-4" style={{ background: "hsl(220 28% 12% / 0.6)", border: "1px solid hsl(185 100% 50% / 0.2)", backdropFilter: "blur(8px)" }}>
+            <div className="font-orbitron text-[10px] tracking-[0.3em] uppercase mb-2 text-cyan-400 opacity-70">Observer Protocol</div>
             <p className="text-sm leading-relaxed" style={{ color: "hsl(190 60% 78%)", fontFamily: "'Exo 2', sans-serif" }}>
               The crew is currently discussing the results of the orbit. <br />
-              As an observer, you can see the roles in play and monitor the conversation, but you cannot influence the outcome.
+              As an observer, you have full access to current roles and ability logs. Monitor the deliberation to identify patterns and deception.
             </p>
+          </div>
+
+          {/* Ability Phase Summary for Spectators */}
+          <div className="rounded-md p-4" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 18%)" }}>
+            <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(270 70% 60%)" }}>
+              ABILITY PHASE SUMMARY (INTEL)
+            </div>
+            {roundSummary && roundSummary.abilityLog.length > 0 ? (
+              <div className="flex flex-col gap-1.5">
+                {roundSummary.abilityLog.map((entry, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-start gap-2 px-2 py-1.5 rounded"
+                    style={{ background: "hsl(220 28% 12%)", border: "1px solid hsl(210 30% 16%)" }}
+                  >
+                    <span className="font-orbitron text-xs font-bold shrink-0 mt-0.5" style={{ color: "hsl(270 50% 50%)" }}>
+                      {String(idx + 1).padStart(2, "0")}
+                    </span>
+                    <span style={{ color: "hsl(190 60% 80%)", fontFamily: "'Exo 2', sans-serif", fontSize: "0.75rem", lineHeight: "1.4" }}>
+                      <span className="font-bold" style={{ color: "hsl(190 80% 90%)" }}>{entry.actorName}</span>
+                      {" "}{entry.event}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm" style={{ color: "hsl(210 30% 40%)", fontFamily: "'Exo 2', sans-serif" }}>
+                No ability events were recorded this round.
+              </p>
+            )}
           </div>
 
           {Object.keys(roleCounts).length > 0 && (

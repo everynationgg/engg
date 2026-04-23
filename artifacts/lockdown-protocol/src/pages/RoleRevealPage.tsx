@@ -29,12 +29,14 @@ export default function RoleRevealPage() {
   const [readyCount, setReadyCount] = useState(0);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
+  const [sessionPlayers, setSessionPlayers] = useState<any[]>([]);
   const [isHost, setIsHost] = useState(false);
+  const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
+  const [rolesAssigned, setRolesAssigned] = useState<Record<string, string>>({});
+  const [initialRoles, setInitialRoles] = useState<Record<string, string>>({});
   const [livePlayers, setLivePlayers] = useState<any[]>([]);
   const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
   const [selectedRouterDestId, setSelectedRouterDestId] = useState<string | null>(null);
-  const [rolesAssigned, setRolesAssigned] = useState<Record<string, string>>({});
 
   // Defensive: Only compute after state is initialized
   const role = getAssignedRole();
@@ -56,8 +58,6 @@ export default function RoleRevealPage() {
     return () => clearTimeout(t1);
   }, [isAlien]);
 
-  // (Removed duplicate state declarations)
-
   const playerName = getPlayerName();
   const totalPlayers = getTotalPlayers();
   const roomCode = sessionStorage.getItem("lp_roomCode") || "";
@@ -70,12 +70,11 @@ export default function RoleRevealPage() {
       }
       if (session.players) {
         setLivePlayers(session.players);
+        setSessionPlayers(session.players.map((p: any) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === socket.id })));
       }
-      if (session.rolesAssigned) {
-        setRolesAssigned(session.rolesAssigned);
-      }
+      if (session.rolesAssigned) setRolesAssigned(session.rolesAssigned);
+      if (session.initialRoles) setInitialRoles(session.initialRoles);
 
-      const myPlayerId = sessionStorage.getItem("lp_playerId");
       const me = session.players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === socket.id);
       if (me) setIsHost(me.isHost);
       // Clear orbit cache when transitioning to orbit (GameShell handles navigation)
@@ -102,11 +101,11 @@ export default function RoleRevealPage() {
           }
           if (resp.session.players) {
             setLivePlayers(resp.session.players);
+            setSessionPlayers(resp.session.players.map((p: any) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === socket.id })));
           }
-          if (resp.session.rolesAssigned) {
-            setRolesAssigned(resp.session.rolesAssigned);
-          }
-          const myPlayerId = sessionStorage.getItem("lp_playerId");
+          if (resp.session.rolesAssigned) setRolesAssigned(resp.session.rolesAssigned);
+          if (resp.session.initialRoles) setInitialRoles(resp.session.initialRoles);
+          
           const me = resp.session.players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === socket.id);
           if (me) setIsHost(me.isHost);
         }
@@ -245,9 +244,48 @@ export default function RoleRevealPage() {
           <div className="font-orbitron text-lg lg:text-2xl tracking-widest uppercase mb-4" style={{ color: "hsl(210 30% 60%)" }}>
             You are observing this game
           </div>
-          <div className="text-base lg:text-lg text-center max-w-xl" style={{ color: "hsl(210 30% 70%)" }}>
+          <div className="text-base lg:text-lg text-center max-w-xl mb-12" style={{ color: "hsl(210 30% 70%)" }}>
             You can watch all phases but cannot participate in actions or voting.<br />Sit back, relax, and enjoy the show!
           </div>
+
+          {Object.keys(rolesAssigned).length > 0 && (
+            <div className="w-full max-w-md rounded-md p-4" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 18%)" }}>
+              <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-4 font-bold text-center" style={{ color: "hsl(185 100% 70%)" }}>
+                IDENTIFIED SUBJECTS
+              </div>
+              <div className="flex flex-col gap-1.5">
+                {sessionPlayers.map((p) => {
+                  const roleId = rolesAssigned[p.id];
+                  if (!roleId || roleId === "spectator") return null;
+
+                  const r = ROLES.find((x) => x.id === roleId);
+                  const isAlienTeam = r?.team === "alien";
+                  const isChaotic = r?.team === "chaotic";
+                  const teamColor = isAlienTeam ? "hsl(0 75% 60%)" : isChaotic ? "hsl(300 70% 65%)" : "hsl(185 100% 65%)";
+
+                  return (
+                    <div
+                      key={p.id}
+                      className="flex items-center justify-between px-3 py-2 rounded gap-2"
+                      style={{ background: "hsl(220 28% 12%)", border: "1px solid hsl(210 30% 16%)" }}
+                    >
+                      <div className="flex items-center gap-3">
+                        {r && (
+                          <img src={r.image} alt={r.name} className="w-8 h-8 rounded object-cover shrink-0" loading="lazy" style={{ border: "1px solid hsl(210 30% 22%)" }} />
+                        )}
+                        <span className="font-orbitron text-sm tracking-wide uppercase truncate" style={{ color: "hsl(190 80% 90%)" }}>
+                          {p.name}
+                        </span>
+                      </div>
+                      <span className="font-orbitron text-xs uppercase font-bold" style={{ color: teamColor }}>
+                        {r?.name?.toUpperCase() ?? roleId.toUpperCase()}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );

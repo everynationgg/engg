@@ -1872,13 +1872,18 @@ export function computeSanitizedState(state: GameState, viewerSocketId: string):
       }
     }
     
-    // 3. Spectator Visibility: Spectators see ALL roles
+    // 3. Spectator Visibility: Spectators see ALL roles and full round summary
     if (viewer?.isSpectator) {
       sanitized.rolesAssigned = { ...state.rolesAssigned };
       sanitized.initialRoles = { ...state.initialRoles };
+      // Spectators see the full round summary (ability logs) even before the result phase
+      sanitized.roundSummary = state.roundSummary;
     } else {
       sanitized.rolesAssigned = sanitizedRoles;
       sanitized.initialRoles = {}; // Hide everyone else's initial roles
+      
+      // Regular players ONLY see the round summary in the result phase
+      sanitized.roundSummary = { abilityLog: [], voteTally: [], voteCounts: [] };
     }
   }
 
