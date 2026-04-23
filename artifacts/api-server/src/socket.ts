@@ -169,13 +169,13 @@ const sessionOnlySchema = z.object({
 const startGameSchema = z.object({
   sessionId: sessionIdSchema,
   roleCounts: z.record(z.string().max(50), z.number().int().min(0).max(20)),
-  customRoles: z.record(z.string().uuid(), z.string().max(50)).optional(),
+  customRoles: z.record(z.string().max(128), z.string().max(50)).optional(),
 });
 
 // Schema for custom game start (custom player roles + custom deck)
 const startGameCustomSchema = z.object({
   sessionId: sessionIdSchema,
-  customRoles: z.record(z.string().uuid(), z.string().max(50)),
+  customRoles: z.record(z.string().max(128), z.string().max(50)),
   customDeck: z.array(z.string().max(50)).length(3),
 });
 

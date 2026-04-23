@@ -924,10 +924,11 @@ export default function RoleConfigPage() {
                 value={customRoles[player.id] || ""}
                 onChange={e => setCustomRoles(r => ({ ...r, [player.id]: e.target.value }))}
               >
-                <option value="">Unassigned</option>
+                <option value="">— Assign a role —</option>
                 {ROLES.map(role => (
                   <option key={role.id} value={role.id}>{role.name}</option>
                 ))}
+                <option value="spectator">Spectator</option>
               </select>
             </div>
           ))}
@@ -941,7 +942,7 @@ export default function RoleConfigPage() {
                   value={customDeck[idx]}
                   onChange={e => handleCustomDeckChange(idx, e.target.value)}
                 >
-                  <option value="">Unassigned</option>
+                  <option value="">— Assign a role —</option>
                   {ROLES.map(role => (
                     <option key={role.id} value={role.id}>{role.name}</option>
                   ))}
