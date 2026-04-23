@@ -427,6 +427,13 @@ export function acknowledgeRole(
     state.roleAcknowledgements.push(playerId);
   }
   if (revealAction) {
+    // Prevent reveal-phase roles (Virus, Router) from targeting spectators
+    for (const tId of (revealAction.targets || [])) {
+      const targetPlayer = state.players.find(p => p.id === tId);
+      if (targetPlayer && targetPlayer.isSpectator) {
+        return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "cannot target spectators" };
+      }
+    }
     state.revealActions[playerId] = revealAction;
   }
 
@@ -533,6 +540,16 @@ export function submitAction(
   }
   if (!state.players.some((p) => p.id === playerId)) {
     return { accepted: false, allSubmitted: false, error: "not in session" };
+  }
+
+  // Prevent targeting spectators in Orbit phase
+  for (const tId of (action.targets || [])) {
+    // Center cards are not players
+    if (tId.startsWith("center_")) continue;
+    const targetPlayer = state.players.find(p => p.id === tId);
+    if (targetPlayer && targetPlayer.isSpectator) {
+      return { accepted: false, allSubmitted: false, error: "cannot target spectators" };
+    }
   }
 
   submitActionInternal(state, playerId, action);
@@ -1027,6 +1044,9 @@ export function castVote(
     const targetPlayer = state.players.find((p) => p.id === targetId);
     if (!targetPlayer) {
       return { accepted: false, votingComplete: false, error: "invalid target" };
+    }
+    if (targetPlayer.isSpectator) {
+      return { accepted: false, votingComplete: false, error: "cannot target spectators" };
     }
   }
 

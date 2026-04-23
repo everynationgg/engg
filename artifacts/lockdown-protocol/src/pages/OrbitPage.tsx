@@ -314,8 +314,8 @@ export default function OrbitPage() {
   }, [submitAction]);
 
 
-  // Other players for target selection (exclude self)
-  const otherPlayers = sessionPlayers.filter((p) => !p.isYou);
+  // Other players for target selection (exclude self and spectators)
+  const otherPlayers = sessionPlayers.filter((p) => !p.isYou && !p.isSpectator);
 
   // ── Render ────────────────────────────────────────────────────────────────
   if (role.id === "spectator") {

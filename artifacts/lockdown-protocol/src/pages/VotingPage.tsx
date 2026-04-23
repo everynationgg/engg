@@ -215,7 +215,7 @@ export default function VotingPage() {
     });
   }, [roomCode]);
 
-  const activePlayers = sessionPlayers.filter(isPlayerConnected);
+  const activePlayers = sessionPlayers.filter(p => isPlayerConnected(p) && !p.isSpectator);
   const totalPlayers = activePlayers.length;
   const votesIn = waitingCount;
   const pendingVoters = activePlayers.filter((p) => !voterIds.has(p.id));
