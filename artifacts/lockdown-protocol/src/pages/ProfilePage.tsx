@@ -89,61 +89,86 @@ export default function ProfilePage() {
       <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
 
       {/* --- HUD HEADER --- */}
-      <div className="max-w-6xl mx-auto mb-12 relative z-10">
-        <div className="flex flex-col md:flex-row items-end justify-between gap-6 pb-6 border-b border-white/10">
+      <div className="max-w-6xl mx-auto mb-16 relative z-10">
+        <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-10 pb-10 border-b border-white/5 relative">
+          {/* Decorative HUD line */}
+          <div className="absolute bottom-0 left-0 w-1/3 h-[2px] bg-cyan-500/50 shadow-[0_0_15px_rgba(0,243,255,0.3)]" />
+          
           <div className="relative group">
-            <div className="absolute -left-6 top-1/2 -translate-y-1/2 w-1 h-12 bg-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.5)]" />
-            <h1 className="font-orbitron font-black text-4xl md:text-6xl tracking-[0.2em] uppercase mb-1 drop-shadow-sm">
-              Operator
-            </h1>
-            <div className="flex items-center gap-4">
-              <span className="font-mono text-cyan-400 text-lg tracking-[0.5em] uppercase">
+            <div className="flex items-center gap-6 mb-4">
+               <div className="w-1.5 h-12 bg-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.6)]" />
+               <div>
+                  <h1 className="font-orbitron font-black text-5xl md:text-7xl tracking-[0.3em] uppercase leading-none drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                    Operator
+                  </h1>
+                  <p className="font-mono text-[10px] tracking-[0.5em] uppercase opacity-30 mt-2">Authenticated_Session_Active</p>
+               </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-6">
+              <span className="font-mono text-cyan-400 text-2xl tracking-[0.4em] uppercase border-b border-cyan-500/20 pb-1">
                 {username}
               </span>
-              <div className="flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-sm">
-                <div className={`w-2 h-2 rounded-full ${isVerified ? "bg-cyan-500 animate-pulse" : "bg-amber-500"}`} />
-                <span className="font-mono text-[9px] tracking-widest uppercase opacity-60">
-                  {isVerified ? "Identity Verified" : "Verification Pending"}
-                </span>
+              
+              {/* Premium Verification Stamp */}
+              <div className={`relative px-6 py-2 flex items-center gap-3 overflow-hidden transition-all duration-500 ${isVerified ? "bg-cyan-500/10 border border-cyan-500/30" : "bg-amber-500/10 border border-amber-500/30"}`}>
+                 {/* Stamp HUD Brackets */}
+                 <div className={`absolute top-0 left-0 w-2 h-2 border-t border-l ${isVerified ? "border-cyan-400" : "border-amber-400"}`} />
+                 <div className={`absolute top-0 right-0 w-2 h-2 border-t border-r ${isVerified ? "border-cyan-400" : "border-amber-400"}`} />
+                 <div className={`absolute bottom-0 left-0 w-2 h-2 border-b border-l ${isVerified ? "border-cyan-400" : "border-amber-400"}`} />
+                 <div className={`absolute bottom-0 right-0 w-2 h-2 border-b border-r ${isVerified ? "border-cyan-400" : "border-amber-400"}`} />
+                 
+                 <div className={`w-2 h-2 rounded-full ${isVerified ? "bg-cyan-400 shadow-[0_0_10px_#00f3ff] animate-pulse" : "bg-amber-400 shadow-[0_0_10px_#ffaa00]"}`} />
+                 <span className={`font-orbitron text-[9px] font-bold tracking-[0.3em] uppercase ${isVerified ? "text-cyan-400" : "text-amber-400"}`}>
+                   {isVerified ? "Identity_Certified" : "Identity_Unverified"}
+                 </span>
               </div>
             </div>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4 w-full lg:w-auto">
             <button
               onClick={() => { playSciFiClick(); setLocation("/"); }}
-              className="px-8 py-3 font-orbitron text-[10px] tracking-[0.3em] uppercase border border-white/20 hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all"
+              className="flex-1 lg:flex-none px-10 py-4 bg-white/5 border border-white/10 text-white/60 font-orbitron text-[10px] tracking-[0.4em] uppercase hover:bg-cyan-500/10 hover:border-cyan-500/40 hover:text-cyan-400 transition-all group relative overflow-hidden"
             >
-              Command Center
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+              HQ_Terminal
             </button>
             <button
               onClick={handleLogout}
-              className="px-8 py-3 font-orbitron text-[10px] tracking-[0.3em] uppercase border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all"
+              className="flex-1 lg:flex-none px-10 py-4 bg-red-500/5 border border-red-500/20 text-red-400/60 font-orbitron text-[10px] tracking-[0.4em] uppercase hover:bg-red-500/10 hover:border-red-500/40 hover:text-red-400 transition-all"
             >
-              Sign Out
+              Terminate_Session
             </button>
           </div>
         </div>
 
         {/* Verification Warning HUD */}
         {!isVerified && (
-          <div className="mt-6 p-6 bg-amber-500/5 border border-amber-500/20 rounded-sm flex flex-col md:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4">
-            <div className="flex items-center gap-4">
-              <div className="text-2xl text-amber-500">⚠️</div>
-              <div>
-                <p className="font-orbitron text-xs tracking-widest uppercase text-amber-500 mb-1">Critical: Identity Desync Detected</p>
-                <p className="font-mono text-[10px] opacity-60 uppercase">Secure your connection via email link to unlock full operator privileges.</p>
-                {resendError && <p className="text-[10px] text-red-500 mt-2 font-mono">ERROR: {resendError.toUpperCase()}</p>}
-                {resendSuccess && <p className="text-[10px] text-cyan-400 mt-2 font-mono">LINK TRANSMITTED. CHECK TERMINAL.</p>}
+          <div className="mt-8 p-8 bg-amber-500/5 border border-amber-500/10 relative overflow-hidden group animate-in fade-in slide-in-from-top-4">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,170,0,0.05),transparent)] opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+              <div className="flex items-center gap-6">
+                <div className="w-12 h-12 flex items-center justify-center border border-amber-500/30 bg-amber-500/10 rounded-full animate-pulse text-amber-500">
+                   ⚠️
+                </div>
+                <div>
+                  <h3 className="font-orbitron text-sm tracking-[0.3em] uppercase text-amber-500 mb-2">Critical: Identity Desync Detected</h3>
+                  <p className="font-mono text-[10px] opacity-40 uppercase tracking-widest leading-relaxed max-w-xl">
+                    Secure your connection via encrypted email handshake to unlock full operator privileges and global classification data.
+                  </p>
+                  {resendError && <p className="text-[10px] text-red-500 mt-3 font-mono border-l-2 border-red-500 pl-3 uppercase tracking-tighter">Handshake_Error: {resendError}</p>}
+                  {resendSuccess && <p className="text-[10px] text-cyan-400 mt-3 font-mono border-l-2 border-cyan-500 pl-3 uppercase tracking-tighter">Link_Transmitted. Check_Terminal.</p>}
+                </div>
               </div>
+              <button
+                onClick={handleResendVerificationEmail}
+                disabled={authLoading}
+                className="w-full md:w-auto px-10 py-4 bg-amber-500/10 border border-amber-500/40 text-amber-500 font-orbitron text-[10px] tracking-[0.4em] uppercase hover:bg-amber-500/20 transition-all disabled:opacity-20 relative overflow-hidden"
+              >
+                {authLoading ? "Synchronizing..." : "Re-Initialize_Link"}
+              </button>
             </div>
-            <button
-              onClick={handleResendVerificationEmail}
-              disabled={authLoading}
-              className="px-6 py-2 bg-amber-500/10 border border-amber-500/40 text-amber-500 font-orbitron text-[10px] tracking-[0.2em] uppercase hover:bg-amber-500/20 transition-all disabled:opacity-30"
-            >
-              {authLoading ? "Transmitting..." : "Re-Initialize Link"}
-            </button>
           </div>
         )}
       </div>

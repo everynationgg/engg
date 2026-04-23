@@ -11,7 +11,7 @@ export default function VerifyEmailPage() {
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   const addLog = (msg: string) => {
-    setLogs(prev => [...prev, `> ${msg}`].slice(-8));
+    setLogs(prev => [...prev, `> ${msg}`].slice(-10));
   };
 
   useEffect(() => {
@@ -31,8 +31,9 @@ export default function VerifyEmailPage() {
 
       try {
         addLog("DECRYPTING IDENTITY TOKEN...");
-        await new Promise(r => setTimeout(r, 800)); // Cinematic delay
+        await new Promise(r => setTimeout(r, 1000));
         addLog("ESTABLISHING ENCRYPTED LINK...");
+        await new Promise(r => setTimeout(r, 800));
         
         const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify-email`, {
           method: "POST",
@@ -44,11 +45,12 @@ export default function VerifyEmailPage() {
           addLog("HANDSHAKE SUCCESSFUL.");
           addLog("SYNCHRONIZING OPERATOR DATA...");
           setStatus("success");
-          refreshUser();
+          await refreshUser();
           
           setTimeout(() => {
+            addLog("IDENTITY_SYNC_COMPLETE.");
             addLog("REDIRECTING TO COMMAND CENTER...");
-            setTimeout(() => setLocation("/profile"), 1000);
+            setTimeout(() => setLocation("/profile"), 1500);
           }, 1500);
         } else {
           const data = await response.json();
@@ -63,97 +65,113 @@ export default function VerifyEmailPage() {
     };
 
     verifyEmail();
-  }, [setLocation]);
+  }, [setLocation, refreshUser]);
 
   return (
-    <div className="min-h-screen text-white p-6 flex items-center justify-center overflow-hidden" style={{ background: "hsl(220 28% 2%)" }}>
-      {/* Background Grid Effect */}
+    <div className="min-h-screen text-white p-6 flex flex-col items-center justify-center overflow-hidden" style={{ background: "hsl(220 30% 2%)" }}>
+      {/* Background HUD elements */}
       <div className="absolute inset-0 opacity-10 pointer-events-none" 
         style={{ 
           backgroundImage: "linear-gradient(hsl(185 100% 50% / 0.1) 1px, transparent 1px), linear-gradient(90deg, hsl(185 100% 50% / 0.1) 1px, transparent 1px)",
-          backgroundSize: "40px 40px"
+          backgroundSize: "60px 60px"
         }} 
       />
+      
+      {/* Scanning lines */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+         <div className="absolute inset-x-0 h-1/4 bg-gradient-to-b from-cyan-500/0 via-cyan-500/5 to-cyan-500/0 -top-full animate-[scan-slow_8s_linear_infinite]" />
+      </div>
 
-      <div className="max-w-md w-full relative z-10">
-        {/* HUD Corner Brackets */}
-        <div className="absolute -top-4 -left-4 w-12 h-12 border-t-2 border-l-2 opacity-50" style={{ borderColor: status === "error" ? "hsl(0 100% 50%)" : "hsl(185 100% 50%)" }} />
-        <div className="absolute -top-4 -right-4 w-12 h-12 border-t-2 border-r-2 opacity-50" style={{ borderColor: status === "error" ? "hsl(0 100% 50%)" : "hsl(185 100% 50%)" }} />
-        <div className="absolute -bottom-4 -left-4 w-12 h-12 border-b-2 border-l-2 opacity-50" style={{ borderColor: status === "error" ? "hsl(0 100% 50%)" : "hsl(185 100% 50%)" }} />
-        <div className="absolute -bottom-4 -right-4 w-12 h-12 border-b-2 border-r-2 opacity-50" style={{ borderColor: status === "error" ? "hsl(0 100% 50%)" : "hsl(185 100% 50%)" }} />
+      <div className="max-w-2xl w-full relative z-10">
+        {/* Terminal Header */}
+        <div className="flex items-center justify-between mb-4 px-2">
+           <div className="flex items-center gap-3">
+              <div className={`w-2 h-2 rounded-full animate-pulse ${status === "error" ? "bg-red-500" : "bg-cyan-500"}`} />
+              <span className="font-orbitron text-[10px] tracking-[0.4em] uppercase opacity-40">Identity_Verification_Node_7</span>
+           </div>
+           <span className="font-mono text-[9px] opacity-20 uppercase tracking-widest">TS: {new Date().toISOString()}</span>
+        </div>
 
-        <div className="rounded-sm p-10 relative overflow-hidden" style={{ background: "hsl(220 28% 6% / 0.8)", border: "1px solid hsl(210 30% 20%)", backdropFilter: "blur(10px)" }}>
-          {/* Header */}
-          <div className="mb-10 text-center">
-            <h1 className="font-orbitron font-bold text-sm tracking-[0.4em] uppercase opacity-60 mb-2">
-              Identity Verification
-            </h1>
-            <div className="h-px w-full bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
-          </div>
+        <div className="bg-[#0c1016] border border-white/10 p-8 md:p-12 shadow-[0_0_50px_rgba(0,243,255,0.05)] relative overflow-hidden min-h-[400px] flex flex-col items-center justify-center">
+           {/* HUD Brackets */}
+           <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-white/20" />
+           <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-white/20" />
+           <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-white/20" />
+           <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-white/20" />
 
-          <div className="flex flex-col items-center">
-            {/* Main Visual */}
-            <div className="relative mb-10">
+           {/* Biometric Visualizer */}
+           <div className="relative mb-12">
               {status === "verifying" && (
-                <div className="w-24 h-24 border-2 border-dashed rounded-full animate-[spin_10s_linear_infinite]" style={{ borderColor: "hsl(185 100% 50% / 0.3)" }}>
-                  <div className="absolute inset-2 border-2 border-cyan-500 rounded-full animate-pulse" />
+                <div className="w-32 h-32 flex items-center justify-center">
+                   <div className="absolute inset-0 border border-cyan-500/20 rounded-full animate-[spin_10s_linear_infinite]" />
+                   <div className="absolute inset-2 border-t-2 border-cyan-500 rounded-full animate-spin" />
+                   <div className="absolute inset-6 border border-cyan-500/10 rounded-full animate-pulse" />
+                   <div className="w-4 h-4 bg-cyan-500 shadow-[0_0_15px_#00f3ff]" />
                 </div>
               )}
               {status === "success" && (
-                <div className="w-24 h-24 border-2 border-cyan-500 rounded-full flex items-center justify-center animate-[bounce_0.5s_ease-out]">
-                  <div className="text-4xl text-cyan-500 drop-shadow-[0_0_10px_rgba(6,182,212,0.5)]">✓</div>
+                <div className="w-32 h-32 flex items-center justify-center animate-[success-pop_0.5s_ease-out]">
+                   <div className="absolute inset-0 border border-cyan-500/40 rounded-full" />
+                   <div className="absolute inset-0 bg-cyan-500/5 rounded-full animate-pulse" />
+                   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00f3ff" strokeWidth="3" strokeLinecap="square" className="drop-shadow-[0_0_10px_rgba(0,243,255,0.5)]">
+                      <polyline points="20 6 9 17 4 12" />
+                   </svg>
                 </div>
               )}
               {status === "error" && (
-                <div className="w-24 h-24 border-2 border-red-500 rounded-full flex items-center justify-center">
-                  <div className="text-4xl text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]">✗</div>
+                <div className="w-32 h-32 flex items-center justify-center animate-[shake_0.4s_ease-in-out]">
+                   <div className="absolute inset-0 border border-red-500/40 rounded-full" />
+                   <div className="absolute inset-0 bg-red-500/5 rounded-full" />
+                   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ff4e4e" strokeWidth="3" strokeLinecap="square" className="drop-shadow-[0_0_10px_rgba(255,78,78,0.5)]">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                   </svg>
                 </div>
               )}
-            </div>
+           </div>
 
-            {/* Technical Logs */}
-            <div className="w-full bg-black/40 p-4 font-mono text-[10px] tracking-wider mb-8 border border-white/5 h-32 overflow-hidden">
-              {logs.map((log, i) => (
-                <div key={i} className="mb-1 animate-[fadeIn_0.2s_ease-out]" style={{ color: log.includes("ERROR") ? "#ff4444" : "#00f3ff" }}>
-                  {log}
-                </div>
-              ))}
-              <div ref={logsEndRef} />
-            </div>
-
-            {status === "error" && (
-              <button
-                onClick={() => {
-                  playSciFiClick();
-                  setLocation("/");
-                }}
-                className="group relative px-8 py-3 font-orbitron text-[10px] tracking-[0.3em] uppercase transition-all duration-300"
-              >
-                <div className="absolute inset-0 border border-red-500/50 group-hover:border-red-400 bg-red-500/5" />
-                <span className="relative text-red-400 group-hover:text-red-300">Abort & Return</span>
-              </button>
-            )}
-            
-            {status === "success" && (
-              <div className="font-orbitron text-[10px] tracking-[0.3em] uppercase text-cyan-500 animate-pulse">
-                Access Granted
+           {/* Console Log */}
+           <div className="w-full max-w-md bg-black/40 border border-white/5 p-6 font-mono text-[11px] leading-relaxed relative group">
+              <div className="absolute -top-3 left-4 px-2 bg-[#0c1016] text-[9px] tracking-widest uppercase opacity-40">System_Logs</div>
+              <div className="space-y-1">
+                 {logs.map((log, i) => (
+                    <div key={i} className={`flex gap-3 ${i === logs.length - 1 ? "animate-pulse" : "opacity-40"}`}>
+                       <span className="text-cyan-600">[{new Date().toLocaleTimeString().split(' ')[0]}]</span>
+                       <span className={status === "error" && log.includes("FAILED") ? "text-red-400" : status === "success" && log.includes("SUCCESSFUL") ? "text-cyan-400" : ""}>
+                          {log}
+                       </span>
+                    </div>
+                 ))}
               </div>
-            )}
-          </div>
+              <div ref={logsEndRef} />
+           </div>
         </div>
-
-        {/* HUD Elements */}
-        <div className="mt-6 flex justify-between items-center px-4 font-mono text-[9px] text-white/20 tracking-tighter">
-          <div>NODE: ENF_SRV_09</div>
-          <div className="animate-pulse">SYSTEM STATUS: {status.toUpperCase()}</div>
-          <div>EST: 2026.04.23</div>
-        </div>
+        
+        {status === "error" && (
+           <div className="mt-8 flex justify-center">
+              <button 
+                onClick={() => setLocation("/")}
+                className="px-10 py-4 bg-white/5 border border-white/10 hover:border-red-500/50 text-white/40 hover:text-white font-orbitron text-[10px] tracking-[0.4em] uppercase transition-all"
+              >
+                 Return_to_Login
+              </button>
+           </div>
+        )}
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(5px); }
-          to { opacity: 1; transform: translateY(0); }
+        @keyframes scan-slow {
+          0% { transform: translateY(0); }
+          100% { transform: translateY(800vh); }
+        }
+        @keyframes success-pop {
+          0% { transform: scale(0.8); opacity: 0; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-5px); }
+          75% { transform: translateX(5px); }
         }
       `}} />
     </div>

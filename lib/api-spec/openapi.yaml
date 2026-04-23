@@ -209,11 +209,14 @@ components:
           type: string
         token:
           type: string
+        isVerified:
+          type: boolean
       required:
         - id
         - email
         - username
         - token
+        - isVerified
     UserProfile:
       type: object
       properties:
@@ -226,11 +229,14 @@ components:
         createdAt:
           type: string
           format: date-time
+        isVerified:
+          type: boolean
       required:
         - id
         - email
         - username
         - createdAt
+        - isVerified
     RecordGameRequest:
       type: object
       properties:

@@ -156,9 +156,13 @@ export function generateVerificationEmailHTML(
 <body>
   <div class="wrapper">
     <div class="container">
-      <div class="hud-header">
+      <div class="hud-header" style="position: relative;">
+        <!-- Corner Brackets for Email -->
+        <div style="position: absolute; top: 10px; left: 10px; width: 15px; height: 15px; border-top: 1px solid ${brandColor}; border-left: 1px solid ${brandColor}; opacity: 0.3;"></div>
+        <div style="position: absolute; top: 10px; right: 10px; width: 15px; height: 15px; border-top: 1px solid ${brandColor}; border-right: 1px solid ${brandColor}; opacity: 0.3;"></div>
+        
         <h1 class="hud-title">Secure Transmission</h1>
-        <div class="hud-subtitle">ORIGIN: ERROR: NEWFORM_DETECTOR_NODE_01</div>
+        <div class="hud-subtitle">ORIGIN: OPERATOR_IDENTITY_NODE_7</div>
       </div>
       
       <div class="content">

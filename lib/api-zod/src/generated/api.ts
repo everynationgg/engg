@@ -48,7 +48,8 @@ export const LoginUserResponse = zod.object({
   "id": zod.string(),
   "email": zod.string(),
   "username": zod.string(),
-  "token": zod.string()
+  "token": zod.string(),
+  "isVerified": zod.boolean()
 })
 
 
@@ -60,7 +61,8 @@ export const GetCurrentUserResponse = zod.object({
   "id": zod.string(),
   "email": zod.string(),
   "username": zod.string(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "isVerified": zod.boolean()
 })
 
 

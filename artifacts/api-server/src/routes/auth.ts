@@ -122,6 +122,7 @@ router.post("/auth/register", async (req, res) => {
       email: user[0].email,
       username: user[0].username,
       token,
+      isVerified: false,
     };
 
     res.status(201).json(response);
@@ -163,6 +164,7 @@ router.post("/auth/login", async (req, res) => {
       email: user.email,
       username: user.username,
       token,
+      isVerified: user.isVerified === true,
     };
 
     res.json(response);
@@ -197,6 +199,7 @@ router.get("/auth/me", authMiddleware, async (req: AuthRequest, res) => {
       email: user.email,
       username: user.username,
       createdAt: user.createdAt,
+      isVerified: user.isVerified === true,
     };
 
     res.json(response);
