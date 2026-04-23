@@ -112,6 +112,8 @@ export interface PrivateFeedback {
     | "commander_boost"
     | "warper_swap"
     | "shifter_exchange"
+    | "virus_result"
+    | "router_result"
     | "skipped"
     | "no_action"
     | "passive"
@@ -613,7 +615,7 @@ export function resolveRound(state: GameState): ResolutionResult {
       // No submission
       if (!action) {
         feedback[actor.id] = { type: "no_action" };
-        logActor(actor.name, actor.id, "did not submit an action");
+        logActor(actor.name, actor.id, "skipped their ability");
         continue;
       }
 
@@ -631,11 +633,11 @@ export function resolveRound(state: GameState): ResolutionResult {
           const revealAction = state.revealActions[actor.id];
           if (revealAction && revealAction.targets[0]) {
             const target = state.players.find(p => p.id === revealAction.targets[0]);
-            feedback[actor.id] = { type: "no_ability" };
-            logActor(actor.name, actor.id, `used Packet Loss on ${target?.name ?? "a player"}`);
+            feedback[actor.id] = { type: "virus_result", data: { targetName: target?.name ?? "a player" } };
+            logActor(actor.name, actor.id, `(Virus) used Packet Loss on ${target?.name ?? "a player"}`);
           } else {
-            feedback[actor.id] = { type: "no_ability" };
-            logActor(actor.name, actor.id, "did not use Packet Loss on anyone");
+            feedback[actor.id] = { type: "skipped" };
+            logActor(actor.name, actor.id, "(Virus) skipped their ability");
           }
           continue;
         }
@@ -644,11 +646,11 @@ export function resolveRound(state: GameState): ResolutionResult {
           if (revealAction && revealAction.targets[0] && revealAction.targets[1]) {
             const source = state.players.find(p => p.id === revealAction.targets[0]);
             const dest = state.players.find(p => p.id === revealAction.targets[1]);
-            feedback[actor.id] = { type: "no_ability" };
-            logActor(actor.name, actor.id, `hijacked ${source?.name ?? "a player"}'s ability to redirect to ${dest?.name ?? "another player"}`);
+            feedback[actor.id] = { type: "router_result", data: { sourceName: source?.name ?? "a player", destName: dest?.name ?? "another player" } };
+            logActor(actor.name, actor.id, `(Router) hijacked ${source?.name ?? "a player"}'s ability to redirect to ${dest?.name ?? "another player"}`);
           } else {
-            feedback[actor.id] = { type: "no_ability" };
-            logActor(actor.name, actor.id, "did not set a gateway hijack during the reveal");
+            feedback[actor.id] = { type: "skipped" };
+            logActor(actor.name, actor.id, "(Router) skipped their ability");
           }
           continue;
         }

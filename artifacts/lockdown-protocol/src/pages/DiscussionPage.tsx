@@ -756,10 +756,24 @@ function renderOrbitResultSummary(
 
   // Virus and Router act during Role Reveal, not during Orbit
   if (roleId === "virus") {
-    return <p className="text-sm" style={info}>You used <strong>Packet Loss</strong> during the Role Reveal phase. Your target cannot see player identities this round.</p>;
+    if (result?.type === "virus_result") {
+      const d = result.data as Record<string, unknown>;
+      return <p className="text-sm" style={info}>You used <strong>Packet Loss</strong> on {String(d?.targetName ?? "a player")}. They cannot see player identities this round.</p>;
+    }
+    if (result?.type === "skipped") {
+      return <p className="text-sm" style={muted}>You chose not to use <strong>Packet Loss</strong> this round.</p>;
+    }
+    return <p className="text-sm" style={info}>You used <strong>Packet Loss</strong> during the Role Reveal phase.</p>;
   }
   if (roleId === "router") {
-    return <p className="text-sm" style={info}>You used <strong>Gateway Hijack</strong> during the Role Reveal phase. The Source player's ability has been redirected.</p>;
+    if (result?.type === "router_result") {
+      const d = result.data as Record<string, unknown>;
+      return <p className="text-sm" style={info}>You used <strong>Gateway Hijack</strong>. {String(d?.sourceName ?? "The Source")}'s ability was redirected to {String(d?.destName ?? "the Destination")}.</p>;
+    }
+    if (result?.type === "skipped") {
+      return <p className="text-sm" style={muted}>You chose not to use <strong>Gateway Hijack</strong> this round.</p>;
+    }
+    return <p className="text-sm" style={info}>You used <strong>Gateway Hijack</strong> during the Role Reveal phase.</p>;
   }
 
   if (!result || result.type === "no_ability") {

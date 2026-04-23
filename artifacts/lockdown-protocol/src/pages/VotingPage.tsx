@@ -46,6 +46,7 @@ export default function VotingPage() {
   const [pendingVote, setPendingVote] = useState<string | null>(null);
   const [waitingCount, setWaitingCount] = useState<number>(0);
   const [voterIds, setVoterIds] = useState<Set<string>>(new Set());
+  const [votes, setVotes] = useState<Record<string, string>>({});
   const [myId, setMyId] = useState<string>("");
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -143,6 +144,7 @@ export default function VotingPage() {
       if (session.votes) {
         setWaitingCount(Object.keys(session.votes).length);
         setVoterIds(new Set(Object.keys(session.votes)));
+        setVotes(session.votes);
       }
       if (session.roundSummary) setRoundSummary(session.roundSummary);
       // GameShell handles phase navigation
@@ -164,6 +166,7 @@ export default function VotingPage() {
           if (resp.session.votes) {
             setWaitingCount(Object.keys(resp.session.votes).length);
             setVoterIds(new Set(Object.keys(resp.session.votes)));
+            setVotes(resp.session.votes);
             if (resp.session.votes[id ?? ""]) setVotedFor(resp.session.votes[id ?? ""]);
           }
           // GameShell handles phase navigation
@@ -360,10 +363,7 @@ export default function VotingPage() {
               
               <div className="space-y-3">
                 {activePlayers.map((p) => {
-                  const voteCount = Array.from(voterIds).filter(voterId => {
-                    const vote = roundSummary?.voteTally.find(t => t.voterName === sessionPlayers.find(sp => sp.id === voterId)?.name);
-                    return vote?.targetName === p.name;
-                  }).length;
+                  const voteCount = Object.values(votes).filter(targetId => targetId === p.id).length;
                   const isLeading = leadingVoteGetters.has(p.id);
 
                   return (
