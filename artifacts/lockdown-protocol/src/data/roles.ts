@@ -10,7 +10,7 @@ import shifterImg from "@assets/role-shifter_1776003488682.webp";
 import warperImg from "@assets/role-warper_1776003488682.webp";
 import virusImg from "@assets/role-virus.webp";
 import routerImg from "@assets/role-router.webp";
-
+import spectatorImg from "@assets/role-spectator.webp";
 
 import alienVid from "@assets/role-alien.webm";
 import parasiteVid from "@assets/role-parasite.webm";
@@ -24,6 +24,7 @@ import shifterVid from "@assets/role-shifter.webm";
 import warperVid from "@assets/role-warper.webm";
 import virusVid from "@assets/role-virus.webm";
 import routerVid from "@assets/role-router.webm";
+import spectatorVid from "@assets/role-spectator.webm";
 
 
 import alienEvictionVid from "@assets/role-alien-eviction.webm";
@@ -38,6 +39,7 @@ import shifterEvictionVid from "@assets/role-shifter-eviction.webm";
 import warperEvictionVid from "@assets/role-warper-eviction.webm";
 import virusEvictionVid from "@assets/role-virus-eviction.webm";
 import routerEvictionVid from "@assets/role-router-eviction.webm";
+import spectatorEvictionVid from "@assets/role-spectator.webm";
 
 export type RoleTeam = "alien" | "crew" | "chaotic" | "spectator";
 
@@ -65,9 +67,9 @@ export const ROLES: Role[] = [
     name: "Spectator",
     team: "spectator",
     alignment: "Spectator",
-    image: require("@assets/role-spectator.webp"),
-    video: require("@assets/role-spectator.webm"),
-    evictionVideo: require("@assets/role-spectator-eviction.webm"),
+    image: spectatorImg,
+    video: spectatorVid,
+    evictionVideo: spectatorEvictionVid,
     winCondition: "Just watching. No win/lose.",
     ability: "Observe the game. No actions.",
     notes: "Cannot interact, vote, or act. Only sees the game.",
