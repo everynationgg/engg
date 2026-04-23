@@ -220,7 +220,7 @@ export default function RoleRevealPage() {
   }
 
 
-  if (isSpectator && !isHost) {
+  if (isSpectator) {
     // Spectator UI: Hide all role info, show only spectator message
     return (
       <div className="relative min-h-screen w-full flex flex-col items-center justify-center ix-page-enter" style={{ background: "hsl(210 30% 8%)", color: "hsl(190 80% 90%)" }}>
@@ -511,14 +511,12 @@ export default function RoleRevealPage() {
             </div>
 
             {/* Ready count */}
-            {acknowledged && (
               <div
                 className="text-xs tracking-wider text-center"
                 style={{ color: "hsl(210 30% 45%)", fontFamily: "'Exo 2', sans-serif" }}
               >
-                {readyCount} / {totalPlayers} players ready
+                {readyCount} / {livePlayers.filter(p => !p.isSpectator).length} players ready
               </div>
-            )}
 
             {/* Target Selection for Virus/Router + Skip Button */}
             {!acknowledged && revealState === "ready" && (role.id === "virus" || role.id === "router") && (() => {

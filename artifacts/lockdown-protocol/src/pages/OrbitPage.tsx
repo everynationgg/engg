@@ -319,7 +319,7 @@ export default function OrbitPage() {
   const otherPlayers = sessionPlayers.filter((p) => !p.isYou && !p.isSpectator);
 
   // ── Render ────────────────────────────────────────────────────────────────
-  if (role.id === "spectator" && !isHost) {
+  if (isSpectator) {
     return (
       <div className="relative min-h-screen w-full flex flex-col ix-page-enter" style={{ background: "hsl(210 30% 8%)", color: "hsl(190 80% 90%)" }}>
         <HamburgerMenu
@@ -544,7 +544,7 @@ export default function OrbitPage() {
             accentColor={accentColor}
             label={!role.canAct ? "Waiting for other players to use their ability" : "Waiting for other players..."}
             completedCount={completedCount}
-            totalCount={sessionPlayers.length}
+            totalCount={sessionPlayers.filter(p => !p.isSpectator).length}
           />
         )}
 

@@ -1264,13 +1264,13 @@ export function attachSocketIO(httpServer: HttpServer) {
           {
             sessionId: parsed.sessionId,
             acked: session.roleAcknowledgements.length,
-            total: session.players.length,
+            total: session.players.filter(p => !p.isSpectator).length,
           },
           "Role acknowledged",
         );
         logGameEvent("role_acknowledged", parsed.sessionId, socket.id, {
           acked: session.roleAcknowledgements.length,
-          total: session.players.length,
+          total: session.players.filter(p => !p.isSpectator).length,
         });
 
         if (result.allAcknowledged) {
@@ -1350,7 +1350,7 @@ export function attachSocketIO(httpServer: HttpServer) {
           {
             sessionId: parsed.sessionId,
             completed: session.orbitCompleted.length,
-            total: session.players.length,
+            total: session.players.filter(p => !p.isSpectator).length,
             actionType: parsed.action.type,
           },
           "Action submitted",
@@ -1358,7 +1358,7 @@ export function attachSocketIO(httpServer: HttpServer) {
         logGameEvent("action_submitted", parsed.sessionId, socket.id, {
           actionType: parsed.action.type,
           completed: session.orbitCompleted.length,
-          total: session.players.length,
+          total: session.players.filter(p => !p.isSpectator).length,
         });
 
         ack?.({ success: true });

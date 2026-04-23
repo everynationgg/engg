@@ -153,7 +153,7 @@ export default function VotingPage() {
 
     // Shared sync function: fetches latest session and updates local state
     const syncSession = () => {
-      socket.emit("get_session", { sessionId: roomCode }, (resp: { success: boolean; session?: { phase: string; players: LivePlayer[]; votes?: Record<string, string> } }) => {
+      socket.emit("get_session", { sessionId: roomCode }, (resp: { success: boolean; session?: { phase: string; players: LivePlayer[]; votes?: Record<string, string>; roundSummary?: any } }) => {
         if (resp.success && resp.session) {
           const myPlayerId = sessionStorage.getItem("lp_playerId");
           const id = socket.id;

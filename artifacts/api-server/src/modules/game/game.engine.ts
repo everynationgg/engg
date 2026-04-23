@@ -541,6 +541,10 @@ export function submitAction(
   if (!state.players.some((p) => p.id === playerId)) {
     return { accepted: false, allSubmitted: false, error: "not in session" };
   }
+  const player = state.players.find(p => p.id === playerId);
+  if (player?.isSpectator) {
+    return { accepted: false, allSubmitted: false, error: "spectators cannot act" };
+  }
 
   // Prevent targeting spectators in Orbit phase
   for (const tId of (action.targets || [])) {
@@ -936,6 +940,9 @@ export function startEmergencyVote(
   if (!caller) {
     return { accepted: false, error: "not in session" };
   }
+  if (caller.isSpectator) {
+    return { accepted: false, error: "spectators cannot call emergency votes" };
+  }
   state.emergencyVote = {
     active: true,
     callerId,
@@ -964,6 +971,10 @@ export function castEmergencyVote(
   }
   if (!state.players.some((p) => p.id === voterId)) {
     return { accepted: false, outcome: null, error: "not in session" };
+  }
+  const voter = state.players.find(p => p.id === voterId);
+  if (voter?.isSpectator) {
+    return { accepted: false, outcome: null, error: "spectators cannot vote" };
   }
 
   const ev = state.emergencyVote;
@@ -1029,6 +1040,10 @@ export function castVote(
   }
   if (!state.players.some((p) => p.id === voterId)) {
     return { accepted: false, votingComplete: false, error: "not in session" };
+  }
+  const voter = state.players.find(p => p.id === voterId);
+  if (voter?.isSpectator) {
+    return { accepted: false, votingComplete: false, error: "spectators cannot vote" };
   }
 
   // No re-voting
