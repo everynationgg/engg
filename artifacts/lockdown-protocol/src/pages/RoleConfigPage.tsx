@@ -424,7 +424,7 @@ export default function RoleConfigPage() {
   }, [joinUrl]);
 
   // For custom game: require all players and all 3 deck cards to be assigned
-  const customGameReady = players.length > 0 && Object.keys(customRoles).length === players.length && customDeck.every(Boolean);
+  const customGameReady = players.length > 0 && players.every(p => p.isHost || customRoles[p.id]) && customDeck.every(Boolean);
   const handleCustomDeckChange = (idx: number, value: string) => {
     setCustomDeck(deck => {
       const next = [...deck] as [string, string, string];
@@ -440,15 +440,21 @@ export default function RoleConfigPage() {
       return;
     }
     setStartError(null);
-    // Debug log: print customRoles and player IDs before emitting
-    console.log("[DEBUG] Emitting start_game_custom", { sessionId: roomCode, customRoles, customDeck });
-    Object.entries(customRoles).forEach(([pid, role]) => {
-      console.log(`[DEBUG] PlayerID: ${pid}, Role: ${role}`);
-    });
+    
+    // Auto-assign host as spectator for custom games
+    const host = players.find(p => p.isHost);
+    const finalCustomRoles = { ...customRoles };
+    if (host) {
+      finalCustomRoles[host.id] = "spectator";
+    }
+
+    // Debug log: print finalCustomRoles and player IDs before emitting
+    console.log("[DEBUG] Emitting start_game_custom", { sessionId: roomCode, customRoles: finalCustomRoles, customDeck });
+    
     const socket = getSocket();
     socket.emit(
       "start_game_custom",
-      { sessionId: roomCode, customRoles, customDeck },
+      { sessionId: roomCode, customRoles: finalCustomRoles, customDeck },
       (resp: { success: boolean; error?: string }) => {
         if (!resp?.success) {
           setStartError(resp?.error ?? "Failed to start custom game");
@@ -532,7 +538,7 @@ export default function RoleConfigPage() {
   }, [roomCode, setLocation]);
 
 
-  if (isSpectator) {
+  if (isSpectator && !amIHost) {
     return (
       <div className="flex flex-col items-center justify-center h-screen w-full bg-black text-cyan-200">
         <h1 className="text-3xl font-orbitron mb-4">Spectator Mode</h1>
@@ -940,17 +946,23 @@ export default function RoleConfigPage() {
           {players.map((player) => (
             <div key={player.id} className="flex items-center gap-3">
               <span className="min-w-[100px] font-orbitron text-xs" style={{ color: "hsl(185 100% 70%)" }}>{player.name}{player.isHost ? " (Host)" : ""}</span>
-              <select
-                className="px-2 py-1 rounded border bg-black text-white"
-                value={customRoles[player.id] || ""}
-                onChange={e => setCustomRoles(r => ({ ...r, [player.id]: e.target.value }))}
-              >
-                <option value="">— Assign a role —</option>
-                {NON_SPECTATOR_ROLES.map(role => (
-                  <option key={role.id} value={role.id}>{role.name}</option>
-                ))}
-                {SPECTATOR_ROLE && <option value={SPECTATOR_ROLE.id}>{SPECTATOR_ROLE.name}</option>}
-              </select>
+              {player.isHost ? (
+                <div className="px-2 py-1 rounded border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 font-orbitron text-[10px] tracking-wider uppercase">
+                  Spectator (Auto)
+                </div>
+              ) : (
+                <select
+                  className="px-2 py-1 rounded border bg-black text-white"
+                  value={customRoles[player.id] || ""}
+                  onChange={e => setCustomRoles(r => ({ ...r, [player.id]: e.target.value }))}
+                >
+                  <option value="">— Assign a role —</option>
+                  {NON_SPECTATOR_ROLES.map(role => (
+                    <option key={role.id} value={role.id}>{role.name}</option>
+                  ))}
+                  {SPECTATOR_ROLE && <option value={SPECTATOR_ROLE.id}>{SPECTATOR_ROLE.name}</option>}
+                </select>
+              )}
             </div>
           ))}
           <div className="font-orbitron text-sm mt-4 mb-2">Assign 3 center deck cards:</div>

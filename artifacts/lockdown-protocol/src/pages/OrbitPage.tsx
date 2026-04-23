@@ -29,6 +29,7 @@ interface LivePlayer {
   isHost: boolean;
   isYou?: boolean;
   playerId?: string;
+  isSpectator?: boolean;
 }
 
 type PageState =
@@ -318,7 +319,7 @@ export default function OrbitPage() {
   const otherPlayers = sessionPlayers.filter((p) => !p.isYou && !p.isSpectator);
 
   // ── Render ────────────────────────────────────────────────────────────────
-  if (role.id === "spectator") {
+  if (role.id === "spectator" && !isHost) {
     return (
       <div className="relative min-h-screen w-full flex flex-col ix-page-enter" style={{ background: "hsl(210 30% 8%)", color: "hsl(190 80% 90%)" }}>
         <HamburgerMenu

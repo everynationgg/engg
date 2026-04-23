@@ -16,6 +16,7 @@ interface LivePlayer {
   playerId?: string;
   connected?: boolean;
   alive?: boolean;
+  isSpectator?: boolean;
 }
 
 
@@ -33,10 +34,13 @@ export default function DiscussionPage() {
   const accentDim = isAlien ? "hsl(0 75% 55% / 0.12)" : isChaotic ? "hsl(300 70% 55% / 0.12)" : "hsl(185 100% 50% / 0.12)";
   const bgTint = isAlien ? "hsl(0 40% 6%)" : isChaotic ? "hsl(290 30% 6%)" : "hsl(200 30% 6%)";
   const bgOverlay = isAlien ? "hsl(0 35% 3% / 0.83)" : isChaotic ? "hsl(290 25% 3% / 0.83)" : "hsl(200 25% 3% / 0.83)";
+  const isSpectator = role.id === "spectator";
 
   const [sessionPlayers, setSessionPlayers] = useState<LivePlayer[]>([]);
   const [orbitResultState, setOrbitResultState] = useState<{ type: string; data?: unknown } | null>(() => getOrbitResult());
   const [roleCounts, setRoleCounts] = useState<Record<string, number>>({});
+  const [rolesAssigned, setRolesAssigned] = useState<Record<string, string>>({});
+  const [initialRoles, setInitialRoles] = useState<Record<string, string>>({});
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
@@ -138,10 +142,14 @@ export default function DiscussionPage() {
   useEffect(() => {
     const socket = getSocket();
 
-    const handlePhaseUpdate = (session: { phase: string; players: LivePlayer[] }) => {
+    const handlePhaseUpdate = (session: { phase: string; players: LivePlayer[]; roleCounts?: Record<string, number>; rolesAssigned?: Record<string, string>; initialRoles?: Record<string, string> }) => {
       const myPlayerId = sessionStorage.getItem("lp_playerId");
       const myId = socket.id;
       setSessionPlayers(session.players.map((p) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === myId })));
+      
+      if (session.roleCounts) setRoleCounts(session.roleCounts);
+      if (session.rolesAssigned) setRolesAssigned(session.rolesAssigned);
+      if (session.initialRoles) setInitialRoles(session.initialRoles);
       
       const me = session.players.find((p) => myPlayerId ? p.playerId === myPlayerId : p.id === myId);
       if (me) setIsHost(me.isHost);
@@ -178,7 +186,7 @@ export default function DiscussionPage() {
 
     // Shared sync function: fetches latest session and updates local state
     const syncSession = () => {
-      socket.emit("get_session", { sessionId: roomCode }, (resp: { success: boolean; session?: { phase: string; players: LivePlayer[]; orbitFeedback?: Record<string, unknown>; roleCounts?: Record<string, number> } }) => {
+      socket.emit("get_session", { sessionId: roomCode }, (resp: { success: boolean; session?: { phase: string; players: LivePlayer[]; orbitFeedback?: Record<string, unknown>; roleCounts?: Record<string, number>; rolesAssigned?: Record<string, string>; initialRoles?: Record<string, string> } }) => {
         if (resp.success && resp.session) {
           const myPlayerId = sessionStorage.getItem("lp_playerId");
           const myId = socket.id;
@@ -190,6 +198,8 @@ export default function DiscussionPage() {
 
           // Populate roles-in-play from session config
           if (resp.session.roleCounts) setRoleCounts(resp.session.roleCounts);
+          if (resp.session.rolesAssigned) setRolesAssigned(resp.session.rolesAssigned);
+          if (resp.session.initialRoles) setInitialRoles(resp.session.initialRoles);
 
           // Fallback: if orbit result wasn't received via socket, read from session
           if (!orbitResultState && myId && resp.session.orbitFeedback?.[myId]) {
@@ -260,7 +270,7 @@ export default function DiscussionPage() {
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
-  if (role.id === "spectator") {
+  if (isSpectator && !isHost) {
     return (
       <div className="relative min-h-screen w-full flex flex-col ix-page-enter" style={{ background: "hsl(210 30% 8%)", color: "hsl(190 80% 90%)" }}>
         <HamburgerMenu
@@ -326,16 +336,82 @@ export default function DiscussionPage() {
               <div className="flex flex-wrap gap-2">
                 {Object.entries(roleCounts)
                   .filter(([, count]) => count > 0)
+                  .sort(([a], [b]) => a.localeCompare(b))
                   .map(([roleId, count]) => {
                     const r = ROLES.find((x) => x.id === roleId);
+                    const teamColor =
+                      r?.team === "alien" ? "hsl(0 75% 60%)" :
+                      r?.team === "chaotic" ? "hsl(300 70% 65%)" :
+                      "hsl(185 100% 55%)";
                     return (
-                      <div key={roleId} className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-hsl(220 28% 12%) border border-white/10">
-                        <span className="font-orbitron text-xs tracking-wider uppercase" style={{ color: "hsl(185 100% 60%)" }}>
-                          {r?.name ?? roleId} x{count}
+                      <div
+                        key={roleId}
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded team-badge ${r?.team}-color`}
+                        style={{ background: "hsl(220 28% 12%)", border: `1px solid ${teamColor.replace(")", " / 0.3)")}` }}
+                      >
+                        <span className="font-orbitron text-xs tracking-wider uppercase" style={{ color: teamColor }}>
+                          {r?.name ?? roleId}
                         </span>
+                        {count > 1 && (
+                          <span className="text-xs font-bold" style={{ color: "hsl(210 30% 50%)", fontFamily: "'Exo 2', sans-serif" }}>
+                            ×{count}
+                          </span>
+                        )}
                       </div>
                     );
                   })}
+              </div>
+            </div>
+          )}
+          
+          {Object.keys(rolesAssigned).length > 0 && (
+            <div className="rounded-md p-4" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 18%)" }}>
+              <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(210 30% 50%)" }}>
+                FULL ROLE REVEAL
+              </div>
+              <div className="flex flex-col gap-1.5">
+                {sessionPlayers.map((p) => {
+                  const roleId = rolesAssigned[p.id];
+                  const initRoleId = initialRoles[p.id];
+                  if (!roleId) return null;
+
+                  const r = ROLES.find((x) => x.id === roleId);
+                  const initR = ROLES.find((x) => x.id === initRoleId);
+                  const roleChanged = initRoleId && roleId !== initRoleId;
+                  const isAlienTeam = r?.team === "alien";
+                  const isChaotic = r?.team === "chaotic";
+                  const teamColor = isAlienTeam ? "hsl(0 75% 60%)" : isChaotic ? "hsl(300 70% 65%)" : "hsl(185 100% 65%)";
+
+                  return (
+                    <div
+                      key={p.id}
+                      className="flex items-center justify-between px-2 py-1.5 rounded gap-2"
+                      style={{ background: "hsl(220 28% 12%)", border: "1px solid hsl(210 30% 16%)" }}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        {r && (
+                          <img src={r.image} alt={r.name} className="w-6 h-6 rounded object-cover shrink-0" loading="lazy" style={{ border: "1px solid hsl(210 30% 22%)" }} />
+                        )}
+                        <span className="font-orbitron text-xs tracking-wide uppercase truncate" style={{ color: "hsl(190 60% 78%)" }}>
+                          {p.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className="font-orbitron text-xs uppercase font-bold" style={{ color: roleChanged ? "hsl(210 40% 55%)" : teamColor, fontSize: "0.65rem" }}>
+                          {initR?.name?.toUpperCase() ?? initRoleId?.toUpperCase() ?? "—"}
+                        </span>
+                        {roleChanged && (
+                          <>
+                            <span className="font-orbitron text-xs" style={{ color: "hsl(210 30% 40%)" }}>→</span>
+                            <span className="font-orbitron text-xs uppercase font-bold" style={{ color: teamColor, fontSize: "0.65rem" }}>
+                              {r?.name?.toUpperCase() ?? roleId.toUpperCase()}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

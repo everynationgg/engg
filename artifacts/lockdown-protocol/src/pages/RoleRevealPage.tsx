@@ -221,7 +221,7 @@ export default function RoleRevealPage() {
   }
 
 
-  if (isSpectator) {
+  if (isSpectator && !isHost) {
     // Spectator UI: Hide all role info, show only spectator message
     return (
       <div className="relative min-h-screen w-full flex flex-col items-center justify-center ix-page-enter" style={{ background: "hsl(210 30% 8%)", color: "hsl(190 80% 90%)" }}>

@@ -18,6 +18,7 @@ interface LivePlayer {
   connected?: boolean;
   connectionStatus?: "connected" | "reconnecting" | "disconnected";
   alive?: boolean;
+  isSpectator?: boolean;
 }
 
 function getRoomCode(): string {
@@ -265,12 +266,25 @@ export default function VotingPage() {
     };
   }, [myId]);
 
-  if (isSpectator) {
+  if (isSpectator && !isHost) {
     return (
       <div
         className="flex flex-col items-center justify-center min-h-screen w-full relative overflow-hidden"
         style={{ background: bgTint, color: accentLight }}
       >
+        <HamburgerMenu
+          onShowSettings={() => setShowSettingsModal(true)}
+          onShowProfile={() => setShowProfileModal(true)}
+          onShowHowToPlay={() => {}}
+          musicOn={musicOn}
+          onToggleMusic={handleToggleMusic}
+          playSound={playSciFiClick}
+          showQuitButton
+          isHost={isHost}
+          onRestartRound={handleRestartRound}
+        />
+        <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
+        <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
         {/* Animated background elements for spectators */}
         <div className="absolute inset-0 pointer-events-none opacity-10">
           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full blur-[120px]" style={{ background: accentColor }} />

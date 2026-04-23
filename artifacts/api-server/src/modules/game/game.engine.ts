@@ -1872,8 +1872,14 @@ export function computeSanitizedState(state: GameState, viewerSocketId: string):
       }
     }
     
-    sanitized.rolesAssigned = sanitizedRoles;
-    sanitized.initialRoles = {}; // Hide everyone else's initial roles
+    // 3. Spectator Visibility: Spectators see ALL roles
+    if (viewer?.isSpectator) {
+      sanitized.rolesAssigned = { ...state.rolesAssigned };
+      sanitized.initialRoles = { ...state.initialRoles };
+    } else {
+      sanitized.rolesAssigned = sanitizedRoles;
+      sanitized.initialRoles = {}; // Hide everyone else's initial roles
+    }
   }
 
   return sanitized;
