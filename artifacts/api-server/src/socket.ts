@@ -1012,6 +1012,7 @@ export function attachSocketIO(httpServer: HttpServer) {
         const parsed = validate(startGameCustomSchema, data, ack);
         if (!parsed) return;
         const { sessionId, customRoles, customDeck } = parsed;
+        logger.info({ sessionId, customRoles, customDeck }, "[DEBUG] start_game_custom payload");
 
         if (currentSessionId !== sessionId) {
           ack?.({ success: false, error: "Not in session" });
@@ -1044,6 +1045,7 @@ export function attachSocketIO(httpServer: HttpServer) {
           for (const p of session.players) {
             if (customRoles[p.id] === "spectator") {
               p.isSpectator = true;
+              logger.info({ playerId: p.id, playerName: p.name }, "[DEBUG] Assigned as spectator");
               // Spectators should not have a role assigned
               delete session.rolesAssigned?.[p.id];
               delete session.initialRoles?.[p.id];
