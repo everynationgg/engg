@@ -41,19 +41,11 @@ function randomizeRoles(playerCount: number): RoleCounts {
   const counts: RoleCounts = {};
   ROLES.forEach((r) => { counts[r.id] = 0; });
 
-  // Exclude spectator from randomization
+  // Build a pool of exactly totalRoles, randomly chosen from NON_SPECTATOR_ROLES
   const pool: string[] = [];
-  NON_SPECTATOR_ROLES.forEach((r) => pool.push(r.id));
-
-  let attempts = 0;
-
-  while (pool.length < totalRoles && attempts < 10000) {
-    attempts++;
-    const role = ROLES[Math.floor(Math.random() * ROLES.length)];
-    const currentCount = pool.filter((id) => id === role.id).length;
-    if (currentCount < 2) {
-      pool.push(role.id);
-    }
+  for (let i = 0; i < totalRoles; i++) {
+    const role = NON_SPECTATOR_ROLES[Math.floor(Math.random() * NON_SPECTATOR_ROLES.length)];
+    pool.push(role.id);
   }
 
   pool.forEach((roleId) => {
