@@ -52,8 +52,11 @@ export default function VotingPage() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
   const [roomCopyFeedback, setRoomCopyFeedback] = useState(false);
-  const [isHost, setIsHost] = useState(false);
-  const [isSpectator, setIsSpectator] = useState(false);
+  const [isHost, setIsHost] = useState(() => sessionStorage.getItem("lp_isHost") === "true");
+  const [isSpectator, setIsSpectator] = useState(() => {
+    const role = sessionStorage.getItem("lp_assignedRole");
+    return role === "spectator" || role === "Spectator";
+  });
   const [secondsLeft, setSecondsLeft] = useState(60);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const typingTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());

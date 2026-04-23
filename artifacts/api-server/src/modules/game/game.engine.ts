@@ -370,9 +370,15 @@ export function startGame(
   state.rolesAssigned = {};
   let roleIdx = 0;
   state.players.forEach((player) => {
-    player.isSpectator = false; // Spectators only allowed in custom games
-    state.rolesAssigned[player.id] = pool[roleIdx++] ?? pool[0];
-    player.alive = true;
+    // Only assign roles to players who are NOT spectators.
+    // If they joined as a spectator, they stay a spectator.
+    if (!player.isSpectator) {
+      state.rolesAssigned[player.id] = pool[roleIdx++] ?? pool[0];
+      player.alive = true;
+    } else {
+      state.rolesAssigned[player.id] = "spectator";
+      player.alive = false; // Spectators aren't "alive" in game terms
+    }
   });
   state.initialRoles = { ...state.rolesAssigned };
   const participantCount = state.players.filter(p => !p.isSpectator).length;

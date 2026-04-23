@@ -46,7 +46,7 @@ export default function DiscussionPage() {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
-  const [isHost, setIsHost] = useState(false);
+  const [isHost, setIsHost] = useState(() => sessionStorage.getItem("lp_isHost") === "true");
 
   const [evPopup, setEvPopup] = useState<{ callerName: string } | null>(null);
   const [evCast, setEvCast] = useState<"yes" | "no" | null>(null);
