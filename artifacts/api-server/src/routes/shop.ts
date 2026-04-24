@@ -15,7 +15,6 @@ const PAYPAL_API = PAYPAL_MODE === "live"
 logger.info({ mode: PAYPAL_MODE, endpoint: PAYPAL_API }, "PayPal Service Initialized");
 
 const CREDIT_PACKS = [
-  { id: "pack_test", name: "Test Core", amount: 10000, price: "0.10", currency: "USD" },
   { id: "pack_250", name: "Standard Core", amount: 250, price: "4.99", currency: "USD" },
   { id: "pack_500", name: "Tactical Core", amount: 500, price: "8.99", currency: "USD" },
   { id: "pack_1000", name: "Elite Core", amount: 1000, price: "15.99", currency: "USD" },

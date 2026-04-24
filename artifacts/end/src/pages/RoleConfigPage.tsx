@@ -18,6 +18,7 @@ import ShopModal from "@/components/ShopModal";
 const SPECTATOR_ROLES = ROLES.filter((r) => r.team === "spectator");
 const NON_SPECTATOR_ROLES = ROLES.filter((r) => r.team !== "spectator");
 const SPECTATOR_ROLE = ROLES.find((r) => r.team === "spectator");
+const PREMIUM_ROLE_IDS = ["virus", "router"];
 
 type SessionPayload = {
   phase: string;
@@ -47,15 +48,21 @@ function getRoomCode(): string {
   return sessionStorage.getItem("lp_roomCode") || "------";
 }
 
-function randomizeRoles(playerCount: number): RoleCounts {
+function randomizeRoles(playerCount: number, unlockedRoles: string[]): RoleCounts {
   const totalRoles = playerCount + 3;
   const counts: RoleCounts = {};
   ROLES.forEach((r) => { counts[r.id] = 0; });
 
-  // Build a pool of exactly totalRoles, randomly chosen from NON_SPECTATOR_ROLES
+  const availableRoles = NON_SPECTATOR_ROLES.filter(r => 
+    !PREMIUM_ROLE_IDS.includes(r.id) || unlockedRoles.includes(r.id)
+  );
+
+  if (availableRoles.length === 0) return counts;
+
+  // Build a pool of exactly totalRoles, randomly chosen from availableRoles
   const pool: string[] = [];
   for (let i = 0; i < totalRoles; i++) {
-    const role = NON_SPECTATOR_ROLES[Math.floor(Math.random() * NON_SPECTATOR_ROLES.length)];
+    const role = availableRoles[Math.floor(Math.random() * availableRoles.length)];
     pool.push(role.id);
   }
 
@@ -421,8 +428,8 @@ export default function RoleConfigPage() {
     playSciFiClick();
     setStartError(null);
     const activePlayerCount = players.filter(p => !p.isSpectator).length;
-    setRoleCounts(randomizeRoles(activePlayerCount));
-  }, [players]);
+    setRoleCounts(randomizeRoles(activePlayerCount, unlockedRoles));
+  }, [players, unlockedRoles]);
 
   const handleCopyLink = useCallback(() => {
     playSciFiClick();
@@ -974,47 +981,56 @@ export default function RoleConfigPage() {
       {/* Custom Game Modal */}
       <Modal open={customGameOpen} onClose={() => setCustomGameOpen(false)} title="Custom Game Setup">
         <div className="flex flex-col gap-4">
-          <div className="font-orbitron text-sm mb-2">Assign roles to each player:</div>
-          {players.map((player) => (
-            <div key={player.id} className="flex items-center gap-3">
-              <span className="min-w-[100px] font-orbitron text-xs" style={{ color: "hsl(185 100% 70%)" }}>{player.name}{player.isHost ? " (Host)" : ""}</span>
-              {player.isHost ? (
-                <div className="px-2 py-1 rounded border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 font-orbitron text-[10px] tracking-wider uppercase">
-                  Spectator (Auto)
+          {(() => {
+            const selectableRoles = NON_SPECTATOR_ROLES.filter(r => 
+              !PREMIUM_ROLE_IDS.includes(r.id) || unlockedRoles.includes(r.id)
+            );
+            return (
+              <>
+                <div className="font-orbitron text-sm mb-2">Assign roles to each player:</div>
+                {players.map((player) => (
+                  <div key={player.id} className="flex items-center gap-3">
+                    <span className="min-w-[100px] font-orbitron text-xs" style={{ color: "hsl(185 100% 70%)" }}>{player.name}{player.isHost ? " (Host)" : ""}</span>
+                    {player.isHost ? (
+                      <div className="px-2 py-1 rounded border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 font-orbitron text-[10px] tracking-wider uppercase">
+                        Spectator (Auto)
+                      </div>
+                    ) : (
+                      <select
+                        className="px-2 py-1 rounded border bg-black text-white"
+                        value={customRoles[player.id] || ""}
+                        onChange={e => setCustomRoles(r => ({ ...r, [player.id]: e.target.value }))}
+                      >
+                        <option value="">— Assign a role —</option>
+                        {selectableRoles.map(role => (
+                          <option key={role.id} value={role.id}>{role.name}</option>
+                        ))}
+                        {SPECTATOR_ROLE && <option value={SPECTATOR_ROLE.id}>{SPECTATOR_ROLE.name}</option>}
+                      </select>
+                    )}
+                  </div>
+                ))}
+                <div className="font-orbitron text-sm mt-4 mb-2">Assign 3 center deck cards:</div>
+                <div className="flex flex-col gap-2">
+                  {[0,1,2].map(idx => (
+                    <div key={idx} className="flex items-center gap-3">
+                      <span className="min-w-[80px] font-orbitron text-xs" style={{ color: "hsl(210 80% 70%)" }}>{`Card ${idx+1}`}</span>
+                      <select
+                        className="px-2 py-1 rounded border bg-black text-white"
+                        value={customDeck[idx]}
+                        onChange={e => handleCustomDeckChange(idx, e.target.value)}
+                      >
+                        <option value="">— Assign a role —</option>
+                        {selectableRoles.map(role => (
+                          <option key={role.id} value={role.id}>{role.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                <select
-                  className="px-2 py-1 rounded border bg-black text-white"
-                  value={customRoles[player.id] || ""}
-                  onChange={e => setCustomRoles(r => ({ ...r, [player.id]: e.target.value }))}
-                >
-                  <option value="">— Assign a role —</option>
-                  {NON_SPECTATOR_ROLES.map(role => (
-                    <option key={role.id} value={role.id}>{role.name}</option>
-                  ))}
-                  {SPECTATOR_ROLE && <option value={SPECTATOR_ROLE.id}>{SPECTATOR_ROLE.name}</option>}
-                </select>
-              )}
-            </div>
-          ))}
-          <div className="font-orbitron text-sm mt-4 mb-2">Assign 3 center deck cards:</div>
-          <div className="flex flex-col gap-2">
-            {[0,1,2].map(idx => (
-              <div key={idx} className="flex items-center gap-3">
-                <span className="min-w-[80px] font-orbitron text-xs" style={{ color: "hsl(210 80% 70%)" }}>{`Card ${idx+1}`}</span>
-                <select
-                  className="px-2 py-1 rounded border bg-black text-white"
-                  value={customDeck[idx]}
-                  onChange={e => handleCustomDeckChange(idx, e.target.value)}
-                >
-                  <option value="">— Assign a role —</option>
-                  {NON_SPECTATOR_ROLES.map(role => (
-                    <option key={role.id} value={role.id}>{role.name}</option>
-                  ))}
-                </select>
-              </div>
-            ))}
-          </div>
+              </>
+            );
+          })()}
           <div className="flex gap-3 mt-4">
             <button
               className="flex-1 px-4 py-2 rounded bg-blue-700 text-white font-orbitron text-xs tracking-wider"
@@ -1333,8 +1349,6 @@ const ROLE_PRICES: Record<string, number> = {
   virus: 25,
   router: 35,
 };
-
-const PREMIUM_ROLE_IDS = ["virus", "router"];
 
 function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLoggedIn, onShowProfile, onBuyCredits }: { 
   role: Role; 

@@ -303,7 +303,7 @@ export default function VotingPage() {
           <div className="flex items-center gap-4">
             <div className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
             <div className="font-orbitron font-black text-lg tracking-[0.3em] uppercase leading-none">
-              CONSENSUS MONITORING
+              STALEMATE PROTOCOL
             </div>
           </div>
           <div className="text-right">

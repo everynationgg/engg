@@ -276,12 +276,12 @@ export default function ResultPage() {
   const bannerDim = crewWon ? "hsl(185 100% 50% / 0.1)" : alienWon ? "hsl(0 75% 55% / 0.1)" : "hsl(270 70% 60% / 0.1)";
   const bgTint = crewWon ? "hsl(200 30% 6%)" : alienWon ? "hsl(0 40% 6%)" : "hsl(270 30% 6%)";
 
-  const winLabel = crewWon ? "CREW VICTORY" : alienWon ? "ALIEN VICTORY" : "NO CONSENSUS";
+  const winLabel = crewWon ? "CREW VICTORY" : alienWon ? "ALIEN VICTORY" : "STALEMATE DETECTED";
   const winSub = crewWon
     ? "The alien has been identified and eliminated."
     : alienWon
       ? "The alien survived. The infestation continues."
-      : "No player received enough votes. The alien remains hidden.";
+      : "Consensus threshold not met. The alien remains active within the facility.";
 
   useEffect(() => {
     if (!summary) {
@@ -977,7 +977,7 @@ function EjectionCinematic({
             EJECTION ABORTED
           </div>
           <div className={`mt-6 font-orbitron font-bold text-lg tracking-[0.3em] uppercase transition-all duration-1000 delay-300 ${phase >= 2 ? 'opacity-100' : 'opacity-0'}`} style={{ color: "hsl(210 30% 40%)" }}>
-            NO CONSENSUS REACHED
+            STALEMATE DETECTED
           </div>
         </div>
       )}

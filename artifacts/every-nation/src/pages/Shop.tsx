@@ -17,7 +17,6 @@ interface Pack {
 
 // Hardcoded Fallback Packs to ensure Shop is never empty
 const FALLBACK_PACKS: Pack[] = [
-  { id: "pack_test", name: "Test Core", amount: 10000, price: "0.10", currency: "USD", rarity: "common" },
   { id: "pack_250", name: "Standard Core", amount: 250, price: "4.99", currency: "USD", rarity: "common" },
   { id: "pack_500", name: "Tactical Core", amount: 500, price: "8.99", currency: "USD", bonus: "+50 Bonus", rarity: "rare" },
   { id: "pack_1000", name: "Elite Core", amount: 1000, price: "15.99", currency: "USD", bonus: "+150 Bonus", rarity: "epic" },
@@ -214,9 +213,8 @@ export default function Shop() {
               initial={{ opacity: 0, scale: 0.9, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className={`mb-12 p-6 border-2 flex items-center justify-center gap-4 backdrop-blur-xl ${
-                error ? "border-red-500/50 bg-red-500/10" : "border-cyan-500/50 bg-cyan-500/10"
-              }`}
+              className={`mb-12 p-6 border-2 flex items-center justify-center gap-4 backdrop-blur-xl ${error ? "border-red-500/50 bg-red-500/10" : "border-cyan-500/50 bg-cyan-500/10"
+                }`}
             >
               {error ? (
                 <div className="w-2 h-2 bg-red-500 animate-pulse" />
@@ -253,10 +251,10 @@ export default function Shop() {
               <FaLock className="mx-auto text-5xl text-cyan-500/40 mb-6" />
               <h2 className="font-orbitron text-2xl tracking-[0.4em] uppercase mb-4">Connection Required</h2>
               <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/40 mb-10 leading-relaxed">
-                Anonymous Browsing Restricted.<br/>Initialize Secure Identity Handshake to Proceed.
+                Anonymous Browsing Restricted.<br />Initialize Secure Identity Handshake to Proceed.
               </p>
 
-              <Link 
+              <Link
                 href="/login"
                 className="inline-block px-12 py-5 bg-cyan-500/10 border border-cyan-500/40 hover:bg-cyan-500/20 hover:border-cyan-400 transition-all font-orbitron text-xs uppercase tracking-[0.5em] text-cyan-400 relative overflow-hidden group"
               >
@@ -274,8 +272,8 @@ export default function Shop() {
                   transition={{ delay: idx * 0.1 }}
                   onClick={() => setSelectedPack(pack)}
                   className={`relative group p-8 border transition-all duration-500 cursor-pointer overflow-hidden flex flex-col items-center backdrop-blur-md ${selectedPack?.id === pack.id
-                      ? "bg-cyan-500/10 border-cyan-400 shadow-[0_0_40px_rgba(6,182,212,0.2)] scale-[1.05] z-20"
-                      : "bg-white/[0.02] border-white/10 hover:border-cyan-500/40 hover:bg-white/[0.04]"
+                    ? "bg-cyan-500/10 border-cyan-400 shadow-[0_0_40px_rgba(6,182,212,0.2)] scale-[1.05] z-20"
+                    : "bg-white/[0.02] border-white/10 hover:border-cyan-500/40 hover:bg-white/[0.04]"
                     }`}
                 >
                   {/* Rarity Indicator */}

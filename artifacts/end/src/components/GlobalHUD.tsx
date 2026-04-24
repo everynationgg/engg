@@ -64,7 +64,7 @@ export default function GlobalHUD({ isWarping = false }) {
       <motion.div 
         className="absolute inset-[-20%] opacity-60"
         animate={isWarping ? { scaleX: 20, x: -1000, opacity: 1 } : { scaleX: 1, x: mousePos.x * 80 }}
-        transition={isWarping ? { duration: 0.5, ease: "expoIn" } : { type: "spring", damping: 20 }}
+        transition={isWarping ? { duration: 0.5, ease: "circIn" } : { type: "spring", damping: 20 }}
         style={{
           y: mousePos.y * 80,
           background: `radial-gradient(1px 1px at 5% 5%, white, transparent),

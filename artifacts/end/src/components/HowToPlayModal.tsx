@@ -101,7 +101,7 @@ export default function HowToPlayModal({ onClose }: HowToPlayModalProps) {
                 <PhaseStep step={3} title="Identity Imprinting" desc="Receive your entity assignment. WIN_CONDITION and ABILITY set to active." />
                 <PhaseStep step={4} title="Orbit Phase [ACTIVE]" desc="Deploy abilities. High-level entity swaps and scans occur during this blackout." />
                 <PhaseStep step={5} title="System Discussion" desc="Analyze anomalies. Deceive or expose. Roles may have drifted from original owners." />
-                <PhaseStep step={6} title="Verification Vote" desc="Designate one suspect for removal. Consensus required for ejection." />
+                <PhaseStep step={6} title="Verification Vote" desc="Designate one suspect for removal. Stalemate occurs if no clear majority is reached." />
                 <PhaseStep step={7} title="Final Resolution" desc="Full reveal of all identities. Crew victory upon Alien neutralization." />
               </div>
             </div>
