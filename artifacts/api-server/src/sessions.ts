@@ -529,6 +529,7 @@ export function createSession(sessionId: string, hostPlayer: Player): VersionedS
     initialRoles: {},
     centerCards: [],
     roleCounts: {},
+    unlockedRoles: [],
     orbitActions: {},
     orbitCompleted: [],
     orbitFeedback: {},

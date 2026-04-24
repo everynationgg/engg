@@ -134,6 +134,7 @@ export interface GameState {
   initialRoles: Record<string, string>;
   centerCards: string[];
   roleCounts: Record<string, number>;
+  unlockedRoles: string[];
   orbitActions: Record<string, PlayerAction>;
   orbitCompleted: string[];
   orbitFeedback: Record<string, { type: string; data?: unknown }>;
@@ -314,6 +315,7 @@ export function createGame(sessionId: string, hostPlayer: Player): GameState {
     initialRoles: {},
     centerCards: [],
     roleCounts: {},
+    unlockedRoles: [],
     orbitActions: {},
     orbitCompleted: [],
     orbitFeedback: {},
@@ -1831,6 +1833,7 @@ export function computeSanitizedState(state: GameState, viewerSocketId: string):
     initialRoles: { ...(state.initialRoles || {}) },
     orbitActions: { ...(state.orbitActions || {}) },
     orbitCompleted: [...(state.orbitCompleted || [])],
+    unlockedRoles: [...(state.unlockedRoles || [])],
     votes: { ...(state.votes || {}) },
   };
 

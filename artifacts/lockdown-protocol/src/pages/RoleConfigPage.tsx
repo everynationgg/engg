@@ -11,10 +11,19 @@ import HamburgerMenu from "@/components/HamburgerMenu";
 import SettingsModal from "@/components/SettingsModal";
 import ConfirmModal from "@/components/ConfirmModal";
 import ProfileModal from "@/components/ProfileModal";
+import { useAuth } from "@/hooks/useAuth";
+import { FaLock, FaBolt } from "react-icons/fa";
 
 const SPECTATOR_ROLES = ROLES.filter((r) => r.team === "spectator");
 const NON_SPECTATOR_ROLES = ROLES.filter((r) => r.team !== "spectator");
 const SPECTATOR_ROLE = ROLES.find((r) => r.team === "spectator");
+
+type SessionPayload = {
+  phase: string;
+  players: LivePlayer[];
+  rolesAssigned: { [playerId: string]: string };
+  unlockedRoles: string[];
+};
 
 function getMyCallsign(): string {
   return sessionStorage.getItem("lp_callsign") || "OPERATIVE";
@@ -78,6 +87,9 @@ export default function RoleConfigPage() {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
+  const { credits, isLoggedIn } = useAuth();
+  const [unlockedRoles, setUnlockedRoles] = useState<string[]>([]);
+  const [isUnlocking, setIsUnlocking] = useState(false);
 
   // isCreating is a one-shot flag: read from sessionStorage ONCE on mount (then
   // immediately deleted so reconnects never re-trigger create_session).
@@ -118,12 +130,6 @@ export default function RoleConfigPage() {
   useEffect(() => {
     const socket = getSocket();
 
-    type SessionPayload = {
-      phase: string;
-      players: LivePlayer[];
-      rolesAssigned: { [playerId: string]: string };
-    };
-
     const handlePhaseUpdate = (session: SessionPayload) => {
       console.log("PHASE:", session.phase, "PLAYERS:", session.players.length);
 
@@ -144,6 +150,7 @@ export default function RoleConfigPage() {
         isYou: myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId,
       }));
       setLivePlayers(updated);
+      setUnlockedRoles(session.unlockedRoles || []);
 
       // Detect if I am a spectator
       const me = session.players.find((p) => (myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId));
@@ -537,6 +544,22 @@ export default function RoleConfigPage() {
     setLocation(`/join/${roomCode}`);
   }, [roomCode, setLocation]);
 
+  const handleUnlockRole = useCallback((roleId: string) => {
+    if (isUnlocking) return;
+    playSciFiClick();
+    setIsUnlocking(true);
+    
+    const socket = getSocket();
+    socket.emit("unlock_role", { sessionId: roomCode, roleId }, (resp: { success: boolean; error?: string }) => {
+      setIsUnlocking(false);
+      if (resp.success) {
+        systemToast(`${roleId.toUpperCase()} role authorized for this match!`, "success");
+      } else {
+        systemToast(resp.error || "Unlock failed", "error");
+      }
+    });
+  }, [roomCode, isUnlocking]);
+
 
   // Spectators see the same HUD as the host, just without controls.
   // We'll let them fall through to the main render.
@@ -622,15 +645,23 @@ export default function RoleConfigPage() {
           </div>
         </div>
 
-
         <div className="text-right shrink-0 hidden sm:block">
-          <div className="text-xs tracking-widest uppercase mb-1" style={{ color: "hsl(210 30% 50%)" }}>Role Configuration</div>
-          <div
-            className="font-orbitron font-bold text-sm tracking-[0.2em]"
-            style={{ color: "hsl(185 100% 70%)" }}
-          >
-            PRE-GAME SETUP
-          </div>
+          {isLoggedIn ? (
+            <div className="flex flex-col items-end">
+              <div className="text-[10px] tracking-widest uppercase mb-1" style={{ color: "hsl(185 100% 50% / 0.5)" }}>Your Balance</div>
+              <div
+                className="font-orbitron font-black text-lg tracking-[0.1em]"
+                style={{ color: "hsl(185 100% 65%)", textShadow: "0 0 10px hsl(185 100% 50% / 0.4)" }}
+              >
+                {credits} <span className="text-[10px] opacity-40">CC</span>
+              </div>
+            </div>
+          ) : (
+             <div className="text-right">
+              <div className="text-xs tracking-widest uppercase mb-1" style={{ color: "hsl(210 30% 50%)" }}>Role Configuration</div>
+              <div className="font-orbitron font-bold text-sm tracking-[0.2em]" style={{ color: "hsl(185 100% 70%)" }}>PRE-GAME SETUP</div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1027,6 +1058,7 @@ export default function RoleConfigPage() {
                   onSelect={handleSelectRole}
                   onAdd={handleAdd}
                   onRemove={handleRemove}
+                  isLocked={PREMIUM_ROLE_IDS.includes(role.id) && !unlockedRoles.includes(role.id)}
                 />
               ))}
             </div>
@@ -1061,6 +1093,7 @@ export default function RoleConfigPage() {
                   onSelect={handleSelectRole}
                   onAdd={handleAdd}
                   onRemove={handleRemove}
+                  isLocked={PREMIUM_ROLE_IDS.includes(role.id) && !unlockedRoles.includes(role.id)}
                 />
               ))}
             </div>
@@ -1095,6 +1128,7 @@ export default function RoleConfigPage() {
                   onSelect={handleSelectRole}
                   onAdd={handleAdd}
                   onRemove={handleRemove}
+                  isLocked={PREMIUM_ROLE_IDS.includes(role.id) && !unlockedRoles.includes(role.id)}
                 />
               ))}
             </div>
@@ -1110,7 +1144,13 @@ export default function RoleConfigPage() {
             borderColor: "hsl(185 100% 50% / 0.15)",
           }}
         >
-          <RolePreview role={selectedRole} />
+          <RolePreview 
+            role={selectedRole} 
+            isLocked={PREMIUM_ROLE_IDS.includes(selectedRole.id) && !unlockedRoles.includes(selectedRole.id)}
+            onUnlock={handleUnlockRole}
+            userCredits={credits}
+            isUnlocking={isUnlocking}
+          />
         </div>
       </div>
     </div>
@@ -1125,9 +1165,10 @@ interface RoleCardProps {
   onSelect: (role: Role) => void;
   onAdd: (roleId: string, e: React.MouseEvent) => void;
   onRemove: (roleId: string, e: React.MouseEvent) => void;
+  isLocked?: boolean;
 }
 
-function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRemove }: RoleCardProps) {
+function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRemove, isLocked }: RoleCardProps) {
   const accentColor =
     role.team === "alien"
       ? "hsl(270 80% 55%)"
@@ -1176,12 +1217,19 @@ function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRe
           }}
         />
         {/* Count badge — hosts only */}
-        {showControls && count > 0 && (
+        {showControls && count > 0 && !isLocked && (
           <div
             className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center font-orbitron font-bold text-xs"
             style={{ background: accentColor, color: "hsl(220 30% 6%)" }}
           >
             {count}
+          </div>
+        )}
+        
+        {/* Lock Overlay */}
+        {isLocked && (
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center">
+             <FaLock className="text-white/40 text-xl" />
           </div>
         )}
       </div>
@@ -1194,7 +1242,7 @@ function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRe
         >
           {role.name}
         </div>
-        {showControls && (
+        {showControls && !isLocked && (
           <div className="flex items-center justify-center gap-2">
             <button
               onClick={(e) => onRemove(role.id, e)}
@@ -1270,7 +1318,14 @@ function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRe
   );
 }
 
-function RolePreview({ role }: { role: Role }) {
+const ROLE_PRICES: Record<string, number> = {
+  virus: 25,
+  router: 35,
+};
+
+const PREMIUM_ROLE_IDS = ["virus", "router"];
+
+function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking }: { role: Role; isLocked: boolean; onUnlock: (id: string) => void; userCredits: number; isUnlocking: boolean }) {
   const accentColor =
     role.team === "alien"
       ? "hsl(270 80% 55%)"
@@ -1348,6 +1403,30 @@ function RolePreview({ role }: { role: Role }) {
           <InfoBlock label="Win Condition" value={role.winCondition} accentColor={accentColorLight} />
           <InfoBlock label="Ability" value={role.ability} accentColor={accentColorLight} />
           <InfoBlock label="Notes" value={role.notes} accentColor={accentColorLight} dim />
+
+          {isLocked && (
+            <div className="mt-4 pt-4 border-t border-white/10 flex flex-col items-center">
+              <div className="text-[10px] tracking-widest uppercase mb-4 text-white/40">Premium Role Locked</div>
+              <button
+                onClick={() => onUnlock(role.id)}
+                disabled={isUnlocking || userCredits < (ROLE_PRICES[role.id] || 0)}
+                className="w-full py-4 rounded-md border-2 transition-all flex items-center justify-center gap-3 group"
+                style={{
+                  background: "linear-gradient(135deg, hsl(185 100% 15%), hsl(185 100% 5%))",
+                  borderColor: "hsl(185 100% 40%)",
+                  color: "hsl(185 100% 60%)",
+                  cursor: (isUnlocking || userCredits < (ROLE_PRICES[role.id] || 0)) ? "not-allowed" : "pointer",
+                  opacity: (isUnlocking || userCredits < (ROLE_PRICES[role.id] || 0)) ? 0.5 : 1
+                }}
+              >
+                <FaBolt className="text-xs group-hover:scale-125 transition-transform" />
+                <span className="font-orbitron font-bold text-xs tracking-[0.2em]">INITIALIZE UNLOCK — {ROLE_PRICES[role.id]} CC</span>
+              </button>
+              {userCredits < (ROLE_PRICES[role.id] || 0) && (
+                <p className="mt-2 font-mono text-[9px] uppercase text-red-400/60">Insufficient Credits in Account</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

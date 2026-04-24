@@ -9,6 +9,7 @@ import { spectatorRouter } from "./spectator";
 import { chatRouter } from "./chat";
 import { ttsRouter } from "./tts";
 import metricsRouter from "./metrics";
+import shopRouter from "./shop";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(spectatorRouter);
 router.use(chatRouter);
 router.use(ttsRouter);
 router.use(metricsRouter);
+router.use(shopRouter);
 
 export default router;

@@ -8,6 +8,7 @@ interface AuthContextType {
   token: string | null;
   email: string | null;
   isVerified: boolean;
+  credits: number;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, username: string, password: string) => Promise<void>;
   logout: () => void;
@@ -25,6 +26,7 @@ const STORAGE_KEY_USER_ID = "lp_user_id";
 const STORAGE_KEY_USERNAME = "lp_username";
 const STORAGE_KEY_EMAIL = "lp_email";
 const STORAGE_KEY_IS_VERIFIED = "lp_is_verified";
+const STORAGE_KEY_CREDITS = "lp_credits";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -33,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const [isVerified, setIsVerified] = useState(false);
+  const [credits, setCredits] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -58,6 +61,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsVerified(newIsVerified);
         localStorage.setItem(STORAGE_KEY_IS_VERIFIED, String(newIsVerified));
         
+        if (data.credits !== undefined) {
+          setCredits(data.credits);
+          localStorage.setItem(STORAGE_KEY_CREDITS, String(data.credits));
+        }
+        
         if (data.username) {
           setUsername(data.username);
           localStorage.setItem(STORAGE_KEY_USERNAME, data.username);
@@ -75,6 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const savedUsername = localStorage.getItem(STORAGE_KEY_USERNAME);
     const savedEmail = localStorage.getItem(STORAGE_KEY_EMAIL);
     const savedIsVerified = localStorage.getItem(STORAGE_KEY_IS_VERIFIED) === "true";
+    const savedCredits = parseInt(localStorage.getItem(STORAGE_KEY_CREDITS) || "0", 10);
     
     if (savedToken && savedUserId) {
       setToken(savedToken);
@@ -82,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUsername(savedUsername);
       setEmail(savedEmail);
       setIsVerified(savedIsVerified);
+      setCredits(savedCredits);
       setIsLoggedIn(true);
       
       // Refresh user data from server to sync verification status
@@ -185,12 +195,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(STORAGE_KEY_USERNAME);
     localStorage.removeItem(STORAGE_KEY_EMAIL);
     localStorage.removeItem(STORAGE_KEY_IS_VERIFIED);
+    localStorage.removeItem(STORAGE_KEY_CREDITS);
 
     setToken(null);
     setUserId(null);
     setUsername(null);
     setEmail(null);
     setIsVerified(false);
+    setCredits(0);
     setIsLoggedIn(false);
     setError(null);
   }, []);
@@ -232,6 +244,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token,
         email,
         isVerified,
+        credits,
         login,
         register,
         logout,

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { Server as SocketIOServer } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
 import type { Server as HttpServer } from "node:http";
@@ -52,7 +53,7 @@ import {
   type PlayerAction,
 } from "./modules/game/game.engine.js";
 import { logger } from "./lib/logger.js";
-import { db, gameChatsTable } from "@workspace/db";
+import { db, gameChatsTable, usersTable, creditTransactionsTable } from "@workspace/db";
 import { eq, desc, gt } from "drizzle-orm";
 import { redisPub, redisSub } from "./config/redis.js";
 import { checkRateLimit } from "./lib/rate-limit.js";
@@ -1220,6 +1221,101 @@ export function attachSocketIO(httpServer: HttpServer) {
         phaseUpdate(io, sessionId, cas.session);
         ack?.({ success: true });
       },
+    );
+
+    // ── UNLOCK ROLE (Credit Spend) ─────────────────────────────────────────
+    socket.on(
+      "unlock_role",
+      async (data: unknown, ack) => {
+        const unlockRoleSchema = z.object({
+          sessionId: sessionIdSchema,
+          roleId: z.enum(["virus", "router"]),
+        });
+
+        const parsed = validate(unlockRoleSchema, data, ack);
+        if (!parsed) return;
+        const { sessionId, roleId } = parsed;
+
+        if (currentSessionId !== sessionId) {
+          ack?.({ success: false, error: "Not in session" });
+          return;
+        }
+
+        if (!currentUserId) {
+          ack?.({ success: false, error: "Authentication required to spend credits" });
+          return;
+        }
+
+        const ROLE_PRICES: Record<string, number> = {
+          virus: 25,
+          router: 35,
+        };
+        const price = ROLE_PRICES[roleId];
+
+        try {
+          const success = await db.transaction(async (tx: any) => {
+            // 1. Get user and check balance
+            const user = await tx.select().from(usersTable).where(eq(usersTable.id, currentUserId!)).limit(1);
+            if (!user.length || user[0].credits < price) {
+              return false;
+            }
+
+            // 2. Check if already unlocked in this session (redundant check but good for safety)
+            const session = await getSession(sessionId);
+            if (session?.unlockedRoles.includes(roleId)) {
+              return "already_unlocked";
+            }
+
+            // 3. Deduct credits
+            await tx.update(usersTable).set({ credits: user[0].credits - price }).where(eq(usersTable.id, currentUserId!));
+
+            // 4. Log transaction
+            await tx.insert(creditTransactionsTable).values({
+              id: randomUUID(),
+              userId: currentUserId!,
+              amount: -price,
+              type: "spend",
+              description: `Unlocked ${roleId} for session ${sessionId}`,
+            });
+
+            return true;
+          });
+
+          if (success === false) {
+            ack?.({ success: false, error: "Insufficient credits" });
+            return;
+          }
+
+          if (success === "already_unlocked") {
+            ack?.({ success: false, error: "Role already authorized for this session" });
+            return;
+          }
+
+          // 5. Update live session state
+          const cas = await withCasRetry(sessionId, (session) => {
+            if (session.unlockedRoles.includes(roleId)) return CAS_SKIP;
+            session.unlockedRoles.push(roleId);
+            return true as const;
+          });
+
+          if (cas) {
+            logger.info({ sessionId, userId: currentUserId, roleId }, "Role unlocked for session");
+            logGameEvent("role_unlocked", sessionId, socket.id, { roleId, price });
+            
+            // Broadcast system message to lobby
+            const playerName = cas.session.players.find(p => p.id === socket.id)?.name || "A player";
+            chatSystemMessage(io, sessionId, `${playerName} has authorized the ${roleId.toUpperCase()} role for this match!`);
+            
+            phaseUpdate(io, sessionId, cas.session);
+            ack?.({ success: true, credits: (await db.select().from(usersTable).where(eq(usersTable.id, currentUserId!)).limit(1))[0].credits });
+          } else {
+            ack?.({ success: false, error: "Session conflict — please try again" });
+          }
+        } catch (err) {
+          logger.error({ err, sessionId, roleId }, "Failed to unlock role");
+          ack?.({ success: false, error: "Internal server error" });
+        }
+      }
     );
 
     // ── ACKNOWLEDGE ROLE REVEAL ───────────────────────────────────────────

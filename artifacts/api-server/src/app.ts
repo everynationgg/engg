@@ -93,7 +93,7 @@ app.use(globalLimiter);
 app.use("/api/auth", authLimiter);
 
 // Basic cheat detection middleware
-function detectCheat(req, res, next) {
+function detectCheat(req: Request, res: Response, next: NextFunction) {
   // Example: Check for impossible moves or rate limits
   // Log suspicious actions for review
   // TODO: Expand with more rules as needed
@@ -123,7 +123,12 @@ app.use(
   }),
 );
 
-app.use(express.json({ limit: "10kb" })); // limit body size
+app.use(express.json({
+  limit: "10kb",
+  verify: (req: any, _res, buf) => {
+    req.rawBody = buf;
+  },
+})); // limit body size
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 
 app.use("/api", router);
@@ -152,13 +157,7 @@ app.use(logReplay);
 // TODO: Integrate with API responses and UI
 
 // Example: Use BasicAIBot in game session logic where bots are needed
-app.use((req, res, next) => {
-  if (req.path.startsWith("/api/games/")) {
-    const bot = new BasicAIBot();
-    bot.processRequest(req, res, next);
-  } else {
-    next();
-  }
-});
+// Example usage: i18next.t("welcome")
+// TODO: Integrate with API responses and UI
 
 export default app;

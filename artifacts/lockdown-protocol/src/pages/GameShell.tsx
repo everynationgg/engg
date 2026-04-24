@@ -18,7 +18,6 @@ import HostGameControls from "@/components/HostGameControls";
 import ChatModal from "@/components/ChatModal";
 import FloatingChatButton from "@/components/FloatingChatButton";
 import GlobalHUD from "@/components/GlobalHUD";
-import { AnimatePresence, motion } from "framer-motion";
 
 // Phases that warrant a dramatic countdown overlay before switching
 const DRAMATIC_PHASES = new Set(["voting", "result", "discussion"]);

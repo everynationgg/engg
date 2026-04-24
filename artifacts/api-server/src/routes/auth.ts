@@ -83,7 +83,7 @@ router.post("/auth/register", async (req, res) => {
         passwordHash,
         isVerified: false,
       })
-      .returning({ id: usersTable.id, email: usersTable.email, username: usersTable.username });
+      .returning({ id: usersTable.id, email: usersTable.email, username: usersTable.username, credits: usersTable.credits });
 
     if (user.length === 0) {
       res.status(500).json({ error: "Failed to create user" });
@@ -123,6 +123,7 @@ router.post("/auth/register", async (req, res) => {
       username: user[0].username,
       token,
       isVerified: false,
+      credits: user[0].credits,
     };
 
     res.status(201).json(response);
@@ -165,6 +166,7 @@ router.post("/auth/login", async (req, res) => {
       username: user.username,
       token,
       isVerified: user.isVerified === true,
+      credits: user.credits,
     };
 
     res.json(response);
@@ -183,7 +185,7 @@ router.get("/auth/me", authMiddleware, async (req: AuthRequest, res) => {
     }
 
     const users = await db
-      .select({ id: usersTable.id, email: usersTable.email, username: usersTable.username, isVerified: usersTable.isVerified, createdAt: usersTable.createdAt })
+      .select({ id: usersTable.id, email: usersTable.email, username: usersTable.username, isVerified: usersTable.isVerified, createdAt: usersTable.createdAt, credits: usersTable.credits })
       .from(usersTable)
       .where(eq(usersTable.id, req.userId))
       .limit(1);
@@ -200,6 +202,7 @@ router.get("/auth/me", authMiddleware, async (req: AuthRequest, res) => {
       username: user.username,
       createdAt: user.createdAt,
       isVerified: user.isVerified === true,
+      credits: user.credits,
     };
 
     res.json(response);
