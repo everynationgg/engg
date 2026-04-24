@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaUser, FaWallet, FaHistory, FaShieldAlt, FaTrophy, FaGamepad, FaLink, FaEnvelope, FaCalendarAlt, FaArrowLeft, FaArrowRight, FaLock, FaSkull, FaKey } from "react-icons/fa";
+import { FaUser, FaWallet, FaHistory, FaShieldAlt, FaTrophy, FaGamepad, FaLink, FaEnvelope, FaCalendarAlt, FaArrowLeft, FaArrowRight, FaLock, FaSkull, FaKey, FaCheckCircle } from "react-icons/fa";
 import WarpJump from "@/components/WarpJump";
 import AlliesSidebar from "@/components/AlliesSidebar";
-import { systemToast } from "@/components/SystemToast";
+import { systemToast } from "../components/SystemToast";
 
 interface Activity {
   id: string;
