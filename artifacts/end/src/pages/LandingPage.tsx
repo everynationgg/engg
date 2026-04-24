@@ -264,6 +264,34 @@ export default function LandingPage() {
               >
                 JOIN GAME
               </button>
+
+              <a
+                href="/"
+                onClick={() => playSciFiClick()}
+                className="ix-btn relative w-full py-4 font-orbitron font-bold text-sm tracking-[0.25em] uppercase rounded-md border-2 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 text-center"
+                style={{
+                  background: "rgba(0, 0, 0, 0.4)",
+                  borderColor: "rgba(255, 255, 255, 0.15)",
+                  color: "rgba(255, 255, 255, 0.5)",
+                  boxShadow: "0 0 10px rgba(255, 255, 255, 0.05)",
+                }}
+                onMouseEnter={(e) => {
+                  const btn = e.currentTarget;
+                  btn.style.borderColor = "rgba(255, 255, 255, 0.4)";
+                  btn.style.color = "rgba(255, 255, 255, 0.9)";
+                  btn.style.boxShadow = "0 0 15px rgba(255, 255, 255, 0.15)";
+                  btn.style.background = "rgba(255, 255, 255, 0.05)";
+                }}
+                onMouseLeave={(e) => {
+                  const btn = e.currentTarget;
+                  btn.style.borderColor = "rgba(255, 255, 255, 0.15)";
+                  btn.style.color = "rgba(255, 255, 255, 0.5)";
+                  btn.style.boxShadow = "0 0 10px rgba(255, 255, 255, 0.05)";
+                  btn.style.background = "rgba(0, 0, 0, 0.4)";
+                }}
+              >
+                RETURN TO BASE
+              </a>
             </nav>
             </div>
           </div>

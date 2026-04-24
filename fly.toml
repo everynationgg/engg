@@ -1,7 +1,7 @@
 # fly.toml — Fly.io configuration for enfestation API server
 # Deploy from repo root: fly deploy
 
-app = 'errornewformdetected'
+app = 'engg'
 primary_region = 'sin'
 
 [build]

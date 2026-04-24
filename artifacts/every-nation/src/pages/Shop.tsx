@@ -127,7 +127,7 @@ export default function Shop() {
     <div className="shop-root min-h-screen bg-[#020408] text-white relative overflow-hidden selection:bg-cyan-500/30 font-inter">
       {/* Dynamic Background */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(6,182,212,0.15)_0%,transparent_70%)]" />
-      <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] pointer-events-none" />
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('data:image/svg+xml,%3Csvg%20viewBox=%220%200%20200%20200%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter%20id=%22noiseFilter%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.65%22%20numOctaves=%223%22%20stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect%20width=%22100%25%22%20height=%22100%25%22%20filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')]" />
       <div className="scanline" />
       
       {/* Particle Overlay (CSS Only) */}
@@ -334,13 +334,19 @@ export default function Shop() {
                     <div className="w-full">
                       {selectedPack?.id === pack.id ? (
                         <div className="animate-in fade-in zoom-in duration-300">
-                          <PayPalScriptProvider options={{ "clientId": import.meta.env.VITE_PAYPAL_CLIENT_ID }}>
-                            <PayPalButtons
-                              style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
-                              createOrder={handleCreateOrder}
-                              onApprove={handleApprove}
-                            />
-                          </PayPalScriptProvider>
+                          {import.meta.env.VITE_PAYPAL_CLIENT_ID ? (
+                            <PayPalScriptProvider options={{ "clientId": import.meta.env.VITE_PAYPAL_CLIENT_ID }}>
+                              <PayPalButtons
+                                style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
+                                createOrder={handleCreateOrder}
+                                onApprove={handleApprove}
+                              />
+                            </PayPalScriptProvider>
+                          ) : (
+                            <div className="p-4 border border-yellow-500/30 bg-yellow-500/5 rounded text-[10px] text-yellow-500/70 text-center font-mono uppercase tracking-wider">
+                              Payment Gateway Offline: Missing Config
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <button className="w-full py-3 bg-white/5 border border-white/10 font-orbitron text-[9px] uppercase tracking-[0.4em] group-hover:border-cyan-400/50 group-hover:text-cyan-400 transition-all">

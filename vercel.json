@@ -73,6 +73,14 @@
   ],
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://engg.fly.dev/api/:path*"
+    },
+    {
+      "source": "/socket.io/:path*",
+      "destination": "https://engg.fly.dev/socket.io/:path*"
+    },
+    {
       "source": "/end/:path*",
       "destination": "/end/index.html"
     },
