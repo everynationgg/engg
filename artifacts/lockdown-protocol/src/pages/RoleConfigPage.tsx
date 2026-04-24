@@ -12,7 +12,8 @@ import SettingsModal from "@/components/SettingsModal";
 import ConfirmModal from "@/components/ConfirmModal";
 import ProfileModal from "@/components/ProfileModal";
 import { useAuth } from "@/hooks/useAuth";
-import { FaLock, FaBolt } from "react-icons/fa";
+import { FaLock, FaBolt, FaCoins } from "react-icons/fa";
+import ShopModal from "@/components/ShopModal";
 
 const SPECTATOR_ROLES = ROLES.filter((r) => r.team === "spectator");
 const NON_SPECTATOR_ROLES = ROLES.filter((r) => r.team !== "spectator");
@@ -86,6 +87,7 @@ export default function RoleConfigPage() {
   const [livePlayers, setLivePlayers] = useState<LivePlayer[]>([]);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showShopModal, setShowShopModal] = useState(false);
   const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
   const { credits, isLoggedIn } = useAuth();
   const [unlockedRoles, setUnlockedRoles] = useState<string[]>([]);
@@ -1157,9 +1159,11 @@ export default function RoleConfigPage() {
             isUnlocking={isUnlocking}
             isLoggedIn={isLoggedIn}
             onShowProfile={() => setShowProfileModal(true)}
+            onBuyCredits={() => setShowShopModal(true)}
           />
         </div>
       </div>
+      <ShopModal isOpen={showShopModal} onClose={() => setShowShopModal(false)} />
     </div>
   );
 }
@@ -1332,7 +1336,7 @@ const ROLE_PRICES: Record<string, number> = {
 
 const PREMIUM_ROLE_IDS = ["virus", "router"];
 
-function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLoggedIn, onShowProfile }: { 
+function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLoggedIn, onShowProfile, onBuyCredits }: { 
   role: Role; 
   isLocked: boolean; 
   onUnlock: (id: string) => void; 
@@ -1340,6 +1344,7 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
   isUnlocking: boolean;
   isLoggedIn: boolean;
   onShowProfile: () => void;
+  onBuyCredits: () => void;
 }) {
   const accentColor =
     role.team === "alien"
@@ -1455,7 +1460,16 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
                     <span className="font-orbitron font-bold text-xs tracking-[0.2em]">INITIALIZE UNLOCK — {ROLE_PRICES[role.id]} CC</span>
                   </button>
                   {userCredits < (ROLE_PRICES[role.id] || 0) && (
-                    <p className="mt-2 font-mono text-[9px] uppercase text-red-400/60">Insufficient Credits in Account</p>
+                    <div className="mt-4 w-full flex flex-col items-center">
+                      <p className="mb-3 font-mono text-[9px] uppercase text-red-400/60">Insufficient Credits in Account</p>
+                      <button
+                        onClick={onBuyCredits}
+                        className="w-full py-3 rounded-md border border-cyan-500/30 bg-cyan-500/5 hover:bg-cyan-500/10 transition-all flex items-center justify-center gap-2 group"
+                      >
+                        <FaCoins className="text-[10px] text-cyan-400 group-hover:scale-110 transition-transform" />
+                        <span className="font-orbitron font-bold text-[10px] tracking-[0.2em] text-cyan-400">PROCURE_CREDITS</span>
+                      </button>
+                    </div>
                   )}
                 </>
               )}

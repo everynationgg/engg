@@ -12,11 +12,13 @@ import HamburgerMenu from "@/components/HamburgerMenu";
 import SettingsModal from "@/components/SettingsModal";
 import { playSciFiClick } from "@/lib/sound";
 import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
+import { FaCoins } from "react-icons/fa";
+import ShopModal from "@/components/ShopModal";
 import { useEffect, useState, useMemo } from "react";
 
 export default function ProfilePage() {
   const [, setLocation] = useLocation();
-  const { isLoggedIn, username, userId, logout, isVerified, resendVerificationEmail, refreshUser, isLoading: authLoading } = useAuth();
+  const { isLoggedIn, username, userId, logout, isVerified, credits, resendVerificationEmail, refreshUser, isLoading: authLoading } = useAuth();
   const { personalStats, roleStats, gameHistory, gameHistoryTotal, leaderboard, fetchLeaderboard, fetchPersonalStats, fetchRoleStats, fetchGameHistory } = useRecordGameResult();
   const { achievements, isLoading: achievementsLoading } = useAchievements();
   const { friends, friendRequests, searchResults, isLoading: friendsLoading, isSearching, sendFriendRequest, acceptFriendRequest, declineFriendRequest, removeFriend, searchFriends } = useFriends();
@@ -24,6 +26,7 @@ export default function ProfilePage() {
   const [resendError, setResendError] = useState<string | null>(null);
   const [resendSuccess, setResendSuccess] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showShopModal, setShowShopModal] = useState(false);
   const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
 
   const handleToggleMusic = () => {
@@ -209,6 +212,22 @@ export default function ProfilePage() {
                   <p className="font-orbitron text-xl text-cyan-400">{personalStats?.gamesWon ?? 0}</p>
                 </div>
               </div>
+
+              <div className="pt-6 border-t border-white/5">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="font-mono text-[9px] text-white/30 uppercase mb-1">Available Credits</p>
+                    <p className="font-orbitron text-2xl text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.3)]">{credits} CC</p>
+                  </div>
+                  <button
+                    onClick={() => { playSciFiClick(); setShowShopModal(true); }}
+                    className="px-4 py-2 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-orbitron text-[10px] tracking-widest uppercase hover:bg-cyan-500/20 transition-all flex items-center gap-2"
+                  >
+                    <FaCoins />
+                    Procure
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -283,6 +302,9 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
+      <ShopModal isOpen={showShopModal} onClose={() => setShowShopModal(false)} />
 
       {/* Scanline Effect Overlay */}
       <div className="fixed inset-0 pointer-events-none z-50 opacity-[0.05] overflow-hidden">
