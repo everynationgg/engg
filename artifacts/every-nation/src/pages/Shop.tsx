@@ -22,10 +22,10 @@ const FALLBACK_PACKS: Pack[] = [
   { id: "pack_2500", name: "Sovereign Core", amount: 2500, price: "34.99", currency: "USD", bonus: "+500 Bonus", rarity: "legendary" },
 ];
 
-const creditCoreImg = "/credit_core_asset_1776962578764.png";
+const creditCoreImg = "credit_core_asset_1776962578764.png";
 
 export default function Shop() {
-  const { isLoggedIn, credits, token, login, refreshUser } = useAuth();
+  const { isLoggedIn, credits, token, login, logout, refreshUser } = useAuth();
   const [packs, setPacks] = useState<Pack[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -328,12 +328,16 @@ export default function Shop() {
                     <img 
                       src={creditCoreImg} 
                       alt="Core" 
-                      onError={(e) => (e.currentTarget.style.display = 'none')}
                       className={`w-full h-full object-contain relative z-10 transition-all duration-700 ${
                         selectedPack?.id === pack.id ? "scale-110 drop-shadow-[0_0_20px_#00f3ff]" : "opacity-60 group-hover:opacity-100 group-hover:scale-105"
                       }`}
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const fallback = e.currentTarget.parentElement?.querySelector('.fallback-icon');
+                        if (fallback) (fallback as HTMLElement).style.opacity = '0.4';
+                      }}
                     />
-                    <FaDatabase className="text-6xl text-cyan-400/20 absolute group-hover:text-cyan-400/40 transition-colors" />
+                    <FaDatabase className="fallback-icon text-6xl text-cyan-400/0 absolute group-hover:text-cyan-400/40 transition-colors pointer-events-none" />
                   </div>
                   
                   <h3 className="font-orbitron text-sm tracking-[0.3em] uppercase mb-1 text-white/90 group-hover:text-white transition-colors text-center">
