@@ -162,7 +162,7 @@ export default function Shop() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020408] text-white pt-32 md:pt-44 pb-20 px-6 md:px-16 relative overflow-x-hidden selection:bg-cyan-500/30 shop-root">
+    <div className="min-h-screen bg-[#020408] text-white pt-48 md:pt-72 pb-24 px-6 md:px-16 relative overflow-x-hidden selection:bg-cyan-500/30 shop-root">
       {/* Dynamic Background */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(6,182,212,0.15)_0%,transparent_70%)]" />
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('data:image/svg+xml,%3Csvg%20viewBox=%220%200%20200%20200%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter%20id=%22noiseFilter%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.65%22%20numOctaves=%223%22%20stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect%20width=%22100%25%22%20height=%22100%25%22%20filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')]" />
@@ -200,7 +200,7 @@ export default function Shop() {
                 <div className="w-1 h-6 bg-cyan-500 shadow-[0_0_15px_#00f3ff]" />
                 <span className="font-mono text-[9px] tracking-[0.5em] uppercase text-cyan-400/60">Operational_Hub</span>
               </div>
-              <h1 className="font-orbitron font-black text-4xl md:text-5xl lg:text-6xl tracking-[0.2em] uppercase text-white leading-tight">
+              <h1 className="font-orbitron font-black text-3xl md:text-5xl lg:text-6xl tracking-[0.2em] uppercase text-white leading-tight">
                 Credit <span className="text-cyan-400">Exchange</span>
               </h1>
             </div>
@@ -353,22 +353,22 @@ export default function Shop() {
                   )}
 
                   {/* Asset Rendering */}
-                  <div className="relative w-48 h-48 mb-12 mt-8 flex items-center justify-center">
-                    <div className="absolute inset-0 blur-[60px] rounded-full transition-all duration-1000 scale-75 group-hover:scale-100"
+                  <div className="relative w-32 h-32 mb-10 mt-6 flex items-center justify-center">
+                    <div className="absolute inset-0 blur-[40px] rounded-full transition-all duration-1000 scale-90"
                       style={{ 
                         background: (pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)",
-                        opacity: selectedPack?.id === pack.id ? 0.5 : 0.15
+                        opacity: selectedPack?.id === pack.id ? 0.4 : 0.1
                       }} 
                     />
                     <img
                       src={creditCoreImg}
                       alt="Core"
-                      className={`w-full h-full object-contain relative z-10 transition-all duration-[1500ms] ease-out ${selectedPack?.id === pack.id ? "scale-115 rotate-6" : "opacity-60 group-hover:opacity-100 group-hover:scale-110 group-hover:-rotate-3"
+                      className={`w-24 h-24 object-contain relative z-10 transition-all duration-700 ${selectedPack?.id === pack.id ? "scale-105" : "opacity-50 group-hover:opacity-80"
                         }`}
                       style={{ 
                         filter: selectedPack?.id === pack.id 
-                          ? `drop-shadow(0 0 30px ${(pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)"})`
-                          : `grayscale(0.6) brightness(0.7)`
+                          ? `drop-shadow(0 0 20px ${(pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)"})`
+                          : `grayscale(0.8) brightness(0.6)`
                       }}
                     />
                   </div>

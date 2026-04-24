@@ -140,7 +140,7 @@ export default function AlliesSidebar() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: "100%", opacity: 0 }}
               transition={{ type: "spring", damping: 30, stiffness: 150 }}
-              className="fixed top-0 right-0 h-full w-[350px] md:w-[420px] bg-[#020408]/90 border-l border-cyan-500/20 z-[1000] backdrop-blur-[40px] flex flex-col shadow-[-30px_0_100px_rgba(0,0,0,0.8)] overflow-hidden"
+              className="fixed top-0 right-0 h-full w-full sm:w-[350px] md:w-[420px] bg-[#020408]/90 border-l border-cyan-500/20 z-[1000] backdrop-blur-[40px] flex flex-col shadow-[-30px_0_100px_rgba(0,0,0,0.8)] overflow-hidden"
             >
               {/* Premium Background FX */}
               <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] blend-overlay" />

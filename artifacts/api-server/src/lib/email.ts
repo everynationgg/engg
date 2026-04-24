@@ -187,7 +187,7 @@ export function generateVerificationEmailHTML(
 
         <div style="color: #ffaa00; font-size: 10px; margin-top: 40px; opacity: 0.8;">
           [!] SECURITY WARNING: THIS LINK WILL DE-AUTHENTICATE IN 24 HOURS.<br>
-          UNAUTHORIZED ACCESS IS A BREACH OF LOCKDOWN PROTOCOL.
+          UNAUTHORIZED ACCESS IS A BREACH OF ERROR NEWFORM DETECTED PROTOCOL.
         </div>
       </div>
       

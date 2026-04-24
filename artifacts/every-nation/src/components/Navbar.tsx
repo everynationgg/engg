@@ -123,13 +123,46 @@ export default function Navbar() {
                 <Link 
                   key={link.name}
                   href={link.href}
-                  className={`font-orbitron text-xs uppercase tracking-[0.4em] ${
+                  className={`font-orbitron text-sm uppercase tracking-[0.4em] ${
                     location === link.href ? "text-cyan-400" : "text-white/60"
                   }`}
                 >
                   {link.name}
                 </Link>
               ))}
+              
+              {isLoggedIn && (
+                <div className="pt-8 border-t border-white/10 flex flex-col gap-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <span className="font-mono text-[9px] uppercase text-white/30 tracking-widest">Available Credits</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-orbitron text-base text-cyan-400 font-bold">{credits.toLocaleString()}</span>
+                        <span className="font-orbitron text-[10px] text-cyan-400/50 uppercase">CC</span>
+                      </div>
+                    </div>
+                    <Link href="/profile" className="flex items-center gap-3 bg-white/5 border border-white/10 p-3 rounded-full">
+                      <FaUser className="text-cyan-400" />
+                    </Link>
+                  </div>
+                  
+                  <button 
+                    onClick={logout}
+                    className="flex items-center gap-3 font-orbitron text-[10px] uppercase tracking-[0.4em] text-red-500/60 hover:text-red-500"
+                  >
+                    <FaSignOutAlt /> Disconnect_Session
+                  </button>
+                </div>
+              )}
+
+              {!isLoggedIn && (
+                <Link 
+                  href="/login"
+                  className="w-full py-4 bg-cyan-500/10 border border-cyan-500/40 text-cyan-400 font-orbitron text-[10px] uppercase tracking-[0.4em] text-center"
+                >
+                  Initialize_Connection
+                </Link>
+              )}
               
               <div className="pt-8 border-t border-white/10">
                 <div className="flex items-center gap-4 opacity-20">

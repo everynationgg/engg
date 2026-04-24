@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaUser, FaWallet, FaHistory, FaShieldAlt, FaTrophy, FaGamepad, FaLink, FaEnvelope, FaCalendarAlt, FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import { FaUser, FaWallet, FaHistory, FaShieldAlt, FaTrophy, FaGamepad, FaLink, FaEnvelope, FaCalendarAlt, FaArrowLeft, FaArrowRight, FaLock, FaSkull, FaKey } from "react-icons/fa";
 import WarpJump from "@/components/WarpJump";
 import AlliesSidebar from "@/components/AlliesSidebar";
+import { systemToast } from "@/components/SystemToast";
 
 interface Activity {
   id: string;
@@ -18,6 +19,11 @@ export default function Profile() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isWarping, setIsWarping] = useState(false);
+  const [showCipherModal, setShowCipherModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [cipherForm, setCipherForm] = useState({ current: "", next: "", confirm: "" });
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -43,11 +49,70 @@ export default function Profile() {
     }, 800);
   };
 
-  const { user, stats, activities } = data || {};
-  const { username, email, credits, createdAt } = user || {};
+  const { user, stats, activities, achievements } = data || {};
+  const { username, email, credits, createdAt, isVerified } = user || {};
+
+  const handleUpdateCipher = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (cipherForm.next !== cipherForm.confirm) {
+      systemToast("Cipher mismatch. Keys do not align.", "error");
+      return;
+    }
+    setIsProcessing(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/update-password`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({
+          currentPassword: cipherForm.current,
+          newPassword: cipherForm.next
+        })
+      });
+      const result = await res.json();
+      if (res.ok) {
+        systemToast("Cipher updated successfully. Security re-established.", "success");
+        setShowCipherModal(false);
+        setCipherForm({ current: "", next: "", confirm: "" });
+      } else {
+        systemToast(result.error || "Update rejected. Invalid credentials.", "error");
+      }
+    } catch (err) {
+      systemToast("Handshake interrupted. Encryption failure.", "error");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleTerminateAccount = async () => {
+    if (deleteConfirm !== "TERMINATE") {
+      systemToast("Confirmation protocol invalid. Type TERMINATE to proceed.", "warning");
+      return;
+    }
+    setIsProcessing(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/terminate`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        systemToast("Account terminated. Data wiped.", "success");
+        sessionStorage.clear();
+        window.location.href = "/";
+      } else {
+        systemToast("Termination blocked. Admin override required.", "error");
+      }
+    } catch (err) {
+      systemToast("Protocol error. Termination aborted.", "error");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[#020408] text-white pt-32 md:pt-44 pb-20 px-6 md:px-16 relative overflow-y-auto selection:bg-cyan-500/30">
+    <div className="min-h-screen bg-[#020408] text-white pt-48 md:pt-60 pb-20 px-6 md:px-16 relative overflow-y-auto selection:bg-cyan-500/30">
       <AlliesSidebar />
       <AnimatePresence>
         {isWarping && <WarpJump />}
@@ -90,7 +155,7 @@ export default function Profile() {
               <motion.h1 
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="font-orbitron text-4xl md:text-5xl font-black tracking-[0.2em] uppercase text-white mb-2"
+                className="font-orbitron text-3xl md:text-5xl font-black tracking-[0.2em] uppercase text-white mb-2"
               >
                 {username}
               </motion.h1>
@@ -110,7 +175,7 @@ export default function Profile() {
             </div>
           </div>
 
-          <div className="flex flex-col items-center md:items-end bg-cyan-500/5 border border-cyan-500/20 p-8 min-w-[240px]">
+          <div className="flex flex-col items-center md:items-end bg-cyan-500/5 border border-cyan-500/20 p-6 md:p-8 w-full md:min-w-[240px]">
             <span className="font-mono text-[10px] uppercase text-white/30 mb-2 tracking-[0.4em]">Available_Credits</span>
             <div className="flex items-center gap-3">
               <span className="font-orbitron text-5xl font-black text-cyan-400 tracking-tighter">{credits?.toLocaleString()}</span>
@@ -216,41 +281,47 @@ export default function Profile() {
                 <div className="w-1 h-6 bg-cyan-500" />
                 <h2 className="font-orbitron text-lg tracking-[0.4em] uppercase">Medal_Vault</h2>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {loading ? (
-                  [...Array(6)].map((_, i) => (
+                  [...Array(5)].map((_, i) => (
                     <div key={i} className="aspect-square bg-white/[0.02] border border-white/5 animate-pulse" />
                   ))
-                ) : data.achievements?.length > 0 ? (
-                  data.achievements.map((medal: any, i: number) => (
+                ) : achievements?.length > 0 ? (
+                  achievements.map((medal: any, i: number) => (
                     <motion.div
                       key={medal.id}
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: i * 0.05 }}
-                      className={`relative aspect-square flex flex-col items-center justify-center border transition-all duration-500 group ${
+                      className={`relative aspect-square flex flex-col items-center justify-center border transition-all duration-500 group overflow-hidden ${
                         medal.unlocked 
                         ? 'bg-white/[0.04] border-white/20 hover:border-cyan-500/50 hover:bg-cyan-500/10' 
                         : 'bg-black/40 border-white/5 grayscale opacity-30'
                       }`}
                     >
-                      <span className={`text-2xl mb-1 transition-transform duration-500 ${medal.unlocked ? 'group-hover:scale-125 group-hover:rotate-12' : ''}`}>
+                      {/* Scanning Ray Effect */}
+                      {medal.unlocked && (
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent -translate-y-full group-hover:translate-y-full transition-transform duration-[2000ms] ease-linear" />
+                      )}
+
+                      <span className={`text-3xl mb-1 transition-transform duration-500 ${medal.unlocked ? 'group-hover:scale-125' : ''}`}>
                         {medal.icon}
                       </span>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-[#020408]/95 p-2 text-center pointer-events-none">
-                        <span className="font-orbitron text-[7px] uppercase tracking-tighter text-white mb-1">{medal.name}</span>
-                        <span className="font-mono text-[6px] uppercase tracking-widest text-white/40 leading-tight">{medal.description}</span>
+                      
+                      <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-[#020408]/95 p-3 text-center pointer-events-none">
+                        <span className="font-orbitron text-[8px] uppercase tracking-tighter text-cyan-400 mb-1">{medal.name}</span>
+                        <span className="font-mono text-[7px] uppercase tracking-widest text-white/40 leading-tight">{medal.description}</span>
                         {medal.unlocked && (
-                          <span className="mt-1 font-mono text-[6px] text-cyan-400">+{medal.prestigeXp} XP</span>
+                          <span className="mt-2 font-mono text-[7px] text-cyan-500/60 font-bold tracking-widest">AUTHORIZED</span>
                         )}
                       </div>
                       
-                      {/* Rarity Indicator (Bottom Dot) */}
-                      <div className={`absolute bottom-2 w-1 h-1 rounded-full ${
-                        medal.rarity === 'legendary' ? 'bg-red-500 shadow-[0_0_5px_red]' :
-                        medal.rarity === 'epic' ? 'bg-yellow-500 shadow-[0_0_5px_yellow]' :
-                        medal.rarity === 'rare' ? 'bg-purple-500 shadow-[0_0_5px_purple]' :
-                        'bg-cyan-500 shadow-[0_0_5px_cyan]'
+                      {/* Rarity Flare */}
+                      <div className={`absolute bottom-0 left-0 right-0 h-[2px] ${
+                        medal.rarity === 'legendary' ? 'bg-red-500 shadow-[0_0_10px_red]' :
+                        medal.rarity === 'epic' ? 'bg-yellow-500 shadow-[0_0_10px_yellow]' :
+                        medal.rarity === 'rare' ? 'bg-purple-500 shadow-[0_0_10px_purple]' :
+                        'bg-cyan-500 shadow-[0_0_10px_cyan]'
                       }`} />
                     </motion.div>
                   ))
@@ -266,31 +337,30 @@ export default function Profile() {
           {/* Sidebar */}
           <div className="space-y-8">
             <div className="bg-white/[0.03] border border-white/10 p-8">
-              <h3 className="font-orbitron text-xs tracking-[0.3em] uppercase mb-6 text-white/60">Account_Actions</h3>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-orbitron text-xs tracking-[0.3em] uppercase text-white/60">Account_Actions</h3>
+                <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
+              </div>
               <div className="space-y-3">
                 <button 
-                  onClick={() => alert("CIPHER_UPDATE_PROTOCOL_PENDING: GUI terminal under construction.")}
-                  className="w-full py-4 px-6 bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-orbitron text-[9px] uppercase tracking-[0.4em] text-white flex items-center justify-between"
+                  onClick={() => setShowCipherModal(true)}
+                  className="w-full py-4 px-6 bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-orbitron text-[9px] uppercase tracking-[0.4em] text-white flex items-center justify-between group"
                 >
-                  Update_Cipher <FaArrowRight className="text-[8px]" />
+                  Update_Cipher <FaKey className="text-[10px] text-cyan-500 opacity-40 group-hover:opacity-100 transition-opacity" />
                 </button>
-                {!(data?.user?.isVerified) && (
+                {!isVerified && (
                   <button 
                     onClick={() => window.location.href = "/verify"}
-                    className="w-full py-4 px-6 bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-orbitron text-[9px] uppercase tracking-[0.4em] text-white flex items-center justify-between"
+                    className="w-full py-4 px-6 bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-orbitron text-[9px] uppercase tracking-[0.4em] text-white flex items-center justify-between group"
                   >
-                    Verify_Email <FaArrowRight className="text-[8px]" />
+                    Verify_Email <FaLink className="text-[10px] text-cyan-500 opacity-40 group-hover:opacity-100 transition-opacity" />
                   </button>
                 )}
                 <button 
-                  onClick={() => {
-                    if (confirm("CRITICAL_WARNING: You are about to initiate account termination. This action is IRREVERSIBLE. Proceed with deletion?")) {
-                      alert("TERMINATION_PROTOCOL_FAILED: Higher clearance required.");
-                    }
-                  }}
-                  className="w-full py-4 px-6 bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 transition-all font-orbitron text-[9px] uppercase tracking-[0.4em] text-red-400/80 flex items-center justify-between"
+                  onClick={() => setShowDeleteModal(true)}
+                  className="w-full py-4 px-6 bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 transition-all font-orbitron text-[9px] uppercase tracking-[0.4em] text-red-400/80 flex items-center justify-between group"
                 >
-                  Terminate_Account <FaArrowRight className="text-[8px]" />
+                  Terminate_Account <FaSkull className="text-[10px] text-red-500 opacity-40 group-hover:opacity-100 transition-opacity" />
                 </button>
               </div>
             </div>
@@ -315,6 +385,126 @@ export default function Profile() {
           </div>
         </div>
       </div>
+      {/* Modals */}
+      <AnimatePresence>
+        {showCipherModal && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowCipherModal(false)}
+              className="absolute inset-0 bg-[#020408]/90 backdrop-blur-md" 
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md bg-[#0a0b1e] border border-cyan-500/30 p-8 shadow-[0_0_50px_rgba(6,182,212,0.1)]"
+            >
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-1 h-6 bg-cyan-500 shadow-[0_0_10px_#00f3ff]" />
+                <h2 className="font-orbitron text-lg tracking-[0.4em] uppercase">Cipher_Update</h2>
+              </div>
+              <form onSubmit={handleUpdateCipher} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="font-mono text-[9px] uppercase tracking-widest text-white/40">Current_Protocol_Cipher</label>
+                  <input 
+                    type="password" 
+                    required
+                    value={cipherForm.current}
+                    onChange={(e) => setCipherForm({ ...cipherForm, current: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 px-4 py-3 font-mono text-sm focus:border-cyan-500/50 outline-none transition-colors"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="font-mono text-[9px] uppercase tracking-widest text-white/40">Next_Protocol_Cipher</label>
+                  <input 
+                    type="password" 
+                    required
+                    value={cipherForm.next}
+                    onChange={(e) => setCipherForm({ ...cipherForm, next: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 px-4 py-3 font-mono text-sm focus:border-cyan-500/50 outline-none transition-colors"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="font-mono text-[9px] uppercase tracking-widest text-white/40">Verify_Next_Cipher</label>
+                  <input 
+                    type="password" 
+                    required
+                    value={cipherForm.confirm}
+                    onChange={(e) => setCipherForm({ ...cipherForm, confirm: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 px-4 py-3 font-mono text-sm focus:border-cyan-500/50 outline-none transition-colors"
+                  />
+                </div>
+                <div className="flex gap-4 pt-4">
+                  <button 
+                    type="button"
+                    onClick={() => setShowCipherModal(false)}
+                    className="flex-1 py-3 border border-white/10 font-orbitron text-[9px] uppercase tracking-[0.4em] hover:bg-white/5 transition-all"
+                  >
+                    Abort
+                  </button>
+                  <button 
+                    disabled={isProcessing}
+                    className="flex-1 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-orbitron text-[9px] uppercase tracking-[0.4em] transition-all disabled:opacity-50"
+                  >
+                    {isProcessing ? "PROCESSING..." : "Update_Cipher"}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+
+        {showDeleteModal && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowDeleteModal(false)}
+              className="absolute inset-0 bg-[#020408]/90 backdrop-blur-md" 
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md bg-[#0a0b1e] border border-red-500/30 p-8 shadow-[0_0_50px_rgba(239,68,68,0.1)]"
+            >
+              <div className="flex items-center gap-4 mb-6 text-red-500">
+                <FaSkull />
+                <h2 className="font-orbitron text-lg tracking-[0.4em] uppercase">Critical_Alert</h2>
+              </div>
+              <p className="font-mono text-[10px] text-white/60 mb-8 leading-relaxed uppercase tracking-wider">
+                You are initiating a full account termination protocol. This will permanently wipe your credits, service history, and medal vault. This action is <span className="text-red-500 font-bold">IRREVERSIBLE</span>.
+              </p>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="font-mono text-[9px] uppercase tracking-widest text-white/40">Type "TERMINATE" to confirm</label>
+                  <input 
+                    type="text" 
+                    value={deleteConfirm}
+                    onChange={(e) => setDeleteConfirm(e.target.value)}
+                    className="w-full bg-red-500/5 border border-red-500/20 px-4 py-3 font-mono text-sm focus:border-red-500/50 outline-none text-red-400 transition-colors"
+                  />
+                </div>
+                <div className="flex gap-4 pt-4">
+                  <button 
+                    onClick={() => setShowDeleteModal(false)}
+                    className="flex-1 py-3 border border-white/10 font-orbitron text-[9px] uppercase tracking-[0.4em] hover:bg-white/5 transition-all"
+                  >
+                    Abort
+                  </button>
+                  <button 
+                    disabled={isProcessing || deleteConfirm !== "TERMINATE"}
+                    onClick={handleTerminateAccount}
+                    className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white font-orbitron text-[9px] uppercase tracking-[0.4em] transition-all disabled:opacity-30"
+                  >
+                    {isProcessing ? "TERMINATING..." : "Execute_Termination"}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

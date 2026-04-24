@@ -86,6 +86,7 @@ export default function HamburgerMenu({
       id: "profile",
       icon: <ProfileIcon />,
       label: "PROFILE",
+      tooltip: "Access service records and personal identity data.",
       onClick: () => handleMenuItemClick(onShowProfile),
       color: "#00f3ff"
     });
@@ -93,6 +94,7 @@ export default function HamburgerMenu({
       id: "logout",
       icon: <LogoutIcon />,
       label: "LOGOUT",
+      tooltip: "Terminate current authenticated session.",
       onClick: handleLogout,
       color: "#ffaa00"
     });
@@ -101,6 +103,7 @@ export default function HamburgerMenu({
       id: "login",
       icon: <LoginIcon />,
       label: "LOGIN",
+      tooltip: "Establish a secure identity handshake.",
       onClick: () => handleMenuItemClick(onShowAuth),
       color: "#ffaa00"
     });
@@ -110,6 +113,7 @@ export default function HamburgerMenu({
     id: "settings",
     icon: <SettingsIcon />,
     label: "SETTINGS",
+    tooltip: "Adjust mission parameters and interface aesthetics.",
     onClick: () => handleMenuItemClick(onShowSettings),
     color: "#c084fc"
   });
@@ -118,6 +122,7 @@ export default function HamburgerMenu({
     id: "howtoplay",
     icon: <ManualIcon />,
     label: "MANUAL",
+    tooltip: "Consult the operative's tactical field manual.",
     onClick: () => { playSound(); closeMenu(); setShowHowToPlay(true); },
     color: "#00f3ff"
   });
@@ -126,6 +131,7 @@ export default function HamburgerMenu({
     id: "sound",
     icon: musicOn ? <SoundOnIcon /> : <SoundOffIcon />,
     label: "AUDIO",
+    tooltip: "Toggle acoustic feedback protocols.",
     onClick: () => { playSound(); onToggleMusic(); },
     color: musicOn ? "#00f3ff" : "rgba(255,255,255,0.3)"
   });
@@ -135,6 +141,7 @@ export default function HamburgerMenu({
       id: "quit",
       icon: <ExitIcon />,
       label: midGame ? "QUIT GAME" : "QUIT",
+      tooltip: midGame ? "Abort active mission and retreat." : "Exit current sector.",
       onClick: () => { playSound(); closeMenu(); openConfirm(); },
       color: "#ff4e4e"
     });
@@ -145,6 +152,7 @@ export default function HamburgerMenu({
       id: "restart",
       icon: <RestartIcon />,
       label: "RESTART",
+      tooltip: "Re-initialize current mission cycle.",
       onClick: () => handleMenuItemClick(onRestartRound),
       color: "#00f3ff"
     });
@@ -187,7 +195,7 @@ export default function HamburgerMenu({
               <button
                 key={item.id}
                 onClick={item.onClick}
-                className="absolute flex items-center justify-center w-14 h-14 rounded-full cursor-pointer pointer-events-auto group overflow-hidden"
+                className="absolute flex items-center justify-center w-14 h-14 rounded-full cursor-pointer pointer-events-auto group"
                 style={{
                   background: "rgba(12, 16, 22, 0.9)",
                   border: `1px solid ${item.color}40`,
@@ -206,19 +214,29 @@ export default function HamburgerMenu({
                    {item.icon}
                 </div>
                 
-                <div className="absolute inset-0 bg-white/0 group-hover:bg-white/5 transition-colors" />
+                <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none">
+                  {/* Animated Scanline for each button */}
+                  <div className="absolute inset-x-0 top-0 h-px bg-white/20 shadow-[0_0_5px_white] animate-[scan_2s_linear_infinite]" />
+                  <div className="absolute inset-0 bg-white/0 group-hover:bg-white/5 transition-colors" />
+                </div>
 
-                {/* Label */}
-                <span className="absolute whitespace-nowrap px-3 py-1 bg-black/90 border border-white/10 text-[8px] font-orbitron tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-all pointer-events-none translate-y-2 group-hover:translate-y-0"
+                {/* Label & Tooltip Container */}
+                <div className="absolute whitespace-nowrap flex flex-col items-center transition-all pointer-events-none lg:opacity-0 lg:group-hover:opacity-100 opacity-100"
                       style={{ 
-                        color: item.color,
-                        top: "-40px",
+                        top: "-55px",
                         left: "50%",
                         transform: "translateX(-50%)",
-                        boxShadow: `0 0 15px ${item.color}20`
                       }}>
-                  {item.label}
-                </span>
+                  <span className="px-2 py-0.5 bg-black/90 border border-white/10 text-[8px] font-orbitron tracking-[0.2em]"
+                        style={{ color: item.color, boxShadow: `0 0 15px ${item.color}20` }}>
+                    {item.label}
+                  </span>
+                  <div className="mt-1 px-3 py-1 bg-[#0a0b1e]/90 border border-white/5 rounded-sm shadow-xl max-w-[120px] text-center">
+                    <p className="font-mono text-[6px] leading-tight uppercase tracking-widest text-white/40">
+                      {item.tooltip}
+                    </p>
+                  </div>
+                </div>
               </button>
             );
           })}

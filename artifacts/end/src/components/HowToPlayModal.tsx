@@ -91,7 +91,7 @@ export default function HowToPlayModal({ onClose }: HowToPlayModalProps) {
             <div className="max-w-2xl space-y-12">
               <div className="p-6 bg-white/5 border-l-2 border-cyan-500/50">
                  <p className="font-mono text-xs leading-relaxed text-cyan-100/70 uppercase tracking-widest">
-                    Lockdown Protocol is a high-stakes social deduction engagement. Identify anomalies, synchronize with your unit, and prevent system-wide infestation.
+                    Error Newform Detected is a high-stakes social deduction engagement. Identify anomalies, synchronize with your unit, and prevent system-wide infestation.
                  </p>
               </div>
 

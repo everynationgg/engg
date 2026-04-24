@@ -27,7 +27,7 @@ function GameCard({ title, description, image, href, status, subtitle, index }: 
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, delay: index * 0.15 }}
       onClick={handleEntry}
-      className={`relative group flex flex-col w-full max-w-[400px] aspect-[10/14] transition-all duration-700 ${isOffline ? "cursor-not-allowed grayscale" : "cursor-pointer"
+      className={`relative group flex flex-col w-full max-w-[400px] aspect-[4/5] md:aspect-[10/14] transition-all duration-700 ${isOffline ? "cursor-not-allowed grayscale" : "cursor-pointer"
         }`}
     >
       {/* Decorative HUD Corner Bracket (Top Right) */}
@@ -70,7 +70,7 @@ function GameCard({ title, description, image, href, status, subtitle, index }: 
         </div>
 
         <div className="flex flex-col gap-1">
-          <h2 className="font-orbitron font-black text-2xl tracking-[0.1em] uppercase text-white group-hover:text-cyan-400 transition-colors">
+          <h2 className="font-orbitron font-black text-xl md:text-2xl tracking-[0.1em] uppercase text-white group-hover:text-cyan-400 transition-colors">
             {title}
           </h2>
           <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-cyan-500/60 font-bold">
@@ -78,15 +78,15 @@ function GameCard({ title, description, image, href, status, subtitle, index }: 
           </span>
         </div>
 
-        <p className="font-mono text-[11px] uppercase tracking-wider text-white/50 leading-relaxed max-w-[90%] opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+        <p className="font-mono text-[11px] uppercase tracking-wider text-white/50 leading-relaxed max-w-[90%] lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-500">
           {description}
         </p>
 
         {!isOffline && (
-          <div className="mt-4 flex items-center gap-4 text-cyan-400 opacity-60 group-hover:opacity-100 transition-all">
+          <div className="mt-4 flex items-center gap-4 text-cyan-400 lg:opacity-60 lg:group-hover:opacity-100 transition-all">
             <span className="font-orbitron text-[10px] uppercase tracking-[0.5em] font-bold">Initialize Deployment</span>
             <div className="flex-1 h-px bg-cyan-500/20" />
-            <FaExternalLinkAlt className="text-[10px] group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+            <FaExternalLinkAlt className="text-[10px] lg:group-hover:translate-x-1 lg:group-hover:-translate-y-1 transition-transform" />
           </div>
         )}
       </div>
@@ -100,10 +100,10 @@ function GameCard({ title, description, image, href, status, subtitle, index }: 
 export default function Hub() {
   const games = [
     {
-      title: "Lockdown Protocol",
-      subtitle: "Social Deduction Engine",
-      description: "A high-stakes network defense simulator. Identify the Virus before core breach.",
-      image: "/hub_lockdown.png",
+      title: "Error Newform Detected",
+      subtitle: "Newform Neural Engine",
+      description: "A high-stakes network defense simulator. Identify the Newform anomaly before system compromise.",
+      image: "/hub_newform.png",
       href: "/end",
       status: "online" as const
     },
@@ -124,7 +124,7 @@ export default function Hub() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#020408] text-white pt-32 md:pt-40 relative flex flex-col items-center overflow-x-hidden selection:bg-cyan-500/30">
+    <div className="min-h-screen bg-[#020408] text-white pt-48 md:pt-40 relative flex flex-col items-center overflow-x-hidden selection:bg-cyan-500/30">
       <AlliesSidebar />
       {/* Cinematic Background Layer */}
       <div
@@ -137,12 +137,12 @@ export default function Hub() {
       <div className="fixed inset-0 pointer-events-none z-20 scanline" />
 
       {/* Header Overlay */}
-      <header className="relative z-10 w-full max-w-[1440px] px-8 md:px-16 pt-16 md:pt-24 flex flex-col gap-4">
+      <header className="relative z-10 w-full max-w-[1440px] px-8 md:px-16 pt-32 md:pt-48 flex flex-col gap-4 mb-8 md:mb-0">
         <div className="flex items-center gap-4">
           <div className="w-12 h-[2px] bg-cyan-500 shadow-[0_0_15px_#00f3ff]" />
           <span className="font-mono text-[10px] uppercase tracking-[0.8em] text-cyan-500">Mission_Select</span>
         </div>
-        <h1 className="font-orbitron font-black text-4xl md:text-6xl tracking-[0.2em] uppercase text-white">
+        <h1 className="font-orbitron font-black text-3xl md:text-6xl tracking-[0.2em] uppercase text-white">
           Gaming <span className="text-cyan-400">Hub</span>
         </h1>
         <div className="flex items-center gap-6 mt-4 opacity-30">
@@ -162,7 +162,7 @@ export default function Hub() {
       </header>
 
       {/* Main Mission Deck */}
-      <div className="relative z-10 w-full max-w-[1440px] px-8 md:px-16 py-20 md:py-32">
+      <div className="relative z-10 w-full max-w-[1440px] px-8 md:px-16 pt-12 pb-20 md:py-32">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-16 justify-items-center">
           {games.map((game, i) => (
             <GameCard key={game.title} {...game} index={i} />

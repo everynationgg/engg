@@ -83,7 +83,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="w-full flex flex-col items-center gap-16 md:gap-24"
+              className="w-full flex flex-col items-center gap-8 md:gap-24"
             >
               {/* Welcome Text */}
               <div className="flex flex-col items-center gap-4">
@@ -91,7 +91,7 @@ export default function Home() {
                   initial={{ opacity: 0, letterSpacing: "0.2em" }}
                   animate={{ opacity: 1, letterSpacing: "0.8em" }}
                   transition={{ duration: 2, ease: "easeOut" }}
-                  className="font-orbitron text-xs md:text-sm uppercase text-white/40 font-bold text-center"
+                  className="font-orbitron text-[10px] md:text-sm uppercase text-white/40 font-bold text-center"
                 >
                   Welcome to Every Nation
                 </motion.div>
