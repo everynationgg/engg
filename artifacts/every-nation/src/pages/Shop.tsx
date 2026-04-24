@@ -16,6 +16,7 @@ interface Pack {
 
 // Hardcoded Fallback Packs to ensure Shop is never empty
 const FALLBACK_PACKS: Pack[] = [
+  { id: "pack_test", name: "Test Core", amount: 10, price: "0.10", currency: "USD", rarity: "common" },
   { id: "pack_250", name: "Standard Core", amount: 250, price: "4.99", currency: "USD", rarity: "common" },
   { id: "pack_500", name: "Tactical Core", amount: 500, price: "8.99", currency: "USD", bonus: "+50 Bonus", rarity: "rare" },
   { id: "pack_1000", name: "Elite Core", amount: 1000, price: "15.99", currency: "USD", bonus: "+150 Bonus", rarity: "epic" },

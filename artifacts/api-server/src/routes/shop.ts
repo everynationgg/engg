@@ -8,13 +8,14 @@ import { logger } from "../lib/logger.js";
 const router: IRouter = Router();
 
 const PAYPAL_MODE = (process.env.PAYPAL_MODE || "sandbox").trim().toLowerCase();
-const PAYPAL_API = PAYPAL_MODE === "live" 
-  ? "https://api-m.paypal.com" 
+const PAYPAL_API = PAYPAL_MODE === "live"
+  ? "https://api-m.paypal.com"
   : "https://api-m.sandbox.paypal.com";
 
 logger.info({ mode: PAYPAL_MODE, endpoint: PAYPAL_API }, "PayPal Service Initialized");
 
 const CREDIT_PACKS = [
+  { id: "pack_test", name: "Test Core", amount: 10000, price: "0.10", currency: "USD" },
   { id: "pack_250", name: "Standard Core", amount: 250, price: "4.99", currency: "USD" },
   { id: "pack_500", name: "Tactical Core", amount: 500, price: "8.99", currency: "USD" },
   { id: "pack_1000", name: "Elite Core", amount: 1000, price: "15.99", currency: "USD" },
@@ -90,11 +91,11 @@ router.post("/shop/create-order", authMiddleware, async (req: AuthRequest, res) 
   } catch (error: any) {
     logger.error({ error }, "PayPal order creation failed");
     if (error.message === "MISSING_PAYPAL_CREDENTIALS") {
-       res.status(500).json({ error: "Server Error: PayPal secrets not configured on host." });
+      res.status(500).json({ error: "Server Error: PayPal secrets not configured on host." });
     } else if (error.message.startsWith("PAYPAL_OAUTH_FAILED:")) {
-       res.status(500).json({ error: `PayPal Auth Error: ${error.message.split(":")[1]}` });
+      res.status(500).json({ error: `PayPal Auth Error: ${error.message.split(":")[1]}` });
     } else {
-       res.status(500).json({ error: "Failed to create PayPal order" });
+      res.status(500).json({ error: "Failed to create PayPal order" });
     }
   }
 });
@@ -125,7 +126,7 @@ router.post("/shop/capture-order", authMiddleware, async (req: AuthRequest, res)
       // Check if the amount paid matches our pack price to prevent frontend tampering
       const purchaseUnit = captureData.purchase_units?.[0];
       const capturedAmount = purchaseUnit?.payments?.captures?.[0]?.amount?.value;
-      
+
       if (capturedAmount !== pack.price) {
         logger.error({ orderID, capturedAmount, expectedPrice: pack.price }, "Price mismatch detected!");
         res.status(400).json({ error: "Price verification failed. Potential tampering detected." });
