@@ -7,9 +7,12 @@ import { logger } from "../lib/logger.js";
 
 const router: IRouter = Router();
 
-const PAYPAL_API = process.env.PAYPAL_MODE === "live" 
+const PAYPAL_MODE = (process.env.PAYPAL_MODE || "sandbox").trim().toLowerCase();
+const PAYPAL_API = PAYPAL_MODE === "live" 
   ? "https://api-m.paypal.com" 
   : "https://api-m.sandbox.paypal.com";
+
+logger.info({ mode: PAYPAL_MODE, endpoint: PAYPAL_API }, "PayPal Service Initialized");
 
 const CREDIT_PACKS = [
   { id: "pack_250", name: "Standard Core", amount: 250, price: "4.99", currency: "USD" },
@@ -19,10 +22,13 @@ const CREDIT_PACKS = [
 ];
 
 async function getPayPalAccessToken() {
-  if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
+  const clientId = (process.env.PAYPAL_CLIENT_ID || "").trim();
+  const clientSecret = (process.env.PAYPAL_CLIENT_SECRET || "").trim();
+
+  if (!clientId || !clientSecret) {
     throw new Error("MISSING_PAYPAL_CREDENTIALS");
   }
-  const auth = Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`).toString("base64");
+  const auth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
   const response = await fetch(`${PAYPAL_API}/v1/oauth2/token`, {
     method: "POST",
     body: "grant_type=client_credentials",
