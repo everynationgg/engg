@@ -41,8 +41,8 @@ export default function Navbar() {
           <div className="w-8 h-8 border border-cyan-500/50 flex items-center justify-center group-hover:border-cyan-400 transition-colors">
             <div className="w-4 h-4 bg-cyan-500 shadow-[0_0_10px_#00f3ff]" />
           </div>
-          <span className="font-orbitron font-black text-lg tracking-[0.3em] uppercase text-white group-hover:text-cyan-400 transition-colors">
-            Every<span className="text-cyan-400">Nation</span>
+          <span className="font-orbitron font-black text-xl tracking-[0.3em] uppercase text-white group-hover:text-cyan-400 transition-colors">
+            ENGG
           </span>
         </Link>
 
@@ -155,36 +155,11 @@ export default function Navbar() {
                 )
               ))}
               
-              <div className="pt-8 border-t border-white/10 flex flex-col gap-6">
-                {isLoggedIn ? (
-                  <>
-                    <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10">
-                      <div className="flex flex-col">
-                        <span className="font-mono text-[9px] uppercase text-white/30 tracking-widest">Balance</span>
-                        <div className="flex items-center gap-2">
-                          <span className="font-orbitron text-lg text-cyan-400 font-bold">{credits}</span>
-                          <span className="font-orbitron text-[10px] text-cyan-400/50 uppercase">CC</span>
-                        </div>
-                      </div>
-                      <Link href="/profile" className="p-3 bg-cyan-500/10 border border-cyan-500/40 rounded">
-                        <FaUser className="text-cyan-400" />
-                      </Link>
-                    </div>
-                    <button 
-                      onClick={logout}
-                      className="w-full py-4 bg-red-500/10 border border-red-500/20 text-red-500 font-orbitron text-[10px] uppercase tracking-[0.4em]"
-                    >
-                      Disconnect Identity
-                    </button>
-                  </>
-                ) : (
-                  <Link 
-                    href="/login"
-                    className="w-full py-4 bg-cyan-500/10 border border-cyan-500/40 text-cyan-400 text-center font-orbitron text-[10px] uppercase tracking-[0.4em]"
-                  >
-                    Initialize Connection
-                  </Link>
-                )}
+              <div className="pt-8 border-t border-white/10">
+                <div className="flex items-center gap-4 opacity-20">
+                  <div className="w-2 h-2 bg-cyan-500" />
+                  <span className="font-mono text-[9px] uppercase tracking-[0.5em]">System_Stable</span>
+                </div>
               </div>
             </div>
           </motion.div>

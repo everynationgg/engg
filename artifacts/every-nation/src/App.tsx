@@ -12,7 +12,7 @@ import Navbar from "@/components/Navbar";
 
 function Router() {
   return (
-    <div className="pt-20 lg:pt-0"> {/* Add padding for the fixed navbar on mobile */}
+    <div className="pt-20"> {/* Unified padding to clear fixed navbar */}
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/shop" component={Shop} />
@@ -26,17 +26,18 @@ function Router() {
   );
 }
 
-function App() {
+export default function App() {
+  const [location] = useLocation();
+  const isHomePage = location === "/";
+
   return (
     <AuthProvider>
       <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
         <div className="min-h-screen bg-black text-white selection:bg-cyan-500/30">
-          <Navbar />
+          {!isHomePage && <Navbar />}
           <Router />
         </div>
       </WouterRouter>
     </AuthProvider>
   );
 }
-
-export default App;

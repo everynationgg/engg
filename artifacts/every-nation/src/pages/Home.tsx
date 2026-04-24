@@ -65,7 +65,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="landing-root">
+    <div className="landing-root overflow-y-auto">
       <video
         ref={videoRef}
         className="bg-video"
@@ -80,8 +80,8 @@ export default function Home() {
         <div className="buttons-row">
           <GlassButton
             label="Community"
-            subtext="discord.gg/everynation"
-            onClick={() => window.open("https://discord.gg/everynation", "_blank")}
+            subtext="discord.gg/engg"
+            onClick={() => window.open("https://discord.gg/engg", "_blank")}
           />
           <GlassButton
             label="Gaming Hub"

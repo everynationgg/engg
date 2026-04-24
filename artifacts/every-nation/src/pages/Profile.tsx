@@ -37,12 +37,12 @@ export default function Profile() {
   const { username, email, credits, createdAt } = user || {};
 
   return (
-    <div className="min-h-screen bg-[#020408] text-white pt-24 pb-20 px-6 md:px-12 relative overflow-hidden selection:bg-cyan-500/30">
+    <div className="min-h-screen bg-[#020408] text-white pt-32 pb-20 px-6 md:px-16 relative overflow-y-auto selection:bg-cyan-500/30">
       {/* Background FX */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(6,182,212,0.1)_0%,transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(6,182,212,0.15)_0%,transparent_50%)]" />
       <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[url('data:image/svg+xml,%3Csvg%20viewBox=%220%200%20200%20200%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter%20id=%22noiseFilter%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.65%22%20numOctaves=%223%22%20stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect%20width=%22100%25%22%20height=%22100%25%22%20filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')]" />
 
-      <div className="max-w-7xl mx-auto relative z-10">
+      <div className="w-full relative z-10">
         {/* Profile Header */}
         <header className="mb-12 flex flex-col md:flex-row items-center md:items-end justify-between gap-8 pb-12 border-b border-white/5">
           <div className="flex flex-col md:flex-row items-center gap-8">

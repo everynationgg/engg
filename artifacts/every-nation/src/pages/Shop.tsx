@@ -133,7 +133,7 @@ export default function Shop() {
   };
 
   return (
-    <div className="shop-root min-h-screen bg-[#020408] text-white relative overflow-hidden selection:bg-cyan-500/30 font-inter">
+    <div className="shop-root min-h-screen bg-[#020408] text-white relative overflow-y-auto selection:bg-cyan-500/30 font-inter">
       {/* Dynamic Background */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(6,182,212,0.15)_0%,transparent_70%)]" />
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('data:image/svg+xml,%3Csvg%20viewBox=%220%200%20200%20200%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter%20id=%22noiseFilter%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.65%22%20numOctaves=%223%22%20stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect%20width=%22100%25%22%20height=%22100%25%22%20filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')]" />
@@ -157,10 +157,10 @@ export default function Shop() {
         ))}
       </div>
 
-      <div className="relative z-10 max-w-[1440px] mx-auto px-6 md:px-12 py-8 md:py-16 min-h-screen flex flex-col">
+      <div className="relative z-10 w-full px-6 md:px-16 py-12 md:pt-32 pb-24 min-h-screen flex flex-col">
 
         {/* Header HUD */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-8">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-24 gap-12 border-b border-white/5 pb-12">
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
