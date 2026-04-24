@@ -56,6 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(STORAGE_KEY_IS_VERIFIED, String(data.isVerified));
         localStorage.setItem(STORAGE_KEY_CREDITS, String(data.credits || 0));
         localStorage.setItem(STORAGE_KEY_USERNAME, data.username);
+      } else if (response.status === 401) {
+        logout();
       }
     } catch (err) {
       console.error("Failed to refresh user:", err);

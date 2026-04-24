@@ -69,6 +69,10 @@ export default function Shop() {
 
   const handleCreateOrder = async () => {
     if (!selectedPack) return "";
+    if (!isLoggedIn) {
+      setError("Authentication Required: Please sign in to establish connection.");
+      return "";
+    }
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/shop/create-order`, {
         method: "POST",
@@ -78,6 +82,11 @@ export default function Shop() {
         },
         body: JSON.stringify({ packId: selectedPack.id }),
       });
+      if (response.status === 401) {
+        logout();
+        setError("Session Synchronisation Lost: Re-authorization required.");
+        return "";
+      }
       const order = await response.json();
       return order.id;
     } catch (err) {
@@ -96,6 +105,11 @@ export default function Shop() {
         },
         body: JSON.stringify({ orderID: data.orderID, packId: selectedPack?.id }),
       });
+      if (response.status === 401) {
+        logout();
+        setError("Handshake Interrupt: Session Expired.");
+        return;
+      }
       const captureData = await response.json();
       if (captureData.success) {
         setSuccessCredits(captureData.credits);
