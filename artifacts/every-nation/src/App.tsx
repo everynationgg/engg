@@ -13,6 +13,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 
 import Navbar from "@/components/Navbar";
 import WarpJump from "@/components/WarpJump";
+import SystemToastContainer from "@/components/SystemToast";
 
 function Router() {
   return (
@@ -51,6 +52,7 @@ export default function App() {
     <AuthProvider>
       <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
         <div className="min-h-screen bg-black text-white selection:bg-cyan-500/30">
+          <SystemToastContainer />
           <AnimatePresence>
             {isWarping && <WarpJump />}
           </AnimatePresence>
