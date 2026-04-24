@@ -545,6 +545,11 @@ export default function RoleConfigPage() {
   }, [roomCode, setLocation]);
 
   const handleUnlockRole = useCallback((roleId: string) => {
+    if (!isLoggedIn) {
+      systemToast("Authentication required to spend credits", "warning");
+      setShowProfileModal(true);
+      return;
+    }
     if (isUnlocking) return;
     playSciFiClick();
     setIsUnlocking(true);
@@ -558,7 +563,7 @@ export default function RoleConfigPage() {
         systemToast(resp.error || "Unlock failed", "error");
       }
     });
-  }, [roomCode, isUnlocking]);
+  }, [roomCode, isUnlocking, isLoggedIn]);
 
 
   // Spectators see the same HUD as the host, just without controls.
@@ -1150,6 +1155,8 @@ export default function RoleConfigPage() {
             onUnlock={handleUnlockRole}
             userCredits={credits}
             isUnlocking={isUnlocking}
+            isLoggedIn={isLoggedIn}
+            onShowProfile={() => setShowProfileModal(true)}
           />
         </div>
       </div>
@@ -1325,7 +1332,15 @@ const ROLE_PRICES: Record<string, number> = {
 
 const PREMIUM_ROLE_IDS = ["virus", "router"];
 
-function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking }: { role: Role; isLocked: boolean; onUnlock: (id: string) => void; userCredits: number; isUnlocking: boolean }) {
+function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLoggedIn, onShowProfile }: { 
+  role: Role; 
+  isLocked: boolean; 
+  onUnlock: (id: string) => void; 
+  userCredits: number; 
+  isUnlocking: boolean;
+  isLoggedIn: boolean;
+  onShowProfile: () => void;
+}) {
   const accentColor =
     role.team === "alien"
       ? "hsl(270 80% 55%)"
@@ -1407,23 +1422,42 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking }: { r
           {isLocked && (
             <div className="mt-4 pt-4 border-t border-white/10 flex flex-col items-center">
               <div className="text-[10px] tracking-widest uppercase mb-4 text-white/40">Premium Role Locked</div>
-              <button
-                onClick={() => onUnlock(role.id)}
-                disabled={isUnlocking || userCredits < (ROLE_PRICES[role.id] || 0)}
-                className="w-full py-4 rounded-md border-2 transition-all flex items-center justify-center gap-3 group"
-                style={{
-                  background: "linear-gradient(135deg, hsl(185 100% 15%), hsl(185 100% 5%))",
-                  borderColor: "hsl(185 100% 40%)",
-                  color: "hsl(185 100% 60%)",
-                  cursor: (isUnlocking || userCredits < (ROLE_PRICES[role.id] || 0)) ? "not-allowed" : "pointer",
-                  opacity: (isUnlocking || userCredits < (ROLE_PRICES[role.id] || 0)) ? 0.5 : 1
-                }}
-              >
-                <FaBolt className="text-xs group-hover:scale-125 transition-transform" />
-                <span className="font-orbitron font-bold text-xs tracking-[0.2em]">INITIALIZE UNLOCK — {ROLE_PRICES[role.id]} CC</span>
-              </button>
-              {userCredits < (ROLE_PRICES[role.id] || 0) && (
-                <p className="mt-2 font-mono text-[9px] uppercase text-red-400/60">Insufficient Credits in Account</p>
+              
+              {!isLoggedIn ? (
+                <button
+                  onClick={onShowProfile}
+                  className="w-full py-4 rounded-md border-2 border-dashed transition-all flex items-center justify-center gap-3 group"
+                  style={{
+                    background: "hsl(220 28% 10%)",
+                    borderColor: "hsl(210 30% 30%)",
+                    color: "hsl(210 30% 60%)",
+                    cursor: "pointer"
+                  }}
+                >
+                  <FaLock className="text-xs group-hover:scale-125 transition-transform" />
+                  <span className="font-orbitron font-bold text-xs tracking-[0.2em]">LOGIN TO INITIALIZE UNLOCK</span>
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => onUnlock(role.id)}
+                    disabled={isUnlocking || userCredits < (ROLE_PRICES[role.id] || 0)}
+                    className="w-full py-4 rounded-md border-2 transition-all flex items-center justify-center gap-3 group"
+                    style={{
+                      background: "linear-gradient(135deg, hsl(185 100% 15%), hsl(185 100% 5%))",
+                      borderColor: "hsl(185 100% 40%)",
+                      color: "hsl(185 100% 60%)",
+                      cursor: (isUnlocking || userCredits < (ROLE_PRICES[role.id] || 0)) ? "not-allowed" : "pointer",
+                      opacity: (isUnlocking || userCredits < (ROLE_PRICES[role.id] || 0)) ? 0.5 : 1
+                    }}
+                  >
+                    <FaBolt className="text-xs group-hover:scale-125 transition-transform" />
+                    <span className="font-orbitron font-bold text-xs tracking-[0.2em]">INITIALIZE UNLOCK — {ROLE_PRICES[role.id]} CC</span>
+                  </button>
+                  {userCredits < (ROLE_PRICES[role.id] || 0) && (
+                    <p className="mt-2 font-mono text-[9px] uppercase text-red-400/60">Insufficient Credits in Account</p>
+                  )}
+                </>
               )}
             </div>
           )}
