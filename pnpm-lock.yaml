@@ -24,6 +24,9 @@ catalogs:
     '@types/node':
       specifier: ^25.3.3
       version: 25.6.0
+    '@types/nodemailer':
+      specifier: ^6.4.17
+      version: 6.4.23
     '@types/pg':
       specifier: ^8.11.11
       version: 8.20.0
@@ -273,6 +276,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 25.6.0
+      '@types/nodemailer':
+        specifier: 'catalog:'
+        version: 6.4.23
       esbuild:
         specifier: 0.27.3
         version: 0.27.3
@@ -2540,6 +2546,9 @@ packages:
 
   '@types/node@25.6.0':
     resolution: {integrity: sha512-+qIYRKdNYJwY3vRCZMdJbPLJAtGjQBudzZzdzwQYkEPQd+PJGixUL5QfvCLDaULoLv+RhT3LDkwEfKaAkgSmNQ==}
+
+  '@types/nodemailer@6.4.23':
+    resolution: {integrity: sha512-aFV3/NsYFLSx9mbb5gtirBSXJnAlrusoKNuPbxsASWc7vrKLmIrTQRpdcxNcSFL3VW2A2XpeLEavwb2qMi6nlQ==}
 
   '@types/pg-pool@2.0.7':
     resolution: {integrity: sha512-U4CwmGVQcbEuqpyju8/ptOKg6gEC+Tqsvj2xS9o1g71bUh8twxnC6ZL5rZKCsGN0iyH0CwgUyc9VR5owNQF9Ng==}
@@ -7314,6 +7323,10 @@ snapshots:
   '@types/node@25.6.0':
     dependencies:
       undici-types: 7.19.2
+
+  '@types/nodemailer@6.4.23':
+    dependencies:
+      '@types/node': 25.6.0
 
   '@types/pg-pool@2.0.7':
     dependencies:

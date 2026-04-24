@@ -31,6 +31,7 @@ export interface AuthResponse {
   username: string;
   token: string;
   isVerified: boolean;
+  credits: number;
 }
 
 export interface UserProfile {
@@ -39,6 +40,7 @@ export interface UserProfile {
   username: string;
   createdAt: string;
   isVerified: boolean;
+  credits: number;
 }
 
 /**

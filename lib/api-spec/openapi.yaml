@@ -211,12 +211,15 @@ components:
           type: string
         isVerified:
           type: boolean
+        credits:
+          type: integer
       required:
         - id
         - email
         - username
         - token
         - isVerified
+        - credits
     UserProfile:
       type: object
       properties:
@@ -231,12 +234,15 @@ components:
           format: date-time
         isVerified:
           type: boolean
+        credits:
+          type: integer
       required:
         - id
         - email
         - username
         - createdAt
         - isVerified
+        - credits
     RecordGameRequest:
       type: object
       properties:

@@ -12,4 +12,5 @@ export interface UserProfile {
   username: string;
   createdAt: Date;
   isVerified: boolean;
+  credits: number;
 }
