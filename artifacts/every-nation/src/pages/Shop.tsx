@@ -162,7 +162,7 @@ export default function Shop() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020408] text-white pt-24 pb-20 px-6 md:px-16 relative overflow-x-hidden selection:bg-cyan-500/30 shop-root">
+    <div className="min-h-screen bg-[#020408] text-white pt-32 md:pt-44 pb-20 px-6 md:px-16 relative overflow-x-hidden selection:bg-cyan-500/30 shop-root">
       {/* Dynamic Background */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(6,182,212,0.15)_0%,transparent_70%)]" />
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('data:image/svg+xml,%3Csvg%20viewBox=%220%200%20200%20200%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter%20id=%22noiseFilter%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.65%22%20numOctaves=%223%22%20stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect%20width=%22100%25%22%20height=%22100%25%22%20filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')]" />
@@ -222,7 +222,7 @@ export default function Shop() {
                   <p className="font-mono text-[10px] uppercase text-white/30 mb-1 tracking-[0.3em]">Operational Balance</p>
                   <div className="flex items-center justify-end gap-2">
                     <span className="font-orbitron text-4xl text-cyan-400 font-bold tracking-tighter">
-                      {displayCredits}
+                      {displayCredits.toLocaleString()}
                     </span>
                     <span className="font-orbitron text-[12px] tracking-[0.2em] text-cyan-400/50 pt-2">CC</span>
                   </div>
@@ -359,7 +359,7 @@ export default function Shop() {
                     {pack.name}
                   </h3>
                   <p className="font-mono text-[18px] font-bold text-white tracking-[0.1em] mb-8">
-                    {pack.amount} <span className="text-[10px] opacity-50 tracking-widest" style={{ color: (pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)" }}>CC</span>
+                    {pack.amount.toLocaleString()} <span className="text-[10px] opacity-50 tracking-widest" style={{ color: (pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)" }}>CC</span>
                   </p>
 
                   <div className="mt-auto w-full pt-6 border-t border-white/5 flex flex-col items-center gap-4">

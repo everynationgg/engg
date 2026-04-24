@@ -83,17 +83,30 @@ export default function Home() {
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="w-full flex flex-col items-center gap-12"
+              className="w-full flex flex-col items-center gap-16 md:gap-24"
             >
-              <div className="flex flex-wrap justify-center gap-4 md:gap-8 w-full max-w-[1200px]">
-                <div className="w-full sm:w-[280px]">
+              {/* Welcome Text */}
+              <div className="flex flex-col items-center gap-4">
+                <motion.div
+                  initial={{ opacity: 0, letterSpacing: "0.2em" }}
+                  animate={{ opacity: 1, letterSpacing: "0.8em" }}
+                  transition={{ duration: 2, ease: "easeOut" }}
+                  className="font-orbitron text-xs md:text-sm uppercase text-white/40 font-bold text-center"
+                >
+                  Welcome to Every Nation
+                </motion.div>
+                <div className="w-24 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              </div>
+
+              <div className="grid grid-cols-2 lg:flex lg:flex-row justify-center gap-4 md:gap-8 w-full max-w-[1400px]">
+                <div className="w-full lg:w-[280px]">
                   <GlassButton
                     label="Community"
                     subtext="Join Discord"
                     onClick={() => window.open("https://discord.gg/engg", "_blank")}
                   />
                 </div>
-                <div className="w-full sm:w-[280px]">
+                <div className="w-full lg:w-[280px]">
                   <GlassButton
                     label="Gaming Hub"
                     subtext="Enter Mission Control"
@@ -101,14 +114,14 @@ export default function Home() {
                     onClick={() => window.location.href = "/hub"}
                   />
                 </div>
-                <div className="w-full sm:w-[280px]">
+                <div className="w-full lg:w-[280px]">
                   <GlassButton
                     label="Credit Shop"
                     subtext="Acquire CC Assets"
                     onClick={() => window.location.href = "/shop"}
                   />
                 </div>
-                <div className="w-full sm:w-[280px]">
+                <div className="w-full lg:w-[280px]">
                   <GlassButton
                     label="Socials"
                     subtext="Connect with ENGG"

@@ -47,7 +47,7 @@ export default function Profile() {
   const { username, email, credits, createdAt } = user || {};
 
   return (
-    <div className="min-h-screen bg-[#020408] text-white pt-24 pb-20 px-6 md:px-16 relative overflow-y-auto selection:bg-cyan-500/30">
+    <div className="min-h-screen bg-[#020408] text-white pt-32 md:pt-44 pb-20 px-6 md:px-16 relative overflow-y-auto selection:bg-cyan-500/30">
       <AlliesSidebar />
       <AnimatePresence>
         {isWarping && <WarpJump />}
@@ -113,7 +113,7 @@ export default function Profile() {
           <div className="flex flex-col items-center md:items-end bg-cyan-500/5 border border-cyan-500/20 p-8 min-w-[240px]">
             <span className="font-mono text-[10px] uppercase text-white/30 mb-2 tracking-[0.4em]">Available_Credits</span>
             <div className="flex items-center gap-3">
-              <span className="font-orbitron text-5xl font-black text-cyan-400 tracking-tighter">{credits}</span>
+              <span className="font-orbitron text-5xl font-black text-cyan-400 tracking-tighter">{credits?.toLocaleString()}</span>
               <span className="font-orbitron text-sm text-cyan-400/50 mt-4 tracking-widest uppercase">CC</span>
             </div>
             <button 
@@ -152,7 +152,7 @@ export default function Profile() {
                       <div className="w-8 h-8 rounded bg-white/5 flex items-center justify-center text-sm">
                         {stat.icon}
                       </div>
-                      <span className="font-orbitron text-2xl font-bold">{stat.value}</span>
+                      <span className="font-orbitron text-2xl font-bold">{stat.value.toLocaleString()}</span>
                     </div>
                     <span className="font-mono text-[9px] uppercase tracking-widest text-white/30">{stat.label}</span>
                   </motion.div>
@@ -198,7 +198,7 @@ export default function Profile() {
                         </div>
                       </div>
                       {activity.amount && (
-                        <span className="font-orbitron text-sm text-cyan-400">+{activity.amount} CC</span>
+                        <span className="font-orbitron text-sm text-cyan-400">+{activity.amount.toLocaleString()} CC</span>
                       )}
                     </motion.div>
                   ))
@@ -268,13 +268,28 @@ export default function Profile() {
             <div className="bg-white/[0.03] border border-white/10 p-8">
               <h3 className="font-orbitron text-xs tracking-[0.3em] uppercase mb-6 text-white/60">Account_Actions</h3>
               <div className="space-y-3">
-                <button className="w-full py-4 px-6 bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-orbitron text-[9px] uppercase tracking-[0.4em] text-white flex items-center justify-between">
+                <button 
+                  onClick={() => alert("CIPHER_UPDATE_PROTOCOL_PENDING: GUI terminal under construction.")}
+                  className="w-full py-4 px-6 bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-orbitron text-[9px] uppercase tracking-[0.4em] text-white flex items-center justify-between"
+                >
                   Update_Cipher <FaArrowRight className="text-[8px]" />
                 </button>
-                <button className="w-full py-4 px-6 bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-orbitron text-[9px] uppercase tracking-[0.4em] text-white flex items-center justify-between">
-                  Verify_Email <FaArrowRight className="text-[8px]" />
-                </button>
-                <button className="w-full py-4 px-6 bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 transition-all font-orbitron text-[9px] uppercase tracking-[0.4em] text-red-400/80 flex items-center justify-between">
+                {!(data?.user?.isVerified) && (
+                  <button 
+                    onClick={() => window.location.href = "/verify"}
+                    className="w-full py-4 px-6 bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-orbitron text-[9px] uppercase tracking-[0.4em] text-white flex items-center justify-between"
+                  >
+                    Verify_Email <FaArrowRight className="text-[8px]" />
+                  </button>
+                )}
+                <button 
+                  onClick={() => {
+                    if (confirm("CRITICAL_WARNING: You are about to initiate account termination. This action is IRREVERSIBLE. Proceed with deletion?")) {
+                      alert("TERMINATION_PROTOCOL_FAILED: Higher clearance required.");
+                    }
+                  }}
+                  className="w-full py-4 px-6 bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 transition-all font-orbitron text-[9px] uppercase tracking-[0.4em] text-red-400/80 flex items-center justify-between"
+                >
                   Terminate_Account <FaArrowRight className="text-[8px]" />
                 </button>
               </div>

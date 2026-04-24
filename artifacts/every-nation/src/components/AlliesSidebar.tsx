@@ -105,190 +105,302 @@ export default function AlliesSidebar() {
   return (
     <>
       {/* Toggle Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-1/2 -right-1 transform -translate-y-1/2 z-[100] bg-[#0a0b1e]/80 border border-cyan-500/30 p-4 rounded-l-xl backdrop-blur-xl hover:bg-cyan-500/10 transition-all shadow-[0_0_20px_rgba(6,182,212,0.1)] group"
-      >
-        <FaUserFriends className="text-cyan-400 text-xl group-hover:scale-110 transition-transform" />
-        {pendingRequests.length > 0 && (
-          <span className="absolute -top-1 -left-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full animate-pulse">
-            {pendingRequests.length}
-          </span>
-        )}
-      </button>
+      {!isOpen && (
+        <motion.button
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-8 right-8 z-[100] w-14 h-14 md:w-16 md:h-16 bg-[#0a0b1e]/60 border border-cyan-500/20 backdrop-blur-xl hover:bg-cyan-500/10 hover:border-cyan-400/50 transition-all shadow-[0_0_30px_rgba(6,182,212,0.1)] group flex items-center justify-center overflow-hidden"
+        >
+          {/* HUD Corner Accents */}
+          <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-cyan-500/40 group-hover:border-cyan-400" />
+          <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-cyan-500/40 group-hover:border-cyan-400" />
+          
+          <div className="flex flex-col items-center gap-1 relative z-10">
+            <FaUserFriends className="text-cyan-400 text-xl md:text-2xl group-hover:scale-110 transition-transform" />
+            <span className="font-mono text-[7px] uppercase tracking-[0.2em] text-cyan-400/40 group-hover:text-cyan-400/80 transition-colors">Allies</span>
+          </div>
+          
+          {/* Scanning Line Effect */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-400/5 to-transparent h-1/2 w-full -translate-y-full group-hover:animate-scan-vertical pointer-events-none" />
+
+          {pendingRequests.length > 0 && (
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20">
+              {pendingRequests.length}
+            </span>
+          )}
+        </motion.button>
+      )}
 
       {/* Sidebar Panel */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 h-full w-[320px] md:w-[380px] bg-[#020408]/95 border-l border-white/5 z-[1000] backdrop-blur-3xl p-8 flex flex-col shadow-[-20px_0_50px_rgba(0,0,0,0.5)]"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  <div className="w-1 h-4 bg-cyan-500" />
-                  <span className="font-orbitron text-xs tracking-[0.3em] uppercase text-white/40">Subsystem</span>
-                </div>
-                <h2 className="font-orbitron text-xl font-black tracking-[0.1em] uppercase text-white">Allies_Network</h2>
-              </div>
-              <button 
-                onClick={() => setIsOpen(false)}
-                className="w-10 h-10 flex items-center justify-center border border-white/5 hover:border-red-500/50 hover:bg-red-500/10 transition-all rounded"
-              >
-                <FaTimes className="text-white/20 hover:text-red-400" />
-              </button>
-            </div>
+            <motion.div
+              initial={{ x: "100%", opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: "100%", opacity: 0 }}
+              transition={{ type: "spring", damping: 30, stiffness: 150 }}
+              className="fixed top-0 right-0 h-full w-[350px] md:w-[420px] bg-[#020408]/90 border-l border-cyan-500/20 z-[1000] backdrop-blur-[40px] flex flex-col shadow-[-30px_0_100px_rgba(0,0,0,0.8)] overflow-hidden"
+            >
+              {/* Premium Background FX */}
+              <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] blend-overlay" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(6,182,212,0.15)_0%,transparent_50%)]" />
+              
+              {/* Tactical Hex Grid Overlay */}
+              <div className="absolute inset-0 opacity-[0.05] pointer-events-none" 
+                style={{ backgroundImage: `radial-gradient(cyan 1px, transparent 0)`, backgroundSize: '24px 24px' }} 
+              />
 
-            {/* Tabs */}
-            <div className="flex gap-2 mb-6">
-              <button 
-                onClick={() => setActiveTab("allies")}
-                className={`flex-1 py-3 font-orbitron text-[9px] uppercase tracking-[0.3em] border transition-all ${
-                  activeTab === "allies" ? "bg-cyan-500/10 border-cyan-500/40 text-cyan-400" : "bg-white/5 border-white/5 text-white/30 hover:text-white/60"
-                }`}
-              >
-                Roster
-              </button>
-              <button 
-                onClick={() => setActiveTab("search")}
-                className={`flex-1 py-3 font-orbitron text-[9px] uppercase tracking-[0.3em] border transition-all ${
-                  activeTab === "search" ? "bg-cyan-500/10 border-cyan-500/40 text-cyan-400" : "bg-white/5 border-white/5 text-white/30 hover:text-white/60"
-                }`}
-              >
-                Scan_Grid
-              </button>
-            </div>
-
-            {/* Search Bar */}
-            {activeTab === "search" && (
-              <div className="relative mb-6">
-                <input
-                  type="text"
-                  placeholder="Scan for Usernames..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  className="w-full bg-white/5 border border-white/10 p-4 font-mono text-xs uppercase tracking-widest text-white focus:border-cyan-500/50 focus:outline-none transition-all pr-12"
-                />
-                <button 
-                  onClick={handleSearch}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-cyan-400 hover:text-cyan-300 transition-colors"
-                >
-                  <FaSearch />
-                </button>
-              </div>
-            )}
-
-            {/* List Area */}
-            <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
-              {activeTab === "allies" ? (
-                <>
-                  {/* Pending Requests Header */}
-                  {pendingRequests.length > 0 && (
-                    <div className="mb-8">
-                      <div className="flex items-center gap-2 mb-4 opacity-40">
-                        <FaUserPlus className="text-[10px]" />
-                        <span className="font-mono text-[8px] uppercase tracking-[0.4em]">Inbound_Signals</span>
-                      </div>
-                      <div className="space-y-3">
-                        {pendingRequests.map((req) => (
-                          <div key={req.id} className="p-4 bg-cyan-500/5 border border-cyan-500/20 flex items-center justify-between">
-                            <div className="flex flex-col">
-                              <span className="font-orbitron text-[10px] uppercase text-white tracking-widest">{req.username}</span>
-                              <span className="font-mono text-[7px] uppercase text-cyan-400/60 tracking-widest">Pending_Approval</span>
-                            </div>
-                            <div className="flex gap-2">
-                              <button 
-                                onClick={() => acceptRequest(req.id)}
-                                className="w-8 h-8 flex items-center justify-center bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 hover:bg-cyan-500 transition-all rounded"
-                              >
-                                <FaCheck className="text-xs" />
-                              </button>
-                              <button className="w-8 h-8 flex items-center justify-center bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 transition-all rounded">
-                                <FaTimes className="text-xs" />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+              {/* Top Scanning Header */}
+              <div className="relative pt-10 px-8 pb-6 border-b border-white/5">
+                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent animate-pulse" />
+                
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-ping" />
+                      <span className="font-mono text-[10px] tracking-[0.6em] uppercase text-cyan-400/60">Subsystem_Active</span>
                     </div>
-                  )}
-
-                  {/* Allies List */}
-                  <div className="flex items-center gap-2 mb-4 opacity-40">
-                    <FaUserFriends className="text-[10px]" />
-                    <span className="font-mono text-[8px] uppercase tracking-[0.4em]">Active_Allies</span>
+                    <h2 className="font-orbitron text-2xl font-black tracking-[0.2em] uppercase text-white drop-shadow-[0_0_10px_rgba(6,182,212,0.3)]">
+                      Allies_<span className="text-cyan-400">Net</span>
+                    </h2>
                   </div>
-                  {allies.length > 0 ? (
-                    allies.map((ally) => (
-                      <div key={ally.id} className="p-4 bg-white/5 border border-white/5 hover:border-cyan-500/20 transition-all flex items-center justify-between group">
-                        <div className="flex items-center gap-4">
-                          <div className="relative">
-                            <div className="w-10 h-10 bg-white/5 border border-white/10 rounded-full flex items-center justify-center">
-                              <FaUserSecret className="text-white/20 group-hover:text-cyan-500/40 transition-colors" />
+                  <button 
+                    onClick={() => setIsOpen(false)}
+                    className="w-10 h-10 flex items-center justify-center bg-white/5 border border-white/10 hover:border-red-500/50 hover:bg-red-500/10 transition-all group"
+                  >
+                    <FaTimes className="text-white/20 group-hover:text-red-400 transition-colors" />
+                  </button>
+                </div>
+                <div className="font-mono text-[8px] uppercase tracking-[0.4em] text-white/20">Encryption: AES-4096_QUANTUM</div>
+              </div>
+
+              {/* Tactical Tabs */}
+              <div className="flex p-6 gap-2">
+                {[
+                  { id: "allies", label: "Roster", icon: <FaUserFriends /> },
+                  { id: "search", label: "Scan_Grid", icon: <FaSearch /> }
+                ].map((tab) => (
+                  <button 
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={`flex-1 flex items-center justify-center gap-3 py-4 font-orbitron text-[10px] uppercase tracking-[0.3em] transition-all relative overflow-hidden group ${
+                      activeTab === tab.id 
+                        ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/30" 
+                        : "bg-white/[0.02] text-white/30 border border-white/5 hover:bg-white/[0.05] hover:text-white/60"
+                    }`}
+                  >
+                    <span className={`text-xs ${activeTab === tab.id ? "text-cyan-400" : "text-white/20"}`}>
+                      {tab.icon}
+                    </span>
+                    {tab.label}
+                    {activeTab === tab.id && (
+                      <motion.div 
+                        layoutId="activeTab"
+                        className="absolute bottom-0 left-0 w-full h-[2px] bg-cyan-400 shadow-[0_0_10px_#00f3ff]" 
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {/* Main Content Area */}
+              <div className="flex-1 overflow-y-auto px-6 space-y-6 custom-scrollbar pb-12">
+                
+                {activeTab === "search" && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="relative"
+                  >
+                    <input
+                      type="text"
+                      placeholder="Enter Operator ID..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                      className="w-full bg-[#0a0b1e]/60 border border-cyan-500/20 p-5 font-mono text-xs uppercase tracking-[0.3em] text-white focus:border-cyan-400/50 focus:outline-none transition-all pr-12 placeholder:text-white/10"
+                    />
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                      {loading ? (
+                        <div className="w-4 h-4 border border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
+                      ) : (
+                        <button onClick={handleSearch} className="text-cyan-400/40 hover:text-cyan-400 transition-colors">
+                          <FaSearch />
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+
+                <AnimatePresence mode="wait">
+                  {activeTab === "allies" ? (
+                    <motion.div 
+                      key="allies-list"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="space-y-6"
+                    >
+                      {/* Inbound Section */}
+                      {pendingRequests.length > 0 && (
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-1 h-3 bg-yellow-500/50" />
+                            <span className="font-mono text-[9px] uppercase tracking-[0.5em] text-yellow-500/60">Inbound_Signals ({pendingRequests.length})</span>
+                          </div>
+                          {pendingRequests.map((req) => (
+                            <div key={req.id} className="p-5 bg-yellow-500/5 border border-yellow-500/20 rounded-sm flex items-center justify-between group hover:bg-yellow-500/10 transition-all">
+                              <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 border border-yellow-500/30 bg-yellow-500/10 flex items-center justify-center rounded-full">
+                                  <FaUserPlus className="text-yellow-500/60" />
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="font-orbitron text-xs uppercase text-white tracking-widest">{req.username}</span>
+                                  <span className="font-mono text-[7px] uppercase text-yellow-500/40">Handshake_Pending</span>
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <button 
+                                  onClick={() => acceptRequest(req.id)}
+                                  className="w-9 h-9 flex items-center justify-center bg-yellow-500/20 border border-yellow-500/40 text-yellow-500 hover:bg-yellow-500 hover:text-black transition-all"
+                                >
+                                  <FaCheck />
+                                </button>
+                              </div>
                             </div>
-                            <FaCircle className={`absolute bottom-0 right-0 text-[10px] ${ally.status === 'online' ? 'text-cyan-400 shadow-[0_0_5px_#00f3ff]' : 'text-white/10'}`} />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="font-orbitron text-[11px] uppercase text-white tracking-widest">{ally.username}</span>
-                            <span className="font-mono text-[7px] uppercase text-white/20 tracking-widest">{ally.status === 'online' ? 'Connected' : 'Offline'}</span>
-                          </div>
+                          ))}
                         </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-12 opacity-20">
-                      <span className="font-mono text-[9px] uppercase tracking-[0.3em]">No Allies Linked</span>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <>
-                  {loading ? (
-                    <div className="text-center py-12">
-                      <div className="w-8 h-8 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin mx-auto mb-4" />
-                      <span className="font-mono text-[9px] uppercase tracking-[0.3em] opacity-30">Scanning Frequency...</span>
-                    </div>
-                  ) : searchResults.length > 0 ? (
-                    searchResults.map((user) => (
-                      <div key={user.id} className="p-4 bg-white/5 border border-white/5 flex items-center justify-between">
-                        <div className="flex flex-col">
-                          <span className="font-orbitron text-[10px] uppercase text-white tracking-widest">{user.username}</span>
-                          <span className="font-mono text-[7px] uppercase text-white/20 tracking-widest">Operator_{user.id.slice(0, 8)}</span>
+                      )}
+
+                      {/* Active Roster */}
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-1 h-3 bg-cyan-500" />
+                          <span className="font-mono text-[9px] uppercase tracking-[0.5em] text-cyan-400/60">Tactical_Roster</span>
                         </div>
-                        {user.friendshipStatus === 'accepted' ? (
-                          <span className="font-mono text-[8px] uppercase text-cyan-400/40 tracking-widest">Linked</span>
-                        ) : user.friendshipStatus === 'pending' ? (
-                          <span className="font-mono text-[8px] uppercase text-yellow-500/40 tracking-widest">Sent</span>
+                        {allies.length > 0 ? (
+                          allies.map((ally) => (
+                            <motion.div 
+                              key={ally.id}
+                              whileHover={{ x: 5 }}
+                              className="relative p-5 bg-white/[0.03] border border-white/5 hover:border-cyan-500/30 transition-all group overflow-hidden"
+                            >
+                              {/* Corner Accents */}
+                              <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-cyan-500/0 group-hover:border-cyan-500/60 transition-all" />
+                              <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-cyan-500/0 group-hover:border-cyan-500/60 transition-all" />
+
+                              <div className="flex items-center justify-between relative z-10">
+                                <div className="flex items-center gap-5">
+                                  <div className="relative">
+                                    <div className="w-12 h-12 bg-[#0a0b1e] border border-white/10 rounded-full flex items-center justify-center overflow-hidden">
+                                      <div className="absolute inset-0 bg-cyan-500/5 animate-pulse" />
+                                      <FaUserSecret className="text-white/20 text-xl relative z-10 group-hover:text-cyan-400/40 transition-colors" />
+                                    </div>
+                                    <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-4 border-[#020408] ${
+                                      ally.status === 'online' ? 'bg-cyan-500 shadow-[0_0_10px_#00f3ff]' : 'bg-white/10'
+                                    }`} />
+                                  </div>
+                                  <div className="flex flex-col gap-0.5">
+                                    <span className="font-orbitron text-sm uppercase text-white tracking-widest group-hover:text-cyan-400 transition-colors">{ally.username}</span>
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-mono text-[7px] uppercase tracking-[0.2em] text-white/30">
+                                        {ally.status === 'online' ? 'Uplink_Established' : 'Signal_Lost'}
+                                      </span>
+                                      {ally.status === 'online' && <div className="w-1 h-1 bg-cyan-500 rounded-full animate-pulse" />}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="opacity-0 group-hover:opacity-100 transition-all">
+                                  <FaCircle className="text-[6px] text-cyan-400 animate-ping" />
+                                </div>
+                              </div>
+                            </motion.div>
+                          ))
                         ) : (
-                          <button 
-                            onClick={() => sendRequest(user.id)}
-                            className="px-4 py-2 bg-cyan-500/10 border border-cyan-500/40 text-cyan-400 font-orbitron text-[8px] uppercase tracking-widest hover:bg-cyan-500 hover:text-white transition-all rounded"
-                          >
-                            Add_Ally
-                          </button>
+                          <div className="py-20 text-center border border-white/5 bg-white/[0.01]">
+                            <div className="mb-4 opacity-10 flex justify-center"><FaUserFriends size={40} /></div>
+                            <span className="font-mono text-[10px] uppercase tracking-[0.5em] text-white/20">Grid_Empty: No Allies Linked</span>
+                          </div>
                         )}
                       </div>
-                    ))
-                  ) : searchQuery.length >= 2 ? (
-                    <div className="text-center py-12 opacity-20">
-                      <span className="font-mono text-[9px] uppercase tracking-[0.3em]">No Match Found</span>
-                    </div>
-                  ) : null}
-                </>
-              )}
-            </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div 
+                      key="search-results"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="space-y-4"
+                    >
+                      {searchResults.length > 0 ? (
+                        searchResults.map((user) => (
+                          <div key={user.id} className="p-5 bg-white/[0.03] border border-white/5 flex items-center justify-between group hover:border-cyan-500/30 transition-all relative overflow-hidden">
+                            <div className="flex flex-col gap-1">
+                              <span className="font-orbitron text-xs uppercase text-white tracking-widest">{user.username}</span>
+                              <span className="font-mono text-[7px] uppercase text-white/20 tracking-[0.4em]">Node_ID: {user.id.slice(0, 8)}</span>
+                            </div>
+                            
+                            <div className="relative z-10">
+                              {user.friendshipStatus === 'accepted' ? (
+                                <div className="flex items-center gap-2 text-cyan-400/40">
+                                  <FaCheck className="text-[10px]" />
+                                  <span className="font-mono text-[8px] uppercase tracking-widest">Linked</span>
+                                </div>
+                              ) : user.friendshipStatus === 'pending' ? (
+                                <div className="flex items-center gap-2 text-yellow-500/40">
+                                  <div className="w-1 h-1 bg-yellow-500 rounded-full animate-pulse" />
+                                  <span className="font-mono text-[8px] uppercase tracking-widest">Transmitting</span>
+                                </div>
+                              ) : (
+                                <button 
+                                  onClick={() => sendRequest(user.id)}
+                                  className="px-6 py-2.5 bg-cyan-500/10 border border-cyan-500/40 text-cyan-400 font-orbitron text-[9px] uppercase tracking-widest hover:bg-cyan-500 hover:text-black transition-all relative group/btn"
+                                >
+                                  Add_Ally
+                                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      ) : searchQuery.length >= 2 ? (
+                        <div className="py-20 text-center">
+                          <span className="font-mono text-[10px] uppercase tracking-[0.5em] text-white/20">Scan_Complete: No Matches</span>
+                        </div>
+                      ) : (
+                        <div className="py-20 text-center flex flex-col items-center gap-4 opacity-20">
+                          <FaSearch size={30} />
+                          <span className="font-mono text-[10px] uppercase tracking-[0.4em]">Awaiting_Input...</span>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
-            {/* Bottom Info */}
-            <div className="mt-6 pt-6 border-t border-white/5 opacity-20">
-              <span className="font-mono text-[8px] uppercase tracking-[0.4em]">Net_Node: US-WEST-2 // SECURE</span>
-            </div>
-          </motion.div>
+              {/* Bottom System Status */}
+              <div className="mt-auto p-8 border-t border-white/5 bg-black/40 backdrop-blur-md">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex flex-col gap-1">
+                    <span className="font-mono text-[8px] uppercase text-white/20 tracking-widest">Neural_Link</span>
+                    <span className="font-mono text-[9px] uppercase text-cyan-500 tracking-[0.2em]">Established</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-mono text-[8px] uppercase text-white/20 tracking-widest">Latency</span>
+                    <span className="font-mono text-[9px] uppercase text-cyan-500 tracking-[0.2em]">14.2ms</span>
+                  </div>
+                </div>
+                <div className="w-full h-1 bg-white/5 relative overflow-hidden">
+                  <motion.div 
+                    initial={{ width: "0%" }}
+                    animate={{ width: "100%" }}
+                    transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                    className="absolute top-0 left-0 h-full bg-cyan-500/40" 
+                  />
+                </div>
+              </div>
+            </motion.div>
         )}
       </AnimatePresence>
 
@@ -301,6 +413,13 @@ export default function AlliesSidebar() {
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
           background: rgba(6, 182, 212, 0.3);
+        }
+        @keyframes scan-vertical {
+          0% { transform: translateY(-100%); }
+          100% { transform: translateY(200%); }
+        }
+        .animate-scan-vertical {
+          animation: scan-vertical 2s linear infinite;
         }
       `}} />
     </>

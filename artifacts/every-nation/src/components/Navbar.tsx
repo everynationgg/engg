@@ -67,7 +67,7 @@ export default function Navbar() {
               <div className="flex flex-col items-end">
                 <span className="font-mono text-[9px] uppercase text-white/30 tracking-widest">Balance</span>
                 <div className="flex items-center gap-2">
-                  <span className="font-orbitron text-sm text-cyan-400 font-bold">{credits}</span>
+                  <span className="font-orbitron text-sm text-cyan-400 font-bold">{credits.toLocaleString()}</span>
                   <span className="font-orbitron text-[9px] text-cyan-400/50">CC</span>
                 </div>
               </div>

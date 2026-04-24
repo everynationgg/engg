@@ -124,7 +124,7 @@ export default function Hub() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#020408] text-white pt-24 relative flex flex-col items-center overflow-x-hidden selection:bg-cyan-500/30">
+    <div className="min-h-screen bg-[#020408] text-white pt-32 md:pt-40 relative flex flex-col items-center overflow-x-hidden selection:bg-cyan-500/30">
       <AlliesSidebar />
       {/* Cinematic Background Layer */}
       <div
