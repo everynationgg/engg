@@ -10,6 +10,7 @@ import { chatRouter } from "./chat";
 import { ttsRouter } from "./tts";
 import metricsRouter from "./metrics";
 import shopRouter from "./shop";
+import userRouter from "./user";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(chatRouter);
 router.use(ttsRouter);
 router.use(metricsRouter);
 router.use(shopRouter);
+router.use(userRouter);
 
 export default router;
