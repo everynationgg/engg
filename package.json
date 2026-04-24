@@ -5,7 +5,10 @@
   "scripts": {
     "preinstall": "node -e \"if (!/pnpm/.test(process.env.npm_config_user_agent || '')) { console.error('Use pnpm instead'); process.exit(1); }\"",
     "typecheck:libs": "tsc --build",
-    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
+    "build": "pnpm run build:landing && pnpm run build:game && rm -rf dist && mkdir -p dist && cp -rn artifacts/every-nation/dist/public/* dist/ && mkdir -p dist/end && cp -rn artifacts/end/dist/public/* dist/end/",
+    "build:landing": "PORT=3000 BASE_PATH=/ NODE_ENV=production pnpm --filter @workspace/every-nation run build",
+    "build:game": "PORT=3000 BASE_PATH=/end NODE_ENV=production pnpm --filter @workspace/end run build"
   },
   "private": true,
   "devDependencies": {

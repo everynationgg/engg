@@ -1,6 +1,6 @@
 {
-  "buildCommand": "PORT=3000 BASE_PATH=/end NODE_ENV=production pnpm --filter @workspace/lockdown-protocol run build",
-  "outputDirectory": "artifacts/lockdown-protocol/dist/public",
+  "buildCommand": "pnpm run build",
+  "outputDirectory": "dist",
   "installCommand": "pnpm install",
   "framework": null,
   "git": {
@@ -10,11 +10,6 @@
     }
   },
   "redirects": [
-    {
-      "source": "/",
-      "destination": "/end",
-      "permanent": false
-    },
     {
       "source": "/join/:code",
       "destination": "/end/join/:code",
@@ -78,19 +73,11 @@
   ],
   "rewrites": [
     {
-      "source": "/end/assets/:path*",
-      "destination": "/assets/:path*"
-    },
-    {
-      "source": "/end/:file.:ext",
-      "destination": "/:file.:ext"
-    },
-    {
-      "source": "/end",
-      "destination": "/index.html"
-    },
-    {
       "source": "/end/:path*",
+      "destination": "/end/index.html"
+    },
+    {
+      "source": "/((?!end|assets|api|socket.io).*)",
       "destination": "/index.html"
     }
   ]
