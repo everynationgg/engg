@@ -25,13 +25,23 @@ const FALLBACK_PACKS: Pack[] = [
 
 const creditCoreImg = "credit_core_asset_1776962578764.png";
 
+const RARITY_CONFIG = {
+  common: { color: "hsl(185 100% 50%)", glow: "rgba(6, 182, 212, 0.2)", label: "Standard" },
+  rare: { color: "hsl(270 80% 60%)", glow: "rgba(168, 85, 247, 0.25)", label: "Tactical" },
+  epic: { color: "hsl(45 90% 55%)", glow: "rgba(234, 179, 8, 0.3)", label: "Elite" },
+  legendary: { color: "hsl(0 100% 60%)", glow: "rgba(239, 68, 68, 0.4)", label: "Sovereign" }
+};
+
 export default function Shop() {
   const { isLoggedIn, credits, token, logout, refreshUser } = useAuth();
   const [packs, setPacks] = useState<Pack[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successCredits, setSuccessCredits] = useState<number | null>(null);
+  const [isInjecting, setIsInjecting] = useState(false);
   const [selectedPack, setSelectedPack] = useState<Pack | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [isWarping, setIsWarping] = useState(false);
 
   // Animated counter for credits
   const [displayCredits, setDisplayCredits] = useState(credits);
@@ -69,6 +79,21 @@ export default function Shop() {
       .catch(() => setPacks(FALLBACK_PACKS))
       .finally(() => setLoading(false));
   }, []);
+
+  const handlePackSelect = (pack: Pack) => {
+    if (selectedPack?.id === pack.id) return;
+    setSelectedPack(pack);
+    setIsSyncing(true);
+    // Cinematic handshake delay
+    setTimeout(() => setIsSyncing(false), 1200);
+  };
+
+  const handleReturn = () => {
+    setIsWarping(true);
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 800);
+  };
 
   const handleCreateOrder = async () => {
     if (!selectedPack) return "";
@@ -119,10 +144,14 @@ export default function Shop() {
       }
       const captureData = await response.json();
       if (captureData.success) {
+        setIsInjecting(true);
         setSuccessCredits(captureData.credits);
         setSelectedPack(null);
         refreshUser();
-        setTimeout(() => setSuccessCredits(null), 5000);
+        setTimeout(() => {
+          setIsInjecting(false);
+          setSuccessCredits(null);
+        }, 6000);
       } else {
         setError(captureData.error || "Transfer failed. Credits not allocated.");
       }
@@ -200,11 +229,11 @@ export default function Shop() {
               )}
             </AnimatePresence>
             <button
-              onClick={() => window.location.href = "/"}
+              onClick={handleReturn}
               className="group flex items-center gap-3 px-6 py-3 border border-white/10 bg-white/5 hover:border-cyan-500/50 hover:bg-cyan-500/10 transition-all backdrop-blur-md"
             >
               <FaArrowLeft className="text-xs group-hover:-translate-x-1 transition-transform" />
-              <span className="font-orbitron text-[10px] uppercase tracking-[0.4em]">Return</span>
+              <span className="font-orbitron text-[10px] uppercase tracking-[0.4em]">Return to Base</span>
             </button>
           </motion.div>
         </header>
@@ -273,53 +302,61 @@ export default function Shop() {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.1 }}
-                  onClick={() => setSelectedPack(pack)}
+                  onClick={() => handlePackSelect(pack)}
                   className={`relative group p-8 border transition-all duration-500 cursor-pointer overflow-hidden flex flex-col items-center backdrop-blur-md ${selectedPack?.id === pack.id
-                    ? "bg-cyan-500/10 border-cyan-400 shadow-[0_0_40px_rgba(6,182,212,0.2)] scale-[1.05] z-20"
-                    : "bg-white/[0.02] border-white/10 hover:border-cyan-500/40 hover:bg-white/[0.04]"
+                    ? "bg-cyan-500/10 shadow-[0_0_40px_rgba(6,182,212,0.1)] scale-[1.05] z-20"
+                    : "bg-white/[0.02] border-white/10 hover:border-white/20 hover:bg-white/[0.04]"
                     }`}
+                  style={{ 
+                    borderColor: selectedPack?.id === pack.id ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : undefined 
+                  }}
                 >
                   {/* Rarity Indicator */}
                   <div className="absolute top-4 left-4 font-mono text-[8px] opacity-20 tracking-tighter uppercase">
                     Tier_{pack.rarity}
                   </div>
                   <div className="absolute top-4 right-4">
-                    {pack.rarity === "legendary" ? <FaCrown className="text-yellow-500 drop-shadow-[0_0_10px_rgba(234,179,8,0.5)]" /> :
-                      pack.rarity === "epic" ? <FaBolt className="text-purple-400" /> :
-                        pack.rarity === "rare" ? <FaGem className="text-cyan-400" /> :
-                          <FaDatabase className="text-white/20" />}
+                    {pack.rarity === "legendary" ? <FaCrown className="text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]" /> :
+                      pack.rarity === "epic" ? <FaBolt className="text-yellow-400" /> :
+                        pack.rarity === "rare" ? <FaGem className="text-purple-400" /> :
+                          <FaDatabase className="text-cyan-400/50" />}
                   </div>
 
                   {/* Bonus Badge */}
                   {pack.bonus && (
-                    <div className="absolute top-10 left-0 px-3 py-1 bg-gradient-to-r from-cyan-600 to-cyan-400 text-[#020408] font-orbitron text-[8px] font-black tracking-widest uppercase -rotate-2 shadow-lg">
+                    <div className="absolute top-10 left-0 px-3 py-1 bg-white text-[#020408] font-orbitron text-[8px] font-black tracking-widest uppercase -rotate-2 shadow-lg"
+                      style={{ background: RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color }}
+                    >
                       {pack.bonus}
                     </div>
                   )}
 
                   {/* Asset Rendering */}
                   <div className="relative w-40 h-40 mb-8 mt-4 flex items-center justify-center">
-                    <div className={`absolute inset-0 blur-[40px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000 ${pack.rarity === "legendary" ? "bg-yellow-500/20" : "bg-cyan-400/20"
-                      }`} />
+                    <div className="absolute inset-0 blur-[45px] rounded-full opacity-40 transition-opacity duration-1000"
+                      style={{ 
+                        background: RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color,
+                        opacity: selectedPack?.id === pack.id ? 0.6 : 0.2
+                      }} 
+                    />
                     <img
                       src={creditCoreImg}
                       alt="Core"
-                      className={`w-full h-full object-contain relative z-10 transition-all duration-700 ${selectedPack?.id === pack.id ? "scale-110 drop-shadow-[0_0_20px_#00f3ff]" : "opacity-60 group-hover:opacity-100 group-hover:scale-105"
+                      className={`w-full h-full object-contain relative z-10 transition-all duration-700 ${selectedPack?.id === pack.id ? "scale-115" : "opacity-70 group-hover:opacity-100 group-hover:scale-105"
                         }`}
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        const fallback = e.currentTarget.parentElement?.querySelector('.fallback-icon');
-                        if (fallback) (fallback as HTMLElement).style.opacity = '0.4';
+                      style={{ 
+                        filter: selectedPack?.id === pack.id 
+                          ? `drop-shadow(0 0 20px ${RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color})`
+                          : `grayscale(0.4) brightness(0.8)`
                       }}
                     />
-                    <FaDatabase className="fallback-icon text-6xl text-cyan-400/0 absolute group-hover:text-cyan-400/40 transition-colors pointer-events-none" />
                   </div>
 
                   <h3 className="font-orbitron text-sm tracking-[0.3em] uppercase mb-1 text-white/90 group-hover:text-white transition-colors text-center">
                     {pack.name}
                   </h3>
                   <p className="font-mono text-[18px] font-bold text-white tracking-[0.1em] mb-8">
-                    {pack.amount} <span className="text-[10px] text-cyan-400/50 tracking-widest">CC</span>
+                    {pack.amount} <span className="text-[10px] opacity-50 tracking-widest" style={{ color: RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color }}>CC</span>
                   </p>
 
                   <div className="mt-auto w-full pt-6 border-t border-white/5 flex flex-col items-center gap-4">
@@ -330,23 +367,32 @@ export default function Shop() {
 
                     <div className="w-full">
                       {selectedPack?.id === pack.id ? (
-                        <div className="animate-in fade-in zoom-in duration-300">
-                          {import.meta.env.VITE_PAYPAL_CLIENT_ID ? (
-                            <PayPalScriptProvider options={{ "clientId": import.meta.env.VITE_PAYPAL_CLIENT_ID }}>
-                              <PayPalButtons
-                                style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
-                                createOrder={handleCreateOrder}
-                                onApprove={handleApprove}
-                              />
-                            </PayPalScriptProvider>
+                        <div className="min-h-[50px] flex items-center justify-center">
+                          {isSyncing ? (
+                            <div className="flex flex-col items-center gap-2">
+                              <div className="w-4 h-4 border border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
+                              <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-cyan-500/60">Securing_Handshake...</span>
+                            </div>
                           ) : (
-                            <div className="p-4 border border-yellow-500/30 bg-yellow-500/5 rounded text-[10px] text-yellow-500/70 text-center font-mono uppercase tracking-wider">
-                              Payment Gateway Offline: Missing Config
+                            <div className="w-full animate-in fade-in zoom-in duration-300">
+                              {import.meta.env.VITE_PAYPAL_CLIENT_ID ? (
+                                <PayPalScriptProvider options={{ "clientId": import.meta.env.VITE_PAYPAL_CLIENT_ID }}>
+                                  <PayPalButtons
+                                    style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
+                                    createOrder={handleCreateOrder}
+                                    onApprove={handleApprove}
+                                  />
+                                </PayPalScriptProvider>
+                              ) : (
+                                <div className="p-4 border border-yellow-500/30 bg-yellow-500/5 rounded text-[10px] text-yellow-500/70 text-center font-mono uppercase tracking-wider">
+                                  Gateway Offline
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
                       ) : (
-                        <button className="w-full py-3 bg-white/5 border border-white/10 font-orbitron text-[9px] uppercase tracking-[0.4em] group-hover:border-cyan-400/50 group-hover:text-cyan-400 transition-all">
+                        <button className="w-full py-3 bg-white/5 border border-white/10 font-orbitron text-[9px] uppercase tracking-[0.4em] group-hover:border-white/40 group-hover:text-white transition-all">
                           Initialize Link
                         </button>
                       )}
@@ -358,16 +404,72 @@ export default function Shop() {
           )}
         </main>
 
-        <footer className="mt-16 flex justify-between items-center border-t border-white/5 pt-10 font-mono text-[9px] uppercase tracking-[0.5em] text-white/20">
-          <div className="flex items-center gap-4">
-            <div className="w-2 h-2 bg-white/10" />
-            <span>© 2026 ENGG_NET // CRYPTO_SHOP</span>
-          </div>
-          <div className="flex gap-12">
-            <span className="animate-pulse text-cyan-500/40">LINK_ACTIVE</span>
-          </div>
-        </footer>
-      </div>
+      {/* Credit Injection Animation */}
+      <AnimatePresence>
+        {isInjecting && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[1100] pointer-events-none flex items-center justify-center"
+          >
+            {[...Array(30)].map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{ 
+                  x: (Math.random() - 0.5) * 400, 
+                  y: (Math.random() - 0.5) * 400,
+                  scale: 0,
+                  rotate: 0,
+                  opacity: 1 
+                }}
+                animate={{ 
+                  x: 0, 
+                  y: -500, // Move towards the balance HUD
+                  scale: [1, 0.5, 0],
+                  rotate: 360,
+                  opacity: [1, 1, 0]
+                }}
+                transition={{ 
+                  duration: 2.5, 
+                  delay: Math.random() * 0.5,
+                  ease: "circIn"
+                }}
+                className="absolute w-4 h-4 bg-cyan-400 shadow-[0_0_20px_#00f3ff]"
+                style={{ clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)" }}
+              />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Warp Jump Overlay */}
+      <AnimatePresence>
+        {isWarping && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[1200] bg-black flex items-center justify-center overflow-hidden pointer-events-none"
+          >
+            {[...Array(80)].map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{ x: 0, y: 0, scaleX: 0, opacity: 0 }}
+                animate={{ 
+                  scaleX: [0, 80], 
+                  opacity: [0, 1, 0],
+                  x: (Math.random() - 0.5) * 3000,
+                  y: (Math.random() - 0.5) * 3000
+                }}
+                transition={{ duration: 0.8, ease: "circIn", delay: Math.random() * 0.1 }}
+                className="absolute h-0.5 bg-white rounded-full shadow-[0_0_10px_white]"
+                style={{ width: '60px' }}
+              />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <style dangerouslySetInnerHTML={{
         __html: `

@@ -139,11 +139,14 @@ router.post("/shop/capture-order", authMiddleware, async (req: AuthRequest, res)
         try {
           await db.transaction(async (tx) => {
             // 2. IDEMPOTENCY CHECK
-            // Ensure this orderID hasn't been processed before
             const existing = await tx.select().from(creditTransactionsTable).where(eq(creditTransactionsTable.paypalOrderId, orderID)).limit(1);
             if (existing.length > 0) {
               throw new Error("ALREADY_PROCESSED");
             }
+
+            // Fetch user details for the transaction log
+            const user = await tx.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+            const userInfo = user[0];
 
             // 3. Update user balance
             await tx
@@ -151,10 +154,12 @@ router.post("/shop/capture-order", authMiddleware, async (req: AuthRequest, res)
               .set({ credits: sql`${usersTable.credits} + ${creditAmount}` })
               .where(eq(usersTable.id, userId));
 
-            // 4. Record transaction with PayPal ID
+            // 4. Record transaction with PayPal ID and User details
             await tx.insert(creditTransactionsTable).values({
               id: randomUUID(),
               userId,
+              username: userInfo?.username || "Unknown",
+              email: userInfo?.email || "Unknown",
               amount: creditAmount,
               type: "purchase",
               paypalOrderId: orderID,

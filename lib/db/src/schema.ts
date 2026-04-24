@@ -24,6 +24,8 @@ export const gameChatsTable = pgTable("game_chats", {
 export const creditTransactionsTable = pgTable("credit_transactions", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
+  username: text("username"),
+  email: text("email"),
   amount: integer("amount").notNull(),
   type: text("type").notNull(),
   description: text("description"),

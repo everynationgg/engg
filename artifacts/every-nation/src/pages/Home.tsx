@@ -34,9 +34,15 @@ function GlassButton({ label, subtext, onClick, variant = "default" }: ButtonPro
       onClick={onClick}
       onMouseEnter={playHoverSound}
     >
-      <div className="btn-inner">
-        <span className="btn-label">{label}</span>
-        {subtext && <span className="btn-subtext">{subtext}</span>}
+      <div className="flex flex-col items-center gap-1">
+        <span className="font-orbitron text-[11px] md:text-[13px] font-bold tracking-[0.2em] uppercase text-white">
+          {label}
+        </span>
+        {subtext && (
+          <span className="font-mono text-[8px] md:text-[9px] tracking-[0.1em] uppercase text-white/40">
+            {subtext}
+          </span>
+        )}
       </div>
       <div className="btn-shimmer" />
       <div className="btn-corner btn-corner--tl" />
@@ -87,11 +93,13 @@ export default function Home() {
               }}
               className="relative w-48 md:w-80 lg:w-96"
             >
-              <img 
-                src="/favicon.png" 
-                alt="ENGG Logo" 
-                className="w-full h-auto"
-              />
+              <div className="flex flex-col items-center">
+                <h1 className="font-orbitron font-black text-6xl md:text-8xl tracking-[0.3em] uppercase text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]">
+                  ENGG
+                </h1>
+                <div className="w-24 h-px bg-gradient-to-r from-transparent via-cyan-500 to-transparent mt-4" />
+                <span className="font-mono text-[10px] tracking-[0.8em] uppercase text-white/30 mt-4">Every Nation Gaming</span>
+              </div>
               {/* Lightning/Fire Flickering Overlays */}
               <motion.div 
                 animate={{ opacity: [0, 0.3, 0, 0.5, 0] }}

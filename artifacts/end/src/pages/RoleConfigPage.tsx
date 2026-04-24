@@ -1439,53 +1439,46 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
           <InfoBlock label="Notes" value={role.notes} accentColor={accentColorLight} dim />
 
           {isLocked && (
-            <div className="mt-4 pt-4 border-t border-white/10 flex flex-col items-center">
-              <div className="text-[10px] tracking-widest uppercase mb-4 text-white/40">Premium Role Locked</div>
+            <div className="mt-4 pt-6 border-t border-white/10 flex flex-col items-center">
+              <div className="flex items-center gap-2 mb-4 opacity-50">
+                <FaLock className="text-[10px]" />
+                <div className="text-[10px] tracking-[0.3em] uppercase font-mono">Authorization Required</div>
+              </div>
               
               {!isLoggedIn ? (
                 <button
                   onClick={onShowProfile}
-                  className="w-full py-4 rounded-md border-2 border-dashed transition-all flex items-center justify-center gap-3 group"
-                  style={{
-                    background: "hsl(220 28% 10%)",
-                    borderColor: "hsl(210 30% 30%)",
-                    color: "hsl(210 30% 60%)",
-                    cursor: "pointer"
-                  }}
+                  className="w-full py-4 rounded-md border border-cyan-500/30 bg-cyan-500/5 hover:bg-cyan-500/10 hover:border-cyan-400 transition-all flex flex-col items-center gap-1 group"
                 >
-                  <FaLock className="text-xs group-hover:scale-125 transition-transform" />
-                  <span className="font-orbitron font-bold text-xs tracking-[0.2em]">LOGIN TO INITIALIZE UNLOCK</span>
+                  <span className="font-orbitron font-bold text-xs tracking-[0.2em] text-cyan-400">INITIALIZE IDENTITY HANDSHAKE</span>
+                  <span className="font-mono text-[8px] text-cyan-400/40 uppercase tracking-widest group-hover:text-cyan-400/60 transition-colors">Login to authorize premium access</span>
                 </button>
               ) : (
-                <>
-                  <button
-                    onClick={() => onUnlock(role.id)}
-                    disabled={isUnlocking || userCredits < (ROLE_PRICES[role.id] || 0)}
-                    className="w-full py-4 rounded-md border-2 transition-all flex items-center justify-center gap-3 group"
-                    style={{
-                      background: "linear-gradient(135deg, hsl(185 100% 15%), hsl(185 100% 5%))",
-                      borderColor: "hsl(185 100% 40%)",
-                      color: "hsl(185 100% 60%)",
-                      cursor: (isUnlocking || userCredits < (ROLE_PRICES[role.id] || 0)) ? "not-allowed" : "pointer",
-                      opacity: (isUnlocking || userCredits < (ROLE_PRICES[role.id] || 0)) ? 0.5 : 1
-                    }}
-                  >
-                    <FaBolt className="text-xs group-hover:scale-125 transition-transform" />
-                    <span className="font-orbitron font-bold text-xs tracking-[0.2em]">INITIALIZE UNLOCK — {ROLE_PRICES[role.id]} CC</span>
-                  </button>
-                  {userCredits < (ROLE_PRICES[role.id] || 0) && (
-                    <div className="mt-4 w-full flex flex-col items-center">
-                      <p className="mb-3 font-mono text-[9px] uppercase text-red-400/60">Insufficient Credits in Account</p>
-                      <button
-                        onClick={onBuyCredits}
-                        className="w-full py-3 rounded-md border border-cyan-500/30 bg-cyan-500/5 hover:bg-cyan-500/10 transition-all flex items-center justify-center gap-2 group"
-                      >
-                        <FaCoins className="text-[10px] text-cyan-400 group-hover:scale-110 transition-transform" />
-                        <span className="font-orbitron font-bold text-[10px] tracking-[0.2em] text-cyan-400">PROCURE_CREDITS</span>
-                      </button>
-                    </div>
+                <div className="w-full flex flex-col gap-3">
+                  <div className="flex justify-between items-center px-4 py-3 bg-white/5 border border-white/10 rounded-md">
+                    <span className="font-mono text-[9px] uppercase tracking-widest text-white/30">Protocol Fee</span>
+                    <span className="font-orbitron text-sm font-bold text-cyan-400">{ROLE_PRICES[role.id] || 0} CC</span>
+                  </div>
+                  
+                  {userCredits >= (ROLE_PRICES[role.id] || 0) ? (
+                    <button
+                      onClick={() => onUnlock(role.id)}
+                      disabled={isUnlocking}
+                      className="w-full py-4 rounded-md bg-cyan-600 hover:bg-cyan-500 text-white transition-all flex flex-col items-center gap-1 shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+                    >
+                      <span className="font-orbitron font-bold text-xs tracking-[0.2em]">{isUnlocking ? "AUTHORIZING..." : "AUTHORIZE UNLOCK"}</span>
+                      <span className="font-mono text-[8px] text-white/50 uppercase tracking-widest">Deduct credits from secure balance</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={onBuyCredits}
+                      className="w-full py-4 rounded-md border border-red-500/30 bg-red-500/5 hover:bg-red-500/10 hover:border-red-400 transition-all flex flex-col items-center gap-1 group"
+                    >
+                      <span className="font-orbitron font-bold text-xs tracking-[0.2em] text-red-400">INSUFFICIENT CREDITS</span>
+                      <span className="font-mono text-[8px] text-red-400/40 uppercase tracking-widest group-hover:text-red-400/60 transition-colors">Access the Credit Exchange to continue</span>
+                    </button>
                   )}
-                </>
+                </div>
               )}
             </div>
           )}

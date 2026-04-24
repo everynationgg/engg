@@ -37,10 +37,10 @@ export default function Navbar() {
     >
       <div className="w-full max-w-[1800px] mx-auto px-6 md:px-16 flex items-center justify-between">
         <Link href="/" className="group flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center group-hover:border-cyan-500/50 transition-all overflow-hidden p-1.5">
-            <img src="/favicon.png" alt="ENGG" className="w-full h-full object-contain transition-transform group-hover:scale-110" />
+          <div className="w-8 h-8 border border-white/20 bg-white/5 flex items-center justify-center group-hover:border-cyan-500/50 transition-all">
+            <div className="w-4 h-4 bg-white group-hover:bg-cyan-500 shadow-[0_0_10px_rgba(255,255,255,0.5)] group-hover:shadow-[0_0_10px_#00f3ff] transition-all" />
           </div>
-          <span className="font-orbitron font-black text-xl tracking-[0.3em] uppercase text-white group-hover:text-cyan-400 transition-colors hidden sm:block">
+          <span className="font-orbitron font-black text-xl tracking-[0.3em] uppercase text-white group-hover:text-cyan-400 transition-colors">
             ENGG
           </span>
         </Link>
