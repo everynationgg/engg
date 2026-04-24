@@ -14,6 +14,7 @@ import { sendEmail, generateVerificationEmailHTML, generatePasswordResetEmailHTM
 import { authMiddleware, type AuthRequest } from "../middlewares/auth.js";
 import xss from "xss";
 import { Filter } from "bad-words";
+import { logger } from "../lib/logger.js";
 
 const filter = new Filter();
 const router: IRouter = Router();
@@ -111,7 +112,7 @@ router.post("/auth/register", async (req, res) => {
         html: generateVerificationEmailHTML(sanitizedUsername, verificationLink),
       });
     } catch (emailError) {
-      console.error("Failed to send verification email:", emailError);
+      logger.error({ emailError, sanitizedEmail }, "Failed to send verification email");
       // Don't fail the registration if email fails
     }
 
@@ -128,7 +129,7 @@ router.post("/auth/register", async (req, res) => {
 
     res.status(201).json(response);
   } catch (error) {
-    console.error("Registration error:", error);
+    logger.error({ error }, "Registration error");
     res.status(400).json({ error: "Invalid request" });
   }
 });
@@ -171,7 +172,7 @@ router.post("/auth/login", async (req, res) => {
 
     res.json(response);
   } catch (error) {
-    console.error("Login error:", error);
+    logger.error({ error }, "Login error");
     res.status(400).json({ error: "Invalid request" });
   }
 });
@@ -207,7 +208,7 @@ router.get("/auth/me", authMiddleware, async (req: AuthRequest, res) => {
 
     res.json(response);
   } catch (error) {
-    console.error("Get user error:", error);
+    logger.error({ error }, "Get user error");
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -253,7 +254,7 @@ router.post("/auth/verify-email", async (req, res) => {
 
     res.json({ success: true, message: "Email verified successfully" });
   } catch (error) {
-    console.error("Email verification error:", error);
+    logger.error({ error }, "Email verification error");
     res.status(500).json({ error: "Email verification failed" });
   }
 });
@@ -310,7 +311,7 @@ router.post("/auth/resend-verification-email", authMiddleware, async (req: AuthR
       });
       res.json({ success: true, message: "Verification email sent" });
     } catch (emailError) {
-      console.error("Failed to send verification email:", emailError);
+      logger.error({ emailError, userId: req.userId }, "Failed to send verification email");
       res.status(500).json({ error: "Failed to send verification email" });
     }
   } catch (error) {
@@ -371,7 +372,7 @@ router.post("/auth/request-password-reset", async (req, res) => {
       });
       res.json({ success: true, message: "If the email exists, a reset link has been sent" });
     } catch (emailError) {
-      console.error("Failed to send password reset email:", emailError);
+      logger.error({ emailError, email }, "Failed to send password reset email");
       res.status(500).json({ error: "Failed to send reset email" });
     }
   } catch (error) {
@@ -441,7 +442,7 @@ router.post("/auth/reset-password", async (req, res) => {
 
     res.json({ success: true, message: "Password reset successful" });
   } catch (error) {
-    console.error("Password reset error:", error);
+    logger.error({ error }, "Password reset error");
     res.status(500).json({ error: "Server error" });
   }
 });

@@ -11,10 +11,8 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Navbar from "@/components/Navbar";
 
 function Router() {
-  // Increased top padding to ensure content is never overlapped by the fixed navbar
-  // Keep this in sync with the Navbar height (py-6/py-4)
   return (
-    <div className="pt-24 md:pt-28"> {/* Increased padding to clear fixed navbar */}
+    <div>
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/shop" component={Shop} />

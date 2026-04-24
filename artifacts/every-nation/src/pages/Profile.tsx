@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaUser, FaWallet, FaHistory, FaShieldAlt, FaTrophy, FaGamepad, FaLink, FaEnvelope, FaCalendarAlt, FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import WarpJump from "@/components/WarpJump";
 
 interface Activity {
   id: string;
@@ -15,6 +16,7 @@ export default function Profile() {
   const { token, refreshUser } = useAuth();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isWarping, setIsWarping] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -25,7 +27,7 @@ export default function Profile() {
         const json = await res.json();
         setData(json);
       } catch (err) {
-        console.error("Failed to sync profile");
+        // Log handled on server, silent on client for security
       } finally {
         setLoading(false);
       }
@@ -33,13 +35,35 @@ export default function Profile() {
     if (token) fetchProfile();
   }, [token]);
 
+  const handleReturn = () => {
+    setIsWarping(true);
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 800);
+  };
+
   const { user, stats, activities } = data || {};
   const { username, email, credits, createdAt } = user || {};
 
   return (
-    <div className="min-h-screen bg-[#020408] text-white pt-32 pb-20 px-6 md:px-16 relative overflow-y-auto selection:bg-cyan-500/30">
+    <div className="min-h-screen bg-[#020408] text-white pt-24 pb-20 px-6 md:px-16 relative overflow-y-auto selection:bg-cyan-500/30">
+      <AnimatePresence>
+        {isWarping && <WarpJump />}
+      </AnimatePresence>
+
+      <button 
+        onClick={handleReturn}
+        className="fixed top-8 left-8 z-[110] flex items-center gap-3 font-orbitron text-[9px] uppercase tracking-[0.4em] text-white/40 hover:text-cyan-400 transition-all group hidden md:flex"
+      >
+        <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center group-hover:border-cyan-500/50 group-hover:bg-cyan-500/10">
+          <FaArrowLeft className="text-[10px]" />
+        </div>
+        Return_to_Base
+      </button>
+
       {/* Background FX */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(6,182,212,0.15)_0%,transparent_50%)]" />
+
       <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[url('data:image/svg+xml,%3Csvg%20viewBox=%220%200%20200%20200%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter%20id=%22noiseFilter%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.65%22%20numOctaves=%223%22%20stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect%20width=%22100%25%22%20height=%22100%25%22%20filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')]" />
 
       <div className="w-full relative z-10">

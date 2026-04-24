@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { FaGem, FaArrowLeft, FaShieldAlt, FaLock, FaCheckCircle, FaBolt, FaCrown, FaDatabase } from "react-icons/fa";
 import { Link } from "wouter";
+import WarpJump from "@/components/WarpJump";
 
 interface Pack {
   id: string;
@@ -161,7 +162,7 @@ export default function Shop() {
   };
 
   return (
-    <div className="shop-root min-h-screen bg-[#020408] text-white relative overflow-y-auto selection:bg-cyan-500/30 font-inter">
+    <div className="min-h-screen bg-[#020408] text-white pt-24 pb-20 px-6 md:px-16 relative overflow-x-hidden selection:bg-cyan-500/30 shop-root">
       {/* Dynamic Background */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(6,182,212,0.15)_0%,transparent_70%)]" />
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('data:image/svg+xml,%3Csvg%20viewBox=%220%200%20200%20200%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter%20id=%22noiseFilter%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.65%22%20numOctaves=%223%22%20stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect%20width=%22100%25%22%20height=%22100%25%22%20filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')]" />
@@ -403,6 +404,7 @@ export default function Shop() {
             </div>
           )}
         </main>
+      </div>
 
       {/* Credit Injection Animation */}
       <AnimatePresence>
@@ -445,30 +447,7 @@ export default function Shop() {
 
       {/* Warp Jump Overlay */}
       <AnimatePresence>
-        {isWarping && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[1200] bg-black flex items-center justify-center overflow-hidden pointer-events-none"
-          >
-            {[...Array(80)].map((_, i) => (
-              <motion.div
-                key={i}
-                initial={{ x: 0, y: 0, scaleX: 0, opacity: 0 }}
-                animate={{ 
-                  scaleX: [0, 80], 
-                  opacity: [0, 1, 0],
-                  x: (Math.random() - 0.5) * 3000,
-                  y: (Math.random() - 0.5) * 3000
-                }}
-                transition={{ duration: 0.8, ease: "circIn", delay: Math.random() * 0.1 }}
-                className="absolute h-0.5 bg-white rounded-full shadow-[0_0_10px_white]"
-                style={{ width: '60px' }}
-              />
-            ))}
-          </motion.div>
-        )}
+        {isWarping && <WarpJump />}
       </AnimatePresence>
 
       <style dangerouslySetInnerHTML={{

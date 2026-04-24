@@ -319,10 +319,7 @@ async function checkAndRunResolution(
   const activeCount = engineGetActivePlayers(session).length;
   if (session.orbitCompleted.length < activeCount) return;
 
-  logger.debug(
-    { sessionId, orbitActions: JSON.stringify(session.orbitActions), phase: session.phase },
-    "Running resolution",
-  );
+  phaseUpdate(io, sessionId, session);
 
   // Step 1: signal all clients that resolution is computing (brief visual indicator)
   session.phase = "orbit_resolution";
@@ -1014,7 +1011,7 @@ export function attachSocketIO(httpServer: HttpServer) {
         const parsed = validate(startGameCustomSchema, data, ack);
         if (!parsed) return;
         const { sessionId, customRoles, customDeck } = parsed;
-        logger.info({ sessionId, customRoles, customDeck }, "[DEBUG] start_game_custom payload");
+        logger.info({ sessionId, customRoles, customDeck }, "start_game_custom payload received");
 
         if (currentSessionId !== sessionId) {
           ack?.({ success: false, error: "Not in session" });
@@ -1047,7 +1044,7 @@ export function attachSocketIO(httpServer: HttpServer) {
           for (const p of session.players) {
             if (customRoles[p.id] === "spectator") {
               p.isSpectator = true;
-              logger.info({ playerId: p.id, playerName: p.name }, "[DEBUG] Assigned as spectator");
+              logger.info({ playerId: p.id, playerName: p.name }, "Assigned as spectator");
               // Spectators should not have a role assigned
               delete session.rolesAssigned?.[p.id];
               delete session.initialRoles?.[p.id];

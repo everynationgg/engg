@@ -34,14 +34,14 @@ function GlassButton({ label, subtext, onClick, variant = "default" }: ButtonPro
       onClick={onClick}
       onMouseEnter={playHoverSound}
     >
-      <div className="flex flex-col items-center gap-1">
-        <span className="font-orbitron text-[11px] md:text-[13px] font-bold tracking-[0.2em] uppercase text-white">
+      <div className="flex flex-col items-center justify-center gap-2 relative z-10 w-full">
+        <div className="font-orbitron text-[11px] md:text-[12px] font-black tracking-[0.4em] uppercase text-white/90 group-hover:text-white transition-colors text-center w-full">
           {label}
-        </span>
+        </div>
         {subtext && (
-          <span className="font-mono text-[8px] md:text-[9px] tracking-[0.1em] uppercase text-white/40">
+          <div className="font-mono text-[8px] md:text-[9px] tracking-[0.2em] uppercase text-white/30 group-hover:text-cyan-400/60 transition-colors text-center w-full">
             {subtext}
-          </span>
+          </div>
         )}
       </div>
       <div className="btn-shimmer" />
@@ -75,59 +75,25 @@ export default function Home() {
       />
       <div className="bg-overlay" />
 
-      <div className="absolute inset-0 flex flex-col items-center justify-between py-12 md:py-24 z-10 px-6">
-        {/* Animated Logo */}
-        <AnimatePresence>
-          {uiVisible && (
-            <motion.div
-              initial={{ opacity: 0, y: -50, scale: 0.8 }}
-              animate={{ 
-                opacity: 1, 
-                y: 0, 
-                scale: 1,
-                filter: ["drop-shadow(0 0 20px rgba(239, 68, 68, 0.2))", "drop-shadow(0 0 40px rgba(6, 182, 212, 0.4))", "drop-shadow(0 0 20px rgba(239, 68, 68, 0.2))"]
-              }}
-              transition={{ 
-                duration: 1.2, 
-                filter: { duration: 4, repeat: Infinity } 
-              }}
-              className="relative w-48 md:w-80 lg:w-96"
-            >
-              <div className="flex flex-col items-center">
-                <h1 className="font-orbitron font-black text-6xl md:text-8xl tracking-[0.3em] uppercase text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]">
-                  ENGG
-                </h1>
-                <div className="w-24 h-px bg-gradient-to-r from-transparent via-cyan-500 to-transparent mt-4" />
-                <span className="font-mono text-[10px] tracking-[0.8em] uppercase text-white/30 mt-4">Every Nation Gaming</span>
-              </div>
-              {/* Lightning/Fire Flickering Overlays */}
-              <motion.div 
-                animate={{ opacity: [0, 0.3, 0, 0.5, 0] }}
-                transition={{ duration: 0.2, repeat: Infinity, repeatDelay: 3 }}
-                className="absolute inset-0 bg-cyan-400/10 mix-blend-overlay rounded-full blur-3xl"
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
+      <div className="absolute inset-0 flex flex-col items-center justify-end pb-24 md:pb-32 z-10 px-6">
         {/* Buttons Row */}
         <AnimatePresence>
           {uiVisible && (
             <motion.div 
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-              className="w-full flex flex-col items-center gap-8"
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="w-full flex flex-col items-center gap-12"
             >
-              <div className="buttons-row w-full max-w-[800px] flex flex-wrap justify-center gap-4 md:gap-6">
-                <div className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)]">
+              <div className="flex flex-wrap justify-center gap-4 md:gap-8 w-full max-w-[1200px]">
+                <div className="w-full sm:w-[280px]">
                   <GlassButton
                     label="Community"
                     subtext="Join Discord"
                     onClick={() => window.open("https://discord.gg/engg", "_blank")}
                   />
                 </div>
-                <div className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)]">
+                <div className="w-full sm:w-[280px]">
                   <GlassButton
                     label="Gaming Hub"
                     subtext="Enter Mission Control"
@@ -135,14 +101,14 @@ export default function Home() {
                     onClick={() => window.location.href = "/hub"}
                   />
                 </div>
-                <div className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)]">
+                <div className="w-full sm:w-[280px]">
                   <GlassButton
                     label="Credit Shop"
                     subtext="Acquire CC Assets"
                     onClick={() => window.location.href = "/shop"}
                   />
                 </div>
-                <div className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)]">
+                <div className="w-full sm:w-[280px]">
                   <GlassButton
                     label="Socials"
                     subtext="Connect with ENGG"

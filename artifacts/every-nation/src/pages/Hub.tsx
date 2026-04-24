@@ -125,7 +125,7 @@ export default function Hub() {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white relative flex flex-col items-center justify-center overflow-x-hidden">
+    <div className="min-h-screen bg-black text-white pt-24 relative flex flex-col items-center justify-center overflow-x-hidden">
       {/* Background Layer */}
       <div
         className="fixed inset-0 z-0 bg-cover bg-center"

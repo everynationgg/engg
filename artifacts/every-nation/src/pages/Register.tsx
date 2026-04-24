@@ -33,8 +33,9 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-6 relative overflow-hidden bg-[#020408]">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(168,85,247,0.05)_0%,transparent_50%)]" />
+    <div className="min-h-[calc(100vh-80px)] pt-24 flex items-center justify-center p-6 relative overflow-hidden bg-[#020408]">
+      {/* Background FX */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(239,68,68,0.1)_0%,transparent_50%)]" />
       
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
