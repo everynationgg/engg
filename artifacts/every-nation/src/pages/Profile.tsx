@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaUser, FaWallet, FaHistory, FaShieldAlt, FaTrophy, FaGamepad, FaLink, FaEnvelope, FaCalendarAlt, FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import WarpJump from "@/components/WarpJump";
+import AlliesSidebar from "@/components/AlliesSidebar";
 
 interface Activity {
   id: string;
@@ -47,6 +48,7 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-[#020408] text-white pt-24 pb-20 px-6 md:px-16 relative overflow-y-auto selection:bg-cyan-500/30">
+      <AlliesSidebar />
       <AnimatePresence>
         {isWarping && <WarpJump />}
       </AnimatePresence>
@@ -169,7 +171,7 @@ export default function Profile() {
                   <div className="p-12 border border-white/5 bg-white/[0.01] text-center">
                     <span className="font-mono text-[10px] uppercase tracking-widest opacity-20 animate-pulse">Retrieving Logs...</span>
                   </div>
-                ) : activities.length > 0 ? (
+                ) : activities?.length > 0 ? (
                   activities.map((activity: Activity, i: number) => (
                     <motion.div
                       key={activity.id}
@@ -203,6 +205,58 @@ export default function Profile() {
                 ) : (
                   <div className="p-12 border border-white/5 bg-white/[0.01] text-center">
                     <span className="font-mono text-[10px] uppercase tracking-widest opacity-20">No Logs Recorded</span>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* Medal Vault */}
+            <section>
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-1 h-6 bg-cyan-500" />
+                <h2 className="font-orbitron text-lg tracking-[0.4em] uppercase">Medal_Vault</h2>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {loading ? (
+                  [...Array(6)].map((_, i) => (
+                    <div key={i} className="aspect-square bg-white/[0.02] border border-white/5 animate-pulse" />
+                  ))
+                ) : data.achievements?.length > 0 ? (
+                  data.achievements.map((medal: any, i: number) => (
+                    <motion.div
+                      key={medal.id}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: i * 0.05 }}
+                      className={`relative aspect-square flex flex-col items-center justify-center border transition-all duration-500 group ${
+                        medal.unlocked 
+                        ? 'bg-white/[0.04] border-white/20 hover:border-cyan-500/50 hover:bg-cyan-500/10' 
+                        : 'bg-black/40 border-white/5 grayscale opacity-30'
+                      }`}
+                    >
+                      <span className={`text-2xl mb-1 transition-transform duration-500 ${medal.unlocked ? 'group-hover:scale-125 group-hover:rotate-12' : ''}`}>
+                        {medal.icon}
+                      </span>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-[#020408]/95 p-2 text-center pointer-events-none">
+                        <span className="font-orbitron text-[7px] uppercase tracking-tighter text-white mb-1">{medal.name}</span>
+                        <span className="font-mono text-[6px] uppercase tracking-widest text-white/40 leading-tight">{medal.description}</span>
+                        {medal.unlocked && (
+                          <span className="mt-1 font-mono text-[6px] text-cyan-400">+{medal.prestigeXp} XP</span>
+                        )}
+                      </div>
+                      
+                      {/* Rarity Indicator (Bottom Dot) */}
+                      <div className={`absolute bottom-2 w-1 h-1 rounded-full ${
+                        medal.rarity === 'legendary' ? 'bg-red-500 shadow-[0_0_5px_red]' :
+                        medal.rarity === 'epic' ? 'bg-yellow-500 shadow-[0_0_5px_yellow]' :
+                        medal.rarity === 'rare' ? 'bg-purple-500 shadow-[0_0_5px_purple]' :
+                        'bg-cyan-500 shadow-[0_0_5px_cyan]'
+                      }`} />
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="col-span-full p-12 border border-white/5 bg-white/[0.01] text-center">
+                    <span className="font-mono text-[10px] uppercase tracking-widest opacity-20">No Medals Detected</span>
                   </div>
                 )}
               </div>

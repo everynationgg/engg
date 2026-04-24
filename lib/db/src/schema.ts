@@ -58,6 +58,8 @@ export const achievementsTable = pgTable("achievements", {
   description: text("description").notNull(),
   icon: text("icon").notNull(),
   rarity: text("rarity").notNull(),
+  category: text("category").notNull(), // gameplay, social, economy
+  prestigeXp: integer("prestige_xp").default(0).notNull(),
   pointsRequired: integer("points_required").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

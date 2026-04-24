@@ -309,7 +309,9 @@ export default function Shop() {
                     : "bg-white/[0.02] border-white/10 hover:border-white/20 hover:bg-white/[0.04]"
                     }`}
                   style={{ 
-                    borderColor: selectedPack?.id === pack.id ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : undefined 
+                    borderColor: (selectedPack?.id === pack.id && pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) 
+                      ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color 
+                      : undefined 
                   }}
                 >
                   {/* Rarity Indicator */}
@@ -326,7 +328,7 @@ export default function Shop() {
                   {/* Bonus Badge */}
                   {pack.bonus && (
                     <div className="absolute top-10 left-0 px-3 py-1 bg-white text-[#020408] font-orbitron text-[8px] font-black tracking-widest uppercase -rotate-2 shadow-lg"
-                      style={{ background: RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color }}
+                      style={{ background: (pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)" }}
                     >
                       {pack.bonus}
                     </div>
@@ -334,9 +336,9 @@ export default function Shop() {
 
                   {/* Asset Rendering */}
                   <div className="relative w-40 h-40 mb-8 mt-4 flex items-center justify-center">
-                    <div className="absolute inset-0 blur-[45px] rounded-full opacity-40 transition-opacity duration-1000"
+                    <div className="absolute inset-0 blur-[45px] rounded-full transition-opacity duration-1000"
                       style={{ 
-                        background: RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color,
+                        background: (pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)",
                         opacity: selectedPack?.id === pack.id ? 0.6 : 0.2
                       }} 
                     />
@@ -347,7 +349,7 @@ export default function Shop() {
                         }`}
                       style={{ 
                         filter: selectedPack?.id === pack.id 
-                          ? `drop-shadow(0 0 20px ${RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color})`
+                          ? `drop-shadow(0 0 20px ${(pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)"})`
                           : `grayscale(0.4) brightness(0.8)`
                       }}
                     />
@@ -357,7 +359,7 @@ export default function Shop() {
                     {pack.name}
                   </h3>
                   <p className="font-mono text-[18px] font-bold text-white tracking-[0.1em] mb-8">
-                    {pack.amount} <span className="text-[10px] opacity-50 tracking-widest" style={{ color: RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color }}>CC</span>
+                    {pack.amount} <span className="text-[10px] opacity-50 tracking-widest" style={{ color: (pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)" }}>CC</span>
                   </p>
 
                   <div className="mt-auto w-full pt-6 border-t border-white/5 flex flex-col items-center gap-4">

@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { FaExternalLinkAlt, FaLock } from "react-icons/fa";
+import { FaExternalLinkAlt, FaLock, FaTerminal, FaShieldAlt, FaCubes } from "react-icons/fa";
+import AlliesSidebar from "@/components/AlliesSidebar";
 
 interface GameCardProps {
   title: string;
@@ -8,9 +9,10 @@ interface GameCardProps {
   href?: string;
   status: "online" | "offline";
   subtitle?: string;
+  index: number;
 }
 
-function GameCard({ title, description, image, href, status, subtitle }: GameCardProps) {
+function GameCard({ title, description, image, href, status, subtitle, index }: GameCardProps) {
   const isOffline = status === "offline";
 
   const handleEntry = () => {
@@ -20,140 +22,188 @@ function GameCard({ title, description, image, href, status, subtitle }: GameCar
   };
 
   return (
-    <div className="flex flex-col items-center gap-12 w-full max-w-[400px]">
-      {/* HUD Header */}
-      <div className="w-full flex flex-col items-center gap-4">
-        <img src="/hub_bracket.png" alt="HUD Bracket" className="w-48 h-auto opacity-80" />
-        <h2 className="font-orbitron font-black text-xl tracking-[0.2em] uppercase text-white whitespace-nowrap">
-          {title}
-        </h2>
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, delay: index * 0.15 }}
+      onClick={handleEntry}
+      className={`relative group flex flex-col w-full max-w-[400px] aspect-[10/14] transition-all duration-700 ${isOffline ? "cursor-not-allowed grayscale" : "cursor-pointer"
+        }`}
+    >
+      {/* Decorative HUD Corner Bracket (Top Right) */}
+      <div className="absolute -top-1 -right-1 w-12 h-12 border-t-2 border-r-2 border-cyan-500/30 group-hover:border-cyan-400 z-30 transition-colors" />
+      <div className="absolute -bottom-1 -left-1 w-12 h-12 border-b-2 border-l-2 border-cyan-500/30 group-hover:border-cyan-400 z-30 transition-colors" />
+
+      {/* Main Image Container */}
+      <div className="absolute inset-0 z-0 overflow-hidden rounded-sm border border-white/10 bg-[#0a0b1e]">
+        <img
+          src={image}
+          alt={title}
+          className={`w-full h-full object-cover transition-transform duration-[2000ms] ease-out ${!isOffline && "group-hover:scale-110"
+            }`}
+        />
+        {/* Gradients & Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90" />
+        <div className="absolute inset-0 bg-cyan-950/10 group-hover:bg-transparent transition-colors duration-700" />
+        
+        {/* Offline Overlay */}
+        {isOffline && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-[4px] z-10">
+            <div className="p-4 rounded-full border border-white/10 bg-white/5 mb-4">
+              <FaLock className="text-white/20 text-2xl" />
+            </div>
+            <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-white/40">Access_Denied</span>
+          </div>
+        )}
+
+        {/* Scanline Effect inside Card */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.05] z-10 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" />
       </div>
 
-      {/* Main Card */}
-      <motion.div
-        whileHover={!isOffline ? { scale: 1.03, y: -10 } : {}}
-        onClick={handleEntry}
-        className={`relative w-full aspect-[3/4] transition-all duration-500 overflow-hidden ${isOffline ? "cursor-not-allowed opacity-60 grayscale" : "cursor-pointer group"
-          }`}
-        style={{
-          background: "linear-gradient(180deg, #0a0b1e 0%, #05060d 100%)",
-          borderRadius: "24px",
-          border: "1px solid rgba(255, 255, 255, 0.05)"
-        }}
-      >
-        {/* Glowing border for active card */}
-        {!isOffline && (
-          <div className="absolute inset-0 border-2 border-cyan-500/0 group-hover:border-cyan-500/30 transition-colors z-20 rounded-[24px]" />
-        )}
-
-        {/* The Clipped Image Container */}
-        <div className="absolute inset-6 z-10">
-          <div
-            className="w-full h-full relative overflow-hidden"
-            style={{
-              clipPath: "polygon(0 0, 75% 0, 100% 25%, 100% 75%, 75% 100%, 25% 100%, 0 75%, 0 0)",
-              background: "rgba(0,0,0,0.4)"
-            }}
-          >
-            <img
-              src={image}
-              alt={title}
-              className={`w-full h-full object-cover transition-transform duration-1000 ${!isOffline && "group-hover:scale-110"
-                }`}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#05060d]/80 via-transparent to-transparent" />
-
-            {isOffline && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
-                <FaLock className="text-white/20 text-4xl" />
-              </div>
-            )}
-          </div>
+      {/* Content HUD Overlays */}
+      <div className="relative z-20 mt-auto p-8 flex flex-col gap-4">
+        <div className="flex items-center gap-3">
+          <div className={`w-1.5 h-1.5 rounded-full ${isOffline ? "bg-red-500/40" : "bg-cyan-500 shadow-[0_0_10px_#00f3ff] animate-pulse"}`} />
+          <span className="font-mono text-[9px] uppercase tracking-[0.5em] text-white/40">
+            {isOffline ? "Status: Offline" : "Status: Operational"}
+          </span>
         </div>
 
-        {/* Decorative HUD Elements inside card */}
-        <div className="absolute bottom-4 left-6 z-20 flex flex-col gap-1">
-          <span className="font-mono text-[8px] uppercase tracking-widest text-cyan-500/60">Node_ID: 0x449</span>
-          <div className="w-12 h-0.5 bg-cyan-500/20" />
+        <div className="flex flex-col gap-1">
+          <h2 className="font-orbitron font-black text-2xl tracking-[0.1em] uppercase text-white group-hover:text-cyan-400 transition-colors">
+            {title}
+          </h2>
+          <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-cyan-500/60 font-bold">
+            {subtitle}
+          </span>
         </div>
-      </motion.div>
 
-      {/* Description Pod */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-[32px] p-8 text-center"
-      >
-        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/50 leading-relaxed">
-          {subtitle}<br />
+        <p className="font-mono text-[11px] uppercase tracking-wider text-white/50 leading-relaxed max-w-[90%] opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-500">
           {description}
         </p>
+
         {!isOffline && (
-          <div className="mt-4 flex items-center justify-center gap-3 text-cyan-400 font-orbitron text-[9px] uppercase tracking-[0.4em] font-bold">
-            Initialize <FaExternalLinkAlt className="text-[8px]" />
+          <div className="mt-4 flex items-center gap-4 text-cyan-400 opacity-60 group-hover:opacity-100 transition-all">
+            <span className="font-orbitron text-[10px] uppercase tracking-[0.5em] font-bold">Initialize Deployment</span>
+            <div className="flex-1 h-px bg-cyan-500/20" />
+            <FaExternalLinkAlt className="text-[10px] group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
           </div>
         )}
-      </motion.div>
-    </div>
+      </div>
+
+      {/* Background Glow */}
+      <div className="absolute inset-0 -z-10 bg-cyan-500/0 group-hover:bg-cyan-500/5 blur-[80px] transition-all duration-700 rounded-full scale-50 group-hover:scale-100" />
+    </motion.div>
   );
 }
 
 export default function Hub() {
   const games = [
     {
-      title: "ERROR: Newform Detected",
-      subtitle: "A Social Deduction game etc",
-      description: "A high-stakes social deduction engine. Identify the Virus before the system collapses.",
+      title: "Lockdown Protocol",
+      subtitle: "Social Deduction Engine",
+      description: "A high-stakes network defense simulator. Identify the Virus before core breach.",
       image: "/hub_lockdown.png",
       href: "/end",
       status: "online" as const
     },
     {
-      title: "TRIPLE TRIAD ONLINE",
-      subtitle: "A Social Deduction game etc",
-      description: "Strategic card warfare. Collect, trade, and dominate the digital grid.",
+      title: "Triple Triad",
+      subtitle: "Strategic Card Duel",
+      description: "Neural card warfare on the digital grid. Collect, trade, and dominate.",
       image: "/hub_triad.png",
       status: "offline" as const
     },
     {
-      title: "TOWER DEFENSE",
-      subtitle: "A Social Deduction game etc",
-      description: "Coordinate orbital defenses. Protect the core from relentless machine swarms.",
+      title: "Tower Defense",
+      subtitle: "Orbital Swarm Defense",
+      description: "Coordinate orbital batteries to protect the colony from machine swarms.",
       image: "/hub_td.png",
       status: "offline" as const
     }
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white pt-24 relative flex flex-col items-center justify-center overflow-x-hidden">
-      {/* Background Layer */}
+    <div className="min-h-screen bg-[#020408] text-white pt-24 relative flex flex-col items-center overflow-x-hidden selection:bg-cyan-500/30">
+      <AlliesSidebar />
+      {/* Cinematic Background Layer */}
       <div
-        className="fixed inset-0 z-0 bg-cover bg-center"
+        className="fixed inset-0 z-0 bg-cover bg-center transition-transform duration-[10000ms] scale-110 animate-slow-drift"
         style={{ backgroundImage: "url('/hub_bg.png')" }}
       />
-      <div className="fixed inset-0 z-1 bg-black/30" />
+      <div className="fixed inset-0 z-1 bg-gradient-to-b from-[#020408]/80 via-[#020408]/40 to-[#020408]/90" />
+      
+      {/* Global HUD Scanning Line */}
+      <div className="fixed inset-0 pointer-events-none z-20 scanline" />
 
-      {/* Main Content */}
-      <div className="relative z-10 w-full max-w-[1440px] px-12 py-32">
-        <div className="flex flex-col md:flex-row items-start justify-center gap-12 lg:gap-20">
+      {/* Header Overlay */}
+      <header className="relative z-10 w-full max-w-[1440px] px-8 md:px-16 pt-16 md:pt-24 flex flex-col gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-[2px] bg-cyan-500 shadow-[0_0_15px_#00f3ff]" />
+          <span className="font-mono text-[10px] uppercase tracking-[0.8em] text-cyan-500">Mission_Select</span>
+        </div>
+        <h1 className="font-orbitron font-black text-4xl md:text-6xl tracking-[0.2em] uppercase text-white">
+          Gaming <span className="text-cyan-400">Hub</span>
+        </h1>
+        <div className="flex items-center gap-6 mt-4 opacity-30">
+          <div className="flex items-center gap-2">
+            <FaTerminal className="text-[10px]" />
+            <span className="font-mono text-[9px] uppercase tracking-widest">Sys_Status: Ready</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <FaShieldAlt className="text-[10px]" />
+            <span className="font-mono text-[9px] uppercase tracking-widest">Network: Secure</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <FaCubes className="text-[10px]" />
+            <span className="font-mono text-[9px] uppercase tracking-widest">Nodes: 3_Detected</span>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Mission Deck */}
+      <div className="relative z-10 w-full max-w-[1440px] px-8 md:px-16 py-20 md:py-32">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-16 justify-items-center">
           {games.map((game, i) => (
-            <motion.div
-              key={game.title}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.15 }}
-              className="flex-1"
-            >
-              <GameCard {...game} />
-            </motion.div>
+            <GameCard key={game.title} {...game} index={i} />
           ))}
         </div>
       </div>
 
-      {/* Footer Branding */}
-      <div className="relative z-10 mt-auto pb-12 opacity-30">
-        <span className="font-orbitron text-[10px] uppercase tracking-[0.8em]">ENGG // CENTRAL_RELAY</span>
-      </div>
+      {/* System Footer Info */}
+      <footer className="relative z-10 mt-auto w-full border-t border-white/5 bg-black/40 backdrop-blur-md py-8">
+        <div className="max-w-[1440px] mx-auto px-8 flex justify-between items-center opacity-30">
+          <span className="font-orbitron text-[9px] uppercase tracking-[0.6em]">ENGG // CENTRAL_RELAY</span>
+          <div className="flex items-center gap-8">
+            <span className="font-mono text-[8px] uppercase tracking-widest">Uptime: 99.98%</span>
+            <span className="font-mono text-[8px] uppercase tracking-widest">Encryption: AES-256</span>
+          </div>
+        </div>
+      </footer>
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        .scanline {
+          position: fixed;
+          inset: 0;
+          background: linear-gradient(
+            to bottom,
+            transparent 50%,
+            rgba(0, 0, 0, 0.1) 50%
+          );
+          background-size: 100% 4px;
+          z-index: 50;
+          pointer-events: none;
+          opacity: 0.5;
+        }
+        @keyframes slow-drift {
+          0%, 100% { transform: scale(1.1) translate(0, 0); }
+          50% { transform: scale(1.15) translate(-1%, -1%); }
+        }
+        .animate-slow-drift {
+          animation: slow-drift 30s infinite ease-in-out;
+        }
+      `}} />
     </div>
   );
 }

@@ -53,11 +53,12 @@ import {
   type PlayerAction,
 } from "./modules/game/game.engine.js";
 import { logger } from "./lib/logger.js";
-import { db, gameChatsTable, usersTable, creditTransactionsTable } from "@workspace/db";
-import { eq, desc, gt } from "drizzle-orm";
+import { db, gameChatsTable, usersTable, creditTransactionsTable, playerStatsTable, gameResultsTable } from "@workspace/db";
+import { eq, desc, gt, sql } from "drizzle-orm";
 import { redisPub, redisSub } from "./config/redis.js";
 import { checkRateLimit } from "./lib/rate-limit.js";
 import { issuePlayerToken, verifyPlayerToken } from "./lib/auth.js";
+import { syncUserAchievements } from "./routes/achievements.js";
 
 // ── Named type aliases ────────────────────────────────────────────────────────
 /** Resolved return type of getSession — either a VersionedSession or undefined. */
@@ -296,6 +297,68 @@ function graceUpdate(
  * Re-reads the latest state from Redis and broadcasts it so all clients stay
  * in sync with the authoritative server state.
  */
+async function recordGameResults(io: SocketIOServer, sessionId: string, voteResult: any) {
+  try {
+    const results = voteResult.allRoles;
+    if (!results || !Array.isArray(results)) return;
+
+    for (const player of results) {
+      // Find the player in our system using their stable playerId (UUID)
+      // or their userId if they were logged in during the session
+      const userId = player.stablePlayerId; 
+      if (!userId) continue;
+
+      const won = (player.role === "alien" || player.role === "parasite") 
+        ? voteResult.winTeam === "alien" 
+        : voteResult.winTeam === "crew";
+
+      // 1. Record the individual game result
+      await db.insert(gameResultsTable).values({
+        id: randomUUID(),
+        gameId: sessionId,
+        userId: userId,
+        role: player.role,
+        won: won ? "yes" : "no",
+      });
+
+      // 2. Update overall player stats
+      await db.insert(playerStatsTable)
+        .values({
+          id: randomUUID(),
+          userId: userId,
+          gamesPlayed: 1,
+          gamesWon: won ? 1 : 0,
+          gamesLost: won ? 0 : 1,
+        })
+        .onConflictDoUpdate({
+          target: playerStatsTable.userId,
+          set: {
+            gamesPlayed: sql`${playerStatsTable.gamesPlayed} + 1`,
+            gamesWon: won ? sql`${playerStatsTable.gamesWon} + 1` : playerStatsTable.gamesWon,
+            gamesLost: won ? playerStatsTable.gamesLost : sql`${playerStatsTable.gamesLost} + 1`,
+            updatedAt: new Date(),
+          }
+        });
+
+      // 3. Sync achievements in real-time
+      const newAchievements = await syncUserAchievements(userId);
+      if (newAchievements.length > 0) {
+        // Find the socket for this player to notify them of the unlock
+        // We use the socket ID which is player.playerId in this context? 
+        // Actually player.playerId is the stable UUID. We need the socket ID.
+        // The results array in engine has playerId (socket.id).
+        const socketId = player.playerId;
+        const sock = io.sockets.sockets.get(socketId);
+        if (sock) {
+          sock.emit("achievements_unlocked", { count: newAchievements.length });
+        }
+      }
+    }
+  } catch (err) {
+    logger.error({ err, sessionId }, "Failed to record game results");
+  }
+}
+
 async function handleSaveConflict(
   io: SocketIOServer,
   sessionId: string,
@@ -1696,6 +1759,9 @@ export function attachSocketIO(httpServer: HttpServer) {
           });
           io.to(parsed.sessionId).emit("vote_result", cas.result.voteResult);
           io.to(parsed.sessionId).emit("round_summary", cas.session.roundSummary);
+
+          // Record results and sync achievements asynchronously
+          void recordGameResults(io, parsed.sessionId, cas.result.voteResult);
         }
       },
     );

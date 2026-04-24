@@ -67,6 +67,44 @@ export async function migrateDb(): Promise<void> {
       )
     `);
 
+    // Achievement System
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS achievements (
+        id              TEXT         PRIMARY KEY,
+        slug            TEXT         NOT NULL UNIQUE,
+        name            TEXT         NOT NULL,
+        description     TEXT         NOT NULL,
+        icon            TEXT         NOT NULL,
+        rarity          TEXT         NOT NULL,
+        category        TEXT         NOT NULL DEFAULT 'gameplay',
+        prestige_xp     INTEGER      NOT NULL DEFAULT 0,
+        points_required INTEGER      NOT NULL DEFAULT 0,
+        created_at      TIMESTAMP    NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_achievements (
+        user_id         TEXT         NOT NULL,
+        achievement_id  TEXT         NOT NULL,
+        unlocked_at     TIMESTAMP    NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (user_id, achievement_id)
+      )
+    `);
+
+    // Backfill columns for achievements if they already exist
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'achievements' AND column_name = 'category') THEN
+          ALTER TABLE achievements ADD COLUMN category TEXT NOT NULL DEFAULT 'gameplay';
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'achievements' AND column_name = 'prestige_xp') THEN
+          ALTER TABLE achievements ADD COLUMN prestige_xp INTEGER NOT NULL DEFAULT 0;
+        END IF;
+      END $$
+    `);
+
     await client.query("COMMIT");
     logger.info("migrate: schema migration completed");
   } catch (err) {
