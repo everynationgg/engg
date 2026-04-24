@@ -1,7 +1,9 @@
-# fly.toml — Fly.io configuration for enfestation API server
-# Deploy from repo root: fly deploy
+# fly.toml app configuration file generated for engg on 2026-04-24T11:59:00Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-app = 'errornewformdetected'
+app = 'engg'
 primary_region = 'sin'
 
 [build]
@@ -11,24 +13,24 @@ primary_region = 'sin'
   PORT = '10000'
 
 [http_service]
-  internal_port = 10000
+  internal_port = 8080
   force_https = true
   auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 1
   processes = ['app']
 
-[http_service.concurrency]
-  type = 'connections'
-  hard_limit = 250
-  soft_limit = 200
+  [http_service.concurrency]
+    type = 'connections'
+    hard_limit = 250
+    soft_limit = 200
 
-[[http_service.checks]]
-  grace_period = '10s'
-  interval = '15s'
-  method = 'GET'
-  path = '/health'
-  timeout = '5s'
+  [[http_service.checks]]
+    interval = '15s'
+    timeout = '5s'
+    grace_period = '10s'
+    method = 'GET'
+    path = '/health'
 
 [[vm]]
   cpu_kind = 'shared'
