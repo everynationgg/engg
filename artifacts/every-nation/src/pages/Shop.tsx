@@ -156,25 +156,28 @@ export default function Shop() {
         ))}
       </div>
 
-      <div className="relative z-10 w-full px-6 md:px-16 py-12 md:pt-32 pb-24 min-h-screen flex flex-col">
+      <div className="relative z-10 w-full px-6 md:px-16 py-12 md:pt-40 pb-24 min-h-screen flex flex-col">
 
         {/* Header HUD */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-24 gap-12 border-b border-white/5 pb-12">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-20 gap-12 border-b border-white/5 pb-10">
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             className="relative"
           >
-            <div className="flex items-center gap-4 mb-3">
-              <div className="w-1.5 h-10 bg-cyan-500 shadow-[0_0_20px_#00f3ff]" />
-              <h1 className="font-orbitron font-black text-4xl md:text-5xl tracking-[0.4em] uppercase text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+            <div className="flex flex-col gap-1 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-1 h-6 bg-cyan-500 shadow-[0_0_15px_#00f3ff]" />
+                <span className="font-mono text-[9px] tracking-[0.5em] uppercase text-cyan-500/60">Operational_Hub</span>
+              </div>
+              <h1 className="font-orbitron font-black text-3xl md:text-4xl tracking-[0.2em] uppercase text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
                 Credit <span className="text-cyan-400">Exchange</span>
               </h1>
             </div>
-            <div className="flex items-center gap-4 ml-6 opacity-40">
-              <span className="font-mono text-[10px] tracking-[0.4em] uppercase">Auth_Session: Stable</span>
+            <div className="flex items-center gap-4 ml-4 opacity-30">
+              <span className="font-mono text-[8px] tracking-[0.3em] uppercase">Auth_Session: Stable</span>
               <div className="w-1 h-1 rounded-full bg-cyan-400 animate-pulse" />
-              <span className="font-mono text-[10px] tracking-[0.4em] uppercase">Node: US-WEST-2</span>
+              <span className="font-mono text-[8px] tracking-[0.3em] uppercase">Node: US-WEST-2</span>
             </div>
           </motion.div>
 
