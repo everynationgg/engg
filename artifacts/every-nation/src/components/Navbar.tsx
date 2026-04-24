@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaUser, FaWallet, FaSignOutAlt, FaBars, FaTimes, FaGlobe } from "react-icons/fa";
+import { FaUser, FaSignOutAlt, FaBars, FaTimes } from "react-icons/fa";
 
 export default function Navbar() {
   const { isLoggedIn, username, credits, logout } = useAuth();
@@ -35,7 +35,7 @@ export default function Navbar() {
           : "bg-transparent border-transparent py-6"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between">
+      <div className="w-full max-w-[1800px] mx-auto px-6 md:px-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="group flex items-center gap-3">
           <div className="w-8 h-8 border border-cyan-500/50 flex items-center justify-center group-hover:border-cyan-400 transition-colors">
@@ -49,27 +49,15 @@ export default function Navbar() {
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center gap-12">
           {navLinks.map((link) => (
-            link.external ? (
-              <a 
-                key={link.name}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-orbitron text-[10px] uppercase tracking-[0.3em] text-white/60 hover:text-cyan-400 transition-colors"
-              >
-                {link.name}
-              </a>
-            ) : (
-              <Link 
-                key={link.name}
-                href={link.href}
-                className={`font-orbitron text-[10px] uppercase tracking-[0.3em] transition-colors ${
-                  location === link.href ? "text-cyan-400" : "text-white/60 hover:text-white"
-                }`}
-              >
-                {link.name}
-              </Link>
-            )
+            <Link 
+              key={link.name}
+              href={link.href}
+              className={`font-orbitron text-[10px] uppercase tracking-[0.3em] transition-colors ${
+                location === link.href ? "text-cyan-400" : "text-white/60 hover:text-white"
+              }`}
+            >
+              {link.name}
+            </Link>
           ))}
         </div>
 
@@ -133,26 +121,15 @@ export default function Navbar() {
           >
             <div className="px-6 py-12 flex flex-col gap-8">
               {navLinks.map((link) => (
-                link.external ? (
-                  <a 
-                    key={link.name}
-                    href={link.href}
-                    target="_blank"
-                    className="font-orbitron text-xs uppercase tracking-[0.4em] text-white/60"
-                  >
-                    {link.name}
-                  </a>
-                ) : (
-                  <Link 
-                    key={link.name}
-                    href={link.href}
-                    className={`font-orbitron text-xs uppercase tracking-[0.4em] ${
-                      location === link.href ? "text-cyan-400" : "text-white/60"
-                    }`}
-                  >
-                    {link.name}
-                  </Link>
-                )
+                <Link 
+                  key={link.name}
+                  href={link.href}
+                  className={`font-orbitron text-xs uppercase tracking-[0.4em] ${
+                    location === link.href ? "text-cyan-400" : "text-white/60"
+                  }`}
+                >
+                  {link.name}
+                </Link>
               ))}
               
               <div className="pt-8 border-t border-white/10">
