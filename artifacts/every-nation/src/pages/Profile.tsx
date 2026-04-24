@@ -112,7 +112,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020408] text-white pt-48 md:pt-60 pb-20 px-6 md:px-16 relative overflow-y-auto selection:bg-cyan-500/30">
+    <div className="min-h-screen bg-[#020408] text-white pt-60 md:pt-72 pb-20 px-6 md:px-16 relative overflow-y-auto selection:bg-cyan-500/30">
       <AlliesSidebar />
       <AnimatePresence>
         {isWarping && <WarpJump />}
@@ -135,252 +135,289 @@ export default function Profile() {
 
       <div className="w-full relative z-10">
         {/* Profile Header */}
-        <header className="mb-12 flex flex-col md:flex-row items-center md:items-end justify-between gap-8 pb-12 border-b border-white/5">
-          <div className="flex flex-col md:flex-row items-center gap-8">
+        <header className="mb-16 flex flex-col md:flex-row items-center md:items-end justify-between gap-8 pb-12 border-b-2 border-white/10 relative">
+          {/* Tactical Header Accents */}
+          <div className="absolute bottom-[-2px] left-0 w-32 h-[2px] bg-cyan-500 shadow-[0_0_15px_#00f3ff]" />
+          
+          <div className="flex flex-col md:flex-row items-center gap-10">
             <motion.div 
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="relative w-32 h-32 md:w-40 md:h-40"
+              className="relative w-32 h-32 md:w-44 md:h-44"
             >
-              <div className="absolute inset-0 border border-cyan-500/30 rounded-full animate-pulse shadow-[0_0_30px_rgba(6,182,212,0.1)]" />
-              <div className="absolute inset-2 border border-white/10 rounded-full bg-white/5 flex items-center justify-center overflow-hidden">
-                <FaUser className="text-5xl md:text-6xl text-white/20" />
+              <div className="absolute inset-0 border-2 border-cyan-500/30 rounded-full animate-[pulse_4s_infinite] shadow-[0_0_50px_rgba(6,182,212,0.15)]" />
+              <div className="absolute inset-3 border border-white/10 rounded-full bg-white/5 flex items-center justify-center overflow-hidden backdrop-blur-sm">
+                <FaUser className="text-6xl text-white/20" />
+                {/* Animated HUD Ring */}
+                <div className="absolute inset-0 border-t-2 border-cyan-500/40 rounded-full animate-[spin_10s_linear_infinite]" />
               </div>
-              <div className="absolute bottom-2 right-2 w-10 h-10 bg-cyan-500 rounded-full border-4 border-[#020408] flex items-center justify-center shadow-lg">
-                <FaShieldAlt className="text-white text-sm" />
+              <div className="absolute bottom-2 right-2 w-12 h-12 bg-cyan-500 rounded-full border-4 border-[#020408] flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.5)] z-20">
+                <FaShieldAlt className="text-white text-base" />
               </div>
             </motion.div>
-
+ 
             <div className="text-center md:text-left">
+              <div className="flex items-center justify-center md:justify-start gap-4 mb-4">
+                <div className="w-2 h-2 rounded-full bg-cyan-500 shadow-[0_0_10px_#00f3ff]" />
+                <span className="font-mono text-[10px] uppercase tracking-[0.6em] text-cyan-400">Status: Active_Engagement</span>
+              </div>
               <motion.h1 
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="font-orbitron text-3xl md:text-5xl font-black tracking-[0.2em] uppercase text-white mb-2"
+                className="font-orbitron text-4xl md:text-6xl font-black tracking-[0.2em] uppercase text-white mb-6"
               >
                 {username}
               </motion.h1>
               <div className="flex flex-wrap justify-center md:justify-start gap-4">
-                <div className="flex items-center gap-2 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded">
-                  <span className="font-mono text-[9px] uppercase tracking-widest text-cyan-400">Verified_Account</span>
+                <div className="flex items-center gap-3 px-4 py-2 bg-cyan-500/10 border border-cyan-500/40 rounded shadow-[inset_0_0_15px_rgba(6,182,212,0.1)]">
+                  <FaCheckCircle className="text-cyan-400 text-xs" />
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-cyan-400 font-bold">Verified_Operative</span>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded">
+                <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded">
                   <FaEnvelope className="text-[10px] text-white/30" />
                   <span className="font-mono text-[9px] lowercase tracking-wider text-white/60">{email}</span>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded">
-                  <FaCalendarAlt className="text-[10px] text-white/30" />
-                  <span className="font-mono text-[9px] uppercase tracking-wider text-white/60">Registered_{new Date(createdAt || Date.now()).toLocaleDateString()}</span>
                 </div>
               </div>
             </div>
           </div>
-
-          <div className="flex flex-col items-center md:items-end bg-cyan-500/5 border border-cyan-500/20 p-6 md:p-8 w-full md:min-w-[240px]">
-            <span className="font-mono text-[10px] uppercase text-white/30 mb-2 tracking-[0.4em]">Available_Credits</span>
-            <div className="flex items-center gap-3">
-              <span className="font-orbitron text-5xl font-black text-cyan-400 tracking-tighter">{credits?.toLocaleString()}</span>
-              <span className="font-orbitron text-sm text-cyan-400/50 mt-4 tracking-widest uppercase">CC</span>
+ 
+          <div className="flex flex-col items-center md:items-end p-8 w-full md:min-w-[320px] relative overflow-hidden group">
+            {/* Background Polish */}
+            <div className="absolute inset-0 bg-cyan-500/[0.03] border border-cyan-500/20 group-hover:bg-cyan-500/[0.06] transition-colors" />
+            <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-cyan-500/30" />
+            
+            <div className="relative z-10 flex flex-col items-center md:items-end">
+              <span className="font-mono text-[9px] uppercase text-white/30 mb-2 tracking-[0.5em] font-bold">Asset_Allocation</span>
+              <div className="flex items-center gap-3">
+                <span className="font-orbitron text-6xl font-black text-cyan-400 tracking-tighter drop-shadow-[0_0_15px_rgba(6,182,212,0.3)]">{credits?.toLocaleString()}</span>
+                <span className="font-orbitron text-sm text-cyan-400/50 mt-4 tracking-widest uppercase font-bold">CC</span>
+              </div>
+              <button 
+                onClick={() => window.location.href = "/shop"}
+                className="mt-8 px-12 py-3 bg-cyan-500/20 hover:bg-cyan-500/40 border border-cyan-500/50 text-cyan-400 font-orbitron text-[10px] uppercase tracking-[0.4em] transition-all relative overflow-hidden group/btn"
+              >
+                <span className="relative z-10">Initialize_Purchase</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000" />
+              </button>
             </div>
-            <button 
-              onClick={() => window.location.href = "/shop"}
-              className="mt-6 w-full py-2 bg-cyan-500/20 hover:bg-cyan-500/40 border border-cyan-500/40 text-cyan-400 font-orbitron text-[9px] uppercase tracking-[0.4em] transition-all"
-            >
-              Allocate_More
-            </button>
           </div>
         </header>
 
         {/* Profile Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-12">
-            {/* Stats Card */}
-            <section>
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-1 h-6 bg-cyan-500" />
-                <h2 className="font-orbitron text-lg tracking-[0.4em] uppercase">Service_Record</h2>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                {[
-                  { label: "Matches", value: stats?.gamesPlayed || 0, icon: <FaGamepad className="text-cyan-400" /> },
-                  { label: "Victories", value: stats?.gamesWon || 0, icon: <FaTrophy className="text-yellow-500" /> },
-                  { label: "Losses", value: stats?.gamesLost || 0, icon: <FaArrowLeft className="text-red-400 rotate-180" /> },
-                ].map((stat, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    className="p-6 bg-white/[0.03] border border-white/10 flex flex-col gap-4 group hover:border-cyan-500/30 transition-all"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="w-8 h-8 rounded bg-white/5 flex items-center justify-center text-sm">
-                        {stat.icon}
-                      </div>
-                      <span className="font-orbitron text-2xl font-bold">{stat.value.toLocaleString()}</span>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          {/* LEFT COLUMN: Summary & Actions */}
+          <div className="lg:col-span-4 space-y-10">
+            {/* Account Progress */}
+            <div className="bg-white/[0.03] border border-white/10 p-8 relative overflow-hidden">
+               <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/5 rotate-45 translate-x-12 -translate-y-12" />
+               <h3 className="font-orbitron text-xs tracking-[0.3em] uppercase mb-8 text-white/60 border-l-2 border-cyan-500 pl-4">Operative_Status</h3>
+               <div className="space-y-6">
+                 <div className="space-y-3">
+                    <div className="flex justify-between items-end">
+                      <span className="font-mono text-[9px] uppercase text-white/30 tracking-widest">Level_Progress</span>
+                      <span className="font-orbitron text-xs text-cyan-400 font-bold">LVL 24</span>
                     </div>
-                    <span className="font-mono text-[9px] uppercase tracking-widest text-white/30">{stat.label}</span>
-                  </motion.div>
-                ))}
-              </div>
-            </section>
+                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: "65%" }}
+                        transition={{ duration: 1.5, ease: "easeOut" }}
+                        className="h-full bg-cyan-500 shadow-[0_0_10px_#00f3ff]" 
+                      />
+                    </div>
+                    <div className="flex justify-between font-mono text-[7px] text-white/20 tracking-tighter uppercase">
+                      <span>14,250 XP</span>
+                      <span>20,000 XP</span>
+                    </div>
+                 </div>
+                 
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-white/5 border border-white/5 rounded text-center">
+                       <span className="block font-orbitron text-lg font-bold text-white mb-1">0.65</span>
+                       <span className="font-mono text-[7px] uppercase tracking-widest text-white/30">Win_Rate</span>
+                    </div>
+                    <div className="p-4 bg-white/5 border border-white/5 rounded text-center">
+                       <span className="block font-orbitron text-lg font-bold text-white mb-1">12</span>
+                       <span className="font-mono text-[7px] uppercase tracking-widest text-white/30">Medals</span>
+                    </div>
+                 </div>
+               </div>
+            </div>
 
-            {/* Activity Feed */}
-            <section>
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-1 h-6 bg-cyan-500" />
-                <h2 className="font-orbitron text-lg tracking-[0.4em] uppercase">Log_Archive</h2>
-              </div>
-              <div className="space-y-4">
-                {loading ? (
-                  <div className="p-12 border border-white/5 bg-white/[0.01] text-center">
-                    <span className="font-mono text-[10px] uppercase tracking-widest opacity-20 animate-pulse">Retrieving Logs...</span>
-                  </div>
-                ) : activities?.length > 0 ? (
-                  activities.map((activity: Activity, i: number) => (
-                    <motion.div
-                      key={activity.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                      className="p-5 bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors flex items-center justify-between gap-6"
-                    >
-                      <div className="flex items-center gap-6">
-                        <div className={`w-10 h-10 flex items-center justify-center border ${
-                          activity.type === 'purchase' ? 'border-cyan-500/30 text-cyan-400' : 
-                          activity.type === 'game_result' ? 'border-purple-500/30 text-purple-400' : 
-                          'border-white/20 text-white/40'
-                        }`}>
-                          {activity.type === 'purchase' ? <FaWallet /> : 
-                           activity.type === 'game_result' ? <FaTrophy /> : 
-                           <FaHistory />}
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <span className="font-orbitron text-[10px] uppercase tracking-widest text-white/80">{activity.description}</span>
-                          <span className="font-mono text-[8px] uppercase tracking-wider text-white/20">
-                            {new Date(activity.timestamp).toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                      {activity.amount && (
-                        <span className="font-orbitron text-sm text-cyan-400">+{activity.amount.toLocaleString()} CC</span>
-                      )}
-                    </motion.div>
-                  ))
-                ) : (
-                  <div className="p-12 border border-white/5 bg-white/[0.01] text-center">
-                    <span className="font-mono text-[10px] uppercase tracking-widest opacity-20">No Logs Recorded</span>
-                  </div>
-                )}
-              </div>
-            </section>
-
-            {/* Medal Vault */}
-            <section>
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-1 h-6 bg-cyan-500" />
-                <h2 className="font-orbitron text-lg tracking-[0.4em] uppercase">Medal_Vault</h2>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {loading ? (
-                  [...Array(5)].map((_, i) => (
-                    <div key={i} className="aspect-square bg-white/[0.02] border border-white/5 animate-pulse" />
-                  ))
-                ) : achievements?.length > 0 ? (
-                  achievements.map((medal: any, i: number) => (
-                    <motion.div
-                      key={medal.id}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: i * 0.05 }}
-                      className={`relative aspect-square flex flex-col items-center justify-center border transition-all duration-500 group overflow-hidden ${
-                        medal.unlocked 
-                        ? 'bg-white/[0.04] border-white/20 hover:border-cyan-500/50 hover:bg-cyan-500/10' 
-                        : 'bg-black/40 border-white/5 grayscale opacity-30'
-                      }`}
-                    >
-                      {/* Scanning Ray Effect */}
-                      {medal.unlocked && (
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent -translate-y-full group-hover:translate-y-full transition-transform duration-[2000ms] ease-linear" />
-                      )}
-
-                      <span className={`text-3xl mb-1 transition-transform duration-500 ${medal.unlocked ? 'group-hover:scale-125' : ''}`}>
-                        {medal.icon}
-                      </span>
-                      
-                      <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-[#020408]/95 p-3 text-center pointer-events-none">
-                        <span className="font-orbitron text-[8px] uppercase tracking-tighter text-cyan-400 mb-1">{medal.name}</span>
-                        <span className="font-mono text-[7px] uppercase tracking-widest text-white/40 leading-tight">{medal.description}</span>
-                        {medal.unlocked && (
-                          <span className="mt-2 font-mono text-[7px] text-cyan-500/60 font-bold tracking-widest">AUTHORIZED</span>
-                        )}
-                      </div>
-                      
-                      {/* Rarity Flare */}
-                      <div className={`absolute bottom-0 left-0 right-0 h-[2px] ${
-                        medal.rarity === 'legendary' ? 'bg-red-500 shadow-[0_0_10px_red]' :
-                        medal.rarity === 'epic' ? 'bg-yellow-500 shadow-[0_0_10px_yellow]' :
-                        medal.rarity === 'rare' ? 'bg-purple-500 shadow-[0_0_10px_purple]' :
-                        'bg-cyan-500 shadow-[0_0_10px_cyan]'
-                      }`} />
-                    </motion.div>
-                  ))
-                ) : (
-                  <div className="col-span-full p-12 border border-white/5 bg-white/[0.01] text-center">
-                    <span className="font-mono text-[10px] uppercase tracking-widest opacity-20">No Medals Detected</span>
-                  </div>
-                )}
-              </div>
-            </section>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-8">
             <div className="bg-white/[0.03] border border-white/10 p-8">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="font-orbitron text-xs tracking-[0.3em] uppercase text-white/60">Account_Actions</h3>
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="font-orbitron text-xs tracking-[0.3em] uppercase text-white/60 border-l-2 border-cyan-500 pl-4">Tactical_Actions</h3>
                 <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
               </div>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <button 
                   onClick={() => setShowCipherModal(true)}
-                  className="w-full py-4 px-6 bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-orbitron text-[9px] uppercase tracking-[0.4em] text-white flex items-center justify-between group"
+                  className="w-full py-5 px-6 bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-orbitron text-[9px] uppercase tracking-[0.4em] text-white flex items-center justify-between group"
                 >
                   Update_Cipher <FaKey className="text-[10px] text-cyan-500 opacity-40 group-hover:opacity-100 transition-opacity" />
                 </button>
                 {!isVerified && (
                   <button 
                     onClick={() => window.location.href = "/verify"}
-                    className="w-full py-4 px-6 bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-orbitron text-[9px] uppercase tracking-[0.4em] text-white flex items-center justify-between group"
+                    className="w-full py-5 px-6 bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-orbitron text-[9px] uppercase tracking-[0.4em] text-white flex items-center justify-between group"
                   >
                     Verify_Email <FaLink className="text-[10px] text-cyan-500 opacity-40 group-hover:opacity-100 transition-opacity" />
                   </button>
                 )}
                 <button 
                   onClick={() => setShowDeleteModal(true)}
-                  className="w-full py-4 px-6 bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 transition-all font-orbitron text-[9px] uppercase tracking-[0.4em] text-red-400/80 flex items-center justify-between group"
+                  className="w-full py-5 px-6 bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 transition-all font-orbitron text-[9px] uppercase tracking-[0.4em] text-red-400/80 flex items-center justify-between group"
                 >
                   Terminate_Account <FaSkull className="text-[10px] text-red-500 opacity-40 group-hover:opacity-100 transition-opacity" />
                 </button>
               </div>
             </div>
+          </div>
 
-            <div className="bg-cyan-500/5 border border-cyan-500/10 p-8">
-              <h3 className="font-orbitron text-xs tracking-[0.3em] uppercase mb-4 text-cyan-400/60">Node_Information</h3>
-              <div className="space-y-4">
-                <div className="flex justify-between border-b border-white/5 pb-2">
-                  <span className="font-mono text-[8px] uppercase text-white/20 tracking-widest">Protocol</span>
-                  <span className="font-mono text-[8px] uppercase text-cyan-500 tracking-widest">WSS_SECURE</span>
-                </div>
-                <div className="flex justify-between border-b border-white/5 pb-2">
-                  <span className="font-mono text-[8px] uppercase text-white/20 tracking-widest">Region</span>
-                  <span className="font-mono text-[8px] uppercase text-cyan-500 tracking-widest">US-WEST-2</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-mono text-[8px] uppercase text-white/20 tracking-widest">Latency</span>
-                  <span className="font-mono text-[8px] uppercase text-cyan-500 tracking-widest">12ms</span>
-                </div>
-              </div>
+          {/* RIGHT COLUMN: Service Records & Logs */}
+          <div className="lg:col-span-8 space-y-12">
+            {/* Stats & Medal Vault Combined */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+               {/* Stats */}
+               <section className="bg-white/[0.02] border border-white/5 p-8 relative">
+                  <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-cyan-500/30" />
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-1 h-6 bg-cyan-500" />
+                    <h2 className="font-orbitron text-sm tracking-[0.4em] uppercase">Service_Record</h2>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4">
+                    {[
+                      { label: "Total Engagements", value: stats?.gamesPlayed || 0, icon: <FaGamepad className="text-cyan-400" /> },
+                      { label: "Confirmed Victories", value: stats?.gamesWon || 0, icon: <FaTrophy className="text-yellow-500" /> },
+                      { label: "Operation Failures", value: stats?.gamesLost || 0, icon: <FaArrowLeft className="text-red-400 rotate-180" /> },
+                    ].map((stat, i) => (
+                      <motion.div
+                        key={i}
+                        className="p-4 bg-white/[0.03] border border-white/5 flex items-center justify-between group hover:border-cyan-500/30 transition-all"
+                      >
+                        <div className="flex items-center gap-4">
+                           <div className="w-8 h-8 rounded bg-white/5 flex items-center justify-center text-sm">
+                             {stat.icon}
+                           </div>
+                           <span className="font-mono text-[9px] uppercase tracking-widest text-white/40">{stat.label}</span>
+                        </div>
+                        <span className="font-orbitron text-xl font-bold">{stat.value.toLocaleString()}</span>
+                      </motion.div>
+                    ))}
+                  </div>
+               </section>
+
+               {/* Medals Summary */}
+               <section className="bg-white/[0.02] border border-white/5 p-8 relative">
+                  <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-cyan-500/30" />
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-1 h-6 bg-cyan-500" />
+                    <h2 className="font-orbitron text-sm tracking-[0.4em] uppercase">Medal_Vault</h2>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {loading ? (
+                      [...Array(6)].map((_, i) => (
+                        <div key={i} className="aspect-square bg-white/[0.02] border border-white/5 animate-pulse" />
+                      ))
+                    ) : achievements?.length > 0 ? (
+                      achievements.slice(0, 6).map((medal: any, i: number) => (
+                        <div key={medal.id} className={`aspect-square flex items-center justify-center border ${medal.unlocked ? 'border-cyan-500/30 bg-cyan-500/5' : 'border-white/5 opacity-20'}`}>
+                           <span className="text-xl">{medal.icon}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="col-span-full py-8 text-center border border-white/5 bg-white/[0.01]">
+                        <span className="font-mono text-[8px] uppercase tracking-widest opacity-20">No Medals</span>
+                      </div>
+                    )}
+                  </div>
+                  <button className="w-full mt-6 py-2 border border-white/5 font-mono text-[8px] uppercase tracking-[0.4em] text-white/30 hover:text-white hover:bg-white/5 transition-all">
+                     View_Full_Archive
+                  </button>
+               </section>
+            </div>
+
+            {/* Logs & Telemetry */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+               {/* Activity Log */}
+               <section className="md:col-span-2">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-1 h-6 bg-cyan-500" />
+                    <h2 className="font-orbitron text-sm tracking-[0.4em] uppercase">Log_Archive</h2>
+                  </div>
+                  <div className="space-y-3">
+                    {loading ? (
+                      <div className="p-12 border border-white/5 bg-white/[0.01] text-center">
+                        <span className="font-mono text-[10px] uppercase tracking-widest opacity-20 animate-pulse">Retrieving Logs...</span>
+                      </div>
+                    ) : activities?.length > 0 ? (
+                      activities.slice(0, 5).map((activity: Activity, i: number) => (
+                        <motion.div
+                          key={activity.id}
+                          className="p-4 bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors flex items-center justify-between gap-6"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className={`w-8 h-8 flex items-center justify-center border text-xs ${
+                              activity.type === 'purchase' ? 'border-cyan-500/30 text-cyan-400' : 
+                              activity.type === 'game_result' ? 'border-purple-500/30 text-purple-400' : 
+                              'border-white/20 text-white/40'
+                            }`}>
+                              {activity.type === 'purchase' ? <FaWallet /> : 
+                               activity.type === 'game_result' ? <FaTrophy /> : 
+                               <FaHistory />}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-orbitron text-[9px] uppercase tracking-widest text-white/80">{activity.description}</span>
+                              <span className="font-mono text-[7px] uppercase tracking-wider text-white/20">
+                                {new Date(activity.timestamp).toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+                          {activity.amount && (
+                            <span className="font-orbitron text-xs text-cyan-400 font-bold">+{activity.amount.toLocaleString()} CC</span>
+                          )}
+                        </motion.div>
+                      ))
+                    ) : (
+                      <div className="p-12 border border-white/5 bg-white/[0.01] text-center">
+                        <span className="font-mono text-[10px] uppercase tracking-widest opacity-20">No Logs Recorded</span>
+                      </div>
+                    )}
+                  </div>
+               </section>
+
+               {/* Node Info */}
+               <section>
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-1 h-6 bg-cyan-500" />
+                    <h2 className="font-orbitron text-sm tracking-[0.4em] uppercase">Telemetry</h2>
+                  </div>
+                  <div className="bg-cyan-500/5 border border-cyan-500/10 p-6 relative">
+                    <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-cyan-500/40" />
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <span className="font-mono text-[7px] uppercase text-white/20 tracking-widest block">Connection_Node</span>
+                        <div className="flex justify-between border-b border-white/10 pb-1">
+                          <span className="font-mono text-[9px] uppercase text-cyan-500 tracking-widest">US-WEST-2</span>
+                          <span className="font-mono text-[9px] uppercase text-cyan-500 tracking-widest">12ms</span>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <span className="font-mono text-[7px] uppercase text-white/20 tracking-widest block">Neural_Uptime</span>
+                        <div className="flex justify-between border-b border-white/10 pb-1">
+                          <span className="font-mono text-[9px] uppercase text-cyan-500 tracking-widest">99.98%</span>
+                          <span className="font-mono text-[9px] uppercase text-cyan-500 tracking-widest">SECURE</span>
+                        </div>
+                      </div>
+                      <div className="pt-4 flex flex-col gap-2">
+                         <div className="h-[2px] w-full bg-cyan-500/10 relative overflow-hidden">
+                            <div className="absolute inset-0 bg-cyan-500/40 animate-[shimmer_2s_infinite]" />
+                         </div>
+                         <span className="font-mono text-[6px] uppercase tracking-[0.3em] text-cyan-500/40">Encryption: Quantum_Grade_AES</span>
+                      </div>
+                    </div>
+                  </div>
+               </section>
             </div>
           </div>
         </div>

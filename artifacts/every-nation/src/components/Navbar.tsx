@@ -36,13 +36,33 @@ export default function Navbar() {
       }`}
     >
       <div className="w-full max-w-[1800px] mx-auto px-6 md:px-16 flex items-center justify-between">
-        <Link href="/" className="group flex items-center gap-3">
-          <div className="w-8 h-8 border border-white/20 bg-white/5 flex items-center justify-center group-hover:border-cyan-500/50 transition-all">
-            <div className="w-4 h-4 bg-white group-hover:bg-cyan-500 shadow-[0_0_10px_rgba(255,255,255,0.5)] group-hover:shadow-[0_0_10px_#00f3ff] transition-all" />
+        <Link href="/" className="group flex items-center gap-6 relative">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 border-2 border-white/20 bg-white/5 flex items-center justify-center group-hover:border-cyan-500 transition-all relative overflow-hidden">
+              <div className="w-5 h-5 bg-white group-hover:bg-cyan-400 shadow-[0_0_15px_rgba(255,255,255,0.4)] group-hover:shadow-[0_0_20px_#00f3ff] transition-all" />
+              {/* Spinning Overlay */}
+              <div className="absolute inset-0 border-t border-cyan-500/40 rounded-full animate-[spin_4s_linear_infinite] opacity-0 group-hover:opacity-100" />
+            </div>
+            <div className="flex flex-col">
+              <span className="font-orbitron font-black text-2xl tracking-[0.3em] uppercase text-white group-hover:text-cyan-400 transition-colors leading-none">
+                ENGG
+              </span>
+              <span className="font-mono text-[7px] tracking-[0.5em] uppercase text-white/30 group-hover:text-cyan-500/60 transition-colors mt-1">Operational_Unit</span>
+            </div>
           </div>
-          <span className="font-orbitron font-black text-xl tracking-[0.3em] uppercase text-white group-hover:text-cyan-400 transition-colors">
-            ENGG
-          </span>
+          
+          {/* Tactical Telemetry (Desktop) */}
+          <div className="hidden xl:flex items-center gap-4 ml-8 pl-8 border-l border-white/5 opacity-20 group-hover:opacity-40 transition-opacity">
+             <div className="flex flex-col">
+                <span className="font-mono text-[7px] uppercase tracking-widest">Protocol</span>
+                <span className="font-mono text-[7px] uppercase text-cyan-400 font-bold tracking-widest">WSS_SECURE</span>
+             </div>
+             <div className="w-[1px] h-4 bg-white/20" />
+             <div className="flex flex-col">
+                <span className="font-mono text-[7px] uppercase tracking-widest">Signal</span>
+                <span className="font-mono text-[7px] uppercase text-cyan-400 font-bold tracking-widest">12ms_LAT</span>
+             </div>
+          </div>
         </Link>
 
         {/* Desktop Navigation */}
@@ -174,6 +194,12 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
+      {/* Scanning Pulse Line */}
+      <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent animate-[shimmer_3s_infinite]" />
+      
+      {/* Dynamic Glow Accents */}
+      <div className="absolute top-0 left-1/4 w-32 h-px bg-cyan-400/20 blur-sm" />
+      <div className="absolute top-0 right-1/4 w-32 h-px bg-cyan-400/20 blur-sm" />
     </nav>
   );
 }

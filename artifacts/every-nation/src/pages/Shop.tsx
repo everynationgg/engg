@@ -24,7 +24,7 @@ const FALLBACK_PACKS: Pack[] = [
   { id: "pack_2500", name: "Sovereign Core", amount: 2500, price: "34.99", currency: "USD", bonus: "+500 Bonus", rarity: "legendary" },
 ];
 
-const creditCoreImg = "credit_core_asset_1776962578764.png";
+const creditCoreImg = "credit_core_asset_1777031706077.png";
 
 const RARITY_CONFIG = {
   common: { color: "hsl(185 100% 50%)", glow: "rgba(6, 182, 212, 0.2)", label: "Standard" },
@@ -162,7 +162,7 @@ export default function Shop() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020408] text-white pt-48 md:pt-72 pb-24 px-6 md:px-16 relative overflow-x-hidden selection:bg-cyan-500/30 shop-root">
+    <div className="min-h-screen bg-[#020408] text-white pt-64 md:pt-80 pb-24 px-6 md:px-16 relative overflow-x-hidden selection:bg-cyan-500/30 shop-root">
       {/* Dynamic Background */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(6,182,212,0.15)_0%,transparent_70%)]" />
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('data:image/svg+xml,%3Csvg%20viewBox=%220%200%20200%20200%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter%20id=%22noiseFilter%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.65%22%20numOctaves=%223%22%20stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect%20width=%22100%25%22%20height=%22100%25%22%20filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')]" />
@@ -186,7 +186,7 @@ export default function Shop() {
         ))}
       </div>
 
-      <div className="relative z-10 w-full px-6 md:px-16 py-12 md:pt-40 pb-24 min-h-screen flex flex-col">
+      <div className="relative z-10 w-full px-6 md:px-16 pb-24 min-h-screen flex flex-col">
 
         {/* Header HUD */}
         <header className="flex flex-col lg:flex-row justify-between items-center lg:items-end mb-16 md:mb-24 gap-8 md:gap-12 border-b border-white/5 pb-12">
@@ -233,19 +233,22 @@ export default function Shop() {
         >
           <button
             onClick={handleReturn}
-            className="group relative px-8 py-4 bg-white/5 border-2 border-white/10 hover:border-cyan-500/50 hover:bg-cyan-500/10 transition-all flex items-center gap-4 overflow-hidden"
+            className="group relative px-10 py-5 bg-white/5 border-2 border-white/10 hover:border-cyan-500/50 hover:bg-cyan-500/10 transition-all flex items-center gap-4 overflow-hidden"
           >
             {/* Tactical Accents */}
-            <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-cyan-500/40" />
-            <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-cyan-500/40" />
+            <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-cyan-500/60" />
+            <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-cyan-500/60" />
             
             <FaArrowLeft className="text-cyan-400 group-hover:-translate-x-2 transition-transform duration-500" />
-            <span className="font-orbitron text-xs font-black uppercase tracking-[0.6em] text-white/80 group-hover:text-white">
-              Return_to_Base
-            </span>
+            <div className="flex flex-col items-start">
+              <span className="font-orbitron text-[10px] font-black uppercase tracking-[0.6em] text-white/80 group-hover:text-white">
+                Return_to_Base
+              </span>
+              <span className="font-mono text-[7px] uppercase tracking-widest text-cyan-500/40">Sector_01_Central</span>
+            </div>
 
             {/* Hover Scan Effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
           </button>
           
           <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
@@ -329,12 +332,18 @@ export default function Shop() {
                   }}
                 >
                   {/* Tactical Brackets (Appear on Hover/Select) */}
-                  <div className="absolute top-2 left-2 w-6 h-6 border-t border-l border-white/0 group-hover:border-white/20 transition-all duration-500" />
-                  <div className="absolute bottom-2 right-2 w-6 h-6 border-b border-r border-white/0 group-hover:border-white/20 transition-all duration-500" />
+                  <div className="absolute top-4 left-4 w-10 h-10 border-t border-l border-white/0 group-hover:border-cyan-500/40 transition-all duration-700" />
+                  <div className="absolute bottom-4 right-4 w-10 h-10 border-b border-r border-white/0 group-hover:border-cyan-500/40 transition-all duration-700" />
+                  
+                  {/* Internal Scanning Line */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-10 pointer-events-none overflow-hidden">
+                     <div className="w-full h-1/2 bg-gradient-to-b from-cyan-500/40 to-transparent animate-[scan_4s_linear_infinite]" />
+                  </div>
 
                   {/* Rarity Indicator */}
-                  <div className="absolute top-6 left-8 font-mono text-[9px] opacity-20 tracking-[0.2em] uppercase">
-                    Tier_{pack.rarity}
+                  <div className="absolute top-8 left-10 flex flex-col items-start gap-1">
+                    <span className="font-mono text-[8px] opacity-30 tracking-[0.4em] uppercase leading-none">Security_Protocol</span>
+                    <span className="font-orbitron text-[9px] tracking-[0.2em] uppercase font-bold" style={{ color: (pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)" }}>Tier_{pack.rarity}</span>
                   </div>
                   <div className="absolute top-6 right-8 text-xl">
                     {pack.rarity === "legendary" ? <FaCrown className="text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]" /> :
@@ -353,22 +362,26 @@ export default function Shop() {
                   )}
 
                   {/* Asset Rendering */}
-                  <div className="relative w-32 h-32 mb-10 mt-6 flex items-center justify-center">
-                    <div className="absolute inset-0 blur-[40px] rounded-full transition-all duration-1000 scale-90"
+                  <div className="relative w-40 h-40 mb-10 mt-12 flex items-center justify-center">
+                    {/* Holographic Pedestal */}
+                    <div className="absolute bottom-4 w-24 h-4 bg-cyan-500/20 blur-xl rounded-[50%] animate-pulse" />
+                    <div className="absolute bottom-6 w-32 h-1 bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
+                    
+                    <div className="absolute inset-0 blur-[60px] rounded-full transition-all duration-1000 scale-90"
                       style={{ 
                         background: (pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)",
-                        opacity: selectedPack?.id === pack.id ? 0.4 : 0.1
+                        opacity: selectedPack?.id === pack.id ? 0.5 : 0.15
                       }} 
                     />
                     <img
                       src={creditCoreImg}
                       alt="Core"
-                      className={`w-24 h-24 object-contain relative z-10 transition-all duration-700 ${selectedPack?.id === pack.id ? "scale-105" : "opacity-50 group-hover:opacity-80"
+                      className={`w-28 h-28 object-contain relative z-10 transition-all duration-1000 ${selectedPack?.id === pack.id ? "scale-110 -translate-y-4" : "opacity-60 group-hover:opacity-100 group-hover:-translate-y-2"
                         }`}
                       style={{ 
                         filter: selectedPack?.id === pack.id 
-                          ? `drop-shadow(0 0 20px ${(pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)"})`
-                          : `grayscale(0.8) brightness(0.6)`
+                          ? `drop-shadow(0 0 30px ${(pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)"})`
+                          : `grayscale(0.6) brightness(0.8)`
                       }}
                     />
                   </div>
@@ -419,20 +432,21 @@ export default function Shop() {
                         </div>
                       ) : (
                         <button 
-                          className="w-full py-5 relative overflow-hidden group/btn"
+                          className="w-full py-6 relative overflow-hidden group/btn shadow-[0_10px_30px_rgba(0,0,0,0.3)]"
                           style={{ color: (pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)" }}
                         >
                           {/* Button Background & Brackets */}
-                          <div className="absolute inset-0 bg-white/[0.02] border border-white/10 group-hover/btn:bg-white/[0.05] group-hover/btn:border-white/30 transition-all duration-500" />
-                          <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 opacity-40 group-hover/btn:opacity-100 transition-all" style={{ borderColor: (pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)" }} />
-                          <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 opacity-40 group-hover/btn:opacity-100 transition-all" style={{ borderColor: (pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)" }} />
+                          <div className="absolute inset-0 bg-white/[0.04] border border-white/20 group-hover/btn:bg-white/[0.08] group-hover/btn:border-white/40 transition-all duration-500" />
+                          <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 opacity-60 group-hover/btn:opacity-100 transition-all" style={{ borderColor: (pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)" }} />
+                          <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 opacity-60 group-hover/btn:opacity-100 transition-all" style={{ borderColor: (pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)" }} />
                           
-                          <div className="relative z-10 flex items-center justify-center gap-3">
+                          <div className="relative z-10 flex items-center justify-center gap-4">
+                            <FaBolt className="text-[10px] animate-pulse" />
                             <span className="font-orbitron text-[11px] uppercase tracking-[0.6em] font-black">Initialize Link</span>
                           </div>
 
                           {/* Hover Scanner Line */}
-                          <div className="absolute top-0 left-0 w-full h-[1px] bg-white/20 -translate-y-full group-hover/btn:animate-scan-vertical pointer-events-none" />
+                          <div className="absolute top-0 left-0 w-full h-[2px] bg-white/40 -translate-y-full group-hover/btn:animate-[scan_2s_linear_infinite] shadow-[0_0_10px_#fff]" />
                         </button>
                       )}
                     </div>
