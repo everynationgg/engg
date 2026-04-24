@@ -23,8 +23,8 @@ export default function Navbar() {
 
   const navLinks = [
     { name: "Home", href: "/" },
+    { name: "Gaming Hub", href: "/hub" },
     { name: "Credit Shop", href: "/shop" },
-    { name: "Enter Game", href: "/end", external: true },
   ];
 
   return (

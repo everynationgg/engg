@@ -4,6 +4,7 @@ import Shop from "@/pages/Shop";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Profile from "@/pages/Profile";
+import Hub from "@/pages/Hub";
 import NotFound from "@/pages/not-found";
 import { AuthProvider } from "@/hooks/useAuth";
 
@@ -18,6 +19,7 @@ function Router() {
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
         <Route path="/profile" component={Profile} />
+        <Route path="/hub" component={Hub} />
         <Route component={NotFound} />
       </Switch>
     </div>

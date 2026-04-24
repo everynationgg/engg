@@ -84,10 +84,10 @@ export default function Home() {
             onClick={() => window.open("https://discord.gg/everynation", "_blank")}
           />
           <GlassButton
-            label="Enter the Game"
-            subtext="Error: Newform Detected"
+            label="Gaming Hub"
+            subtext="Access Mission Control"
             variant="primary"
-            onClick={() => window.open("https://engg.online/end", "_blank")}
+            onClick={() => window.location.href = "/hub"}
           />
           <GlassButton
             label="Credit Shop"
