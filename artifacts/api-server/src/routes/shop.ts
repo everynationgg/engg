@@ -19,6 +19,9 @@ const CREDIT_PACKS = [
 ];
 
 async function getPayPalAccessToken() {
+  if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
+    throw new Error("MISSING_PAYPAL_CREDENTIALS");
+  }
   const auth = Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`).toString("base64");
   const response = await fetch(`${PAYPAL_API}/v1/oauth2/token`, {
     method: "POST",
@@ -27,6 +30,11 @@ async function getPayPalAccessToken() {
       Authorization: `Basic ${auth}`,
     },
   });
+  if (!response.ok) {
+    const errorData = await response.text();
+    logger.error({ errorData, status: response.status }, "PayPal OAuth failed");
+    throw new Error("PAYPAL_OAUTH_FAILED");
+  }
   const data = await response.json() as any;
   return data.access_token;
 }
@@ -68,10 +76,20 @@ router.post("/shop/create-order", authMiddleware, async (req: AuthRequest, res) 
     });
 
     const order = await response.json() as any;
+    if (!response.ok) {
+      res.status(response.status).json({ error: order.message || "Failed to create PayPal order" });
+      return;
+    }
     res.json(order);
-  } catch (error) {
+  } catch (error: any) {
     logger.error({ error }, "PayPal order creation failed");
-    res.status(500).json({ error: "Failed to create PayPal order" });
+    if (error.message === "MISSING_PAYPAL_CREDENTIALS") {
+       res.status(500).json({ error: "Server Error: PayPal secrets not configured on host." });
+    } else if (error.message === "PAYPAL_OAUTH_FAILED") {
+       res.status(500).json({ error: "Server Error: Failed to authenticate with PayPal gateway." });
+    } else {
+       res.status(500).json({ error: "Failed to create PayPal order" });
+    }
   }
 });
 

@@ -88,9 +88,13 @@ export default function Shop() {
         return "";
       }
       const order = await response.json();
+      if (!response.ok) {
+        setError(order.error || `Server Response: ${response.status}`);
+        return "";
+      }
       return order.id;
     } catch (err) {
-      setError("Order generation failure. Please re-initialize connection.");
+      setError("Network Handshake Failed. Verify server reachability.");
       return "";
     }
   };
