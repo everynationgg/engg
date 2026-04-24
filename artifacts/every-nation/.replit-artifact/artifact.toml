@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Every Nation"
+version = "1.0.0"
+id = "artifacts/every-nation"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24738
+
+[services.development]
+run = "pnpm --filter @workspace/every-nation run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/every-nation", "run", "build" ]
+publicDir = "artifacts/every-nation/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24738"
+BASE_PATH = "/"

@@ -12,9 +12,10 @@ const PAYPAL_API = process.env.PAYPAL_MODE === "live"
   : "https://api-m.sandbox.paypal.com";
 
 const CREDIT_PACKS = [
-  { id: "pack_100", name: "100 Credits", amount: 100, price: "1.99", currency: "USD" },
-  { id: "pack_500", name: "500 Credits", amount: 500, price: "7.99", currency: "USD" },
-  { id: "pack_1000", name: "1000 Credits", amount: 1000, price: "14.99", currency: "USD" },
+  { id: "pack_250", name: "Standard Core", amount: 250, price: "4.99", currency: "USD" },
+  { id: "pack_500", name: "Tactical Core", amount: 500, price: "8.99", currency: "USD" },
+  { id: "pack_1000", name: "Elite Core", amount: 1000, price: "15.99", currency: "USD" },
+  { id: "pack_2500", name: "Sovereign Core", amount: 2500, price: "34.99", currency: "USD" },
 ];
 
 async function getPayPalAccessToken() {
