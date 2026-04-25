@@ -303,7 +303,7 @@ export default function Shop() {
                          className={`w-24 h-24 object-contain relative z-10 transition-all duration-700 ${selectedPack?.id === pack.id ? "scale-110 -translate-y-2" : "opacity-70 group-hover:opacity-100"}`}
                          style={{ 
                             filter: selectedPack?.id === pack.id 
-                              ? `drop-shadow(0 0 20px ${RARITY_CONFIG[pack.rarity].color})`
+                              ? `drop-shadow(0 0 20px ${(RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color})`
                               : `grayscale(0.5) brightness(0.8)`
                          }}
                        />
