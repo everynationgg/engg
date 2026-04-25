@@ -103,25 +103,25 @@ function GameCard({ title, description, image, href, status, subtitle, index }: 
 export default function Hub() {
   const games = [
     {
-      title: "Error Newform Detected",
-      subtitle: "Newform Neural Engine",
-      description: "A high-stakes network defense simulator. Identify the Newform anomaly before system compromise.",
-      image: "/hub_newform.png",
+      title: "Error: Newform Detected",
+      subtitle: "Neural Defense Protocol",
+      description: "A high-stakes network defense simulator. Trace the anomaly through the digital ether before system-wide compromise.",
+      image: "/hub_newform.webp",
       href: "/end",
       status: "online" as const
     },
     {
-      title: "Triple Triad",
-      subtitle: "Strategic Card Duel",
-      description: "Neural card warfare on the digital grid. Collect, trade, and dominate.",
-      image: "/hub_triad.png",
+      title: "Engraved Nether",
+      subtitle: "Sub-Surface Extraction",
+      description: "Descend into the encrypted depths of the Nether. Harvest exotic matter while evading the ancient sentinels of the deep.",
+      image: "/hub_engraved.webp",
       status: "offline" as const
     },
     {
-      title: "Tower Defense",
-      subtitle: "Orbital Swarm Defense",
-      description: "Coordinate orbital batteries to protect the colony from machine swarms.",
-      image: "/hub_td.png",
+      title: "Epsilon Nine",
+      subtitle: "Orbital Command",
+      description: "Coordinate the defense of the Epsilon Nine station. Manage energy grids and orbital batteries against incoming threats.",
+      image: "/hub_epsilon.webp",
       status: "offline" as const
     }
   ];
