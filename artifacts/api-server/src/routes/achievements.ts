@@ -27,6 +27,10 @@ const ACHIEVEMENTS_SEED: Omit<Achievement, "createdAt">[] = [
   // Economy
   { id: "achievement_capitalist_void",  slug: "capitalist_void",      name: "Capitalist of the Void", description: "Acquire your first Credit Core pack",   icon: "💎", rarity: "rare",      category: "economy",  prestigeXp: 500, pointsRequired: 0 },
   { id: "achievement_market_whale",     slug: "market_whale",         name: "Market Whale",     description: "Hold a high-capacity credit balance",         icon: "🐳", rarity: "legendary", category: "economy",  prestigeXp: 5000, pointsRequired: 0 },
+
+  // Special
+  { id: "achievement_50_percent_winrate", slug: "winrate_50",         name: "Tactical Specialist", description: "Maintain a 50% win rate over 10 games", icon: "📈", rarity: "rare",      category: "gameplay", prestigeXp: 1000, pointsRequired: 0 },
+  { id: "achievement_unstoppable",      slug: "unstoppable",          name: "Unstoppable Force",   description: "Maintain a 75% win rate over 20 games", icon: "🔥", rarity: "epic",      category: "gameplay", prestigeXp: 2000, pointsRequired: 0 },
 ];
 
 /** IDs that should be unlocked given a player's current stats and per-role win counts. */

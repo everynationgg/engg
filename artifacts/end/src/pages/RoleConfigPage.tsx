@@ -690,7 +690,20 @@ export default function RoleConfigPage() {
         <div className="hidden lg:flex w-64 shrink-0 flex-col border-r h-full overflow-hidden" style={{ background: "hsl(220 30% 6%)", borderColor: "hsl(210 30% 14%)" }}>
            <div className="p-5 border-b" style={{ borderColor: "hsl(210 30% 14%)" }}>
               <div className="text-[10px] tracking-[0.4em] uppercase font-mono mb-1.5" style={{ color: "hsl(210 30% 45%)" }}>Operational_Session</div>
-              <div className="font-orbitron font-black text-2xl tracking-[0.2em]" style={{ color: "hsl(185 100% 60%)" }}>{roomCode}</div>
+              <div className="flex items-center justify-between gap-2">
+                 <div className="font-orbitron font-black text-2xl tracking-[0.2em]" style={{ color: "hsl(185 100% 60%)" }}>{roomCode}</div>
+                 <button
+                   onClick={handleCopyLink}
+                   className="px-2 py-1 font-orbitron text-[8px] tracking-[0.1em] uppercase rounded border transition-all duration-150 cursor-pointer shrink-0"
+                   style={{
+                     background: copyFeedback ? "hsl(140 60% 15% / 0.6)" : "hsl(220 28% 10%)",
+                     borderColor: copyFeedback ? "hsl(140 60% 45%)" : "hsl(185 100% 50% / 0.35)",
+                     color: copyFeedback ? "hsl(140 60% 60%)" : "hsl(185 100% 50%)",
+                   }}
+                 >
+                   {copyFeedback ? "COPIED!" : "COPY LINK"}
+                 </button>
+               </div>
               <div className="mt-2 flex items-center justify-between">
                 <div className="text-[10px] font-mono uppercase tracking-widest" style={{ color: "hsl(185 100% 50% / 0.6)" }}>
                   {Object.values(roleCounts).reduce((a, b) => a + b, 0)} Total Roles

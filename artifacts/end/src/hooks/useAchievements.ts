@@ -24,6 +24,7 @@ export function useAchievements() {
   const [achievements, setAchievements] = useState<AchievementsData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasFetched, setHasFetched] = useState(false);
 
   const fetchAchievements = useCallback(async () => {
     if (!token) {
@@ -33,6 +34,7 @@ export function useAchievements() {
 
     setIsLoading(true);
     setError(null);
+    setHasFetched(true);
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/user/achievements`, {
@@ -57,10 +59,10 @@ export function useAchievements() {
 
   // Fetch achievements on mount
   useEffect(() => {
-    if (token && !achievements) {
+    if (token && !achievements && !hasFetched && !isLoading) {
       fetchAchievements();
     }
-  }, [token, achievements, fetchAchievements]);
+  }, [token, achievements, hasFetched, isLoading, fetchAchievements]);
 
   return {
     achievements,
