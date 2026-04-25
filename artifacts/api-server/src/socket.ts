@@ -491,7 +491,7 @@ export function attachSocketIO(httpServer: HttpServer) {
     cors: { origin: corsOrigin, methods: ["GET", "POST"], credentials: true },
     path: "/socket.io",
     transports: ["polling", "websocket"],
-    pingTimeout: 60000,
+    pingTimeout: 90000,
     pingInterval: 25000,
   });
 
@@ -609,11 +609,17 @@ export function attachSocketIO(httpServer: HttpServer) {
             } else if (!reconnecting) {
               // New player mistakenly sent create_session on an existing session (e.g. stale lp_isHost).
               // Treat as a regular join so they are added to the session and all clients stay in sync.
+              
+              // RECLAMATION: If the session has no host (e.g. host was removed after grace expiry),
+              // allow the first re-entering player to reclaim host status to prevent session paralysis.
+              const currentHost = session.players.find(p => p.isHost);
+              const shouldClaimHost = !currentHost;
+
               addPlayerToSession(session, {
                 id: socket.id,
                 playerId,
                 name: playerName,
-                isHost: false,
+                isHost: shouldClaimHost,
                 isSpectator: !!parsed.isSpectator,
                 connectionStatus: "connected",
               });
@@ -797,7 +803,9 @@ export function attachSocketIO(httpServer: HttpServer) {
           }
 
           // NEW PLAYER: block joining when the game has already started
-          if (session.phase !== "lobby" && session.phase !== "role_config") {
+          // EXCEPTION: If the session has no host, allow the join so the session can be reclaimed.
+          const hasHost = session.players.some(p => p.isHost);
+          if (session.phase !== "lobby" && session.phase !== "role_config" && hasHost) {
             gameInProgress = true;
             return CAS_SKIP;
           }
@@ -812,12 +820,14 @@ export function attachSocketIO(httpServer: HttpServer) {
           }
 
           // addPlayerToSession pushes to session.players — never reassigns the array.
-          // isHost is always false here; host assignment only happens in create_session.
+          // RECLAMATION: If session has no host, promote this player to host.
+          const shouldPromote = !session.players.some(p => p.isHost);
+          
           addPlayerToSession(session, {
             id: socket.id,
             playerId,
             name: playerName,
-            isHost: false,
+            isHost: shouldPromote,
             isSpectator: !!parsed.isSpectator,
             userId: parsed.userId,
             connected: true,

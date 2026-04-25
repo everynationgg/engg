@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Modal from "@/components/Modal";
 import { useLocation } from "wouter";
@@ -14,6 +14,7 @@ import ProfileModal from "@/components/ProfileModal";
 import { useAuth } from "@/hooks/useAuth";
 import { FaLock, FaBolt, FaCoins } from "react-icons/fa";
 import ShopModal from "@/components/ShopModal";
+import AuthModal from "@/components/AuthModal";
 
 const SPECTATOR_ROLES = ROLES.filter((r) => r.team === "spectator");
 const NON_SPECTATOR_ROLES = ROLES.filter((r) => r.team !== "spectator");
@@ -99,6 +100,7 @@ export default function RoleConfigPage() {
   const { credits, isLoggedIn } = useAuth();
   const [unlockedRoles, setUnlockedRoles] = useState<string[]>([]);
   const [isUnlocking, setIsUnlocking] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // isCreating is a one-shot flag: read from sessionStorage ONCE on mount (then
   // immediately deleted so reconnects never re-trigger create_session).
@@ -587,6 +589,7 @@ export default function RoleConfigPage() {
       <HamburgerMenu
         onShowSettings={() => setShowSettingsModal(true)}
         onShowProfile={() => setShowProfileModal(true)}
+        onShowAuth={() => setShowAuthModal(true)}
         onShowHowToPlay={() => { }} // No how to play in role config
         musicOn={musicOn}
         onToggleMusic={handleToggleMusic}
@@ -682,9 +685,9 @@ export default function RoleConfigPage() {
 
 
       {/* Role Deck Area */}
-      <div className="flex flex-col lg:flex-row flex-1 lg:min-h-0 relative overflow-y-auto lg:overflow-hidden">
+      <div className="flex flex-col lg:flex-row flex-1 relative overflow-hidden">
         {/* LEFT SIDEBAR — players (desktop only, hidden on mobile) */}
-        <div className="hidden lg:flex w-64 shrink-0 flex-col border-r" style={{ background: "hsl(220 30% 6%)", borderColor: "hsl(210 30% 14%)" }}>
+        <div className="hidden lg:flex w-64 shrink-0 flex-col border-r h-full overflow-hidden" style={{ background: "hsl(220 30% 6%)", borderColor: "hsl(210 30% 14%)" }}>
            <div className="p-5 border-b" style={{ borderColor: "hsl(210 30% 14%)" }}>
               <div className="text-[10px] tracking-[0.4em] uppercase font-mono mb-1.5" style={{ color: "hsl(210 30% 45%)" }}>Operational_Session</div>
               <div className="font-orbitron font-black text-2xl tracking-[0.2em]" style={{ color: "hsl(185 100% 60%)" }}>{roomCode}</div>
@@ -768,7 +771,7 @@ export default function RoleConfigPage() {
         </div>
 
         {/* CENTER PANEL */}
-        <div className="flex-1 lg:overflow-y-auto px-6 pt-14 pb-8">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 pt-10 sm:pt-14 pb-8 h-full custom-scrollbar">
 
           {/* Mobile-only: room code + player list */}
           <div className="lg:hidden mb-5 pb-5 border-b" style={{ borderColor: "hsl(210 30% 14%)" }}>
@@ -1167,7 +1170,7 @@ export default function RoleConfigPage() {
 
         {/* RIGHT PANEL — preview and details */}
         <div
-          className={`flex w-full ${selectedRole ? "min-h-[400px] opacity-100" : "h-0 opacity-0 lg:h-full lg:opacity-100"} lg:w-[clamp(200px,28%,380px)] shrink-0 flex-col border-t lg:border-t-0 lg:border-l lg:overflow-hidden transition-all duration-300 ease-in-out`}
+          className={`flex w-full ${selectedRole ? "min-h-[400px] opacity-100" : "h-0 opacity-0 lg:h-full lg:opacity-100"} lg:w-[clamp(240px,30%,400px)] shrink-0 flex-col border-t lg:border-t-0 lg:border-l lg:h-full lg:overflow-hidden transition-all duration-300 ease-in-out`}
           style={{ background: "hsl(220 30% 6%)", borderColor: "hsl(210 30% 14%)" }}
         >
           <RolePreview 
@@ -1177,12 +1180,13 @@ export default function RoleConfigPage() {
             userCredits={credits}
             isUnlocking={isUnlocking}
             isLoggedIn={isLoggedIn}
-            onShowProfile={() => setShowProfileModal(true)}
+            onShowProfile={() => isLoggedIn ? setShowProfileModal(true) : setShowAuthModal(true)}
             onBuyCredits={() => setShowShopModal(true)}
           />
         </div>
       </div>
       <ShopModal isOpen={showShopModal} onClose={() => setShowShopModal(false)} />
+      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
     </div>
   );
 }
@@ -1199,7 +1203,25 @@ interface RoleCardProps {
   tooltipPosition?: "top" | "bottom";
 }
 
-function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRemove, isLocked, tooltipPosition = "top" }: RoleCardProps) {
+function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRemove, isLocked }: RoleCardProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0, showBelow: false });
+
+  useEffect(() => {
+    if (isHovered && cardRef.current) {
+      const rect = cardRef.current.getBoundingClientRect();
+      const spaceAbove = rect.top;
+      const showBelow = spaceAbove < 150; // Not enough space above, show below card
+      
+      setTooltipPos({
+        top: showBelow ? rect.bottom + 5 : rect.top - 5,
+        left: rect.left + rect.width / 2,
+        showBelow
+      });
+    }
+  }, [isHovered]);
+
   const accentColor =
     role.team === "alien"
       ? "hsl(270 80% 55%)"
@@ -1215,9 +1237,12 @@ function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRe
 
   return (
     <div
+      ref={cardRef}
       onClick={() => onSelect(role)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       data-testid={`role-card-${role.id}`}
-      className="group relative flex flex-col rounded-md overflow-visible cursor-pointer transition-all duration-150"
+      className="group relative flex flex-col rounded-md cursor-pointer transition-all duration-150"
       style={{
         background: "hsl(220 28% 10%)",
         border: isSelected
@@ -1325,27 +1350,31 @@ function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRe
         )}
       </div>
 
-      <div
-        className="pointer-events-none absolute left-1/2 z-50 hidden -translate-x-1/2 group-hover:block"
-        style={{
-          bottom: tooltipPosition === "top" ? "calc(100% + 5px)" : "auto",
-          top: tooltipPosition === "bottom" ? "calc(100% + 5px)" : "auto",
-          minWidth: "170px",
-          maxWidth: "220px",
-          background: "hsl(220 28% 8% / 0.97)",
-          border: `1px solid ${accentColor.replace(")", " / 0.55")}`,
-          boxShadow: `0 0 16px ${accentColor.replace(")", " / 0.25")}`,
-          borderRadius: "8px",
-          padding: "8px",
-        }}
-      >
-        <div className="font-orbitron text-[10px] tracking-[0.2em] uppercase mb-1" style={{ color: accentColorLight }}>
-          Ability
+      {isHovered && (
+        <div
+          className="pointer-events-none fixed z-[9999] -translate-x-1/2"
+          style={{
+            top: tooltipPos.top,
+            left: tooltipPos.left,
+            transform: `translateX(-50%) translateY(${tooltipPos.showBelow ? "0" : "-100%"})`,
+            minWidth: "170px",
+            maxWidth: "220px",
+            background: "hsl(220 28% 10% / 0.98)",
+            border: `1px solid ${accentColor.replace(")", " / 0.6")}`,
+            boxShadow: `0 4px 20px rgba(0, 0, 0, 0.5), 0 0 15px ${accentColor.replace(")", " / 0.3")}`,
+            borderRadius: "8px",
+            padding: "10px",
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          <div className="font-orbitron text-[10px] tracking-[0.2em] uppercase mb-1.5 font-black" style={{ color: accentColorLight }}>
+            Tactical_Ability
+          </div>
+          <p className="text-[11px] leading-relaxed font-medium" style={{ color: "hsl(190 60% 85%)", fontFamily: "'Exo 2', sans-serif" }}>
+            {role.ability}
+          </p>
         </div>
-        <p className="text-[11px] leading-snug" style={{ color: "hsl(190 60% 75%)", fontFamily: "'Exo 2', sans-serif" }}>
-          {role.ability}
-        </p>
-      </div>
+      )}
     </div>
   );
 }

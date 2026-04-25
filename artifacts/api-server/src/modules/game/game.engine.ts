@@ -674,10 +674,18 @@ export function resolveRound(state: GameState): ResolutionResult {
       // Router Effect: Gateway Hijack
       if (state.hijackedTargets[actor.id]) {
         const destinationId = state.hijackedTargets[actor.id];
-        const destination = state.players.find(p => p.id === destinationId);
-        if (destination) {
-          targets = [destinationId];
-          logActor(actor.name, actor.id, `gateway was hijacked (redirected to ${destination.name})`);
+        
+        // REFINEMENT: Hijack only applies to actions targeting players.
+        // It does NOT redirect Deck-based actions (center_*) or affect certain roles.
+        const isDeckAction = action?.targets?.some(t => t.startsWith("center_"));
+        const isExemptRole = ["alien", "commander", "crew"].includes(roleId);
+
+        if (!isDeckAction && !isExemptRole) {
+          const destination = state.players.find(p => p.id === destinationId);
+          if (destination) {
+            targets = [destinationId];
+            logActor(actor.name, actor.id, `gateway was hijacked (redirected to ${destination.name})`);
+          }
         }
       }
 

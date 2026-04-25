@@ -67,6 +67,7 @@ export default function HamburgerMenu({
     playSound();
     closeMenu();
     logout();
+    window.location.href = "/?login=true";
   };
 
   const toggleMenu = () => {

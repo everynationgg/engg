@@ -277,7 +277,7 @@ export default function SettingsPage() {
             <button
               onClick={() => {
                 logout();
-                setLocation("/");
+                window.location.href = "/?login=true";
               }}
               className="w-full py-3 font-orbitron font-bold text-sm tracking-[0.1em] uppercase rounded-md border-2 transition-all"
               style={{

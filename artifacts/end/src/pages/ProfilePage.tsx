@@ -55,7 +55,7 @@ export default function ProfilePage() {
   const handleLogout = () => {
     playSciFiClick();
     logout();
-    setLocation("/");
+    window.location.href = "/?login=true";
   };
 
   const handleResendVerificationEmail = async () => {

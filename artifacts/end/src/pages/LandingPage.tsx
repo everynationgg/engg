@@ -37,6 +37,14 @@ export default function LandingPage() {
 
   useEffect(() => {
     startLobbyMusic();
+    
+    // Check for login redirect from logout
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("login") === "true") {
+      setShowAuthModal(true);
+      // Clean up URL without refreshing
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
   }, []);
 
   const handleToggleMusic = useCallback(() => {
