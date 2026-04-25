@@ -26,7 +26,7 @@ export default function Register() {
     setLoading(true);
     setError(null);
     try {
-      await register(username, email, password);
+      await register(email, username, password);
       setLocation("/verify");
     } catch (err: any) {
       setError(err.message || "Enrollment Failed: Protocol Disrupted");
@@ -100,7 +100,7 @@ export default function Register() {
                       type="text"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="w-full bg-white/[0.02] border border-white/10 p-5 pl-14 font-mono text-sm tracking-wider text-white outline-none focus:border-purple-500/50 focus:bg-purple-500/5 transition-all"
+                      className="w-full bg-white/[0.02] border border-white/10 py-5 pr-5 pl-16 font-mono text-sm tracking-wider text-white outline-none focus:border-purple-500/50 focus:bg-purple-500/5 transition-all"
                       placeholder="CALLSIGN"
                       required
                     />
@@ -115,7 +115,7 @@ export default function Register() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-white/[0.02] border border-white/10 p-5 pl-14 font-mono text-sm tracking-wider text-white outline-none focus:border-purple-500/50 focus:bg-purple-500/5 transition-all"
+                      className="w-full bg-white/[0.02] border border-white/10 py-5 pr-5 pl-16 font-mono text-sm tracking-wider text-white outline-none focus:border-purple-500/50 focus:bg-purple-500/5 transition-all"
                       placeholder="EMAIL_ADDR"
                       required
                     />
@@ -130,7 +130,7 @@ export default function Register() {
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-white/[0.02] border border-white/10 p-5 pl-14 font-mono text-sm tracking-[0.4em] text-white outline-none focus:border-purple-500/50 focus:bg-purple-500/5 transition-all"
+                      className="w-full bg-white/[0.02] border border-white/10 py-5 pr-5 pl-16 font-mono text-sm tracking-[0.4em] text-white outline-none focus:border-purple-500/50 focus:bg-purple-500/5 transition-all"
                       placeholder="••••••••"
                       required
                     />

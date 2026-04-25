@@ -16,7 +16,7 @@ Sentry.init({
 });
 
 const app: Express = express();
-app.set("trust proxy", 1);
+app.set("trust proxy", true); // Trust all proxies in the chain (Vercel + Fly.io)
 // Security headers
 app.use(helmet());
 
@@ -83,7 +83,7 @@ const globalLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10, // stricter limit for auth routes
+  max: 50, // increased from 10 to allow more breathing room for testing
   message: { error: "Too many auth attempts, please try again later." },
   standardHeaders: true,
   legacyHeaders: false,
