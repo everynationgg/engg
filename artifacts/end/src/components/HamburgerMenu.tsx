@@ -220,10 +220,9 @@ export default function HamburgerMenu({
                   <div className="absolute inset-0 bg-white/0 group-hover:bg-white/5 transition-colors" />
                 </div>
 
-                {/* Label & Tooltip Container */}
-                <div className="absolute whitespace-nowrap flex flex-col items-center transition-all pointer-events-none lg:opacity-0 lg:group-hover:opacity-100 opacity-100"
+                <div className="absolute whitespace-nowrap flex flex-col items-center transition-all pointer-events-none opacity-100"
                       style={{ 
-                        top: "-55px",
+                        top: "-25px",
                         left: "50%",
                         transform: "translateX(-50%)",
                       }}>
@@ -231,11 +230,6 @@ export default function HamburgerMenu({
                         style={{ color: item.color, boxShadow: `0 0 15px ${item.color}20` }}>
                     {item.label}
                   </span>
-                  <div className="mt-1 px-3 py-1 bg-[#0a0b1e]/90 border border-white/5 rounded-sm shadow-xl max-w-[120px] text-center">
-                    <p className="font-mono text-[6px] leading-tight uppercase tracking-widest text-white/40">
-                      {item.tooltip}
-                    </p>
-                  </div>
                 </div>
               </button>
             );

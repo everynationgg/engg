@@ -24,7 +24,7 @@ const FALLBACK_PACKS: Pack[] = [
   { id: "pack_2500", name: "Sovereign Core", amount: 2500, price: "34.99", currency: "USD", bonus: "+500 Bonus", rarity: "legendary" },
 ];
 
-const creditCoreImg = "credit_core_asset_1777031706077.png";
+const creditCoreImg = "credit_core_asset.png";
 
 const RARITY_CONFIG = {
   common: { color: "hsl(185 100% 50%)", glow: "rgba(6, 182, 212, 0.2)", label: "Standard" },
@@ -313,7 +313,7 @@ export default function Shop() {
               </motion.div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-8 md:gap-10 w-full max-w-[1800px] mx-auto">
+            <div className="flex flex-wrap justify-center gap-8 md:gap-10 w-full max-w-[1600px] mx-auto">
               {packs.map((pack, idx) => (
                 <motion.div
                   key={pack.id}
@@ -321,7 +321,7 @@ export default function Shop() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.15, duration: 0.8 }}
                   onClick={() => handlePackSelect(pack)}
-                  className={`relative group p-10 border transition-all duration-700 cursor-pointer flex flex-col items-center backdrop-blur-md ${selectedPack?.id === pack.id
+                  className={`relative group p-10 border transition-all duration-700 cursor-pointer flex flex-col items-center backdrop-blur-md w-full max-w-[360px] ${selectedPack?.id === pack.id
                     ? "bg-cyan-500/5 shadow-[0_0_60px_rgba(6,182,212,0.15)] z-20"
                     : "bg-white/[0.01] border-white/5 hover:border-white/10 hover:bg-white/[0.03]"
                     }`}
