@@ -10,11 +10,20 @@ interface AuthContextType {
   credits: number;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, username: string, password: string) => Promise<void>;
+  verify: (code: string) => Promise<void>;
+  resendVerification: () => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
   isLoading: boolean;
   isInitialized: boolean;
   error: string | null;
+  user: {
+    id: string | null;
+    username: string | null;
+    email: string | null;
+    isVerified: boolean;
+    credits: number;
+  } | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -158,6 +167,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const verify = useCallback(async (code: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({ code }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Verification failed");
+      }
+
+      setIsVerified(true);
+      localStorage.setItem(STORAGE_KEY_IS_VERIFIED, "true");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Verification failed");
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [token]);
+
+  const resendVerification = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/resend`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Resend failed");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Resend failed");
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [token]);
+
   const logout = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY_TOKEN);
     localStorage.removeItem(STORAGE_KEY_USER_ID);
@@ -175,6 +233,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoggedIn(false);
   }, []);
 
+  const user = isLoggedIn ? {
+    id: userId,
+    username,
+    email,
+    isVerified,
+    credits
+  } : null;
+
   return (
     <AuthContext.Provider
       value={{
@@ -187,11 +253,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         credits,
         login,
         register,
+        verify,
+        resendVerification,
         logout,
         refreshUser,
         isLoading,
         error,
         isInitialized,
+        user
       }}
     >
       {children}

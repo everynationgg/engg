@@ -160,7 +160,7 @@ export default function HamburgerMenu({
 
   return (
     <div
-      className="fixed z-50 right-24 bottom-24"
+      className="fixed z-50 right-12 top-12"
     >
       {/* Backdrop overlay */}
       {menuOpen && (
@@ -179,8 +179,8 @@ export default function HamburgerMenu({
            </div>
 
           {menuItems.map((item, index) => {
-            const arcAngle = 120; // Expanded arc for 7 items
-            const startAngle = 165; // Start slightly below horizontal
+            const arcAngle = 90; // Standard 90-degree quadrant
+            const startAngle = 90; // Start down and fan towards left (90-180)
             const angleOffset = menuItems.length > 1 ? arcAngle / (menuItems.length - 1) : 0;
             const angle = startAngle + (index * angleOffset);
             const radius = 200; // Increased radius for better separation

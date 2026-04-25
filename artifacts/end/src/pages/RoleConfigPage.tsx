@@ -1052,6 +1052,37 @@ export default function RoleConfigPage() {
         </div>
       </Modal>
 
+          {/* Premium Protocols — only show when locked premium roles exist */}
+          {PREMIUM_ROLE_IDS.some(id => !unlockedRoles.includes(id)) && (
+            <div className="mb-8 p-4 rounded-lg bg-cyan-950/20 border border-cyan-500/20">
+               <div className="flex items-center gap-3 mb-4">
+                <span
+                  className="font-orbitron font-bold text-[10px] tracking-[0.3em] uppercase px-3"
+                  style={{ color: "hsl(185 100% 65%)", textShadow: "0 0 8px hsl(185 100% 50% / 0.7)" }}
+                >
+                  PREMIUM PROTOCOLS
+                </span>
+                <div className="h-px flex-1 bg-gradient-to-r from-cyan-500/30 to-transparent" />
+              </div>
+              <div className="flex overflow-x-auto gap-4 pb-2 scrollbar-thin scrollbar-thumb-cyan-500/30 scrollbar-track-transparent">
+                {ROLES.filter(r => PREMIUM_ROLE_IDS.includes(r.id) && !unlockedRoles.includes(r.id)).map((role) => (
+                  <div key={role.id} className="w-24 shrink-0">
+                    <RoleCard
+                      role={role}
+                      count={0}
+                      isSelected={selectedRole.id === role.id}
+                      showControls={false}
+                      onSelect={handleSelectRole}
+                      onAdd={handleAdd}
+                      onRemove={handleRemove}
+                      isLocked={true}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Alien Team */}
           <div className="mb-4">
             <div className="flex items-center gap-3 mb-4">
@@ -1071,7 +1102,7 @@ export default function RoleConfigPage() {
               />
             </div>
             <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-8 gap-2">
-              {ALIEN_ROLES.map((role) => (
+              {ALIEN_ROLES.filter(r => !PREMIUM_ROLE_IDS.includes(r.id) || unlockedRoles.includes(r.id)).map((role) => (
                 <RoleCard
                   key={role.id}
                   role={role}
@@ -1106,7 +1137,7 @@ export default function RoleConfigPage() {
               />
             </div>
             <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-8 gap-2">
-              {CHAOTIC_ROLES.map((role) => (
+              {CHAOTIC_ROLES.filter(r => !PREMIUM_ROLE_IDS.includes(r.id) || unlockedRoles.includes(r.id)).map((role) => (
                 <RoleCard
                   key={role.id}
                   role={role}
