@@ -46,6 +46,17 @@ router.post("/stats/record-game", authMiddleware, async (req: AuthRequest, res) 
     // Because playerStatsTable.userId has a UNIQUE constraint, there is no
     // window where two concurrent requests can both INSERT a new row.
     const gameResult = await db.transaction(async (tx) => {
+      // 0. Check for existing record to prevent double-counting
+      const existing = await tx
+        .select()
+        .from(gameResultsTable)
+        .where(sql`${gameResultsTable.gameId} = ${body.gameId} AND ${gameResultsTable.userId} = ${req.userId!}`)
+        .limit(1);
+
+      if (existing.length > 0) {
+        return existing[0];
+      }
+
       const [inserted] = await tx
         .insert(gameResultsTable)
         .values({
@@ -270,7 +281,7 @@ router.get("/stats/game-history", authMiddleware, async (req: AuthRequest, res) 
         id: game.id,
         gameId: game.gameId,
         role: game.role,
-        won: game.won === "yes",
+        won: game.won,
         playedAt: game.completedAt,
       })),
       total: totalCount[0]?.count || 0,

@@ -539,6 +539,7 @@ export function createSession(sessionId: string, hostPlayer: Player): VersionedS
     votingStartedAt: null,
     emergencyVote: freshEmergencyVote(),
     votes: {},
+    chaoticAlignments: {},
     voteResult: null,
     roundSummary: freshRoundSummary(),
     createdAt: Date.now(),

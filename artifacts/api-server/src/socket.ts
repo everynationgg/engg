@@ -297,7 +297,7 @@ function graceUpdate(
  * Re-reads the latest state from Redis and broadcasts it so all clients stay
  * in sync with the authoritative server state.
  */
-async function recordGameResults(io: SocketIOServer, sessionId: string, voteResult: any) {
+async function recordGameResults(io: SocketIOServer, sessionId: string, voteResult: any, session: any) {
   try {
     const results = voteResult.allRoles;
     if (!results || !Array.isArray(results)) return;
@@ -308,18 +308,47 @@ async function recordGameResults(io: SocketIOServer, sessionId: string, voteResu
       const userId = player.stablePlayerId; 
       if (!userId) continue;
 
-      const won = (player.role === "alien" || player.role === "parasite") 
-        ? voteResult.winTeam === "alien" 
-        : voteResult.winTeam === "crew";
+      const role = player.role;
+      const socketId = player.playerId; // This is the socket ID in the engine's allRoles array
+      const winTeam = voteResult.winTeam;
 
-      // 1. Record the individual game result
-      await db.insert(gameResultsTable).values({
-        id: randomUUID(),
-        gameId: sessionId,
-        userId: userId,
-        role: player.role,
-        won: won ? "yes" : "no",
+      let wonStatus: "yes" | "no" | "draw" = "no";
+
+      if (winTeam === "tie") {
+        wonStatus = "draw";
+      } else {
+        let playerTeam = "crew";
+        if (role === "alien" || role === "parasite" || role === "virus") {
+          playerTeam = "alien";
+        } else if (role === "chaotic") {
+          const alignment = session.chaoticAlignments?.[socketId] ?? "Good";
+          playerTeam = (alignment === "Bad") ? "alien" : "crew";
+        }
+
+        wonStatus = (playerTeam === winTeam) ? "yes" : "no";
+      }
+
+      // 1. Record the individual game result with idempotency check
+      const recorded = await db.transaction(async (tx) => {
+        const existing = await tx
+          .select()
+          .from(gameResultsTable)
+          .where(sql`${gameResultsTable.gameId} = ${sessionId} AND ${gameResultsTable.userId} = ${userId}`)
+          .limit(1);
+        
+        if (existing.length > 0) return false; // Already recorded
+
+        await tx.insert(gameResultsTable).values({
+          id: randomUUID(),
+          gameId: sessionId,
+          userId: userId,
+          role: role,
+          won: wonStatus,
+        });
+        return true;
       });
+
+      if (!recorded) continue; // Skip stats if already recorded
 
       // 2. Update overall player stats
       await db.insert(playerStatsTable)
@@ -327,15 +356,16 @@ async function recordGameResults(io: SocketIOServer, sessionId: string, voteResu
           id: randomUUID(),
           userId: userId,
           gamesPlayed: 1,
-          gamesWon: won ? 1 : 0,
-          gamesLost: won ? 0 : 1,
+          gamesWon: wonStatus === "yes" ? 1 : 0,
+          gamesLost: wonStatus === "no" ? 1 : 0,
+          // Draw doesn't increment win/loss but increments played
         })
         .onConflictDoUpdate({
           target: playerStatsTable.userId,
           set: {
             gamesPlayed: sql`${playerStatsTable.gamesPlayed} + 1`,
-            gamesWon: won ? sql`${playerStatsTable.gamesWon} + 1` : playerStatsTable.gamesWon,
-            gamesLost: won ? playerStatsTable.gamesLost : sql`${playerStatsTable.gamesLost} + 1`,
+            gamesWon: wonStatus === "yes" ? sql`${playerStatsTable.gamesWon} + 1` : playerStatsTable.gamesWon,
+            gamesLost: wonStatus === "no" ? sql`${playerStatsTable.gamesLost} + 1` : playerStatsTable.gamesLost,
             updatedAt: new Date(),
           }
         });
@@ -343,11 +373,6 @@ async function recordGameResults(io: SocketIOServer, sessionId: string, voteResu
       // 3. Sync achievements in real-time
       const newAchievements = await syncUserAchievements(userId);
       if (newAchievements.length > 0) {
-        // Find the socket for this player to notify them of the unlock
-        // We use the socket ID which is player.playerId in this context? 
-        // Actually player.playerId is the stable UUID. We need the socket ID.
-        // The results array in engine has playerId (socket.id).
-        const socketId = player.playerId;
         const sock = io.sockets.sockets.get(socketId);
         if (sock) {
           sock.emit("achievements_unlocked", { count: newAchievements.length });
@@ -1779,7 +1804,7 @@ export function attachSocketIO(httpServer: HttpServer) {
           io.to(parsed.sessionId).emit("round_summary", cas.session.roundSummary);
 
           // Record results and sync achievements asynchronously
-          void recordGameResults(io, parsed.sessionId, cas.result.voteResult);
+          void recordGameResults(io, parsed.sessionId, cas.result.voteResult, cas.session);
         }
       },
     );

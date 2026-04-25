@@ -23,7 +23,7 @@ export interface GameHistoryEntry {
   id: string;
   gameId: string;
   role: string;
-  won: boolean;
+  won: "yes" | "no" | "draw";
   playedAt: string;
 }
 

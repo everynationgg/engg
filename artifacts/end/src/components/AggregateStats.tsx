@@ -16,12 +16,14 @@ export default function AggregateStats({ roleStats, personalStats }: AggregateSt
   const totalRoles = roleStats.length;
   const mostPlayedRole = [...roleStats].sort((a, b) => b.gamesPlayed - a.gamesPlayed)[0];
 
-  // Calculate crew vs alien wins
-  const crewStats = roleStats.filter((r) => ["crew", "commander", "scanner", "sentinel", "shifter"].includes(r.role));
-  const alienStats = roleStats.filter((r) => ["alien", "parasite", "warper", "disruptor", "seeker"].includes(r.role));
+  // Calculate faction performance
+  const crewRoles = ["crew", "commander", "scanner", "sentinel", "seeker"];
+  const alienRoles = ["alien", "parasite", "virus"];
+  const chaoticRoles = ["warper", "disruptor", "shifter", "router"];
 
-  const crewWins = crewStats.reduce((acc, r) => acc + r.gamesWon, 0);
-  const alienWins = alienStats.reduce((acc, r) => acc + r.gamesWon, 0);
+  const crewWins = roleStats.filter(r => crewRoles.includes(r.role)).reduce((acc, r) => acc + r.gamesWon, 0);
+  const alienWins = roleStats.filter(r => alienRoles.includes(r.role)).reduce((acc, r) => acc + r.gamesWon, 0);
+  const chaoticWins = roleStats.filter(r => chaoticRoles.includes(r.role)).reduce((acc, r) => acc + r.gamesWon, 0);
 
   return (
     <div className="p-8 bg-white/5 border border-white/10 relative overflow-hidden">
@@ -54,17 +56,22 @@ export default function AggregateStats({ roleStats, personalStats }: AggregateSt
         <div className="flex flex-col justify-between p-6 bg-white/5 border border-white/5">
           <div className="flex justify-between items-end">
             <div>
-              <p className="font-mono text-[9px] uppercase opacity-40 mb-1">Crew Allegiance</p>
+              <p className="font-mono text-[9px] uppercase opacity-40 mb-1">Crew Ops</p>
               <p className="font-orbitron text-2xl text-cyan-400">{crewWins} <span className="text-xs opacity-40 ml-1">WINS</span></p>
             </div>
-            <div className="text-right">
-              <p className="font-mono text-[9px] uppercase opacity-40 mb-1">Alien Infiltration</p>
+            <div className="text-center">
+              <p className="font-mono text-[9px] uppercase opacity-40 mb-1">Infiltration</p>
               <p className="font-orbitron text-2xl text-red-400">{alienWins} <span className="text-xs opacity-40 ml-1">WINS</span></p>
+            </div>
+            <div className="text-right">
+              <p className="font-mono text-[9px] uppercase opacity-40 mb-1">Chaos</p>
+              <p className="font-orbitron text-2xl text-purple-400">{chaoticWins} <span className="text-xs opacity-40 ml-1">WINS</span></p>
             </div>
           </div>
           <div className="h-1.5 w-full bg-white/5 mt-4 flex overflow-hidden">
-             <div className="h-full bg-cyan-500" style={{ width: `${(crewWins / (crewWins + alienWins || 1)) * 100}%` }} />
-             <div className="h-full bg-red-500" style={{ width: `${(alienWins / (crewWins + alienWins || 1)) * 100}%` }} />
+             <div className="h-full bg-cyan-500" style={{ width: `${(crewWins / (crewWins + alienWins + chaoticWins || 1)) * 100}%` }} />
+             <div className="h-full bg-red-500" style={{ width: `${(alienWins / (crewWins + alienWins + chaoticWins || 1)) * 100}%` }} />
+             <div className="h-full bg-purple-500" style={{ width: `${(chaoticWins / (crewWins + alienWins + chaoticWins || 1)) * 100}%` }} />
           </div>
         </div>
       </div>

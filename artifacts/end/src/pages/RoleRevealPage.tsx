@@ -37,6 +37,7 @@ export default function RoleRevealPage() {
   const [livePlayers, setLivePlayers] = useState<any[]>([]);
   const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
   const [selectedRouterDestId, setSelectedRouterDestId] = useState<string | null>(null);
+  const [chaoticChoice, setChaoticChoice] = useState<"Good" | "Bad" | null>(null);
 
   // Defensive: Only compute after state is initialized
   const role = getAssignedRole();
@@ -157,6 +158,10 @@ export default function RoleRevealPage() {
     if (acknowledged) return;
 
     // Validation for acting roles
+    if (role.id === "chaotic" && !chaoticChoice) {
+      alert("Please select your alignment (Enlist or Infiltrate).");
+      return;
+    }
     if (role.id === "virus" && !selectedTargetId) {
       alert("Please select a target to jam.");
       return;
@@ -175,6 +180,8 @@ export default function RoleRevealPage() {
       action = { type: "packet_loss", targets: [selectedTargetId] };
     } else if (role.id === "router") {
       action = { type: "gateway_hijack", targets: [selectedTargetId, selectedRouterDestId] };
+    } else if (role.id === "chaotic") {
+      action = { type: "alignment_choice", targets: [chaoticChoice] };
     }
 
     const socket = getSocket();
@@ -187,7 +194,7 @@ export default function RoleRevealPage() {
         }
       },
     );
-  }, [acknowledged, roomCode, role.id, selectedTargetId, selectedRouterDestId]);
+  }, [acknowledged, roomCode, role.id, selectedTargetId, selectedRouterDestId, chaoticChoice]);
 
   const handleRestartRound = useCallback(() => {
     const socket = getSocket();
@@ -508,6 +515,13 @@ export default function RoleRevealPage() {
               >
                 {role.lore}
               </p>
+              {role.id === "chaotic" && (
+                <div className="mt-3 p-3 rounded border border-dashed text-xs italic" style={{ borderColor: chaoticChoice === "Bad" ? "hsl(0 100% 50% / 0.3)" : "hsl(185 100% 50% / 0.3)", background: chaoticChoice === "Bad" ? "hsl(0 100% 50% / 0.05)" : "hsl(185 100% 50% / 0.05)" }}>
+                  <span style={{ color: chaoticChoice === "Bad" ? "hsl(0 100% 70%)" : "hsl(185 100% 70%)" }}>
+                    CURRENT ALIGNMENT: {chaoticChoice ? chaoticChoice.toUpperCase() : "PENDING..."}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Ready count */}
@@ -515,8 +529,31 @@ export default function RoleRevealPage() {
                 className="text-xs tracking-wider text-center"
                 style={{ color: "hsl(210 30% 45%)", fontFamily: "'Exo 2', sans-serif" }}
               >
-                {readyCount} / {livePlayers.filter(p => !p.isSpectator).length} players ready
+              {readyCount} / {livePlayers.filter(p => !p.isSpectator).length} players ready
               </div>
+
+            {/* Chaotic Choice UI */}
+            {!acknowledged && revealState === "ready" && role.id === "chaotic" && (
+              <div className="flex flex-col gap-4 mb-6 mt-2">
+                <div className="text-[10px] tracking-[0.4em] uppercase font-mono text-center mb-1" style={{ color: "hsl(210 30% 60%)" }}>Alignment_Select</div>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => { playSciFiClick(); setChaoticChoice("Good"); }}
+                    className={`py-4 rounded border-2 font-orbitron font-bold text-[10px] tracking-widest transition-all ${chaoticChoice === "Good" ? "bg-cyan-500/20 border-cyan-400 text-cyan-200" : "bg-black/40 border-cyan-900/50 text-cyan-900 hover:border-cyan-700"}`}
+                    style={{ boxShadow: chaoticChoice === "Good" ? "0 0 20px hsl(185 100% 50% / 0.3)" : "none" }}
+                  >
+                    ENLIST (GOOD)
+                  </button>
+                  <button
+                    onClick={() => { playSciFiClick(); setChaoticChoice("Bad"); }}
+                    className={`py-4 rounded border-2 font-orbitron font-bold text-[10px] tracking-widest transition-all ${chaoticChoice === "Bad" ? "bg-red-500/20 border-red-400 text-red-200" : "bg-black/40 border-red-900/50 text-red-900 hover:border-red-700"}`}
+                    style={{ boxShadow: chaoticChoice === "Bad" ? "0 0 20px hsl(0 100% 50% / 0.3)" : "none" }}
+                  >
+                    INFILTRATE (BAD)
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Target Selection for Virus/Router + Skip Button */}
             {!acknowledged && revealState === "ready" && (role.id === "virus" || role.id === "router") && (() => {

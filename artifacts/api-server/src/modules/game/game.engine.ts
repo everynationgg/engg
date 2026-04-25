@@ -148,6 +148,7 @@ export interface GameState {
   votingStartedAt: number | null;
   emergencyVote: EmergencyVoteState;
   votes: Record<string, string>;
+  chaoticAlignments: Record<string, "Good" | "Bad">;
   voteResult: VoteResult | null;
   roundSummary: RoundSummary;
   createdAt: number;
@@ -329,6 +330,7 @@ export function createGame(sessionId: string, hostPlayer: Player): GameState {
     votingStartedAt: null,
     emergencyVote: freshEmergencyVote(),
     votes: {},
+    chaoticAlignments: {},
     voteResult: null,
     roundSummary: freshRoundSummary(),
     createdAt: Date.now(),
@@ -797,7 +799,13 @@ export function resolveRound(state: GameState): ResolutionResult {
           const target = state.players.find((p) => p.id === targets[0]);
           if (target) {
             const role = state.rolesAssigned[target.id];
-            const alignment = role === "alien" || role === "parasite" || role === "virus" ? "Bad" : "Good";
+            let alignment = role === "alien" || role === "parasite" || role === "virus" ? "Bad" : "Good";
+            
+            // Chaotic Alignment Override
+            if (role === "chaotic" && state.chaoticAlignments[target.id]) {
+              alignment = state.chaoticAlignments[target.id];
+            }
+
             feedback[actor.id] = {
               type: "seek_result",
               data: { targetName: target.name, alignment },
@@ -1299,7 +1307,7 @@ export function tallyVotes(state: GameState): VoteResult {
       eliminatedId: null,
       eliminatedName: null,
       eliminatedRole: null,
-      winTeam: isAnyEvilInPlay ? "alien" : "crew",
+      winTeam: "tie",
       allRoles,
       centerCards,
     };
@@ -1367,6 +1375,7 @@ export function restartGame(state: GameState): GameState {
   state.votingStartedAt = null;
   state.emergencyVote = freshEmergencyVote();
   state.votes = {};
+  state.chaoticAlignments = {};
   state.voteResult = null;
   state.roundSummary = freshRoundSummary();
   state.interruptedFromPhase = undefined;
@@ -1428,6 +1437,7 @@ export function reconnectPlayer(state: GameState, oldId: string, newId: string):
   remap(state.orbitActions, "orbitActions");
   remap(state.orbitFeedback, "orbitFeedback");
   remap(state.votes, "votes");
+  remap(state.chaoticAlignments, "chaoticAlignments");
 
   // Remap arrays of IDs
   const remapArray = (arr: string[]) => arr.map((id) => (id === oldId ? newId : id));
@@ -1577,6 +1587,11 @@ export function processRevealActions(state: GameState): void {
       const [sourceId, destId] = action.targets;
       if (sourceId && destId) {
         state.hijackedTargets[sourceId] = destId;
+      }
+    } else if (role === "chaotic") {
+      const alignment = action.targets[0] as "Good" | "Bad";
+      if (alignment) {
+        state.chaoticAlignments[actorId] = alignment;
       }
     }
   }

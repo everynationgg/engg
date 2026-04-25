@@ -69,18 +69,29 @@ export default function GameHistoryDisplay({ games, onLoadMore, canLoadMore }: G
               key={game.id}
               className="rounded p-4 transition-all duration-150 hover:border-opacity-100 flex items-center justify-between"
               style={{
-                background: game.won ? "hsl(185 100% 10%)" : "hsl(0 75% 10%)",
-                border: `1px solid ${game.won ? "hsl(185 100% 30%)" : "hsl(0 75% 30%)"}`,
+                background: 
+                  game.won === "yes" ? "hsl(185 100% 8%)" : 
+                  game.won === "draw" ? "hsl(30 100% 8%)" : 
+                  "hsl(0 75% 8%)",
+                border: `1px solid ${
+                  game.won === "yes" ? "hsl(185 100% 25%)" : 
+                  game.won === "draw" ? "hsl(30 100% 25%)" : 
+                  "hsl(0 75% 25%)"
+                }`,
               }}
             >
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-1">
-                  {game.won ? (
-                    <span className="font-orbitron text-xs tracking-[0.1em] uppercase px-2 py-1 rounded" style={{ background: "hsl(185 100% 20%)", color: "hsl(185 100% 50%)" }}>
+                  {game.won === "yes" ? (
+                    <span className="font-orbitron text-[9px] tracking-[0.2em] uppercase px-2 py-1 rounded border border-cyan-500/30" style={{ background: "hsl(185 100% 15%)", color: "hsl(185 100% 50%)" }}>
                       ✓ Victory
                     </span>
+                  ) : game.won === "draw" ? (
+                    <span className="font-orbitron text-[9px] tracking-[0.2em] uppercase px-2 py-1 rounded border border-orange-500/30" style={{ background: "hsl(30 100% 15%)", color: "hsl(30 100% 50%)" }}>
+                      – DRAW
+                    </span>
                   ) : (
-                    <span className="font-orbitron text-xs tracking-[0.1em] uppercase px-2 py-1 rounded" style={{ background: "hsl(0 75% 20%)", color: "hsl(0 75% 60%)" }}>
+                    <span className="font-orbitron text-[9px] tracking-[0.2em] uppercase px-2 py-1 rounded border border-red-500/30" style={{ background: "hsl(0 75% 15%)", color: "hsl(0 75% 60%)" }}>
                       ✗ Defeat
                     </span>
                   )}
