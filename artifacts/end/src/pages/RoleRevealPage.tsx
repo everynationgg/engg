@@ -153,10 +153,8 @@ export default function RoleRevealPage() {
       ? "hsl(290 30% 6%)"
       : "hsl(200 30% 6%)";
 
-   const handleAcknowledge = useCallback(() => {
+  const handleAcknowledge = useCallback(() => {
     if (acknowledged) return;
-
-    console.log("[reveal] Acknowledge clicked - role:", role.id);
 
     // Validation for acting roles
     if (role.id === "virus" && !selectedTargetId) {
@@ -180,19 +178,12 @@ export default function RoleRevealPage() {
     }
 
     const socket = getSocket();
-    console.log("[reveal] Emitting acknowledge_role - action:", action);
     socket.emit(
       "acknowledge_role",
       { sessionId: roomCode, action },
-      (resp: { success: boolean; orbitInfo?: unknown; error?: string }) => {
-        console.log("[reveal] Acknowledge response:", resp);
+      (resp: { success: boolean; orbitInfo?: unknown }) => {
         if (resp?.orbitInfo) {
           sessionStorage.setItem("lp_orbit_info", JSON.stringify(resp.orbitInfo));
-        }
-        if (resp?.success === false && resp.error) {
-          setAcknowledged(false);
-          setReadyCount((prev) => Math.max(0, prev - 1));
-          alert(resp.error);
         }
       },
     );
@@ -520,12 +511,12 @@ export default function RoleRevealPage() {
             </div>
 
             {/* Ready count */}
-            <div
-              className="text-xs tracking-wider text-center"
-              style={{ color: "hsl(210 30% 45%)", fontFamily: "'Exo 2', sans-serif" }}
-            >
-              {readyCount} / {livePlayers.filter(p => !p.isSpectator).length} players ready
-            </div>
+              <div
+                className="text-xs tracking-wider text-center"
+                style={{ color: "hsl(210 30% 45%)", fontFamily: "'Exo 2', sans-serif" }}
+              >
+                {readyCount} / {livePlayers.filter(p => !p.isSpectator).length} players ready
+              </div>
 
             {/* Target Selection for Virus/Router + Skip Button */}
             {!acknowledged && revealState === "ready" && (role.id === "virus" || role.id === "router") && (() => {
@@ -560,10 +551,9 @@ export default function RoleRevealPage() {
                   )}
                   {/* Skip Button */}
                   <button
-                    className="mt-2 px-4 py-3 rounded bg-black/40 border text-xs font-orbitron tracking-widest uppercase transition-all duration-200 hover:brightness-125"
-                    style={{ color: accentColorLight, borderColor: `${accentColor}44` }}
+                    className="mt-2 px-4 py-2 rounded bg-gray-800 border border-gray-600 text-xs font-orbitron tracking-widest uppercase hover:bg-gray-700"
+                    style={{ color: accentColorLight, borderColor: accentColor }}
                     onClick={() => {
-                      console.log("[reveal] Skip clicked - role:", role.id);
                       playSciFiClick();
                       setAcknowledged(true);
                       setReadyCount((prev) => prev + 1);
@@ -579,61 +569,24 @@ export default function RoleRevealPage() {
                       );
                     }}
                   >
-                    Skip & Signal Ready
+                    Skip
                   </button>
                 </div>
               );
             })()}
 
-            {/* Alien Teammates panel for Alien/Parasite */}
-            {(isAlien || role.id === "parasite") && (
-              <div 
-                className="mt-2 p-4 rounded-md border" 
-                style={{ 
-                  background: "rgba(220, 38, 38, 0.05)", 
-                  borderColor: "rgba(220, 38, 38, 0.25)",
-                  boxShadow: "inset 0 0 15px rgba(220, 38, 38, 0.05)"
-                }}
-              >
-                 <div className="font-orbitron text-[10px] tracking-[0.25em] uppercase mb-3 font-bold flex items-center gap-2" style={{ color: "hsl(0 75% 70%)" }}>
-                   <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
-                   ALIEN_RECON_DATA
-                 </div>
-                 <div className="flex flex-col gap-2">
-                   {livePlayers.filter(p => rolesAssigned[p.id] === "alien").map(p => (
-                     <div key={p.id} className="flex items-center gap-3 px-3 py-2 rounded bg-black/40 border border-red-900/30">
-                       <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                       <span className="font-orbitron text-[11px] tracking-wider uppercase text-red-100">{p.name}</span>
-                       <span className="ml-auto font-mono text-[9px] uppercase text-red-500/70">IDENTIFIED_ALIEN</span>
-                     </div>
-                   ))}
-                   {livePlayers.filter(p => rolesAssigned[p.id] === "alien").length === 0 && (
-                     <div className="text-[10px] italic text-red-400/50 uppercase font-mono tracking-widest text-center py-2">
-                       NO_OTHER_ALIENS_DETECTED
-                     </div>
-                   )}
-                   <div className="mt-2 text-[9px] uppercase tracking-widest leading-relaxed opacity-60 font-mono text-red-400">
-                     SYSTEM NOTE: YOUR LOYALTY TO THE HIVE IS ABSOLUTE. DRAW SUSPICION AWAY FROM THE SOURCE.
-                   </div>
-                 </div>
-              </div>
-            )}
-          </div>
-
-          {/* Persistent Acknowledge button — desktop (bottom of info panel) */}
-          <div 
-            className={`hidden lg:block p-6 border-t transition-opacity duration-500 delay-300 ${revealState === "ready" ? "opacity-100" : "opacity-0"}`}
-            style={{ background: bgTint, borderColor: `${accentColor.replace(")", " / 0.15)")}` }}
-          >
-            {revealState === "ready" && (
-              <AcknowledgeButton
-                acknowledged={acknowledged}
-                accentColor={accentColor}
-                accentColorLight={accentColorLight}
-                accentGlow={accentGlow}
-                onAcknowledge={handleAcknowledge}
-              />
-            )}
+            {/* Acknowledge button — desktop (inline) */}
+            <div className={`hidden lg:block transition-opacity duration-500 delay-300 ${revealState === "ready" ? "opacity-100" : "opacity-0"}`}>
+              {revealState === "ready" && (
+                <AcknowledgeButton
+                  acknowledged={acknowledged}
+                  accentColor={accentColor}
+                  accentColorLight={accentColorLight}
+                  accentGlow={accentGlow}
+                  onAcknowledge={handleAcknowledge}
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>

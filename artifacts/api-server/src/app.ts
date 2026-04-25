@@ -16,7 +16,7 @@ Sentry.init({
 });
 
 const app: Express = express();
-app.set("trust proxy", 1); // Trust first proxy (Vercel/Fly.io) to satisfy express-rate-limit security requirements
+app.set("trust proxy", true); // Trust all proxies in the chain (Vercel + Fly.io)
 // Security headers
 app.use(helmet());
 

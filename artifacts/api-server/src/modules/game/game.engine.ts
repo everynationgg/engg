@@ -775,7 +775,6 @@ export function resolveRound(state: GameState): ResolutionResult {
           } else {
             blockedPlayers.add(targetId);
             logInternal(targetId, "ability was blocked");
-            feedback[actor.id] = { type: "disrupt_success", data: { targetName: targetPlayer?.name ?? "a player" } };
             logActor(actor.name, actor.id, `(Disruptor) blocked ${targetPlayer?.name ?? "a player"}'s ability`);
           }
           break;

@@ -56,7 +56,7 @@ function eligibleAchievementIds(
 // Get all achievements
 router.get("/achievements", async (_req, res) => {
   try {
-    // Ensure table is seeded
+    // onConflictDoNothing makes this idempotent and race-safe
     await db.insert(achievementsTable).values(ACHIEVEMENTS_SEED).onConflictDoNothing();
     const achievements = await db.select().from(achievementsTable);
     res.json(achievements);
@@ -73,9 +73,6 @@ router.get("/user/achievements", authMiddleware, async (req: AuthRequest, res) =
       res.status(401).json({ error: "Unauthorized" });
       return;
     }
-
-    // Ensure achievements table is seeded before querying or inserting user achievements
-    await db.insert(achievementsTable).values(ACHIEVEMENTS_SEED).onConflictDoNothing();
 
     // Fetch everything needed in parallel, including per-role wins for role-based achievements
     const [unlockedAchievements, allAchievements, userStats, roleStats, user, txCount] = await Promise.all([
