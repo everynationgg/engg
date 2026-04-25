@@ -1130,7 +1130,15 @@ export function attachSocketIO(httpServer: HttpServer) {
           
           session.initialRoles = { ...session.rolesAssigned };
           session.centerCards = [...customDeck];
-          session.roleCounts = {};
+          // Calculate roleCounts (active players + center deck)
+          const counts: Record<string, number> = {};
+          Object.values(session.rolesAssigned).forEach(rid => {
+            if (rid !== "spectator") counts[rid] = (counts[rid] || 0) + 1;
+          });
+          session.centerCards.forEach(rid => {
+            counts[rid] = (counts[rid] || 0) + 1;
+          });
+          session.roleCounts = counts;
           // Reset round state
           session.orbitActions = {};
           session.orbitCompleted = [];

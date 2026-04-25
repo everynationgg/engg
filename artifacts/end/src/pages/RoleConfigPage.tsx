@@ -1260,8 +1260,8 @@ function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRe
       {/* Name and controls */}
       <div className={`px-1.5 flex flex-col ${showControls ? "py-1.5 gap-1.5" : "py-1"}`}>
         <div
-          className="font-orbitron font-bold text-xs tracking-wider uppercase text-center truncate"
-          style={{ color: isSelected ? accentColorLight : "hsl(190 60% 70%)" }}
+          className={`font-orbitron font-bold tracking-wider uppercase text-center ${role.name.length > 8 ? 'text-[9px]' : 'text-xs'} truncate`}
+          style={{ color: isSelected ? accentColorLight : "hsl(190 60% 70%)", minHeight: '1.2em' }}
         >
           {role.name}
         </div>
