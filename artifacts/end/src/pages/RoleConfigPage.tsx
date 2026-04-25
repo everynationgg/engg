@@ -1320,6 +1320,7 @@ function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRe
       </div>
 
       <div
+        className="pointer-events-none absolute left-1/2 z-50 hidden -translate-x-1/2 group-hover:block"
         style={{
           bottom: tooltipPosition === "top" ? "calc(100% + 5px)" : "auto",
           top: tooltipPosition === "bottom" ? "calc(100% + 5px)" : "auto",
