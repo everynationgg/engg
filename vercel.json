@@ -21,16 +21,6 @@
       "permanent": true
     },
     {
-      "source": "/profile",
-      "destination": "/end/profile",
-      "permanent": false
-    },
-    {
-      "source": "/settings",
-      "destination": "/end/settings",
-      "permanent": false
-    },
-    {
       "source": "/verify-email",
       "destination": "/end/verify-email",
       "permanent": false
