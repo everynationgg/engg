@@ -162,7 +162,7 @@ export default function Shop() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020408] text-white pt-64 md:pt-80 pb-24 px-6 md:px-16 relative overflow-x-hidden selection:bg-cyan-500/30 shop-root">
+    <div className="min-h-screen bg-[#020408] text-white pt-12 md:pt-16 pb-24 px-6 md:px-16 relative overflow-x-hidden selection:bg-cyan-500/30 shop-root flex flex-col items-center justify-center">
       {/* Dynamic Background */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(6,182,212,0.15)_0%,transparent_70%)]" />
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('data:image/svg+xml,%3Csvg%20viewBox=%220%200%20200%20200%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter%20id=%22noiseFilter%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.65%22%20numOctaves=%223%22%20stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect%20width=%22100%25%22%20height=%22100%25%22%20filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')]" />
@@ -189,7 +189,7 @@ export default function Shop() {
       <div className="relative z-10 w-full px-6 md:px-16 pb-24 min-h-screen flex flex-col">
 
         {/* Header HUD */}
-        <header className="flex flex-col lg:flex-row justify-between items-center lg:items-end mb-16 md:mb-24 gap-8 md:gap-12 border-b border-white/5 pb-12">
+        <header className="flex flex-col lg:flex-row justify-between items-center lg:items-end mb-24 md:mb-32 gap-8 md:gap-12 border-b border-white/5 pb-12">
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -281,7 +281,7 @@ export default function Shop() {
           )}
         </AnimatePresence>
 
-        <main className="flex-1">
+        <main className="flex-1 flex flex-col items-center justify-center">
           {loading ? (
             <div className="flex flex-col items-center justify-center min-h-[400px] gap-6">
               <div className="w-20 h-20 border-2 border-cyan-500/10 border-t-cyan-500 rounded-full animate-spin shadow-[0_0_30px_rgba(6,182,212,0.2)]" />

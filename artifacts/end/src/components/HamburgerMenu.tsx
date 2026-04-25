@@ -178,15 +178,17 @@ export default function HamburgerMenu({
       {menuOpen && (
         <div className="absolute inset-0 pointer-events-none -z-10 flex items-center justify-center">
            {/* Tactical Ring Background */}
-           <div className={`absolute w-[280px] h-[280px] border border-cyan-500/10 rounded-full transition-all duration-700 ${menuClosing ? "scale-0 opacity-0" : "scale-100 opacity-100"}`}>
+           <div className={`absolute w-[360px] h-[360px] border border-cyan-500/10 rounded-full transition-all duration-700 ${menuClosing ? "scale-0 opacity-0" : "scale-100 opacity-100"}`}>
               <div className="absolute inset-0 border-t-2 border-cyan-500/20 rounded-full animate-[spin_20s_linear_infinite]" />
               <div className="absolute inset-4 border border-white/5 rounded-full" />
            </div>
 
           {menuItems.map((item, index) => {
-            const angleOffset = menuItems.length > 1 ? 90 / (menuItems.length - 1) : 0;
-            const angle = 180 + (index * angleOffset);
-            const radius = 135;
+            const arcAngle = 135; // Increased arc for better spacing
+            const startAngle = 150; // Start slightly lower than 180
+            const angleOffset = menuItems.length > 1 ? arcAngle / (menuItems.length - 1) : 0;
+            const angle = startAngle + (index * angleOffset);
+            const radius = 170; // Increased radius from 135
             const rad = angle * (Math.PI / 180);
             const x = radius * Math.cos(rad);
             const y = radius * Math.sin(rad);

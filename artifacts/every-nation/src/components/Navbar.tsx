@@ -29,7 +29,7 @@ export default function Navbar() {
 
   return (
     <nav 
-      className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 border-b ${
+      className={`sticky top-0 left-0 right-0 z-[100] transition-all duration-500 border-b ${
         scrolled || isOpen 
           ? "bg-black/90 backdrop-blur-xl border-white/10 py-4" 
           : "bg-transparent border-transparent py-6"

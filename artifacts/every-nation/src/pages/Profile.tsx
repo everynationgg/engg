@@ -112,7 +112,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020408] text-white pt-60 md:pt-72 pb-20 px-6 md:px-16 relative overflow-y-auto selection:bg-cyan-500/30">
+    <div className="min-h-screen bg-[#020408] text-white pt-12 md:pt-16 pb-20 px-6 md:px-16 relative selection:bg-cyan-500/30">
       <AlliesSidebar />
       <AnimatePresence>
         {isWarping && <WarpJump />}

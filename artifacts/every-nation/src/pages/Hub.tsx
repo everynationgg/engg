@@ -124,7 +124,7 @@ export default function Hub() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#020408] text-white pt-48 md:pt-40 relative flex flex-col items-center overflow-x-hidden selection:bg-cyan-500/30">
+    <div className="min-h-screen bg-[#020408] text-white pt-8 md:pt-12 relative flex flex-col items-center overflow-x-hidden selection:bg-cyan-500/30">
       <AlliesSidebar />
       {/* Cinematic Background Layer */}
       <div
@@ -137,7 +137,7 @@ export default function Hub() {
       <div className="fixed inset-0 pointer-events-none z-20 scanline" />
 
       {/* Header Overlay */}
-      <header className="relative z-10 w-full max-w-[1440px] px-8 md:px-16 pt-32 md:pt-48 flex flex-col gap-4 mb-8 md:mb-0">
+      <header className="relative z-10 w-full max-w-[1440px] px-8 md:px-16 pt-16 md:pt-24 flex flex-col gap-4 mb-8 md:mb-0">
         <div className="flex items-center gap-4">
           <div className="w-12 h-[2px] bg-cyan-500 shadow-[0_0_15px_#00f3ff]" />
           <span className="font-mono text-[10px] uppercase tracking-[0.8em] text-cyan-500">Mission_Select</span>
