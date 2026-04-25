@@ -762,7 +762,7 @@ export default function RoleConfigPage() {
         </div>
 
         {/* CENTER PANEL */}
-        <div className="flex-1 lg:overflow-y-auto px-6 py-4">
+        <div className="flex-1 lg:overflow-y-auto px-6 pt-14 pb-8">
 
           {/* Mobile-only: room code + player list */}
           <div className="lg:hidden mb-5 pb-5 border-b" style={{ borderColor: "hsl(210 30% 14%)" }}>
@@ -1160,7 +1160,7 @@ export default function RoleConfigPage() {
 
         {/* RIGHT PANEL — preview and details */}
         <div
-          className={`flex w-full ${selectedRole ? "min-h-[400px] opacity-100" : "h-0 opacity-0 lg:h-auto lg:opacity-100"} lg:w-[clamp(200px,28%,380px)] shrink-0 flex-col border-t lg:border-t-0 lg:border-l overflow-hidden transition-all duration-300 ease-in-out`}
+          className={`flex w-full ${selectedRole ? "min-h-[400px] opacity-100" : "h-0 opacity-0 lg:h-full lg:opacity-100"} lg:w-[clamp(200px,28%,380px)] shrink-0 flex-col border-t lg:border-t-0 lg:border-l lg:overflow-hidden transition-all duration-300 ease-in-out`}
           style={{ background: "hsl(220 30% 6%)", borderColor: "hsl(210 30% 14%)" }}
         >
           <RolePreview 
@@ -1320,7 +1320,7 @@ function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRe
       <div
         className="pointer-events-none absolute left-1/2 z-20 hidden -translate-x-1/2 group-hover:block"
         style={{
-          bottom: "calc(100% + 6px)",
+          bottom: "calc(100% + 5px)",
           minWidth: "170px",
           maxWidth: "220px",
           background: "hsl(220 28% 8% / 0.97)",
@@ -1392,9 +1392,9 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
     role.team === "alien" ? "ALIEN TEAM" : role.team === "chaotic" ? "CHAOTIC" : "CREW TEAM";
 
   return (
-    <div className="flex flex-row lg:flex-col h-full">
+    <div className="flex flex-col lg:h-full">
       {/* Role image/video — square frame */}
-      <div className="relative w-1/3 lg:w-[85%] lg:mx-auto aspect-square overflow-hidden shrink-0 p-2 lg:p-3">
+      <div className="relative w-full lg:w-[85%] lg:mx-auto aspect-square overflow-hidden shrink-0 p-2 lg:p-3">
         <div className="relative w-full h-full rounded-lg border border-white/10 overflow-hidden">
           <video
             key={role.id}
@@ -1426,7 +1426,7 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
       </div>
 
       {/* Right side (mobile) / Bottom section (desktop) */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+      <div className="flex flex-col flex-1 min-w-0 lg:overflow-hidden">
         {/* Role name */}
         <div
           className="px-3 lg:px-4 pt-1 pb-1 lg:pt-1 lg:pb-2 border-b shrink-0"
@@ -1442,7 +1442,7 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
         </div>
 
         {/* Details */}
-        <div className="flex-1 overflow-y-auto lg:overflow-visible px-3 lg:px-4 py-1 lg:py-2 flex flex-col gap-1.5 lg:gap-3 pb-24">
+        <div className="flex-1 lg:overflow-y-auto px-3 lg:px-4 py-1 lg:py-2 flex flex-col gap-1.5 lg:gap-3 pb-24">
           <InfoBlock label="Alignment" value={role.alignment} accentColor={accentColorLight} />
           <InfoBlock label="Win Condition" value={role.winCondition} accentColor={accentColorLight} />
           <InfoBlock label="Ability" value={role.ability} accentColor={accentColorLight} />
