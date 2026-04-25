@@ -805,6 +805,13 @@ function renderOrbitResultSummary(
     case "disrupt_ineffective":
       return <p className="text-sm leading-relaxed" style={warn}>Your block attempt failed — that target cannot be blocked.</p>;
 
+    case "disrupt_success":
+      return (
+        <p className="text-sm leading-relaxed" style={good}>
+          You successfully blocked <span className="font-bold" style={{ color: accentLight }}>{String(d?.targetName ?? "the target")}</span>'s ability.
+        </p>
+      );
+
     case "scan_player":
       return (
         <p className="text-sm" style={info}>
