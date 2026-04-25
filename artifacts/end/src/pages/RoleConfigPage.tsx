@@ -1081,6 +1081,7 @@ export default function RoleConfigPage() {
                   onAdd={handleAdd}
                   onRemove={handleRemove}
                   isLocked={PREMIUM_ROLE_IDS.includes(role.id) && !unlockedRoles.includes(role.id)}
+                  tooltipPosition="bottom"
                 />
               ))}
             </div>
@@ -1189,9 +1190,10 @@ interface RoleCardProps {
   onAdd: (roleId: string, e: React.MouseEvent) => void;
   onRemove: (roleId: string, e: React.MouseEvent) => void;
   isLocked?: boolean;
+  tooltipPosition?: "top" | "bottom";
 }
 
-function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRemove, isLocked }: RoleCardProps) {
+function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRemove, isLocked, tooltipPosition = "top" }: RoleCardProps) {
   const accentColor =
     role.team === "alien"
       ? "hsl(270 80% 55%)"
@@ -1318,9 +1320,9 @@ function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRe
       </div>
 
       <div
-        className="pointer-events-none absolute left-1/2 z-20 hidden -translate-x-1/2 group-hover:block"
         style={{
-          bottom: "calc(100% + 5px)",
+          bottom: tooltipPosition === "top" ? "calc(100% + 5px)" : "auto",
+          top: tooltipPosition === "bottom" ? "calc(100% + 5px)" : "auto",
           minWidth: "170px",
           maxWidth: "220px",
           background: "hsl(220 28% 8% / 0.97)",
