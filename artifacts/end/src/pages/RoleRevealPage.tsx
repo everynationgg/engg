@@ -106,7 +106,7 @@ export default function RoleRevealPage() {
           }
           if (resp.session.rolesAssigned) setRolesAssigned(resp.session.rolesAssigned);
           if (resp.session.initialRoles) setInitialRoles(resp.session.initialRoles);
-          
+
           const me = resp.session.players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === socket.id);
           if (me) setIsHost(me.isHost);
         }
@@ -158,7 +158,7 @@ export default function RoleRevealPage() {
     if (acknowledged) return;
 
     // Validation for acting roles
-    if (role.id === "chaotic" && !chaoticChoice) {
+    if (role.team === "chaotic" && !chaoticChoice) {
       alert("Please select your alignment (Enlist or Infiltrate).");
       return;
     }
@@ -179,9 +179,9 @@ export default function RoleRevealPage() {
     if (role.id === "virus") {
       action = { type: "packet_loss", targets: [selectedTargetId] };
     } else if (role.id === "router") {
-      action = { type: "gateway_hijack", targets: [selectedTargetId, selectedRouterDestId] };
-    } else if (role.id === "chaotic") {
-      action = { type: "alignment_choice", targets: [chaoticChoice] };
+      action = { type: "gateway_hijack", targets: [selectedTargetId, selectedRouterDestId], alignment: chaoticChoice };
+    } else if (role.team === "chaotic") {
+      action = { type: "alignment_choice", targets: [], alignment: chaoticChoice };
     }
 
     const socket = getSocket();
@@ -194,7 +194,7 @@ export default function RoleRevealPage() {
         }
       },
     );
-  }, [acknowledged, roomCode, role.id, selectedTargetId, selectedRouterDestId, chaoticChoice]);
+  }, [acknowledged, roomCode, role.id, role.team, selectedTargetId, selectedRouterDestId, chaoticChoice]);
 
   const handleRestartRound = useCallback(() => {
     const socket = getSocket();
@@ -393,7 +393,7 @@ export default function RoleRevealPage() {
                 style={{ background: "black" }}
               />
               {/* Bio-Scan Overlay */}
-              <motion.div 
+              <motion.div
                 animate={{ top: ["0%", "100%", "0%"] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
                 className="absolute left-0 right-0 h-[2px] bg-cyan-400/50 shadow-[0_0_15px_#22d3ee] z-10 pointer-events-none"
@@ -515,7 +515,7 @@ export default function RoleRevealPage() {
               >
                 {role.lore}
               </p>
-              {role.id === "chaotic" && (
+              {role.team === "chaotic" && (
                 <div className="mt-3 p-3 rounded border border-dashed text-xs italic" style={{ borderColor: chaoticChoice === "Bad" ? "hsl(0 100% 50% / 0.3)" : "hsl(185 100% 50% / 0.3)", background: chaoticChoice === "Bad" ? "hsl(0 100% 50% / 0.05)" : "hsl(185 100% 50% / 0.05)" }}>
                   <span style={{ color: chaoticChoice === "Bad" ? "hsl(0 100% 70%)" : "hsl(185 100% 70%)" }}>
                     CURRENT ALIGNMENT: {chaoticChoice ? chaoticChoice.toUpperCase() : "PENDING..."}
@@ -525,15 +525,15 @@ export default function RoleRevealPage() {
             </div>
 
             {/* Ready count */}
-              <div
-                className="text-xs tracking-wider text-center"
-                style={{ color: "hsl(210 30% 45%)", fontFamily: "'Exo 2', sans-serif" }}
-              >
+            <div
+              className="text-xs tracking-wider text-center"
+              style={{ color: "hsl(210 30% 45%)", fontFamily: "'Exo 2', sans-serif" }}
+            >
               {readyCount} / {livePlayers.filter(p => !p.isSpectator).length} players ready
-              </div>
+            </div>
 
             {/* Chaotic Choice UI */}
-            {!acknowledged && revealState === "ready" && role.id === "chaotic" && (
+            {!acknowledged && revealState === "ready" && role.team === "chaotic" && (
               <div className="flex flex-col gap-4 mb-6 mt-2">
                 <div className="text-[10px] tracking-[0.4em] uppercase font-mono text-center mb-1" style={{ color: "hsl(210 30% 60%)" }}>Alignment_Select</div>
                 <div className="grid grid-cols-2 gap-3">

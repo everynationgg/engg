@@ -57,6 +57,7 @@ export interface GameSettings {
 export interface PlayerAction {
   type: string;
   targets: string[];
+  alignment?: "Good" | "Bad";
 }
 
 export interface EmergencyVoteState {
@@ -73,7 +74,7 @@ export interface VoteResult {
   eliminatedName: string | null;
   eliminatedRole: string | null;
   winTeam: "crew" | "alien" | "tie";
-  allRoles: { playerId: string; stablePlayerId?: string; playerName: string; role: string; initialRole: string; alive: boolean }[];
+  allRoles: { playerId: string; stablePlayerId?: string; playerName: string; role: string; initialRole: string; alive: boolean; alignment?: "Good" | "Bad" }[];
   centerCards: string[];
 }
 
@@ -446,6 +447,10 @@ export function acknowledgeRole(
       }
     }
     state.revealActions[playerId] = revealAction;
+    if (revealAction.alignment) {
+      if (!state.chaoticAlignments) state.chaoticAlignments = {};
+      state.chaoticAlignments[playerId] = revealAction.alignment;
+    }
   }
 
   const orbitInfo = computeOrbitInfo(state, playerId);
@@ -1291,6 +1296,7 @@ export function tallyVotes(state: GameState): VoteResult {
     role: state.rolesAssigned[p.id] ?? "unknown",
     initialRole: state.initialRoles[p.id] ?? "unknown",
     alive: p.alive !== false,
+    alignment: state.chaoticAlignments?.[p.id],
   }));
 
   const centerCards = state.centerCards ?? [];

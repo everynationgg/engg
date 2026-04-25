@@ -24,6 +24,7 @@ export interface GameHistoryEntry {
   gameId: string;
   role: string;
   won: "yes" | "no" | "draw";
+  alignment?: string;
   playedAt: string;
 }
 
@@ -40,6 +41,7 @@ export interface GameResultData {
   gameId: string;
   role: string;
   won: "yes" | "no";
+  alignment?: string;
 }
 
 export function useRecordGameResult() {
@@ -228,22 +230,20 @@ export function useRecordGameResult() {
  */
 export function determinePlayerWon(
   playerRole: string,
-  winTeam: "crew" | "alien" | "tie"
+  winTeam: "crew" | "alien" | "tie",
+  alignment?: "Good" | "Bad"
 ): boolean {
   if (winTeam === "tie") return false;
 
   const roleObj = ROLES.find((r) => r.id === playerRole);
   if (!roleObj) return false;
 
-  const playerTeam = roleObj.team; // "crew" | "alien" | "chaotic"
+  let playerTeam = roleObj.team;
+  if (playerTeam === "chaotic" && alignment) {
+    playerTeam = (alignment === "Bad") ? "alien" : "crew";
+  }
   
-  // Crew roles win if crew wins
-  if (playerTeam === "crew" && winTeam === "crew") return true;
-  // Alien roles (including parasite) win if alien wins
-  if (playerTeam === "alien" && winTeam === "alien") return true;
-  // Chaotic roles don't win in these outcomes
-  
-  return false;
+  return playerTeam === winTeam;
 }
 
 /**

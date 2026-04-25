@@ -75,7 +75,8 @@ export const GetCurrentUserResponse = zod.object({
 export const RecordGameResultBody = zod.object({
   "gameId": zod.string().describe('Unique game identifier'),
   "role": zod.string().describe('Role played (alien, crew, commander, etc.)'),
-  "won": zod.enum(['yes', 'no']).describe('Whether player won the game')
+  "won": zod.enum(['yes', 'no']).describe('Whether player won the game'),
+  "alignment": zod.enum(['Good', 'Bad']).optional().describe('Alignment choice (Good/Bad) for chaotic roles')
 })
 
 

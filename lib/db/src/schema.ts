@@ -48,6 +48,7 @@ export const gameResultsTable = pgTable("game_results", {
   userId: text("user_id").notNull(),
   role: text("role").notNull(),
   won: text("won").notNull(),
+  alignment: text("alignment"),
   completedAt: timestamp("completed_at").defaultNow().notNull(),
 });
 

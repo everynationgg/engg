@@ -98,6 +98,18 @@ export default function GameHistoryDisplay({ games, onLoadMore, canLoadMore }: G
                   <span className="font-orbitron text-xs font-bold" style={{ color: roleInfo.color }}>
                     {roleInfo.name}
                   </span>
+                  {game.alignment && (
+                    <span 
+                      className="font-orbitron text-[8px] px-1.5 py-0.5 rounded border ml-1 uppercase"
+                      style={{ 
+                        background: game.alignment === "Bad" ? "hsl(0 100% 50% / 0.1)" : "hsl(185 100% 50% / 0.1)",
+                        borderColor: game.alignment === "Bad" ? "hsl(0 100% 50% / 0.3)" : "hsl(185 100% 50% / 0.3)",
+                        color: game.alignment === "Bad" ? "hsl(0 100% 70%)" : "hsl(185 100% 70%)"
+                      }}
+                    >
+                      {game.alignment}
+                    </span>
+                  )}
                 </div>
                 <p className="font-mono text-[9px] uppercase opacity-40">
                   {formatDate(game.playedAt)}

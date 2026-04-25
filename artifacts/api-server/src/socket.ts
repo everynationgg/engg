@@ -135,6 +135,7 @@ const playerNameSchema = z.string().min(1).max(30).transform((s) => s.trim());
 const orbitActionSchema = z.object({
   type: z.string().min(1).max(50),
   targets: z.array(z.string().max(128)).max(10),
+  alignment: z.enum(["Good", "Bad"]).optional(),
 });
 
 const createSessionSchema = z.object({
@@ -318,9 +319,10 @@ async function recordGameResults(io: SocketIOServer, sessionId: string, voteResu
         wonStatus = "draw";
       } else {
         let playerTeam = "crew";
+        const chaoticRoles = new Set(["disruptor", "shifter", "warper", "router"]);
         if (role === "alien" || role === "parasite" || role === "virus") {
           playerTeam = "alien";
-        } else if (role === "chaotic") {
+        } else if (chaoticRoles.has(role)) {
           const alignment = session.chaoticAlignments?.[socketId] ?? "Good";
           playerTeam = (alignment === "Bad") ? "alien" : "crew";
         }
@@ -344,6 +346,7 @@ async function recordGameResults(io: SocketIOServer, sessionId: string, voteResu
           userId: userId,
           role: role,
           won: wonStatus,
+          alignment: session.chaoticAlignments?.[socketId],
         });
         return true;
       });

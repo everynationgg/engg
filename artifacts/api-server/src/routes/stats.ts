@@ -65,6 +65,7 @@ router.post("/stats/record-game", authMiddleware, async (req: AuthRequest, res) 
           userId: req.userId!,
           role: body.role,
           won: body.won,
+          alignment: body.alignment,
         })
         .returning();
 
@@ -263,6 +264,7 @@ router.get("/stats/game-history", authMiddleware, async (req: AuthRequest, res) 
           gameId: gameResultsTable.gameId,
           role: gameResultsTable.role,
           won: gameResultsTable.won,
+          alignment: gameResultsTable.alignment,
           completedAt: gameResultsTable.completedAt,
         })
         .from(gameResultsTable)

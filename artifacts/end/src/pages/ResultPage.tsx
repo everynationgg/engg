@@ -17,7 +17,7 @@ interface VoteResult {
   eliminatedName: string | null;
   eliminatedRole: string | null;
   winTeam: "crew" | "alien" | "tie";
-  allRoles: { playerId: string; stablePlayerId?: string; playerName: string; role: string; initialRole: string; alive?: boolean }[];
+  allRoles: { playerId: string; stablePlayerId?: string; playerName: string; role: string; initialRole: string; alive?: boolean; alignment?: "Good" | "Bad" }[];
   centerCards: string[];
 }
 
@@ -134,8 +134,8 @@ export default function ResultPage() {
     if (!isLoggedIn || !userId) return;
 
     recordedResultRef.current = true;
-    const won = determinePlayerWon(playerData.role, voteResult.winTeam) ? "yes" : "no";
-    recordResult({ gameId, role: playerData.role, won });
+    const won = determinePlayerWon(playerData.role, voteResult.winTeam, playerData.alignment) ? "yes" : "no";
+    recordResult({ gameId, role: playerData.role, won, alignment: playerData.alignment });
     setPendingVoteResult(null);
   }, [gameId, hasRecorded, isInitialized, isLoggedIn, recordResult, userId]);
 
@@ -535,6 +535,18 @@ export default function ResultPage() {
                           <span className="font-orbitron text-xs tracking-wide uppercase truncate" style={{ color: "hsl(190 60% 78%)" }}>
                             {entry.playerName}
                           </span>
+                          {entry.alignment && (
+                            <span 
+                              className="text-[9px] px-1.5 py-0.5 rounded font-orbitron font-bold tracking-widest uppercase border"
+                              style={{ 
+                                background: entry.alignment === "Bad" ? "hsl(0 100% 50% / 0.1)" : "hsl(185 100% 50% / 0.1)",
+                                borderColor: entry.alignment === "Bad" ? "hsl(0 100% 50% / 0.3)" : "hsl(185 100% 50% / 0.3)",
+                                color: entry.alignment === "Bad" ? "hsl(0 100% 70%)" : "hsl(185 100% 70%)"
+                              }}
+                            >
+                              {entry.alignment}
+                            </span>
+                          )}
                           {/* Alive/eliminated badge intentionally disabled for now. */}
                           {isEliminated && (
                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-950/40 border border-red-500/50 text-red-400 font-orbitron font-bold tracking-widest uppercase scale-75 origin-right">EJECTED</span>
