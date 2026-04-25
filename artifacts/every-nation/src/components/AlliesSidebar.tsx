@@ -69,7 +69,7 @@ export default function AlliesSidebar() {
 
   const sendRequest = async (friendId: string) => {
     try {
-      await fetch(`${import.meta.env.VITE_API_URL}/api/user/send-friend-request`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/send-friend-request`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -77,9 +77,16 @@ export default function AlliesSidebar() {
         },
         body: JSON.stringify({ friendId })
       });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Request failed");
+      }
+      
       handleSearch(); // Refresh search to show pending status
     } catch (err) {
       console.error("Failed to send request", err);
+      // Optional: Add UI feedback for error
     }
   };
 

@@ -689,18 +689,49 @@ export default function RoleConfigPage() {
               <div className="text-[10px] tracking-[0.4em] uppercase font-mono mb-1.5" style={{ color: "hsl(210 30% 45%)" }}>Operational_Session</div>
               <div className="font-orbitron font-black text-2xl tracking-[0.2em]" style={{ color: "hsl(185 100% 60%)" }}>{roomCode}</div>
               <div className="mt-2 flex items-center justify-between">
-                 <div className="text-[9px] font-mono uppercase tracking-widest" style={{ color: "hsl(210 30% 35%)" }}>{players.length}/10 Units</div>
-                 <button 
-                  onClick={handleCopyLink}
-                  className="text-[9px] font-orbitron tracking-widest uppercase hover:text-white transition-colors"
-                  style={{ color: copyFeedback ? "hsl(140 60% 60%)" : "hsl(185 100% 50% / 0.7)" }}
-                 >
-                   {copyFeedback ? "Copied" : "Copy_Link"}
-                 </button>
+                <div className="text-[10px] font-mono uppercase tracking-widest" style={{ color: "hsl(185 100% 50% / 0.6)" }}>
+                  {Object.values(roleCounts).reduce((a, b) => a + b, 0)} Total Roles
+                </div>
+                <div className="text-[9px] font-mono uppercase tracking-widest" style={{ color: "hsl(210 30% 35%)" }}>
+                  {players.length} Players
+                </div>
               </div>
            </div>
-           
-           <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+
+           {/* Role summary: moved to top for better visibility */}
+           {showActiveRoles && (
+             <div className="px-5 py-4 border-b bg-cyan-500/5" style={{ borderColor: "hsl(210 30% 14%)" }}>
+               <div className="text-[10px] tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(210 30% 55%)" }}>Active Roles Manifest</div>
+               <div className="flex flex-wrap gap-1.5 mb-2">
+                 {ROLES.filter((r) => (roleCounts[r.id] || 0) > 0).map((r) => (
+                   <div 
+                     key={r.id} 
+                     className="px-1.5 py-0.5 rounded border flex items-center gap-1.5"
+                     style={{ 
+                       background: "hsl(220 30% 10%)",
+                       borderColor: r.team === "alien" ? "hsl(270 80% 50% / 0.3)" : r.team === "chaotic" ? "hsl(300 70% 50% / 0.3)" : "hsl(185 100% 50% / 0.3)"
+                     }}
+                   >
+                     <span
+                       className="text-[9px] font-orbitron tracking-wider uppercase"
+                       style={{
+                         color: r.team === "alien" ? "hsl(270 80% 65%)" : r.team === "chaotic" ? "hsl(300 70% 65%)" : "hsl(185 100% 60%)",
+                       }}
+                     >
+                       {r.name}
+                     </span>
+                     <span className="text-[9px] font-bold" style={{ color: "hsl(190 60% 75%)" }}>{roleCounts[r.id]}</span>
+                   </div>
+                 ))}
+                 {ROLES.every((r) => (roleCounts[r.id] || 0) === 0) && (
+                   <div className="text-[10px] font-mono italic" style={{ color: "hsl(210 30% 35%)" }}>Initialization required — no roles selected</div>
+                 )}
+               </div>
+             </div>
+           )}
+
+           <div className="flex-1 overflow-y-auto px-4 py-3">
+              <div className="text-[10px] tracking-widest uppercase mb-3 px-1" style={{ color: "hsl(210 30% 45%)" }}>Personnel_List</div>
               <div className="space-y-1">
                  {players.map((player) => (
                     <div 
@@ -734,31 +765,6 @@ export default function RoleConfigPage() {
                  ))}
               </div>
            </div>
-
-           {/* Role summary: only show in lobby, hide after game starts */}
-           {showActiveRoles && (
-             <div className="px-4 pt-4 mt-auto pb-4 border-t" style={{ borderColor: "hsl(210 30% 14%)" }}>
-               <div className="text-xs tracking-widest uppercase mb-3" style={{ color: "hsl(210 30% 45%)" }}>Active Roles</div>
-               <div className="flex flex-col gap-1">
-                 {ROLES.filter((r) => (roleCounts[r.id] || 0) > 0).map((r) => (
-                   <div key={r.id} className="flex items-center justify-between">
-                     <span
-                       className="text-xs"
-                       style={{
-                         color: r.team === "alien" ? "hsl(270 80% 65%)" : r.team === "chaotic" ? "hsl(300 70% 65%)" : "hsl(185 100% 60%)",
-                       }}
-                     >
-                       {r.name}
-                     </span>
-                     <span className="font-orbitron text-xs" style={{ color: "hsl(190 60% 75%)" }}>x{roleCounts[r.id]}</span>
-                   </div>
-                 ))}
-                 {ROLES.every((r) => (roleCounts[r.id] || 0) === 0) && (
-                   <div className="text-xs" style={{ color: "hsl(210 30% 35%)" }}>No roles selected yet</div>
-                 )}
-               </div>
-             </div>
-           )}
         </div>
 
         {/* CENTER PANEL */}

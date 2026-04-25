@@ -109,8 +109,12 @@ friendsRouter.post(
       }
 
       // Check friend exists and no relationship exists in a single round-trip
-      const [targetUser, existingFriendship] = await Promise.all([
-        db.query.usersTable.findFirst({ where: eq(usersTable.id, friendId) }),
+      const [targetUsers, existingFriendship] = await Promise.all([
+        db
+          .select({ id: usersTable.id })
+          .from(usersTable)
+          .where(eq(usersTable.id, friendId))
+          .limit(1),
         db
           .select({ status: friendshipsTable.status })
           .from(friendshipsTable)
@@ -123,7 +127,7 @@ friendsRouter.post(
           .limit(1),
       ]);
 
-      if (!targetUser) {
+      if (targetUsers.length === 0) {
         res.status(404).json({ error: "User not found" });
         return;
       }
@@ -137,6 +141,7 @@ friendsRouter.post(
         userId,
         friendId,
         status: "pending",
+        updatedAt: new Date(),
       });
 
       res.json({ success: true, message: "Friend request sent" });
