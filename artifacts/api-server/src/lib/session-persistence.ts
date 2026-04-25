@@ -82,6 +82,7 @@ export function deserializeSession(data: unknown): Session | null {
       ...raw,
       discussionStartedAt: (raw["discussionStartedAt"] as number | null) ?? null,
       voteResult: (raw["voteResult"] as Session["voteResult"]) ?? null,
+      chaoticAlignments: (raw["chaoticAlignments"] as Session["chaoticAlignments"]) ?? {},
     } as Session;
   } catch {
     return null;

@@ -67,7 +67,7 @@ export default function GameHistoryDisplay({ games, onLoadMore, canLoadMore }: G
           return (
             <div
               key={game.id}
-              className="rounded p-4 transition-all duration-150 hover:border-opacity-100 flex items-center justify-between"
+              className="rounded p-4 transition-all duration-150 hover:border-opacity-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0"
               style={{
                 background: 
                   game.won === "yes" ? "hsl(185 100% 8%)" : 
@@ -80,36 +80,36 @@ export default function GameHistoryDisplay({ games, onLoadMore, canLoadMore }: G
                 }`,
               }}
             >
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-1">
+              <div className="flex-1 w-full">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
                   {game.won === "yes" ? (
-                    <span className="font-orbitron text-[9px] tracking-[0.2em] uppercase px-2 py-1 rounded border border-cyan-500/30" style={{ background: "hsl(185 100% 15%)", color: "hsl(185 100% 50%)" }}>
+                    <span className="font-orbitron text-[8px] tracking-[0.2em] uppercase px-1.5 py-0.5 rounded border border-cyan-500/30" style={{ background: "hsl(185 100% 15%)", color: "hsl(185 100% 50%)" }}>
                       ✓ Victory
                     </span>
                   ) : game.won === "draw" ? (
-                    <span className="font-orbitron text-[9px] tracking-[0.2em] uppercase px-2 py-1 rounded border border-orange-500/30" style={{ background: "hsl(30 100% 15%)", color: "hsl(30 100% 50%)" }}>
+                    <span className="font-orbitron text-[8px] tracking-[0.2em] uppercase px-1.5 py-0.5 rounded border border-orange-500/30" style={{ background: "hsl(30 100% 15%)", color: "hsl(30 100% 50%)" }}>
                       – DRAW
                     </span>
                   ) : (
-                    <span className="font-orbitron text-[9px] tracking-[0.2em] uppercase px-2 py-1 rounded border border-red-500/30" style={{ background: "hsl(0 75% 15%)", color: "hsl(0 75% 60%)" }}>
+                    <span className="font-orbitron text-[8px] tracking-[0.2em] uppercase px-1.5 py-0.5 rounded border border-red-500/30" style={{ background: "hsl(0 75% 15%)", color: "hsl(0 75% 60%)" }}>
                       ✗ Defeat
                     </span>
                   )}
-                  <span className="font-orbitron text-sm" style={{ color: roleInfo.color }}>
+                  <span className="font-orbitron text-xs font-bold" style={{ color: roleInfo.color }}>
                     {roleInfo.name}
                   </span>
                 </div>
-                <p className="font-orbitron text-xs" style={{ color: "hsl(210 30% 50%)" }}>
+                <p className="font-mono text-[9px] uppercase opacity-40">
                   {formatDate(game.playedAt)}
                 </p>
               </div>
 
-              <div className="text-right">
-                <span className="font-orbitron text-xs uppercase tracking-[0.1em]" style={{ color: "hsl(210 30% 60%)" }}>
-                  Game ID
+              <div className="text-left sm:text-right w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-0 border-white/5 flex sm:block justify-between items-center">
+                <span className="font-mono text-[8px] uppercase opacity-20 block sm:inline">
+                  Log_Ref
                 </span>
-                <p className="font-mono text-xs" style={{ color: "hsl(210 30% 70%)" }}>
-                  {game.gameId.substring(0, 8)}...
+                <p className="font-mono text-[10px] sm:text-xs opacity-40 ml-2 sm:ml-0">
+                  {game.gameId.substring(0, 6)}
                 </p>
               </div>
             </div>

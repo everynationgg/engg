@@ -53,42 +53,49 @@ export default function AggregateStats({ roleStats, personalStats }: AggregateSt
         </div>
 
         {/* Team Performance Readout */}
-        <div className="flex flex-col justify-between p-6 bg-white/5 border border-white/5">
-          <div className="flex justify-between items-end">
-            <div>
-              <p className="font-mono text-[9px] uppercase opacity-40 mb-1">Crew Ops</p>
-              <p className="font-orbitron text-2xl text-cyan-400">{crewWins} <span className="text-xs opacity-40 ml-1">WINS</span></p>
+        <div className="flex flex-col justify-between p-5 md:p-8 bg-black/40 border border-white/5 relative group">
+          <div className="absolute top-0 right-0 p-2 font-mono text-[8px] opacity-10">FACTION_SYNC</div>
+          
+          <div className="flex flex-row justify-between items-end gap-2 sm:gap-4">
+            <div className="flex-1">
+              <p className="font-mono text-[8px] uppercase opacity-40 mb-1">Crew</p>
+              <p className="font-orbitron text-lg sm:text-2xl text-cyan-400">{crewWins}</p>
             </div>
-            <div className="text-center">
-              <p className="font-mono text-[9px] uppercase opacity-40 mb-1">Infiltration</p>
-              <p className="font-orbitron text-2xl text-red-400">{alienWins} <span className="text-xs opacity-40 ml-1">WINS</span></p>
+            <div className="flex-1 text-center">
+              <p className="font-mono text-[8px] uppercase opacity-40 mb-1">Infiltration</p>
+              <p className="font-orbitron text-lg sm:text-2xl text-red-400">{alienWins}</p>
             </div>
-            <div className="text-right">
-              <p className="font-mono text-[9px] uppercase opacity-40 mb-1">Chaos</p>
-              <p className="font-orbitron text-2xl text-purple-400">{chaoticWins} <span className="text-xs opacity-40 ml-1">WINS</span></p>
+            <div className="flex-1 text-right">
+              <p className="font-mono text-[8px] uppercase opacity-40 mb-1">Chaos</p>
+              <p className="font-orbitron text-lg sm:text-2xl text-purple-400">{chaoticWins}</p>
             </div>
           </div>
-          <div className="h-1.5 w-full bg-white/5 mt-4 flex overflow-hidden">
-             <div className="h-full bg-cyan-500" style={{ width: `${(crewWins / (crewWins + alienWins + chaoticWins || 1)) * 100}%` }} />
-             <div className="h-full bg-red-500" style={{ width: `${(alienWins / (crewWins + alienWins + chaoticWins || 1)) * 100}%` }} />
-             <div className="h-full bg-purple-500" style={{ width: `${(chaoticWins / (crewWins + alienWins + chaoticWins || 1)) * 100}%` }} />
+          
+          <div className="h-1.5 w-full bg-white/5 mt-6 flex overflow-hidden rounded-full">
+             <div className="h-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" style={{ width: `${(crewWins / (crewWins + alienWins + chaoticWins || 1)) * 100}%` }} />
+             <div className="h-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]" style={{ width: `${(alienWins / (crewWins + alienWins + chaoticWins || 1)) * 100}%` }} />
+             <div className="h-full bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]" style={{ width: `${(chaoticWins / (crewWins + alienWins + chaoticWins || 1)) * 100}%` }} />
           </div>
+          <p className="font-mono text-[8px] uppercase opacity-20 mt-4 text-center tracking-[0.2em]">Operational Alignment Analysis</p>
         </div>
       </div>
 
       {/* Role Distribution Chart */}
       <div className="mt-12">
-        <h3 className="font-mono text-[9px] uppercase opacity-40 mb-6 tracking-[0.2em]">Operational Distribution</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <h3 className="font-mono text-[9px] uppercase opacity-40 mb-6 tracking-[0.2em] flex items-center gap-3">
+          Operational Distribution
+          <div className="h-[1px] w-8 bg-white/10" />
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
           {[...roleStats]
             .sort((a, b) => b.gamesPlayed - a.gamesPlayed)
             .slice(0, 5)
             .map((role) => (
-              <div key={role.role} className="p-3 bg-white/5 border border-white/5 relative overflow-hidden group">
-                <div className="absolute bottom-0 left-0 h-0.5 bg-cyan-500/50 transition-all duration-500" style={{ width: `${(role.gamesPlayed / personalStats.gamesPlayed) * 100}%` }} />
+              <div key={role.role} className="p-4 bg-black/40 border border-white/5 relative overflow-hidden group">
+                <div className="absolute bottom-0 left-0 h-0.5 bg-cyan-500/50 shadow-[0_0_8px_rgba(6,182,212,0.4)] transition-all duration-700" style={{ width: `${(role.gamesPlayed / (personalStats.gamesPlayed || 1)) * 100}%` }} />
                 <div className="flex justify-between items-center mb-1">
-                   <span className="font-orbitron text-[10px] uppercase tracking-wider">{role.role}</span>
-                   <span className="font-mono text-[9px] opacity-40">{role.gamesPlayed}</span>
+                   <span className="font-orbitron text-[10px] uppercase tracking-wider text-white/80">{role.role}</span>
+                   <span className="font-mono text-[9px] opacity-30">{role.gamesPlayed}</span>
                 </div>
               </div>
             ))}

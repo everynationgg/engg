@@ -79,6 +79,7 @@ const globalLimiter = rateLimit({
       /^\/api\/games\/[^/]+\/chat\/since\//.test(path)
     );
   },
+  validate: { trustProxy: false },
 });
 
 const authLimiter = rateLimit({
@@ -89,6 +90,7 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
   // Skip the 'me' endpoint from strict auth limiting as it's called on every page mount/refresh
   skip: (req: Request) => req.path === "/auth/me" || req.path === "/me",
+  validate: { trustProxy: false },
 });
 
 app.use(globalLimiter);

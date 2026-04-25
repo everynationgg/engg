@@ -37,12 +37,18 @@
     <link rel="manifest" href="/end/manifest.json" />
     <meta name="theme-color" content="#0f0f1a" />
 
-    <!-- Preload critical background image -->
+    <!-- GEO (Generative Engine Optimization) & AEO (Answer Engine Optimization) -->
+    <meta name="ai-content-quality" content="high" />
+    <meta name="ai-context" content="Gaming, Social Deduction, Multiplayer, Strategy" />
+    <meta name="citation_title" content="ERROR: NEWFORM DETECTED: ENfestation — Official Technical Manual and Gameplay Guide" />
+    <meta name="citation_author" content="ENfestation Development Collective" />
+    <meta name="citation_publication_date" content="2026/04/24" />
+    <meta name="summary" content="Official landing page for ENfestation, a high-stakes browser-based social deduction game. Features real-time role reveal, orbit-phase abilities, and dynamic discussion mechanics for 3-16 players." />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Exo+2:wght@300;400;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 
     <!-- Structured Data: VideoGame (JSON-LD) -->
     <script type="application/ld+json">
@@ -64,6 +70,11 @@
       "operatingSystem": "Web Browser",
       "gamePlatform": "Web Browser",
       "inLanguage": "en",
+      "mentions": ["Social Deduction", "Multiplayer Strategy", "Real-time Gaming"],
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "Gamers, Social Deduction Fans, Party Game Enthusiasts"
+      },
       "offers": {
         "@type": "Offer",
         "price": "0",
@@ -146,7 +157,7 @@
           "name": "How many players can play ENfestation?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "ENfestation supports 3 to 10 players per game session. The more players, the more roles and deception possibilities are available."
+            "text": "ENfestation supports 3 to 16 players per game session. The more players, the more roles and deception possibilities are available."
           }
         },
         {
@@ -163,6 +174,14 @@
           "acceptedAnswer": {
             "@type": "Answer",
             "text": "ENfestation features 10 unique roles across three teams. Crew roles include Commander, Crew, Sentinel, Scanner, and Seeker. Alien roles include the Alien and Parasite. Chaotic roles include Disruptor, Shifter, and Warper. Each role has a unique ability and win condition."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do you win in ENfestation?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The win condition depends on your team: The Crew wins by voting out the Alien. The Alien wins by surviving the vote. The Parasite wins if they are voted out. Chaotic roles choose their alignment to win with either the Crew or the Alien."
           }
         }
       ]

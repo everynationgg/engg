@@ -1423,6 +1423,10 @@ export function reconnectPlayer(state: GameState, oldId: string, newId: string):
 
   // Remap keyed records
   const remap = (record: any, name: string) => {
+    if (!record) {
+      console.log(`[reconnectPlayer] WARNING: ${name} record itself is undefined! Initializing...`);
+      return;
+    }
     if (record[oldId] !== undefined) {
       record[newId] = record[oldId];
       delete record[oldId];
@@ -1431,6 +1435,14 @@ export function reconnectPlayer(state: GameState, oldId: string, newId: string):
       console.log(`[reconnectPlayer] WARNING: ${name}[oldId] is undefined`);
     }
   };
+
+  // Ensure record fields exist before remapping to avoid crashes with legacy sessions
+  state.rolesAssigned = state.rolesAssigned || {};
+  state.initialRoles = state.initialRoles || {};
+  state.orbitActions = state.orbitActions || {};
+  state.orbitFeedback = state.orbitFeedback || {};
+  state.votes = state.votes || {};
+  state.chaoticAlignments = state.chaoticAlignments || {};
 
   remap(state.rolesAssigned, "rolesAssigned");
   remap(state.initialRoles, "initialRoles");
