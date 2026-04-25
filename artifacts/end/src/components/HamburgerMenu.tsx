@@ -160,11 +160,7 @@ export default function HamburgerMenu({
 
   return (
     <div
-      className="fixed z-50"
-      style={{
-        right: "calc(0.75rem + env(safe-area-inset-right, 0px))",
-        bottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))",
-      }}
+      className="fixed z-50 right-24 bottom-24"
     >
       {/* Backdrop overlay */}
       {menuOpen && (
@@ -174,21 +170,20 @@ export default function HamburgerMenu({
         />
       )}
 
-      {/* Radial Menu Items */}
       {menuOpen && (
         <div className="absolute inset-0 pointer-events-none -z-10 flex items-center justify-center">
            {/* Tactical Ring Background */}
-           <div className={`absolute w-[320px] h-[320px] border border-cyan-500/10 rounded-full transition-all duration-700 ${menuClosing ? "scale-0 opacity-0" : "scale-100 opacity-100"}`}>
+           <div className={`absolute w-[400px] h-[400px] border border-cyan-500/10 rounded-full transition-all duration-700 ${menuClosing ? "scale-0 opacity-0" : "scale-100 opacity-100"}`}>
               <div className="absolute inset-0 border-t-2 border-cyan-500/20 rounded-full animate-[spin_20s_linear_infinite]" />
               <div className="absolute inset-4 border border-white/5 rounded-full" />
            </div>
 
           {menuItems.map((item, index) => {
-            const arcAngle = 90; // Safe 90-degree quadrant
-            const startAngle = 180; // Start at horizontal left
+            const arcAngle = 120; // Expanded arc for 7 items
+            const startAngle = 165; // Start slightly below horizontal
             const angleOffset = menuItems.length > 1 ? arcAngle / (menuItems.length - 1) : 0;
             const angle = startAngle + (index * angleOffset);
-            const radius = 160; // Slightly reduced for safety margin
+            const radius = 200; // Increased radius for better separation
             const rad = angle * (Math.PI / 180);
             const x = radius * Math.cos(rad);
             const y = radius * Math.sin(rad);
