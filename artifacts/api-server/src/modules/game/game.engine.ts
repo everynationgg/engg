@@ -774,8 +774,13 @@ export function resolveRound(state: GameState): ResolutionResult {
             logActor(actor.name, actor.id, "(Disruptor) attempted to block — target was immune");
           } else {
             blockedPlayers.add(targetId);
+            const originalTarget = state.players.find(p => p.id === originalTargets[0]);
             logInternal(targetId, "ability was blocked");
-            logActor(actor.name, actor.id, `(Disruptor) blocked ${targetPlayer?.name ?? "a player"}'s ability`);
+            logActor(
+              actor.name, 
+              actor.id, 
+              `(Disruptor) blocked ${originalTarget?.name ?? "a player"}'s ability`
+            );
           }
           break;
         }
