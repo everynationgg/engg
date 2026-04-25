@@ -641,7 +641,7 @@ export function resolveRound(state: GameState): ResolutionResult {
           const source = state.players.find(p => p.id === revealAction.targets[0]);
           const dest = state.players.find(p => p.id === revealAction.targets[1]);
           feedback[actor.id] = { type: "router_result", data: { sourceName: source?.name ?? "a player", destName: dest?.name ?? "another player" } };
-          logActor(actor.name, actor.id, `hijacked ${source?.name ?? "a player"}'s ability to redirect to ${dest?.name ?? "another player"}`);
+          logActor(actor.name, actor.id, `hijacked ${source?.name ?? "a player"}'s ability`);
         } else {
           feedback[actor.id] = { type: "skipped" };
           logActor(actor.name, actor.id, "skipped their ability");
@@ -669,6 +669,7 @@ export function resolveRound(state: GameState): ResolutionResult {
         continue;
       }
 
+      const originalTargets = [...action.targets];
       let targets = [...action.targets];
 
       // Router Effect: Gateway Hijack
@@ -690,7 +691,6 @@ export function resolveRound(state: GameState): ResolutionResult {
             } else {
               targets = [destinationId];
             }
-            logActor(actor.name, actor.id, `gateway was hijacked (redirected to ${destination.name})`);
           }
         }
       }
@@ -830,16 +830,22 @@ export function resolveRound(state: GameState): ResolutionResult {
             const roleB = state.rolesAssigned[tB];
             state.rolesAssigned[tA] = roleB;
             state.rolesAssigned[tB] = roleA;
+            const originalA = state.players.find(p => p.id === originalTargets[0]);
+            const originalB = state.players.find(p => p.id === originalTargets[1]);
+
             logInternal(tA, "role was swapped by a warper");
             logInternal(tB, "role was swapped by a warper");
             feedback[actor.id] = {
               type: "warper_swap",
-              data: { playerAName: playerA.name, playerBName: playerB.name },
+              data: { 
+                playerAName: originalA?.name ?? playerA.name, 
+                playerBName: originalB?.name ?? playerB.name 
+              },
             };
             logActor(
               actor.name,
               actor.id,
-              `swapped the roles of ${playerA.name} and ${playerB.name}`,
+              `swapped the roles of ${originalA?.name ?? playerA.name} and ${originalB?.name ?? playerB.name}`,
             );
           } else {
             feedback[actor.id] = { type: "no_action" };
