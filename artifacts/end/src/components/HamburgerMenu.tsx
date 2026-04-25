@@ -222,16 +222,19 @@ export default function HamburgerMenu({
                   <div className="absolute inset-0 bg-white/0 group-hover:bg-white/5 transition-colors" />
                 </div>
 
-                <div className="absolute whitespace-nowrap flex flex-col items-center transition-all pointer-events-none opacity-100"
+                {/* Hover Label */}
+                <div className="absolute whitespace-nowrap flex flex-col items-center transition-all duration-300 pointer-events-none opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
                       style={{ 
-                        top: "-25px",
+                        top: "-30px",
                         left: "50%",
                         transform: "translateX(-50%)",
                       }}>
-                  <span className="px-2 py-0.5 bg-black/90 border border-white/10 text-[8px] font-orbitron tracking-[0.2em]"
-                        style={{ color: item.color, boxShadow: `0 0 15px ${item.color}20` }}>
+                  <span className="px-3 py-1 bg-black/95 border border-white/20 text-[9px] font-orbitron tracking-[0.3em] shadow-[0_0_20px_rgba(0,0,0,0.8)]"
+                        style={{ color: item.color, borderLeftColor: item.color, borderLeftWidth: '2px' }}>
                     {item.label}
                   </span>
+                  {/* Small pointer/accent */}
+                  <div className="w-[1px] h-2 bg-gradient-to-b from-white/40 to-transparent" style={{ backgroundColor: item.color }} />
                 </div>
               </button>
             );

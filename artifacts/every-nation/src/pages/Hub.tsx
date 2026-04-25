@@ -27,72 +27,75 @@ function GameCard({ title, description, image, href, status, subtitle, index }: 
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, delay: index * 0.15 }}
       onClick={handleEntry}
-      className={`relative group flex flex-col w-full max-w-[400px] aspect-[4/5] md:aspect-[10/14] transition-all duration-700 ${isOffline ? "cursor-not-allowed grayscale" : "cursor-pointer"
+      className={`relative group flex flex-col w-full max-w-[420px] aspect-[10/16] transition-all duration-700 p-1 ${isOffline ? "cursor-not-allowed grayscale" : "cursor-pointer"
         }`}
     >
-      {/* Decorative HUD Corner Bracket (Top Right) */}
-      <div className="absolute -top-1 -right-1 w-12 h-12 border-t-2 border-r-2 border-cyan-500/30 group-hover:border-cyan-400 z-30 transition-colors" />
-      <div className="absolute -bottom-1 -left-1 w-12 h-12 border-b-2 border-l-2 border-cyan-500/30 group-hover:border-cyan-400 z-30 transition-colors" />
-
-      {/* Main Image Container */}
-      <div className="absolute inset-0 z-0 overflow-hidden rounded-sm border border-white/10 bg-[#0a0b1e]">
-        <img
-          src={image}
-          alt={title}
-          className={`w-full h-full object-cover transition-transform duration-[2000ms] ease-out ${!isOffline && "group-hover:scale-110"
-            }`}
-        />
-        {/* Gradients & Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90" />
-        <div className="absolute inset-0 bg-cyan-950/10 group-hover:bg-transparent transition-colors duration-700" />
-        
-        {/* Offline Overlay */}
-        {isOffline && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-[4px] z-10">
-            <div className="p-4 rounded-full border border-white/10 bg-white/5 mb-4">
-              <FaLock className="text-white/20 text-2xl" />
-            </div>
-            <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-white/40">Access_Denied</span>
-          </div>
-        )}
-
-        {/* Scanline Effect inside Card */}
-        <div className="absolute inset-0 pointer-events-none opacity-[0.05] z-10 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" />
-      </div>
-
-      {/* Content HUD Overlays */}
-      <div className="relative z-20 mt-auto p-8 flex flex-col gap-4">
-        <div className="flex items-center gap-3">
-          <div className={`w-1.5 h-1.5 rounded-full ${isOffline ? "bg-red-500/40" : "bg-cyan-500 shadow-[0_0_10px_#00f3ff] animate-pulse"}`} />
-          <span className="font-mono text-[9px] uppercase tracking-[0.5em] text-white/40">
-            {isOffline ? "Status: Offline" : "Status: Operational"}
-          </span>
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <h2 className="font-orbitron font-black text-xl md:text-2xl tracking-[0.1em] uppercase text-white group-hover:text-cyan-400 transition-colors">
+      {/* Title Header (Top Aligned as per reference) */}
+      <div className="relative z-20 mb-4 px-2">
+         <h2 className="font-orbitron font-black text-sm md:text-base tracking-[0.2em] uppercase text-white group-hover:text-cyan-400 transition-colors">
             {title}
-          </h2>
-          <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-cyan-500/60 font-bold">
-            {subtitle}
-          </span>
-        </div>
-
-        <p className="font-mono text-[11px] uppercase tracking-wider text-white/50 leading-relaxed max-w-[90%] lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-500">
-          {description}
-        </p>
-
-        {!isOffline && (
-          <div className="mt-4 flex items-center gap-4 text-cyan-400 lg:opacity-60 lg:group-hover:opacity-100 transition-all">
-            <span className="font-orbitron text-[10px] uppercase tracking-[0.5em] font-bold">Initialize Deployment</span>
-            <div className="flex-1 h-px bg-cyan-500/20" />
-            <FaExternalLinkAlt className="text-[10px] lg:group-hover:translate-x-1 lg:group-hover:-translate-y-1 transition-transform" />
-          </div>
-        )}
+         </h2>
+         <div className="w-full h-px bg-gradient-to-r from-white/20 via-white/5 to-transparent mt-2" />
       </div>
 
-      {/* Background Glow */}
-      <div className="absolute inset-0 -z-10 bg-cyan-500/0 group-hover:bg-cyan-500/5 blur-[80px] transition-all duration-700 rounded-full scale-50 group-hover:scale-100" />
+      {/* Main Tactical Container */}
+      <div className="flex-1 relative overflow-hidden">
+        {/* Asymmetric Clipped Background */}
+        <div className="absolute inset-0 bg-[#0a0f1e]/40 backdrop-blur-sm border border-white/5 transition-all duration-700 group-hover:bg-cyan-500/5 group-hover:border-cyan-500/20"
+             style={{ clipPath: "polygon(0 0, 75% 0, 100% 20%, 100% 100%, 25% 100%, 0 80%)" }} />
+        
+        {/* Image Container with matching ClipPath */}
+        <div className="absolute inset-2 z-0 overflow-hidden" 
+             style={{ clipPath: "polygon(0 0, 75% 0, 100% 20%, 100% 100%, 25% 100%, 0 80%)" }}>
+          <img
+            src={image}
+            alt={title}
+            className={`w-full h-full object-cover transition-transform duration-[3000ms] ease-out ${!isOffline && "group-hover:scale-110"
+              }`}
+          />
+          {/* HUD Gradients */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#020408] via-transparent to-transparent opacity-80" />
+          
+          {/* Offline Overlay */}
+          {isOffline && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-[2px] z-10">
+              <FaLock className="text-white/10 text-4xl mb-4" />
+              <span className="font-mono text-[8px] uppercase tracking-[0.5em] text-white/30">Sector_Locked</span>
+            </div>
+          )}
+        </div>
+
+        {/* Tactical HUD Accents */}
+        <div className="absolute top-4 right-10 w-2 h-2 bg-cyan-500/40 rounded-full animate-pulse" />
+        <div className="absolute bottom-10 left-4 flex flex-col gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
+           <div className="w-6 h-0.5 bg-cyan-500" />
+           <div className="w-4 h-0.5 bg-cyan-500/40" />
+        </div>
+
+        {/* Card Content Overlay */}
+        <div className="absolute inset-x-8 bottom-8 z-20 flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <div className={`w-1.5 h-1.5 rounded-full ${isOffline ? "bg-red-500/40" : "bg-cyan-500 shadow-[0_0_10px_#00f3ff]"}`} />
+            <span className="font-mono text-[8px] uppercase tracking-[0.4em] text-white/40">
+              {subtitle}
+            </span>
+          </div>
+
+          <p className="font-mono text-[10px] uppercase tracking-wider text-white/50 leading-relaxed line-clamp-3 group-hover:text-white/80 transition-colors">
+            {description}
+          </p>
+
+          {!isOffline && (
+            <div className="mt-4 flex items-center gap-3 text-cyan-400">
+              <span className="font-orbitron text-[9px] uppercase tracking-[0.4em] font-bold">Deploy_Link</span>
+              <FaExternalLinkAlt className="text-[8px]" />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Outer Glow */}
+      <div className="absolute inset-0 -z-10 bg-cyan-500/0 group-hover:bg-cyan-500/10 blur-[60px] transition-all duration-1000 scale-75 group-hover:scale-110" />
     </motion.div>
   );
 }
