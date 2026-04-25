@@ -85,18 +85,7 @@ export default function Home() {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="w-full flex flex-col items-center gap-8 md:gap-24"
             >
-              {/* Welcome Text */}
-              <div className="flex flex-col items-center gap-4">
-                <motion.div
-                  initial={{ opacity: 0, letterSpacing: "0.2em" }}
-                  animate={{ opacity: 1, letterSpacing: "0.8em" }}
-                  transition={{ duration: 2, ease: "easeOut" }}
-                  className="font-orbitron text-[10px] md:text-sm uppercase text-white/40 font-bold text-center"
-                >
-                  Welcome to Every Nation
-                </motion.div>
-                <div className="w-24 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              </div>
+
 
               <div className="grid grid-cols-2 lg:flex lg:flex-row justify-center gap-4 md:gap-8 w-full max-w-[1400px]">
                 <div className="w-full lg:w-[280px]">

@@ -1,12 +1,11 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
-import { FaGem, FaArrowLeft, FaShieldAlt, FaLock, FaCheckCircle, FaBolt, FaCrown, FaDatabase, FaExchangeAlt, FaHdd } from "react-icons/fa";
+import { FaGem, FaArrowLeft, FaBolt, FaCrown, FaDatabase, FaHdd } from "react-icons/fa";
 import { Link } from "wouter";
 import WarpJump from "@/components/WarpJump";
-import TacticalSlate from "@/components/TacticalSlate";
-import { useParallax } from "@/hooks/useParallax";
+import AntiGravity3D from "@/components/AntiGravity3D";
 
 interface Pack {
   id: string;
@@ -18,7 +17,6 @@ interface Pack {
   rarity: "common" | "rare" | "epic" | "legendary";
 }
 
-// Hardcoded Fallback Packs to ensure Shop is never empty
 const FALLBACK_PACKS: Pack[] = [
   { id: "pack_250", name: "Standard Core", amount: 250, price: "4.99", currency: "USD", rarity: "common" },
   { id: "pack_500", name: "Tactical Core", amount: 500, price: "8.99", currency: "USD", bonus: "+50 Bonus", rarity: "rare" },
@@ -36,8 +34,7 @@ const RARITY_CONFIG = {
 };
 
 export default function Shop() {
-  const { x, y } = useParallax(25);
-  const { isLoggedIn, credits, token, logout, refreshUser } = useAuth();
+  const { isLoggedIn, credits, token, refreshUser } = useAuth();
   const [packs, setPacks] = useState<Pack[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +44,6 @@ export default function Shop() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [isWarping, setIsWarping] = useState(false);
 
-  // Animated counter for credits
   const [displayCredits, setDisplayCredits] = useState(credits);
 
   useEffect(() => {
@@ -97,7 +93,7 @@ export default function Shop() {
   const handleCreateOrder = async () => {
     if (!selectedPack) return "";
     if (!isLoggedIn) {
-      setError("Authentication Required: Please sign in to establish connection.");
+      setError("Authentication Required to connect.");
       return "";
     }
     try {
@@ -150,22 +146,13 @@ export default function Shop() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020408] text-white relative flex flex-col items-center overflow-x-hidden selection:bg-cyan-500/30">
+    <div className="min-h-screen bg-[#050510] text-white relative flex flex-col items-center overflow-x-hidden selection:bg-cyan-500/30">
       <AnimatePresence>
         {isWarping && <WarpJump />}
       </AnimatePresence>
 
-      {/* Cinematic Parallax Background */}
-      <motion.div 
-        className="fixed inset-0 z-0 opacity-20 pointer-events-none"
-        style={{ x, y }}
-      >
-        <div className="absolute inset-0 bg-[url('/background.png')] bg-cover bg-center" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#020408]/60 to-[#020408]" />
-      </motion.div>
-
-      {/* Global HUD Scanning Line Overlay */}
-      <div className="fixed inset-0 pointer-events-none z-10 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" />
+      <AntiGravity3D />
+      <div className="fixed inset-0 z-1 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/10 via-[#050510]/80 to-[#050510]" />
 
       <main className="relative z-20 w-full max-w-[1600px] px-6 py-24 md:py-32 flex flex-col items-center">
         {/* Header Section */}
@@ -174,15 +161,13 @@ export default function Shop() {
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col items-center gap-6 mb-20 text-center"
         >
-          <div className="flex items-center gap-4 text-cyan-500/60 font-mono text-[10px] tracking-[0.6em] uppercase">
-             <div className="w-12 h-px bg-cyan-500/20" />
-             <span>Financial_Core_Uplink</span>
-             <div className="w-12 h-px bg-cyan-500/20" />
+          <div className="flex items-center gap-4 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
+             <span className="font-orbitron text-[10px] uppercase tracking-[0.3em] text-cyan-400">Financial Core Uplink</span>
           </div>
-          <h1 className="font-orbitron text-4xl md:text-6xl font-black tracking-tighter uppercase text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.1)]">
-            Credit <span className="text-cyan-500">Exchange</span>
+          <h1 className="font-inter text-5xl md:text-7xl font-bold tracking-tight text-white drop-shadow-2xl">
+            Credit <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">Exchange</span>
           </h1>
-          <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-white/40 max-w-md leading-relaxed">
+          <p className="font-inter text-sm md:text-base text-white/50 max-w-lg leading-relaxed">
             Acquire high-density CC assets to unlock premium operational roles and advanced tactical protocols.
           </p>
         </motion.div>
@@ -193,30 +178,30 @@ export default function Shop() {
           animate={{ opacity: 1, scale: 1 }}
           className="w-full max-w-2xl mb-24"
         >
-          <TacticalSlate className="p-6" showScanner={false}>
+          <div className="bg-white/5 border border-white/10 rounded-3xl p-6 shadow-[0_20px_40px_rgba(0,0,0,0.4)] backdrop-blur-xl">
             <div className="flex flex-col md:flex-row items-center justify-between gap-8 px-4">
               <div className="flex items-center gap-6">
-                <div className="w-12 h-12 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-                  <FaHdd className="text-cyan-400 text-xl animate-pulse" />
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center border border-white/10 shadow-[0_0_20px_rgba(0,243,255,0.1)]">
+                  <FaHdd className="text-cyan-400 text-2xl animate-pulse" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-white/30">Available_Assets</span>
+                  <span className="font-inter font-medium text-xs uppercase tracking-widest text-white/40">Available Assets</span>
                   <div className="flex items-baseline gap-2">
-                    <span className="font-orbitron text-3xl font-black text-white">{displayCredits.toLocaleString()}</span>
-                    <span className="font-orbitron text-[10px] text-cyan-500 font-bold tracking-widest">CC</span>
+                    <span className="font-inter text-4xl font-black text-white">{displayCredits.toLocaleString()}</span>
+                    <span className="font-orbitron text-xs text-cyan-400 font-bold tracking-widest">CC</span>
                   </div>
                 </div>
               </div>
-              <div className="h-12 w-px bg-white/5 hidden md:block" />
+              <div className="h-12 w-px bg-white/10 hidden md:block" />
               <button 
                 onClick={handleReturn}
-                className="flex items-center gap-4 group/btn px-8 py-3 bg-white/5 border border-white/10 hover:border-cyan-500/40 hover:bg-cyan-500/5 transition-all"
+                className="flex items-center gap-3 px-8 py-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all shadow-[0_10px_20px_rgba(0,0,0,0.2)]"
               >
-                <FaArrowLeft className="text-xs group-hover/btn:-translate-x-1 transition-transform" />
-                <span className="font-orbitron text-[10px] uppercase tracking-[0.4em]">Return_Home</span>
+                <FaArrowLeft className="text-xs text-white/60" />
+                <span className="font-inter text-sm font-medium tracking-wide">Return Home</span>
               </button>
             </div>
-          </TacticalSlate>
+          </div>
         </motion.div>
 
         {/* Status Messages */}
@@ -226,15 +211,15 @@ export default function Shop() {
               initial={{ opacity: 0, scale: 0.9, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className={`w-full max-w-2xl mb-16 p-6 border-2 flex items-center justify-center gap-6 backdrop-blur-xl ${error ? "border-red-500/50 bg-red-500/10" : "border-cyan-500/50 bg-cyan-500/10"
+              className={`w-full max-w-2xl mb-16 p-6 rounded-2xl border flex items-center justify-center gap-4 backdrop-blur-xl shadow-2xl ${error ? "border-red-500/30 bg-red-500/10" : "border-cyan-500/30 bg-cyan-500/10"
                 }`}
             >
-              <div className={`w-3 h-3 animate-pulse rounded-full ${error ? "bg-red-500" : "bg-cyan-500"}`} />
-              <p className={`font-orbitron text-[11px] tracking-[0.2em] uppercase text-center ${error ? "text-red-400" : "text-cyan-400"}`}>
+              <div className={`w-2 h-2 rounded-full ${error ? "bg-red-400 shadow-[0_0_10px_red]" : "bg-cyan-400 shadow-[0_0_10px_cyan]"}`} />
+              <p className={`font-inter text-sm font-medium tracking-wide ${error ? "text-red-300" : "text-cyan-300"}`}>
                 {error ? error : `Transfer Complete: +${successCredits?.toLocaleString()} Units Allocated`}
               </p>
               {error && (
-                <button onClick={() => setError(null)} className="px-4 py-1 text-red-500/50 hover:text-red-400 font-mono text-[9px] uppercase tracking-widest border border-red-500/20 transition-all">
+                <button onClick={() => setError(null)} className="ml-auto px-4 py-2 rounded-lg text-red-300 hover:text-white bg-red-500/20 hover:bg-red-500/40 transition-colors text-xs font-medium">
                   Dismiss
                 </button>
               )}
@@ -245,21 +230,23 @@ export default function Shop() {
         {/* Compact Packs Grid */}
         {loading ? (
           <div className="flex flex-col items-center gap-6 mt-12">
-            <div className="w-8 h-8 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
-            <span className="font-mono text-[9px] uppercase tracking-[0.5em] text-white/30 animate-pulse">Establishing_Link...</span>
+            <div className="w-8 h-8 border-2 border-cyan-500/20 border-t-cyan-400 rounded-full animate-spin" />
+            <span className="font-inter text-sm text-cyan-400/60 animate-pulse font-medium">Establishing Link...</span>
           </div>
         ) : !isLoggedIn ? (
-            <div className="flex items-center justify-center min-h-[400px] w-full">
-               <TacticalSlate className="w-full max-w-xl p-16 text-center">
-                  <FaLock className="mx-auto text-5xl text-cyan-500/30 mb-8" />
-                  <h2 className="font-orbitron text-2xl tracking-[0.5em] uppercase mb-6">Connection Required</h2>
-                  <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/30 mb-12 leading-relaxed">
-                    Secure Handshake Required for Asset Exchange.
+            <div className="flex items-center justify-center min-h-[300px] w-full">
+               <div className="w-full max-w-xl p-16 text-center bg-white/5 border border-white/10 rounded-[2.5rem] backdrop-blur-xl shadow-2xl">
+                  <div className="w-20 h-20 mx-auto rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mb-8 shadow-[0_0_30px_rgba(0,243,255,0.1)]">
+                     <FaHdd className="text-3xl text-cyan-400/60" />
+                  </div>
+                  <h2 className="font-inter font-bold text-2xl tracking-tight mb-4">Connection Required</h2>
+                  <p className="font-inter text-sm text-white/50 mb-10 leading-relaxed">
+                    A secure handshake is required to process asset exchanges. Please authenticate your identity.
                   </p>
-                  <Link href="/login" className="px-12 py-5 bg-cyan-500/10 border border-cyan-500/40 hover:bg-cyan-500/20 transition-all font-orbitron text-[10px] uppercase tracking-[0.6em] text-cyan-400">
+                  <Link href="/login" className="px-10 py-4 rounded-xl bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 transition-all font-inter font-semibold tracking-wide shadow-[0_10px_20px_rgba(0,243,255,0.2)]">
                     Authorize Identity
                   </Link>
-               </TacticalSlate>
+               </div>
             </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
@@ -272,55 +259,56 @@ export default function Shop() {
                 onClick={() => handlePackSelect(pack)}
                 className="relative"
               >
-                <TacticalSlate 
-                  color={selectedPack?.id === pack.id ? (RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color : "#ffffff10"}
-                  className={`h-full transition-transform duration-500 ${selectedPack?.id === pack.id ? "scale-[1.02]" : "hover:scale-[1.01]"}`}
+                <div 
+                  className={`h-full transition-all duration-500 rounded-3xl backdrop-blur-xl border flex flex-col p-8 min-h-[500px] cursor-pointer 
+                    ${selectedPack?.id === pack.id ? "bg-white/10 scale-[1.02] shadow-[0_30px_60px_rgba(0,0,0,0.5)]" : "bg-white/5 hover:bg-white/[0.07] hover:scale-[1.01] shadow-[0_20px_40px_rgba(0,0,0,0.3)]"}
+                  `}
+                  style={{
+                    borderColor: selectedPack?.id === pack.id ? (RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color : "rgba(255,255,255,0.1)"
+                  }}
                 >
-                  <div className="p-8 flex flex-col items-center h-full min-h-[500px]">
                     {/* Rarity & Header */}
                     <div className="w-full flex justify-between items-start mb-10">
                       <div className="flex flex-col">
-                        <span className="font-mono text-[7px] text-white/20 uppercase tracking-[0.4em]">Protocol_ID</span>
-                        <span className="font-orbitron text-[9px] uppercase font-black tracking-widest" style={{ color: (RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color }}>
+                        <span className="font-inter text-[10px] font-medium text-white/30 uppercase tracking-widest">Protocol ID</span>
+                        <span className="font-orbitron text-xs uppercase font-bold tracking-widest mt-1" style={{ color: (RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color }}>
                           {(RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).label}
                         </span>
                       </div>
-                      <div className="p-2 rounded-lg bg-white/[0.03] border border-white/5">
-                        {pack.rarity === "legendary" ? <FaCrown className="text-red-500" /> :
+                      <div className="p-3 rounded-xl bg-white/5 border border-white/10 shadow-inner">
+                        {pack.rarity === "legendary" ? <FaCrown className="text-red-400" /> :
                           pack.rarity === "epic" ? <FaBolt className="text-yellow-400" /> :
                           pack.rarity === "rare" ? <FaGem className="text-purple-400" /> :
-                          <FaDatabase className="text-cyan-400/40" />}
+                          <FaDatabase className="text-cyan-400" />}
                       </div>
                     </div>
 
                     {/* Pack Visual */}
-                    <div className="relative w-32 h-32 mb-8 mt-4 flex items-center justify-center">
-                       <div className="absolute inset-0 blur-[40px] opacity-20 scale-125 transition-all duration-1000"
-                            style={{ backgroundColor: (RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color, opacity: selectedPack?.id === pack.id ? 0.4 : 0.1 }} />
+                    <div className="relative w-32 h-32 mx-auto mb-10 flex items-center justify-center">
+                       <div className="absolute inset-0 blur-[50px] opacity-20 scale-150 transition-all duration-1000"
+                            style={{ backgroundColor: (RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color, opacity: selectedPack?.id === pack.id ? 0.3 : 0.1 }} />
                        <img 
                          src={creditCoreImg} 
                          alt="Core"
-                         className={`w-24 h-24 object-contain relative z-10 transition-all duration-700 ${selectedPack?.id === pack.id ? "scale-110 -translate-y-2" : "opacity-70 group-hover:opacity-100"}`}
+                         className={`w-28 h-28 object-contain relative z-10 transition-all duration-700 ${selectedPack?.id === pack.id ? "scale-110 -translate-y-2" : "opacity-80 group-hover:opacity-100"}`}
                          style={{ 
                             filter: selectedPack?.id === pack.id 
-                              ? `drop-shadow(0 0 20px ${(RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color})`
-                              : `grayscale(0.5) brightness(0.8)`
+                              ? `drop-shadow(0 10px 20px ${(RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color})`
+                              : `grayscale(0.3) brightness(0.9)`
                          }}
                        />
-                       {/* Holographic Base */}
-                       <div className="absolute -bottom-2 w-20 h-1 bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
                     </div>
 
                     {/* Value Data */}
                     <div className="text-center mb-10 flex-1">
-                      <h3 className="font-orbitron text-sm tracking-[0.4em] uppercase text-white/60 mb-2">{pack.name}</h3>
+                      <h3 className="font-inter font-semibold text-lg text-white/80 mb-4">{pack.name}</h3>
                       <div className="flex items-baseline justify-center gap-2">
-                        <span className="font-orbitron text-4xl font-black text-white">{pack.amount.toLocaleString()}</span>
-                        <span className="font-orbitron text-[10px] text-cyan-500 font-bold">CC</span>
+                        <span className="font-inter text-5xl font-black tracking-tight text-white">{pack.amount.toLocaleString()}</span>
+                        <span className="font-orbitron text-xs text-cyan-400 font-bold">CC</span>
                       </div>
                       {pack.bonus && (
-                        <div className="mt-3 px-3 py-1 bg-white/5 border border-white/10 rounded-full inline-block">
-                          <span className="font-mono text-[8px] uppercase tracking-widest text-cyan-400">{pack.bonus}</span>
+                        <div className="mt-4 px-4 py-1.5 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-white/10 rounded-full inline-block shadow-[0_0_15px_rgba(0,243,255,0.1)]">
+                          <span className="font-inter text-xs font-semibold tracking-wide text-cyan-300">{pack.bonus}</span>
                         </div>
                       )}
                     </div>
@@ -328,11 +316,11 @@ export default function Shop() {
                     {/* Purchase Interface */}
                     <div className="w-full mt-auto">
                       {selectedPack?.id === pack.id ? (
-                        <div className="min-h-[140px] flex items-center justify-center">
+                        <div className="min-h-[140px] flex items-center justify-center bg-black/20 rounded-2xl p-4 border border-white/5">
                           {isSyncing ? (
                             <div className="flex flex-col items-center gap-4">
-                              <div className="w-5 h-5 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
-                              <span className="font-mono text-[8px] uppercase tracking-[0.4em] text-cyan-400/60 animate-pulse">Neural_Sync...</span>
+                              <div className="w-6 h-6 border-2 border-cyan-500/20 border-t-cyan-400 rounded-full animate-spin" />
+                              <span className="font-inter text-xs tracking-wide text-cyan-400/60 font-medium">Synchronizing...</span>
                             </div>
                           ) : (
                             <div className="w-full animate-in fade-in slide-in-from-bottom-4">
@@ -347,14 +335,13 @@ export default function Shop() {
                           )}
                         </div>
                       ) : (
-                        <button className="w-full py-4 border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 transition-all flex items-center justify-center gap-3">
-                          <span className="font-mono text-xs opacity-30">$</span>
-                          <span className="font-orbitron text-2xl font-black">{pack.price}</span>
+                        <button className="w-full py-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-2 shadow-sm">
+                          <span className="font-inter text-sm opacity-50 font-medium">$</span>
+                          <span className="font-inter text-xl font-bold">{pack.price}</span>
                         </button>
                       )}
                     </div>
-                  </div>
-                </TacticalSlate>
+                </div>
               </motion.div>
             ))}
           </div>
@@ -368,32 +355,31 @@ export default function Shop() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[1100] pointer-events-none flex items-center justify-center"
+            className="fixed inset-0 z-[1100] pointer-events-none flex items-center justify-center bg-cyan-900/10 backdrop-blur-[2px]"
           >
-            {[...Array(30)].map((_, i) => (
+            {[...Array(40)].map((_, i) => (
               <motion.div
                 key={i}
                 initial={{ 
-                  x: (Math.random() - 0.5) * 400, 
-                  y: (Math.random() - 0.5) * 400,
+                  x: (Math.random() - 0.5) * 600, 
+                  y: (Math.random() - 0.5) * 600,
                   scale: 0,
                   rotate: 0,
                   opacity: 1 
                 }}
                 animate={{ 
                   x: 0, 
-                  y: -500, 
-                  scale: [1, 0.5, 0],
-                  rotate: 360,
+                  y: -800, 
+                  scale: [1, 0.8, 0],
+                  rotate: 720,
                   opacity: [1, 1, 0]
                 }}
                 transition={{ 
-                  duration: 2.5, 
+                  duration: 2.5 + Math.random(), 
                   delay: Math.random() * 0.5,
                   ease: "circIn"
                 }}
-                className="absolute w-4 h-4 bg-cyan-400 shadow-[0_0_20px_#00f3ff]"
-                style={{ clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)" }}
+                className="absolute w-5 h-5 bg-gradient-to-br from-cyan-400 to-purple-500 rounded-full shadow-[0_0_30px_#00f3ff]"
               />
             ))}
           </motion.div>
