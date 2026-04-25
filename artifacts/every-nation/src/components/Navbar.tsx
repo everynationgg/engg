@@ -103,7 +103,10 @@ export default function Navbar() {
               </Link>
               
               <button 
-                onClick={logout}
+                onClick={() => {
+                  logout();
+                  window.location.href = "/?login=true";
+                }}
                 className="p-3 text-white/30 hover:text-red-400 transition-colors"
                 title="Disconnect Session"
               >
@@ -167,7 +170,10 @@ export default function Navbar() {
                   </div>
                   
                   <button 
-                    onClick={logout}
+                    onClick={() => {
+                      logout();
+                      window.location.href = "/?login=true";
+                    }}
                     className="flex items-center gap-3 font-orbitron text-[10px] uppercase tracking-[0.4em] text-red-500/60 hover:text-red-500"
                   >
                     <FaSignOutAlt /> Disconnect_Session

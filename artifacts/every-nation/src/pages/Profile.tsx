@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { FaUser, FaWallet, FaHistory, FaShieldAlt, FaTrophy, FaGamepad, FaLink, FaEnvelope, FaCalendarAlt, FaArrowLeft, FaArrowRight, FaLock, FaSkull, FaKey, FaCheckCircle, FaSatelliteDish, FaTerminal } from "react-icons/fa";
+import { FaUser, FaWallet, FaHistory, FaShieldAlt, FaTrophy, FaGamepad, FaLink, FaEnvelope, FaCalendarAlt, FaArrowLeft, FaArrowRight, FaLock, FaSkull, FaKey, FaCheckCircle, FaSatelliteDish, FaTerminal, FaSignOutAlt } from "react-icons/fa";
 import WarpJump from "@/components/WarpJump";
 import AlliesSidebar from "@/components/AlliesSidebar";
 import { systemToast } from "../components/SystemToast";
@@ -18,7 +18,7 @@ interface Activity {
 
 export default function Profile() {
   const { x, y } = useParallax(20);
-  const { token, refreshUser } = useAuth();
+  const { token, refreshUser, logout } = useAuth();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isWarping, setIsWarping] = useState(false);
@@ -309,23 +309,34 @@ export default function Profile() {
                            </p>
                         </div>
                         
-                        <div className="flex flex-col gap-4">
-                           <button 
-                              onClick={() => setShowCipherModal(true)}
-                              className="w-full py-4 border border-white/10 bg-white/5 hover:bg-white/10 transition-all flex items-center justify-center gap-4"
-                           >
-                              <FaKey className="text-xs opacity-40" />
-                              <span className="font-orbitron text-[9px] uppercase tracking-[0.4em]">Update_Cipher</span>
-                           </button>
+                         <div className="flex flex-col gap-4">
+                            <button 
+                               onClick={() => setShowCipherModal(true)}
+                               className="w-full py-4 border border-white/10 bg-white/5 hover:bg-white/10 transition-all flex items-center justify-center gap-4"
+                            >
+                               <FaKey className="text-xs opacity-40" />
+                               <span className="font-orbitron text-[9px] uppercase tracking-[0.4em]">Update_Cipher</span>
+                            </button>
 
-                           <button 
-                              onClick={() => setShowDeleteModal(true)}
-                              className="w-full py-4 border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 transition-all flex items-center justify-center gap-4 text-red-500/60"
-                           >
-                              <FaSkull className="text-xs opacity-40" />
-                              <span className="font-orbitron text-[9px] uppercase tracking-[0.4em]">Terminate_Session</span>
-                           </button>
-                        </div>
+                            <button 
+                               onClick={() => {
+                                 logout();
+                                 window.location.href = "/?login=true";
+                               }}
+                               className="w-full py-4 border border-cyan-500/20 bg-cyan-500/5 hover:bg-cyan-500/10 transition-all flex items-center justify-center gap-4 text-cyan-400"
+                            >
+                               <FaSignOutAlt className="text-xs opacity-40" />
+                               <span className="font-orbitron text-[9px] uppercase tracking-[0.4em]">Logout_Protocol</span>
+                            </button>
+
+                            <button 
+                               onClick={() => setShowDeleteModal(true)}
+                               className="w-full py-4 border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 transition-all flex items-center justify-center gap-4 text-red-500/60"
+                            >
+                               <FaSkull className="text-xs opacity-40" />
+                               <span className="font-orbitron text-[9px] uppercase tracking-[0.4em]">Account_Termination</span>
+                            </button>
+                         </div>
                      </div>
                   </TacticalSlate>
 

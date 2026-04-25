@@ -683,7 +683,13 @@ export function resolveRound(state: GameState): ResolutionResult {
         if (!isDeckAction && !isExemptRole) {
           const destination = state.players.find(p => p.id === destinationId);
           if (destination) {
-            targets = [destinationId];
+            if (roleId === "warper") {
+              // Special rule: Warper is forced to change their redirect target (second target)
+              // Example: Warper (B) C -> D becomes C -> E (where E is Router's target)
+              targets = [targets[0], destinationId];
+            } else {
+              targets = [destinationId];
+            }
             logActor(actor.name, actor.id, `gateway was hijacked (redirected to ${destination.name})`);
           }
         }
