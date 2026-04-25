@@ -19,7 +19,26 @@ export default function Verify() {
     if (user?.isVerified) {
       setLocation("/profile");
     }
-  }, [user, setLocation]);
+
+    // Auto-verify if token is in URL
+    const searchParams = new URLSearchParams(window.location.search);
+    const token = searchParams.get("token");
+    if (token && !loading && !user?.isVerified) {
+      setCode(token);
+      (async () => {
+        setLoading(true);
+        setError(null);
+        try {
+          await verify(token);
+          setLocation("/profile");
+        } catch (err: any) {
+          setError(err.message || "Auto-verification failed. Manual entry required.");
+        } finally {
+          setLoading(false);
+        }
+      })();
+    }
+  }, [user, setLocation, verify]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,7 +131,7 @@ export default function Verify() {
                       type="text"
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
-                      className="w-full bg-white/[0.02] border border-white/10 p-5 pl-14 font-mono text-xl tracking-[1em] text-white text-center outline-none focus:border-yellow-500/50 focus:bg-yellow-500/5 transition-all uppercase"
+                      className="w-full bg-white/[0.02] border border-white/10 py-5 pr-5 pl-16 tactical-input font-mono text-xl tracking-[1em] text-white outline-none focus:border-yellow-500/50 focus:bg-yellow-500/5 transition-all uppercase"
                       placeholder="XXXXXX"
                       maxLength={6}
                       required

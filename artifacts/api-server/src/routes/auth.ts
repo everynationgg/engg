@@ -91,9 +91,9 @@ router.post("/auth/register", async (req, res) => {
       return;
     }
 
-    // Create verification token (valid for 24 hours)
+    // Create verification token (6-digit code for easier manual entry)
     const verificationTokenId = randomUUID();
-    const verificationToken = randomBytes(32).toString("hex");
+    const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     await db.insert(emailVerificationTokensTable).values({
@@ -104,12 +104,12 @@ router.post("/auth/register", async (req, res) => {
     });
 
     // Send verification email
-    const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+    const verificationLink = `${process.env.FRONTEND_URL}/verify?token=${verificationToken}`;
     try {
       await sendEmail({
         to: sanitizedEmail,
-        subject: "Verify your ERROR: NEWFORM DETECTED email",
-        html: generateVerificationEmailHTML(sanitizedUsername, verificationLink),
+        subject: "EN_PROTOCOL: Identity Synchronization Key",
+        html: generateVerificationEmailHTML(sanitizedUsername, verificationToken),
       });
     } catch (emailError) {
       logger.error({ emailError, sanitizedEmail }, "Failed to send verification email");
@@ -213,13 +213,14 @@ router.get("/auth/me", authMiddleware, async (req: AuthRequest, res) => {
   }
 });
 
-// Verify email with token
-router.post("/auth/verify-email", async (req, res) => {
+// Verify email with token/code
+router.post(["/auth/verify", "/auth/verify-email"], async (req, res) => {
   try {
-    const { token } = req.body;
+    const { token, code } = req.body;
+    const verificationCode = token || code;
 
-    if (!token || typeof token !== "string") {
-      res.status(400).json({ error: "Verification token required" });
+    if (!verificationCode || typeof verificationCode !== "string") {
+      res.status(400).json({ error: "Verification code required" });
       return;
     }
 
@@ -227,7 +228,7 @@ router.post("/auth/verify-email", async (req, res) => {
     const verificationRecords = await db
       .select()
       .from(emailVerificationTokensTable)
-      .where(eq(emailVerificationTokensTable.token, token))
+      .where(eq(emailVerificationTokensTable.token, verificationCode))
       .limit(1);
 
     if (verificationRecords.length === 0) {
@@ -260,7 +261,7 @@ router.post("/auth/verify-email", async (req, res) => {
 });
 
 // Resend verification email
-router.post("/auth/resend-verification-email", authMiddleware, async (req: AuthRequest, res) => {
+router.post(["/auth/resend", "/auth/resend-verification-email"], authMiddleware, async (req: AuthRequest, res) => {
   try {
     if (!req.userId) {
       res.status(401).json({ error: "Unauthorized" });
@@ -289,9 +290,9 @@ router.post("/auth/resend-verification-email", authMiddleware, async (req: AuthR
     // Delete old tokens
     await db.delete(emailVerificationTokensTable).where(eq(emailVerificationTokensTable.userId, req.userId));
 
-    // Create new verification token
+    // Create new verification token (6-digit code)
     const verificationTokenId = randomUUID();
-    const verificationToken = randomBytes(32).toString("hex");
+    const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     await db.insert(emailVerificationTokensTable).values({
@@ -302,14 +303,14 @@ router.post("/auth/resend-verification-email", authMiddleware, async (req: AuthR
     });
 
     // Send verification email
-    const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+    const verificationLink = `${process.env.FRONTEND_URL}/verify?token=${verificationToken}`;
     try {
       await sendEmail({
         to: user.email,
-        subject: "Verify your ERROR: NEWFORM DETECTED email",
-        html: generateVerificationEmailHTML(user.username, verificationLink),
+        subject: "EN_PROTOCOL: Identity Synchronization Key (Resend)",
+        html: generateVerificationEmailHTML(user.username, verificationToken),
       });
-      res.json({ success: true, message: "Verification email sent" });
+      res.json({ success: true, message: "Verification code sent" });
     } catch (emailError) {
       logger.error({ emailError, userId: req.userId }, "Failed to send verification email");
       res.status(500).json({ error: "Failed to send verification email" });

@@ -180,6 +180,10 @@ input::placeholder {
   letter-spacing: 0.2em;
 }
 
+.tactical-input {
+  padding-left: 4rem !important;
+}
+
 /* Custom scrollbar for tactical feel */
 ::-webkit-scrollbar {
   width: 4px;

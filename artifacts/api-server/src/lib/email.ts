@@ -44,13 +44,13 @@ export async function sendEmail(options: SendEmailOptions): Promise<void> {
  */
 export function generateVerificationEmailHTML(
   username: string,
-  verificationLink: string
+  verificationCode: string
 ): string {
   const brandColor = "#00f3ff";
-  const bgColor = "#05070a";
-  const surfaceColor = "#0c1016";
-  const borderColor = "#1a2431";
-  const textColor = "#a0aec0";
+  const bgColor = "#0a0e14";
+  const surfaceColor = "#1a2333";
+  const borderColor = "#2d3b55";
+  const textColor = "#ffffff"; // Pure white for readability
 
   return `
 <!DOCTYPE html>
@@ -174,20 +174,23 @@ export function generateVerificationEmailHTML(
           WE REQUIRE FINAL SYNCHRONIZATION TO ESTABLISH YOUR OPERATOR STATUS ON THE NETWORK.
         </div>
         
-        <div class="action-zone">
-          <a href="${verificationLink}" class="btn-tactical">ESTABLISH LINK</a>
-        </div>
-        
-        <div class="message" style="font-size: 11px; color: #4a5568;">
-          IF THE BUTTON ABOVE FAILS TO INITIALIZE, MANUAL INPUT REQUIRED:
-        </div>
-        <div class="data-block">
-          ${verificationLink}
+        <div class="message" style="text-align: center; margin: 40px 0; padding: 30px; border: 1px dashed rgba(0, 243, 255, 0.2); background: rgba(0, 243, 255, 0.03);">
+          <div style="font-size: 11px; color: #718096; margin-bottom: 15px; letter-spacing: 0.3em; font-weight: bold;">[ IDENTITY_SYNC_CODE ]</div>
+          <div style="font-size: 48px; color: #00f3ff; letter-spacing: 0.4em; font-weight: 800; text-shadow: 0 0 20px rgba(0, 243, 255, 0.3);">
+            ${verificationCode}
+          </div>
         </div>
 
-        <div style="color: #ffaa00; font-size: 10px; margin-top: 40px; opacity: 0.8;">
-          [!] SECURITY WARNING: THIS LINK WILL DE-AUTHENTICATE IN 24 HOURS.<br>
-          UNAUTHORIZED ACCESS IS A BREACH OF ERROR NEWFORM DETECTED PROTOCOL.
+        <div class="message" style="font-size: 11px; color: #4a5568;">
+          ALTERNATIVELY, INITIALIZE VIA DIRECT LINK:
+        </div>
+        <div class="data-block">
+          ${process.env.FRONTEND_URL || "https://engg.online"}/verify?token=${verificationCode}
+        </div>
+
+        <div style="color: #ffaa00; font-size: 11px; margin-top: 40px; padding: 15px; border-left: 2px solid #ffaa00; background: rgba(255, 170, 0, 0.05);">
+          [!] SECURITY WARNING: THIS KEY EXPIRES IN 24 HOURS.<br>
+          UNAUTHORIZED ACCESS IS A BREACH OF ERROR NEWFORM DETECTED PROTOCOLS.
         </div>
       </div>
       

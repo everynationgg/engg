@@ -64,7 +64,7 @@ app.get("/api/healthz", (_req, res) => {
 // Rate limiting - prevent brute force
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // max 300 requests per window (increased from 100)
+  max: 1000, // max 1000 requests per window (increased from 300)
   message: { error: "Too many requests, please try again later." },
   standardHeaders: true,
   legacyHeaders: false,
@@ -82,11 +82,13 @@ const globalLimiter = rateLimit({
 });
 
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 50, // increased from 10 to allow more breathing room for testing
+  windowMs: 60 * 1000, // 1 minute window for faster recovery
+  max: 100, // 100 requests per minute
   message: { error: "Too many auth attempts, please try again later." },
   standardHeaders: true,
   legacyHeaders: false,
+  // Skip the 'me' endpoint from strict auth limiting as it's called on every page mount/refresh
+  skip: (req: Request) => req.path === "/auth/me" || req.path === "/me",
 });
 
 app.use(globalLimiter);
