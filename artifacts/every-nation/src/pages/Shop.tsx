@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
-import { FaGem, FaArrowLeft, FaShieldAlt, FaLock, FaCheckCircle, FaBolt, FaCrown, FaDatabase } from "react-icons/fa";
+import { FaGem, FaArrowLeft, FaShieldAlt, FaLock, FaCheckCircle, FaBolt, FaCrown, FaDatabase, FaExchangeAlt, FaHdd } from "react-icons/fa";
 import { Link } from "wouter";
 import WarpJump from "@/components/WarpJump";
+import TacticalSlate from "@/components/TacticalSlate";
+import { useParallax } from "@/hooks/useParallax";
 
 interface Pack {
   id: string;
@@ -34,6 +36,7 @@ const RARITY_CONFIG = {
 };
 
 export default function Shop() {
+  const { x, y } = useParallax(25);
   const { isLoggedIn, credits, token, logout, refreshUser } = useAuth();
   const [packs, setPacks] = useState<Pack[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,21 +52,17 @@ export default function Shop() {
 
   useEffect(() => {
     if (displayCredits === credits) return;
-
-    let timeoutId: any;
     const countUp = () => {
       const diff = credits - displayCredits;
       if (diff > 0) {
-        // High-velocity step: faster if the gap is large, minimum 1
         const step = Math.max(1, Math.ceil(diff / 15));
         setDisplayCredits(prev => Math.min(prev + step, credits));
-        timeoutId = setTimeout(countUp, 16); // ~60fps target
       } else if (diff < 0) {
         setDisplayCredits(credits);
       }
     };
-    countUp();
-    return () => clearTimeout(timeoutId);
+    const interval = setInterval(countUp, 16);
+    return () => clearInterval(interval);
   }, [credits, displayCredits]);
 
   useEffect(() => {
@@ -85,7 +84,6 @@ export default function Shop() {
     if (selectedPack?.id === pack.id) return;
     setSelectedPack(pack);
     setIsSyncing(true);
-    // Cinematic handshake delay
     setTimeout(() => setIsSyncing(false), 1200);
   };
 
@@ -111,11 +109,6 @@ export default function Shop() {
         },
         body: JSON.stringify({ packId: selectedPack.id }),
       });
-      if (response.status === 401) {
-        logout();
-        setError("Session Synchronisation Lost: Re-authorization required.");
-        return "";
-      }
       const order = await response.json();
       if (!response.ok) {
         setError(order.error || `Server Response: ${response.status}`);
@@ -123,7 +116,7 @@ export default function Shop() {
       }
       return order.id;
     } catch (err) {
-      setError("Network Handshake Failed. Verify server reachability.");
+      setError("Network Handshake Failed.");
       return "";
     }
   };
@@ -138,11 +131,6 @@ export default function Shop() {
         },
         body: JSON.stringify({ orderID: data.orderID, packId: selectedPack?.id }),
       });
-      if (response.status === 401) {
-        logout();
-        setError("Handshake Interrupt: Session Expired.");
-        return;
-      }
       const captureData = await response.json();
       if (captureData.success) {
         setIsInjecting(true);
@@ -154,104 +142,81 @@ export default function Shop() {
           setSuccessCredits(null);
         }, 6000);
       } else {
-        setError(captureData.error || "Transfer failed. Credits not allocated.");
+        setError(captureData.error || "Transfer failed.");
       }
     } catch (err) {
-      setError("Verification failed. Handshake interrupted.");
+      setError("Verification failed.");
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#020408] text-white pt-12 md:pt-16 pb-24 px-6 md:px-16 relative overflow-x-hidden selection:bg-cyan-500/30 shop-root flex flex-col items-center justify-center">
-      {/* Dynamic Background */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(6,182,212,0.15)_0%,transparent_70%)]" />
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('data:image/svg+xml,%3Csvg%20viewBox=%220%200%20200%20200%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter%20id=%22noiseFilter%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%220.65%22%20numOctaves=%223%22%20stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect%20width=%22100%25%22%20height=%22100%25%22%20filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')]" />
-      <div className="scanline" />
+    <div className="min-h-screen bg-[#020408] text-white relative flex flex-col items-center overflow-x-hidden selection:bg-cyan-500/30">
+      <AnimatePresence>
+        {isWarping && <WarpJump />}
+      </AnimatePresence>
 
-      {/* Particle Overlay (CSS Only) */}
-      <div className="absolute inset-0 opacity-20 pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full bg-cyan-400 animate-float"
-            style={{
-              width: Math.random() * 3 + 'px',
-              height: Math.random() * 3 + 'px',
-              top: Math.random() * 100 + '%',
-              left: Math.random() * 100 + '%',
-              animationDelay: Math.random() * 5 + 's',
-              animationDuration: Math.random() * 10 + 10 + 's'
-            }}
-          />
-        ))}
-      </div>
+      {/* Cinematic Parallax Background */}
+      <motion.div 
+        className="fixed inset-0 z-0 opacity-20 pointer-events-none"
+        style={{ x, y }}
+      >
+        <div className="absolute inset-0 bg-[url('/background.png')] bg-cover bg-center" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#020408]/60 to-[#020408]" />
+      </motion.div>
 
-      <div className="relative z-10 w-full px-6 md:px-16 pb-24 min-h-screen flex flex-col">
+      {/* Global HUD Scanning Line Overlay */}
+      <div className="fixed inset-0 pointer-events-none z-10 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" />
 
-        {/* Header HUD */}
-        <header className="flex flex-col lg:flex-row justify-between items-center lg:items-end mb-24 md:mb-32 gap-8 md:gap-12 border-b border-white/5 pb-12">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex flex-col items-center lg:items-start text-center lg:text-left"
-          >
-            <div className="flex flex-col gap-1 mb-6">
-              <div className="flex items-center justify-center lg:justify-start gap-3">
-                <div className="w-1 h-6 bg-cyan-500 shadow-[0_0_15px_#00f3ff]" />
-                <span className="font-mono text-[9px] tracking-[0.5em] uppercase text-cyan-400/60">Operational_Hub</span>
-              </div>
-              <h1 className="font-orbitron font-black text-3xl md:text-5xl lg:text-6xl tracking-[0.2em] uppercase text-white leading-tight">
-                Credit <span className="text-cyan-400">Exchange</span>
-              </h1>
-            </div>
-            <div className="flex flex-wrap justify-center lg:justify-start items-center gap-6 opacity-30">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-[8px] tracking-[0.3em] uppercase">Auth_Session: Stable</span>
-                <div className="w-1 h-1 rounded-full bg-cyan-400 animate-pulse" />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-[8px] tracking-[0.3em] uppercase">Node: US-WEST-2</span>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="w-full lg:w-auto"
-          >
-            <AnimatePresence mode="wait">
-              {/* Redundant balance removed to prevent overlap with Navbar HUD */}
-            </AnimatePresence>
-          </motion.div>
-        </header>
-
+      <main className="relative z-20 w-full max-w-[1600px] px-6 py-24 md:py-32 flex flex-col items-center">
+        {/* Header Section */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-12 flex items-center gap-6"
+          className="flex flex-col items-center gap-6 mb-20 text-center"
         >
-          <button
-            onClick={handleReturn}
-            className="group relative px-10 py-5 bg-white/5 border-2 border-white/10 hover:border-cyan-500/50 hover:bg-cyan-500/10 transition-all flex items-center gap-4 overflow-hidden"
-          >
-            {/* Tactical Accents */}
-            <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-cyan-500/60" />
-            <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-cyan-500/60" />
-            
-            <FaArrowLeft className="text-cyan-400 group-hover:-translate-x-2 transition-transform duration-500" />
-            <div className="flex flex-col items-start">
-              <span className="font-orbitron text-[10px] font-black uppercase tracking-[0.6em] text-white/80 group-hover:text-white">
-                Return_to_Base
-              </span>
-              <span className="font-mono text-[7px] uppercase tracking-widest text-cyan-500/40">Sector_01_Central</span>
-            </div>
+          <div className="flex items-center gap-4 text-cyan-500/60 font-mono text-[10px] tracking-[0.6em] uppercase">
+             <div className="w-12 h-px bg-cyan-500/20" />
+             <span>Financial_Core_Uplink</span>
+             <div className="w-12 h-px bg-cyan-500/20" />
+          </div>
+          <h1 className="font-orbitron text-4xl md:text-6xl font-black tracking-tighter uppercase text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+            Credit <span className="text-cyan-500">Exchange</span>
+          </h1>
+          <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-white/40 max-w-md leading-relaxed">
+            Acquire high-density CC assets to unlock premium operational roles and advanced tactical protocols.
+          </p>
+        </motion.div>
 
-            {/* Hover Scan Effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-          </button>
-          
-          <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
+        {/* Global Balance Bar */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-2xl mb-24"
+        >
+          <TacticalSlate className="p-6" showScanner={false}>
+            <div className="flex flex-col md:flex-row items-center justify-between gap-8 px-4">
+              <div className="flex items-center gap-6">
+                <div className="w-12 h-12 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
+                  <FaHdd className="text-cyan-400 text-xl animate-pulse" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-white/30">Available_Assets</span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-orbitron text-3xl font-black text-white">{displayCredits.toLocaleString()}</span>
+                    <span className="font-orbitron text-[10px] text-cyan-500 font-bold tracking-widest">CC</span>
+                  </div>
+                </div>
+              </div>
+              <div className="h-12 w-px bg-white/5 hidden md:block" />
+              <button 
+                onClick={handleReturn}
+                className="flex items-center gap-4 group/btn px-8 py-3 bg-white/5 border border-white/10 hover:border-cyan-500/40 hover:bg-cyan-500/5 transition-all"
+              >
+                <FaArrowLeft className="text-xs group-hover/btn:-translate-x-1 transition-transform" />
+                <span className="font-orbitron text-[10px] uppercase tracking-[0.4em]">Return_Home</span>
+              </button>
+            </div>
+          </TacticalSlate>
         </motion.div>
 
         {/* Status Messages */}
@@ -261,19 +226,15 @@ export default function Shop() {
               initial={{ opacity: 0, scale: 0.9, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className={`mb-16 p-8 border-2 flex flex-col md:flex-row items-center justify-center gap-6 backdrop-blur-xl ${error ? "border-red-500/50 bg-red-500/10" : "border-cyan-500/50 bg-cyan-500/10"
+              className={`w-full max-w-2xl mb-16 p-6 border-2 flex items-center justify-center gap-6 backdrop-blur-xl ${error ? "border-red-500/50 bg-red-500/10" : "border-cyan-500/50 bg-cyan-500/10"
                 }`}
             >
-              {error ? (
-                <div className="w-3 h-3 bg-red-500 animate-pulse rounded-full" />
-              ) : (
-                <FaCheckCircle className="text-cyan-400 text-3xl animate-pulse" />
-              )}
-              <p className={`font-orbitron text-base tracking-[0.2em] uppercase text-center ${error ? "text-red-400" : "text-cyan-400"}`}>
-                {error ? error : `Authorized Transfer Complete: +${successCredits?.toLocaleString()} Units Allocated`}
+              <div className={`w-3 h-3 animate-pulse rounded-full ${error ? "bg-red-500" : "bg-cyan-500"}`} />
+              <p className={`font-orbitron text-[11px] tracking-[0.2em] uppercase text-center ${error ? "text-red-400" : "text-cyan-400"}`}>
+                {error ? error : `Transfer Complete: +${successCredits?.toLocaleString()} Units Allocated`}
               </p>
               {error && (
-                <button onClick={() => setError(null)} className="px-6 py-2 text-red-500/50 hover:text-red-400 font-mono text-[10px] uppercase tracking-widest border border-red-500/20 hover:border-red-500/50 transition-all">
+                <button onClick={() => setError(null)} className="px-4 py-1 text-red-500/50 hover:text-red-400 font-mono text-[9px] uppercase tracking-widest border border-red-500/20 transition-all">
                   Dismiss
                 </button>
               )}
@@ -281,182 +242,124 @@ export default function Shop() {
           )}
         </AnimatePresence>
 
-        <main className="flex-1 flex flex-col items-center justify-center">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center min-h-[400px] gap-6">
-              <div className="w-20 h-20 border-2 border-cyan-500/10 border-t-cyan-500 rounded-full animate-spin shadow-[0_0_30px_rgba(6,182,212,0.2)]" />
-              <p className="font-mono text-xs uppercase tracking-[0.8em] text-cyan-500 animate-pulse ml-3">Syncing_Grid...</p>
+        {/* Compact Packs Grid */}
+        {loading ? (
+          <div className="flex flex-col items-center gap-6 mt-12">
+            <div className="w-8 h-8 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
+            <span className="font-mono text-[9px] uppercase tracking-[0.5em] text-white/30 animate-pulse">Establishing_Link...</span>
+          </div>
+        ) : !isLoggedIn ? (
+            <div className="flex items-center justify-center min-h-[400px] w-full">
+               <TacticalSlate className="w-full max-w-xl p-16 text-center">
+                  <FaLock className="mx-auto text-5xl text-cyan-500/30 mb-8" />
+                  <h2 className="font-orbitron text-2xl tracking-[0.5em] uppercase mb-6">Connection Required</h2>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/30 mb-12 leading-relaxed">
+                    Secure Handshake Required for Asset Exchange.
+                  </p>
+                  <Link href="/login" className="px-12 py-5 bg-cyan-500/10 border border-cyan-500/40 hover:bg-cyan-500/20 transition-all font-orbitron text-[10px] uppercase tracking-[0.6em] text-cyan-400">
+                    Authorize Identity
+                  </Link>
+               </TacticalSlate>
             </div>
-          ) : !isLoggedIn ? (
-            <div className="flex items-center justify-center min-h-[500px]">
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
+            {packs.map((pack, idx) => (
               <motion.div
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="w-full max-w-xl p-16 bg-[#0a0f16]/60 border border-white/10 backdrop-blur-2xl relative text-center"
+                key={pack.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1, duration: 0.6 }}
+                onClick={() => handlePackSelect(pack)}
+                className="relative"
               >
-                <div className="absolute top-0 left-0 w-24 h-24 border-t-2 border-l-2 border-cyan-500/20" />
-                <div className="absolute bottom-0 right-0 w-24 h-24 border-b-2 border-r-2 border-cyan-500/20" />
-
-                <FaLock className="mx-auto text-6xl text-cyan-500/30 mb-8" />
-                <h2 className="font-orbitron text-3xl tracking-[0.5em] uppercase mb-6">Connection Required</h2>
-                <p className="font-mono text-xs uppercase tracking-[0.4em] text-white/30 mb-12 leading-relaxed">
-                  Anonymous Browsing Restricted.<br />Initialize Secure Identity Handshake to Proceed.
-                </p>
-
-                <Link
-                  href="/login"
-                  className="inline-block px-16 py-6 bg-cyan-500/10 border border-cyan-500/40 hover:bg-cyan-500/20 hover:border-cyan-400 transition-all font-orbitron text-[11px] uppercase tracking-[0.6em] text-cyan-400 relative overflow-hidden group"
+                <TacticalSlate 
+                  color={selectedPack?.id === pack.id ? RARITY_CONFIG[pack.rarity].color : "#ffffff10"}
+                  className={`h-full transition-transform duration-500 ${selectedPack?.id === pack.id ? "scale-[1.02]" : "hover:scale-[1.01]"}`}
                 >
-                  <span className="relative z-10">Access Portal</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                </Link>
-              </motion.div>
-            </div>
-          ) : (
-            <div className="flex flex-wrap justify-center gap-8 md:gap-10 w-full max-w-[1600px] mx-auto">
-              {packs.map((pack, idx) => (
-                <motion.div
-                  key={pack.id}
-                  initial={{ opacity: 0, y: 40 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.15, duration: 0.8 }}
-                  onClick={() => handlePackSelect(pack)}
-                  className={`relative group p-10 border transition-all duration-700 cursor-pointer flex flex-col items-center backdrop-blur-md w-full max-w-[360px] ${selectedPack?.id === pack.id
-                    ? "bg-cyan-500/5 shadow-[0_0_60px_rgba(6,182,212,0.15)] z-20"
-                    : "bg-white/[0.01] border-white/5 hover:border-white/10 hover:bg-white/[0.03]"
-                    }`}
-                  style={{ 
-                    borderColor: (selectedPack?.id === pack.id && pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) 
-                      ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color 
-                      : undefined 
-                  }}
-                >
-                  {/* Tactical Brackets (Appear on Hover/Select) */}
-                  <div className="absolute top-4 left-4 w-10 h-10 border-t border-l border-white/0 group-hover:border-cyan-500/40 transition-all duration-700" />
-                  <div className="absolute bottom-4 right-4 w-10 h-10 border-b border-r border-white/0 group-hover:border-cyan-500/40 transition-all duration-700" />
-                  
-                  {/* Internal Scanning Line */}
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-10 pointer-events-none overflow-hidden">
-                     <div className="w-full h-1/2 bg-gradient-to-b from-cyan-500/40 to-transparent animate-[scan_4s_linear_infinite]" />
-                  </div>
-
-                  {/* Rarity Indicator */}
-                  <div className="absolute top-8 left-10 flex flex-col items-start gap-1">
-                    <span className="font-mono text-[8px] opacity-30 tracking-[0.4em] uppercase leading-none">Security_Protocol</span>
-                    <span className="font-orbitron text-[9px] tracking-[0.2em] uppercase font-bold" style={{ color: (pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)" }}>Tier_{pack.rarity}</span>
-                  </div>
-                  <div className="absolute top-6 right-8 text-xl">
-                    {pack.rarity === "legendary" ? <FaCrown className="text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]" /> :
-                      pack.rarity === "epic" ? <FaBolt className="text-yellow-400 drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]" /> :
-                        pack.rarity === "rare" ? <FaGem className="text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]" /> :
-                          <FaDatabase className="text-cyan-400/30" />}
-                  </div>
-
-                  {/* Bonus Badge */}
-                  {pack.bonus && (
-                    <div className="absolute top-12 left-0 px-5 py-1.5 bg-white text-[#020408] font-orbitron text-[9px] font-black tracking-widest uppercase -rotate-3 shadow-[0_5px_15px_rgba(0,0,0,0.5)] z-20"
-                      style={{ background: (pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)" }}
-                    >
-                      {pack.bonus}
-                    </div>
-                  )}
-
-                  {/* Asset Rendering */}
-                  <div className="relative w-40 h-40 mb-10 mt-12 flex items-center justify-center">
-                    {/* Holographic Pedestal */}
-                    <div className="absolute bottom-4 w-24 h-4 bg-cyan-500/20 blur-xl rounded-[50%] animate-pulse" />
-                    <div className="absolute bottom-6 w-32 h-1 bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
-                    
-                    <div className="absolute inset-0 blur-[60px] rounded-full transition-all duration-1000 scale-90"
-                      style={{ 
-                        background: (pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)",
-                        opacity: selectedPack?.id === pack.id ? 0.5 : 0.15
-                      }} 
-                    />
-                    <img
-                      src={creditCoreImg}
-                      alt="Core"
-                      className={`w-28 h-28 object-contain relative z-10 transition-all duration-1000 ${selectedPack?.id === pack.id ? "scale-110 -translate-y-4" : "opacity-60 group-hover:opacity-100 group-hover:-translate-y-2"
-                        }`}
-                      style={{ 
-                        filter: selectedPack?.id === pack.id 
-                          ? `drop-shadow(0 0 30px ${(pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)"})`
-                          : `grayscale(0.6) brightness(0.8)`
-                      }}
-                    />
-                  </div>
-
-                  <div className="flex flex-col items-center gap-2 mb-10">
-                    <h3 className="font-orbitron text-base md:text-lg tracking-[0.4em] uppercase text-white/90 group-hover:text-white transition-colors text-center font-bold">
-                      {pack.name}
-                    </h3>
-                    <div className="flex items-center gap-3">
-                      <span className="font-orbitron text-3xl font-black text-white tracking-tighter">
-                        {pack.amount.toLocaleString()}
-                      </span>
-                      <span className="font-orbitron text-[11px] opacity-60 tracking-[0.3em] mt-2" style={{ color: (pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)" }}>CC</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-auto w-full pt-8 border-t border-white/5 flex flex-col items-center gap-6">
-                    <div className="flex items-center justify-center bg-white/[0.03] px-6 py-2 rounded-full border border-white/5">
-                      <span className="font-mono text-sm opacity-30 mt-1 mr-2">$</span>
-                      <span className="font-orbitron text-3xl font-black tracking-tight">{pack.price}</span>
+                  <div className="p-8 flex flex-col items-center h-full min-h-[500px]">
+                    {/* Rarity & Header */}
+                    <div className="w-full flex justify-between items-start mb-10">
+                      <div className="flex flex-col">
+                        <span className="font-mono text-[7px] text-white/20 uppercase tracking-[0.4em]">Protocol_ID</span>
+                        <span className="font-orbitron text-[9px] uppercase font-black tracking-widest" style={{ color: RARITY_CONFIG[pack.rarity].color }}>
+                          {RARITY_CONFIG[pack.rarity].label}
+                        </span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-white/[0.03] border border-white/5">
+                        {pack.rarity === "legendary" ? <FaCrown className="text-red-500" /> :
+                          pack.rarity === "epic" ? <FaBolt className="text-yellow-400" /> :
+                          pack.rarity === "rare" ? <FaGem className="text-purple-400" /> :
+                          <FaDatabase className="text-cyan-400/40" />}
+                      </div>
                     </div>
 
-                    <div className="w-full">
+                    {/* Pack Visual */}
+                    <div className="relative w-32 h-32 mb-8 mt-4 flex items-center justify-center">
+                       <div className="absolute inset-0 blur-[40px] opacity-20 scale-125 transition-all duration-1000"
+                            style={{ backgroundColor: RARITY_CONFIG[pack.rarity].color, opacity: selectedPack?.id === pack.id ? 0.4 : 0.1 }} />
+                       <img 
+                         src={creditCoreImg} 
+                         alt="Core"
+                         className={`w-24 h-24 object-contain relative z-10 transition-all duration-700 ${selectedPack?.id === pack.id ? "scale-110 -translate-y-2" : "opacity-70 group-hover:opacity-100"}`}
+                         style={{ 
+                            filter: selectedPack?.id === pack.id 
+                              ? `drop-shadow(0 0 20px ${RARITY_CONFIG[pack.rarity].color})`
+                              : `grayscale(0.5) brightness(0.8)`
+                         }}
+                       />
+                       {/* Holographic Base */}
+                       <div className="absolute -bottom-2 w-20 h-1 bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
+                    </div>
+
+                    {/* Value Data */}
+                    <div className="text-center mb-10 flex-1">
+                      <h3 className="font-orbitron text-sm tracking-[0.4em] uppercase text-white/60 mb-2">{pack.name}</h3>
+                      <div className="flex items-baseline justify-center gap-2">
+                        <span className="font-orbitron text-4xl font-black text-white">{pack.amount.toLocaleString()}</span>
+                        <span className="font-orbitron text-[10px] text-cyan-500 font-bold">CC</span>
+                      </div>
+                      {pack.bonus && (
+                        <div className="mt-3 px-3 py-1 bg-white/5 border border-white/10 rounded-full inline-block">
+                          <span className="font-mono text-[8px] uppercase tracking-widest text-cyan-400">{pack.bonus}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Purchase Interface */}
+                    <div className="w-full mt-auto">
                       {selectedPack?.id === pack.id ? (
-                        <div className="min-h-[120px] flex items-center justify-center">
+                        <div className="min-h-[140px] flex items-center justify-center">
                           {isSyncing ? (
                             <div className="flex flex-col items-center gap-4">
-                              <div className="w-6 h-6 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
-                              <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-cyan-400/60 animate-pulse">Neural_Handshake...</span>
+                              <div className="w-5 h-5 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
+                              <span className="font-mono text-[8px] uppercase tracking-[0.4em] text-cyan-400/60 animate-pulse">Neural_Sync...</span>
                             </div>
                           ) : (
-                            <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
-                              {import.meta.env.VITE_PAYPAL_CLIENT_ID ? (
-                                <PayPalScriptProvider options={{ "clientId": import.meta.env.VITE_PAYPAL_CLIENT_ID }}>
+                            <div className="w-full animate-in fade-in slide-in-from-bottom-4">
+                               <PayPalScriptProvider options={{ "clientId": import.meta.env.VITE_PAYPAL_CLIENT_ID || "sb" }}>
                                   <PayPalButtons
-                                    style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
+                                    style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay", height: 45 }}
                                     createOrder={handleCreateOrder}
                                     onApprove={handleApprove}
                                   />
                                 </PayPalScriptProvider>
-                              ) : (
-                                <div className="p-6 border border-red-500/20 bg-red-500/5 rounded text-[10px] text-red-400 text-center font-mono uppercase tracking-[0.3em] leading-relaxed">
-                                  Secure Gateway<br />Offline
-                                </div>
-                              )}
                             </div>
                           )}
                         </div>
                       ) : (
-                        <button 
-                          className="w-full py-6 relative overflow-hidden group/btn shadow-[0_10px_30px_rgba(0,0,0,0.3)]"
-                          style={{ color: (pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)" }}
-                        >
-                          {/* Button Background & Brackets */}
-                          <div className="absolute inset-0 bg-white/[0.04] border border-white/20 group-hover/btn:bg-white/[0.08] group-hover/btn:border-white/40 transition-all duration-500" />
-                          <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 opacity-60 group-hover/btn:opacity-100 transition-all" style={{ borderColor: (pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)" }} />
-                          <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 opacity-60 group-hover/btn:opacity-100 transition-all" style={{ borderColor: (pack.rarity && RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG]) ? RARITY_CONFIG[pack.rarity as keyof typeof RARITY_CONFIG].color : "hsl(185 100% 50%)" }} />
-                          
-                          <div className="relative z-10 flex items-center justify-center gap-4">
-                            <FaBolt className="text-[10px] animate-pulse" />
-                            <span className="font-orbitron text-[11px] uppercase tracking-[0.6em] font-black">Initialize Link</span>
-                          </div>
-
-                          {/* Hover Scanner Line */}
-                          <div className="absolute top-0 left-0 w-full h-[2px] bg-white/40 -translate-y-full group-hover/btn:animate-[scan_2s_linear_infinite] shadow-[0_0_10px_#fff]" />
+                        <button className="w-full py-4 border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 transition-all flex items-center justify-center gap-3">
+                          <span className="font-mono text-xs opacity-30">$</span>
+                          <span className="font-orbitron text-2xl font-black">{pack.price}</span>
                         </button>
                       )}
                     </div>
                   </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
-        </main>
-      </div>
+                </TacticalSlate>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </main>
 
       {/* Credit Injection Animation */}
       <AnimatePresence>
@@ -479,7 +382,7 @@ export default function Shop() {
                 }}
                 animate={{ 
                   x: 0, 
-                  y: -500, // Move towards the balance HUD
+                  y: -500, 
                   scale: [1, 0.5, 0],
                   rotate: 360,
                   opacity: [1, 1, 0]
@@ -496,43 +399,6 @@ export default function Shop() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Warp Jump Overlay */}
-      <AnimatePresence>
-        {isWarping && <WarpJump />}
-      </AnimatePresence>
-
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        .scanline {
-          position: fixed;
-          inset: 0;
-          background: linear-gradient(
-            to bottom,
-            transparent 50%,
-            rgba(0, 0, 0, 0.1) 50%
-          );
-          background-size: 100% 4px;
-          z-index: 5;
-          pointer-events: none;
-          opacity: 0.5;
-        }
-        .shop-root::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-          opacity: 0.02;
-          pointer-events: none;
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0) translateX(0); }
-          50% { transform: translateY(-20px) translateX(10px); }
-        }
-        .animate-float {
-          animation: float infinite ease-in-out;
-        }
-      `}} />
     </div>
   );
 }

@@ -30,6 +30,8 @@ function Router() {
   );
 }
 
+import { HUDFilters } from "@/components/HUDRenderer";
+
 export default function App() {
   const [location] = useLocation();
   const [isWarping, setIsWarping] = useState(false);
@@ -51,7 +53,8 @@ export default function App() {
   return (
     <AuthProvider>
       <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-        <div className="min-h-screen bg-black text-white selection:bg-cyan-500/30">
+        <div className="min-h-screen bg-black text-white selection:bg-cyan-500/30 overflow-x-hidden">
+          <HUDFilters />
           <SystemToastContainer />
           <AnimatePresence>
             {isWarping && <WarpJump />}

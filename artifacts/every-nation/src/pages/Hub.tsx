@@ -1,6 +1,9 @@
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { FaExternalLinkAlt, FaLock, FaTerminal, FaShieldAlt, FaCubes } from "react-icons/fa";
 import AlliesSidebar from "@/components/AlliesSidebar";
+import TacticalSlate from "@/components/TacticalSlate";
+import { useParallax } from "@/hooks/useParallax";
+import { useRef } from "react";
 
 interface GameCardProps {
   title: string;
@@ -14,6 +17,7 @@ interface GameCardProps {
 
 function GameCard({ title, description, image, href, status, subtitle, index }: GameCardProps) {
   const isOffline = status === "offline";
+  const { x, y } = useParallax(15);
 
   const handleEntry = () => {
     if (!isOffline && href) {
@@ -26,53 +30,30 @@ function GameCard({ title, description, image, href, status, subtitle, index }: 
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, delay: index * 0.15 }}
+      style={{ x, y }}
       onClick={handleEntry}
-      className={`relative group flex flex-col w-full max-w-[420px] aspect-[10/16] transition-all duration-700 p-1 ${isOffline ? "cursor-not-allowed grayscale" : "cursor-pointer"
-        }`}
+      className={`relative group w-full max-w-[420px] aspect-[10/16] transition-all duration-700 ${isOffline ? "cursor-not-allowed grayscale" : "cursor-pointer"}`}
     >
-      {/* Title Header (Top Aligned as per reference) */}
-      <div className="relative z-20 mb-4 px-2">
-         <h2 className="font-orbitron font-black text-sm md:text-base tracking-[0.2em] uppercase text-white group-hover:text-cyan-400 transition-colors">
-            {title}
-         </h2>
-         <div className="w-full h-px bg-gradient-to-r from-white/20 via-white/5 to-transparent mt-2" />
-      </div>
+      <TacticalSlate color={isOffline ? "#ffffff40" : "#00f3ff"} className="h-full">
+        {/* Title Header */}
+        <div className="relative z-20 mb-4 px-6 pt-6">
+           <h2 className="font-orbitron font-black text-sm md:text-base tracking-[0.2em] uppercase text-white group-hover:text-cyan-400 transition-colors">
+              {title}
+           </h2>
+           <div className="w-full h-px bg-gradient-to-r from-cyan-500/40 via-cyan-500/5 to-transparent mt-2" />
+        </div>
 
-      {/* Main Tactical Container */}
-      <div className="flex-1 relative overflow-hidden">
-        {/* Asymmetric Clipped Background */}
-        <div className="absolute inset-0 bg-[#0a0f1e]/40 backdrop-blur-sm border border-white/5 transition-all duration-700 group-hover:bg-cyan-500/5 group-hover:border-cyan-500/20"
-             style={{ clipPath: "polygon(0 0, 75% 0, 100% 20%, 100% 100%, 25% 100%, 0 80%)" }} />
-        
-        {/* Image Container with matching ClipPath */}
-        <div className="absolute inset-2 z-0 overflow-hidden" 
-             style={{ clipPath: "polygon(0 0, 75% 0, 100% 20%, 100% 100%, 25% 100%, 0 80%)" }}>
+        {/* Image Container */}
+        <div className="absolute inset-0 z-0 opacity-40 group-hover:opacity-60 transition-opacity duration-700">
           <img
             src={image}
             alt={title}
-            className={`w-full h-full object-cover transition-transform duration-[3000ms] ease-out ${!isOffline && "group-hover:scale-110"
-              }`}
+            className={`w-full h-full object-cover transition-transform duration-[3000ms] ease-out ${!isOffline && "group-hover:scale-110"}`}
           />
-          {/* HUD Gradients */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#020408] via-transparent to-transparent opacity-80" />
-          
-          {/* Offline Overlay */}
-          {isOffline && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-[2px] z-10">
-              <FaLock className="text-white/10 text-4xl mb-4" />
-              <span className="font-mono text-[8px] uppercase tracking-[0.5em] text-white/30">Sector_Locked</span>
-            </div>
-          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#020408] via-transparent to-transparent opacity-90" />
         </div>
 
-        {/* Tactical HUD Accents */}
-        <div className="absolute top-4 right-10 w-2 h-2 bg-cyan-500/40 rounded-full animate-pulse" />
-        <div className="absolute bottom-10 left-4 flex flex-col gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
-           <div className="w-6 h-0.5 bg-cyan-500" />
-           <div className="w-4 h-0.5 bg-cyan-500/40" />
-        </div>
-
-        {/* Card Content Overlay */}
+        {/* Content Overlay */}
         <div className="absolute inset-x-8 bottom-8 z-20 flex flex-col gap-3">
           <div className="flex items-center gap-3">
             <div className={`w-1.5 h-1.5 rounded-full ${isOffline ? "bg-red-500/40" : "bg-cyan-500 shadow-[0_0_10px_#00f3ff]"}`} />
@@ -88,19 +69,25 @@ function GameCard({ title, description, image, href, status, subtitle, index }: 
           {!isOffline && (
             <div className="mt-4 flex items-center gap-3 text-cyan-400">
               <span className="font-orbitron text-[9px] uppercase tracking-[0.4em] font-bold">Deploy_Link</span>
-              <FaExternalLinkAlt className="text-[8px]" />
+              <FaExternalLinkAlt className="text-[8px] group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+            </div>
+          )}
+
+          {isOffline && (
+            <div className="mt-4 flex items-center gap-2 text-white/20">
+              <FaLock className="text-[10px]" />
+              <span className="font-orbitron text-[9px] uppercase tracking-[0.4em]">Sector_Locked</span>
             </div>
           )}
         </div>
-      </div>
-
-      {/* Outer Glow */}
-      <div className="absolute inset-0 -z-10 bg-cyan-500/0 group-hover:bg-cyan-500/10 blur-[60px] transition-all duration-1000 scale-75 group-hover:scale-110" />
+      </TacticalSlate>
     </motion.div>
   );
 }
 
 export default function Hub() {
+  const { x, y } = useParallax(30); // Stronger parallax for background
+
   const games = [
     {
       title: "Error: Newform Detected",
@@ -130,9 +117,9 @@ export default function Hub() {
     <div className="min-h-screen bg-[#020408] text-white pt-8 md:pt-12 relative flex flex-col items-center overflow-x-hidden selection:bg-cyan-500/30">
       <AlliesSidebar />
       {/* Cinematic Background Layer */}
-      <div
-        className="fixed inset-0 z-0 bg-cover bg-center transition-transform duration-[10000ms] scale-110 animate-slow-drift"
-        style={{ backgroundImage: "url('/hub_bg.png')" }}
+      <motion.div
+        className="fixed inset-0 z-0 bg-cover bg-center transition-transform duration-[1000ms] ease-out scale-110"
+        style={{ backgroundImage: "url('/hub_bg.png')", x, y }}
       />
       <div className="fixed inset-0 z-1 bg-gradient-to-b from-[#020408]/80 via-[#020408]/40 to-[#020408]/90" />
       

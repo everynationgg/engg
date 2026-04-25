@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
-import { motion } from "framer-motion";
-import { FaUserPlus, FaEnvelope, FaUser, FaLock, FaArrowRight } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
+import { FaUser, FaEnvelope, FaLock, FaArrowRight, FaIdCard, FaShieldAlt } from "react-icons/fa";
+import { useParallax } from "@/hooks/useParallax";
+import TacticalSlate from "@/components/TacticalSlate";
 
 export default function Register() {
-  const [email, setEmail] = useState("");
+  const { x, y } = useParallax(15);
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,127 +26,150 @@ export default function Register() {
     setLoading(true);
     setError(null);
     try {
-      await register(email, username, password);
-      setLocation("/shop");
+      await register(username, email, password);
+      setLocation("/verify");
     } catch (err: any) {
-      setError(err.message || "Registration Failed: System Error");
+      setError(err.message || "Enrollment Failed: Protocol Disrupted");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen pt-12 flex items-center justify-center p-6 relative overflow-hidden bg-[#020408]">
-      {/* Background FX */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(239,68,68,0.1)_0%,transparent_50%)]" />
-      
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md relative z-10"
+    <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden bg-[#020408] selection:bg-cyan-500/30">
+      {/* Biometric Parallax Background */}
+      <motion.div 
+        className="fixed inset-0 z-0 opacity-20 pointer-events-none"
+        style={{ x, y }}
       >
-        <div className="bg-[#0a0f16]/80 border border-white/10 backdrop-blur-2xl p-10 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-12 h-12 border-t-2 border-l-2 border-purple-500/40" />
-          <div className="absolute bottom-0 right-0 w-12 h-12 border-b-2 border-r-2 border-purple-500/40" />
-
-          <div className="text-center mb-10">
-            <div className="w-16 h-16 mx-auto bg-purple-500/10 border border-purple-500/30 rounded-full flex items-center justify-center mb-6">
-              <FaUserPlus className="text-2xl text-purple-400" />
-            </div>
-            <h1 className="font-orbitron text-2xl font-black tracking-[0.3em] uppercase text-white">
-              Operator <span className="text-purple-400">Registry</span>
-            </h1>
-            <p className="font-mono text-[9px] uppercase tracking-[0.4em] opacity-30 mt-3">
-              New_Asset_Initialization
-            </p>
-          </div>
-
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="mb-8 p-4 bg-red-500/10 border border-red-500/30 flex items-center gap-3"
-            >
-              <div className="w-1 h-4 bg-red-500" />
-              <span className="font-mono text-[10px] uppercase text-red-400 tracking-wider">{error}</span>
-            </motion.div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <label className="block font-mono text-[9px] uppercase text-white/40 tracking-[0.2em] ml-1">
-                Designated_Callsign
-              </label>
-              <div className="relative group">
-                <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-purple-400 transition-colors" />
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-white/[0.03] border border-white/10 p-4 pl-12 font-mono text-sm focus:border-purple-500/50 focus:bg-purple-500/5 outline-none transition-all text-white"
-                  placeholder="USER_X"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="block font-mono text-[9px] uppercase text-white/40 tracking-[0.2em] ml-1">
-                Communication_Link
-              </label>
-              <div className="relative group">
-                <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-purple-400 transition-colors" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white/[0.03] border border-white/10 p-4 pl-12 font-mono text-sm focus:border-purple-500/50 focus:bg-purple-500/5 outline-none transition-all text-white"
-                  placeholder="operator@sector.com"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="block font-mono text-[9px] uppercase text-white/40 tracking-[0.2em] ml-1">
-                Security_Cipher
-              </label>
-              <div className="relative group">
-                <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-purple-400 transition-colors" />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white/[0.03] border border-white/10 p-4 pl-12 font-mono text-sm focus:border-purple-500/50 focus:bg-purple-500/5 outline-none transition-all text-white"
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-5 bg-purple-500/10 border border-purple-500/40 hover:bg-purple-500/20 hover:border-purple-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-orbitron text-[11px] uppercase tracking-[0.4em] text-purple-400 relative overflow-hidden group mt-4"
-            >
-              <span className="relative z-10 flex items-center justify-center gap-3">
-                {loading ? "Initializing..." : "Authorize Identity"}
-                {!loading && <FaArrowRight className="text-[10px] group-hover:translate-x-1 transition-transform" />}
-              </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-400/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-            </button>
-          </form>
-
-          <div className="mt-12 text-center pt-8 border-t border-white/5">
-            <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/30">
-              Already Registered?{" "}
-              <Link href="/login" className="text-purple-500/60 hover:text-purple-400 transition-colors font-bold ml-2">
-                Establish_Link
-              </Link>
-            </p>
-          </div>
-        </div>
+        <div className="absolute inset-0 bg-[url('/background.png')] bg-cover bg-center" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#020408]/60 to-[#020408]" />
       </motion.div>
+
+      {/* Global Scanline Overlay */}
+      <div className="fixed inset-0 pointer-events-none z-10 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-lg relative z-20"
+      >
+        <TacticalSlate color="#a855f7">
+          <div className="p-12 md:p-16 flex flex-col gap-10">
+            {/* Header: Newform Enrollment */}
+            <div className="text-center flex flex-col items-center gap-6">
+              <div className="relative">
+                <div className="w-20 h-20 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center relative">
+                   <div className="absolute inset-0 border-2 border-purple-500/40 rounded-full animate-[spin_10s_linear_infinite] border-t-transparent" />
+                   <FaIdCard className="text-3xl text-purple-400/60" />
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <h1 className="font-orbitron text-2xl md:text-3xl font-black tracking-[0.3em] uppercase text-white">
+                  Neural <span className="text-purple-500">Enrollment</span>
+                </h1>
+                <p className="font-mono text-[9px] uppercase tracking-[0.5em] text-white/30">
+                  Initialising_Biometric_Manifest
+                </p>
+              </div>
+            </div>
+
+            {/* Error Notification */}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="bg-red-500/10 border border-red-500/30 p-4 flex items-center gap-4"
+                >
+                  <div className="w-1 h-6 bg-red-500" />
+                  <span className="font-mono text-[10px] uppercase text-red-400 tracking-widest">{error}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Form Interface */}
+            <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-3">
+                  <label className="font-mono text-[8px] uppercase tracking-[0.4em] text-white/30 ml-2">Operative_Codename</label>
+                  <div className="relative group">
+                    <FaUser className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-purple-400 transition-colors" />
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="w-full bg-white/[0.02] border border-white/10 p-5 pl-14 font-mono text-sm tracking-wider text-white outline-none focus:border-purple-500/50 focus:bg-purple-500/5 transition-all"
+                      placeholder="CALLSIGN"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <label className="font-mono text-[8px] uppercase tracking-[0.4em] text-white/30 ml-2">Communication_Uplink</label>
+                  <div className="relative group">
+                    <FaEnvelope className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-purple-400 transition-colors" />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full bg-white/[0.02] border border-white/10 p-5 pl-14 font-mono text-sm tracking-wider text-white outline-none focus:border-purple-500/50 focus:bg-purple-500/5 transition-all"
+                      placeholder="EMAIL_ADDR"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <label className="font-mono text-[8px] uppercase tracking-[0.4em] text-white/30 ml-2">Access_Cipher</label>
+                  <div className="relative group">
+                    <FaLock className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-purple-400 transition-colors" />
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full bg-white/[0.02] border border-white/10 p-5 pl-14 font-mono text-sm tracking-[0.4em] text-white outline-none focus:border-purple-500/50 focus:bg-purple-500/5 transition-all"
+                      placeholder="••••••••"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-6 mt-4">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-6 bg-purple-500/10 border border-purple-500/40 hover:bg-purple-500/20 text-purple-400 font-orbitron text-[11px] uppercase tracking-[0.6em] font-black transition-all flex items-center justify-center gap-4 relative overflow-hidden group/btn disabled:opacity-50"
+                >
+                  <div className="absolute inset-0 bg-purple-500/10 -translate-x-full group-hover/btn:translate-x-0 transition-transform duration-500" />
+                  <span className="relative z-10">{loading ? "Committing_Data..." : "Confirm_Enrollment"}</span>
+                  <FaArrowRight className="relative z-10 text-[10px] group-hover/btn:translate-x-1 transition-transform" />
+                </button>
+
+                <div className="flex items-center justify-center gap-6">
+                   <div className="h-px flex-1 bg-white/5" />
+                   <span className="font-mono text-[8px] uppercase tracking-[0.5em] text-white/20 whitespace-nowrap">Existing_Identity</span>
+                   <div className="h-px flex-1 bg-white/5" />
+                </div>
+
+                <Link href="/login" className="w-full py-5 border border-white/10 hover:bg-white/5 transition-all flex items-center justify-center gap-4">
+                  <FaShieldAlt className="text-[10px] opacity-20" />
+                  <span className="font-orbitron text-[9px] uppercase tracking-[0.4em] text-white/40">Access_Portal</span>
+                </Link>
+              </div>
+            </form>
+          </div>
+        </TacticalSlate>
+      </motion.div>
+
+      {/* Footer Info */}
+      <div className="fixed bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 opacity-20 pointer-events-none">
+         <span className="font-mono text-[8px] uppercase tracking-[0.8em]">ENCRYPTION_LAYER_ACTIVE</span>
+         <div className="w-48 h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent" />
+      </div>
     </div>
   );
 }
