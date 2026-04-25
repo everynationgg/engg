@@ -273,7 +273,7 @@ export default function Shop() {
                 className="relative"
               >
                 <TacticalSlate 
-                  color={selectedPack?.id === pack.id ? RARITY_CONFIG[pack.rarity].color : "#ffffff10"}
+                  color={selectedPack?.id === pack.id ? (RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color : "#ffffff10"}
                   className={`h-full transition-transform duration-500 ${selectedPack?.id === pack.id ? "scale-[1.02]" : "hover:scale-[1.01]"}`}
                 >
                   <div className="p-8 flex flex-col items-center h-full min-h-[500px]">
@@ -281,8 +281,8 @@ export default function Shop() {
                     <div className="w-full flex justify-between items-start mb-10">
                       <div className="flex flex-col">
                         <span className="font-mono text-[7px] text-white/20 uppercase tracking-[0.4em]">Protocol_ID</span>
-                        <span className="font-orbitron text-[9px] uppercase font-black tracking-widest" style={{ color: RARITY_CONFIG[pack.rarity].color }}>
-                          {RARITY_CONFIG[pack.rarity].label}
+                        <span className="font-orbitron text-[9px] uppercase font-black tracking-widest" style={{ color: (RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color }}>
+                          {(RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).label}
                         </span>
                       </div>
                       <div className="p-2 rounded-lg bg-white/[0.03] border border-white/5">
@@ -296,7 +296,7 @@ export default function Shop() {
                     {/* Pack Visual */}
                     <div className="relative w-32 h-32 mb-8 mt-4 flex items-center justify-center">
                        <div className="absolute inset-0 blur-[40px] opacity-20 scale-125 transition-all duration-1000"
-                            style={{ backgroundColor: RARITY_CONFIG[pack.rarity].color, opacity: selectedPack?.id === pack.id ? 0.4 : 0.1 }} />
+                            style={{ backgroundColor: (RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color, opacity: selectedPack?.id === pack.id ? 0.4 : 0.1 }} />
                        <img 
                          src={creditCoreImg} 
                          alt="Core"

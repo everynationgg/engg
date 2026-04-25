@@ -1463,7 +1463,7 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
         </div>
 
         {/* Details */}
-        <div className="flex-1 overflow-y-auto lg:overflow-visible px-3 lg:px-4 py-1 lg:py-2 flex flex-col gap-1.5 lg:gap-3">
+        <div className="flex-1 overflow-y-auto lg:overflow-visible px-3 lg:px-4 py-1 lg:py-2 flex flex-col gap-1.5 lg:gap-3 pb-24">
           <InfoBlock label="Alignment" value={role.alignment} accentColor={accentColorLight} />
           <InfoBlock label="Win Condition" value={role.winCondition} accentColor={accentColorLight} />
           <InfoBlock label="Ability" value={role.ability} accentColor={accentColorLight} />

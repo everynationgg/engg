@@ -160,7 +160,7 @@ export default function HamburgerMenu({
 
   return (
     <div
-      className="fixed z-50 right-12 top-12"
+      className="fixed z-50 right-12 bottom-12"
     >
       {/* Backdrop overlay */}
       {menuOpen && (
@@ -171,7 +171,7 @@ export default function HamburgerMenu({
       )}
 
       {menuOpen && (
-        <div className="absolute inset-0 pointer-events-none -z-10 flex items-center justify-center">
+        <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center">
            {/* Tactical Ring Background */}
            <div className={`absolute w-[400px] h-[400px] border border-cyan-500/10 rounded-full transition-all duration-700 ${menuClosing ? "scale-0 opacity-0" : "scale-100 opacity-100"}`}>
               <div className="absolute inset-0 border-t-2 border-cyan-500/20 rounded-full animate-[spin_20s_linear_infinite]" />
@@ -180,7 +180,7 @@ export default function HamburgerMenu({
 
           {menuItems.map((item, index) => {
             const arcAngle = 90; // Standard 90-degree quadrant
-            const startAngle = 90; // Start down and fan towards left (90-180)
+            const startAngle = 180; // Start left and fan towards up (180-270)
             const angleOffset = menuItems.length > 1 ? arcAngle / (menuItems.length - 1) : 0;
             const angle = startAngle + (index * angleOffset);
             const radius = 200; // Increased radius for better separation
@@ -218,11 +218,12 @@ export default function HamburgerMenu({
                 </div>
 
                 {/* Hover Label */}
-                <div className="absolute whitespace-nowrap flex flex-col items-center transition-all duration-300 pointer-events-none opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
+                <div className="absolute whitespace-nowrap flex flex-col items-center transition-all duration-300 pointer-events-none opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 z-30"
                       style={{ 
-                        top: "-30px",
+                        top: "-40px",
                         left: "50%",
                         transform: "translateX(-50%)",
+                        textShadow: "0 0 10px rgba(0,0,0,0.8)"
                       }}>
                   <span className="px-3 py-1 bg-black/95 border border-white/20 text-[9px] font-orbitron tracking-[0.3em] shadow-[0_0_20px_rgba(0,0,0,0.8)]"
                         style={{ color: item.color, borderLeftColor: item.color, borderLeftWidth: '2px' }}>
