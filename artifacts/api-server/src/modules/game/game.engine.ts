@@ -792,7 +792,7 @@ export function resolveRound(state: GameState): ResolutionResult {
           const target = state.players.find((p) => p.id === targets[0]);
           if (target) {
             const role = state.rolesAssigned[target.id];
-            const alignment = role === "alien" || role === "parasite" ? "Bad" : "Good";
+            const alignment = role === "alien" || role === "parasite" || role === "virus" ? "Bad" : "Good";
             feedback[actor.id] = {
               type: "seek_result",
               data: { targetName: target.name, alignment },
@@ -1282,12 +1282,19 @@ export function tallyVotes(state: GameState): VoteResult {
 
   const centerCards = state.centerCards ?? [];
 
+  const isAlienInPlay = Object.values(state.rolesAssigned).includes("alien");
+  const isParasiteInPlay = Object.values(state.rolesAssigned).includes("parasite");
+  const isVirusInPlay = Object.values(state.rolesAssigned).includes("virus");
+  
+  // Any "Bad" role makes a tie (no-one voted out) an Alien win.
+  const isAnyEvilInPlay = isAlienInPlay || isParasiteInPlay || isVirusInPlay;
+
   if (topTargets.length !== 1 || !topTargets[0]) {
     return {
       eliminatedId: null,
       eliminatedName: null,
       eliminatedRole: null,
-      winTeam: "tie",
+      winTeam: isAnyEvilInPlay ? "alien" : "crew",
       allRoles,
       centerCards,
     };
@@ -1296,8 +1303,23 @@ export function tallyVotes(state: GameState): VoteResult {
   const eliminatedId = topTargets[0];
   const eliminated = state.players.find((p) => p.id === eliminatedId);
   const eliminatedRole = state.rolesAssigned[eliminatedId] ?? "unknown";
-  const isAlienInPlay = Object.values(state.rolesAssigned).includes("alien");
-  const winTeam = (eliminatedRole === "alien" || (!isAlienInPlay && eliminatedRole === "parasite")) ? "crew" : "alien";
+  
+  /**
+   * WIN HIERARCHY (The most "Evil" role present must be the one eliminated):
+   * 1. If Alien is in play, they MUST be voted out for Crew to win.
+   * 2. If no Alien, but Parasite is in play, Parasite MUST be voted out for Crew to win.
+   * 3. If no Alien and no Parasite, but Virus is in play, Virus MUST be voted out for Crew to win.
+   * 4. If none of the above are in play (All Crew), voting anyone out results in an Alien win (Crew loss).
+   */
+  let winTeam: "crew" | "alien" | "tie" = "alien";
+  
+  if (eliminatedRole === "alien") {
+    winTeam = "crew";
+  } else if (!isAlienInPlay && eliminatedRole === "parasite") {
+    winTeam = "crew";
+  } else if (!isAlienInPlay && !isParasiteInPlay && eliminatedRole === "virus") {
+    winTeam = "crew";
+  }
 
   return {
     eliminatedId,
