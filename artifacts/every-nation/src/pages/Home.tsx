@@ -79,7 +79,7 @@ export default function Home() {
         {/* Buttons Row */}
         <AnimatePresence>
           {uiVisible && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
@@ -103,7 +103,7 @@ export default function Home() {
                   <GlassButton
                     label="Community"
                     subtext="Join Discord"
-                    onClick={() => window.open("https://discord.gg/engg", "_blank")}
+                    onClick={() => window.open("https://discord.gg/everynation", "_blank")}
                   />
                 </div>
                 <div className="w-full lg:w-[280px]">
@@ -125,7 +125,7 @@ export default function Home() {
                   <GlassButton
                     label="Socials"
                     subtext="Connect with ENGG"
-                    onClick={() => window.open("https://linktr.ee/engg", "_blank")}
+                    onClick={() => window.open("https://linktr.ee/everynationgg", "_blank")}
                   />
                 </div>
               </div>

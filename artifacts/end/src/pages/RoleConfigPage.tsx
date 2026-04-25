@@ -79,7 +79,7 @@ export default function RoleConfigPage() {
   const [customGameOpen, setCustomGameOpen] = useState(false);
   const [customRoles, setCustomRoles] = useState<{ [playerId: string]: string }>({});
   const [customDeck, setCustomDeck] = useState<[string, string, string]>(["", "", ""]);
-  const [selectedRole, setSelectedRole] = useState<Role>(ROLES[0]);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(ROLES[0]);
   const [roleCounts, setRoleCounts] = useState<RoleCounts>(() => {
     const init: RoleCounts = {};
     ROLES.forEach((r) => { init[r.id] = 0; });
@@ -409,8 +409,8 @@ export default function RoleConfigPage() {
 
   const handleSelectRole = useCallback((role: Role) => {
     playSciFiClick();
-    setSelectedRole(role);
-  }, []);
+    setSelectedRole(prev => prev?.id === role.id ? null : role);
+  }, [playSciFiClick]);
 
   const handleAdd = useCallback((roleId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -649,13 +649,13 @@ export default function RoleConfigPage() {
             className="font-orbitron font-black text-base sm:text-lg tracking-widest uppercase leading-none"
             style={{ color: "hsl(185 100% 55%)", textShadow: "0 0 12px hsl(185 100% 50% / 0.7)" }}
           >
-            ERROR: NEWFORM
+            Tactical_Unit_Hub
           </div>
           <div
             className="font-orbitron font-bold text-xs tracking-[0.3em] uppercase"
             style={{ color: "hsl(270 80% 65%)" }}
           >
-            DETECTED
+            Configuration_Mode
           </div>
         </div>
 
@@ -679,144 +679,74 @@ export default function RoleConfigPage() {
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden" style={{ minHeight: 0 }}>
-        {/* LEFT PANEL — hidden on mobile */}
-        <div
-          className="hidden lg:flex w-60 shrink-0 flex-col border-r overflow-y-auto"
-          style={{
-            background: "hsl(220 28% 7%)",
-            borderColor: "hsl(185 100% 50% / 0.15)",
-          }}
-        >
-          {/* Room info */}
-          <div className="px-4 pt-5 pb-4 border-b" style={{ borderColor: "hsl(210 30% 14%)" }}>
-            <div className="text-xs tracking-widest uppercase mb-2" style={{ color: "hsl(210 30% 45%)" }}>Room Code</div>
-            <div
-              className="font-orbitron font-black text-2xl tracking-[0.3em]"
-              style={{ color: "hsl(185 100% 60%)", textShadow: "0 0 10px hsl(185 100% 50% / 0.6)" }}
-              data-testid="text-room-code"
-            >
-              {roomCode}
-            </div>
-            <div
-              className="mt-2 px-2 py-1 rounded text-xs"
-              style={{
-                background: "hsl(220 28% 10%)",
-                border: "1px solid hsl(185 100% 50% / 0.25)",
-                color: "hsl(185 100% 72%)",
-                fontFamily: "'Exo 2', sans-serif",
-              }}
-            >
-              {players.length}/16 players · need at least 4 to start
-            </div>
-            {/* Copy link button */}
-            <button
-              onClick={handleCopyLink}
-              data-testid="button-copy-link"
-              className="mt-2 w-full py-1.5 font-orbitron text-xs tracking-[0.2em] uppercase rounded border transition-all duration-150 cursor-pointer"
-              style={{
-                background: copyFeedback ? "hsl(140 60% 15% / 0.6)" : "hsl(220 28% 10%)",
-                borderColor: copyFeedback ? "hsl(140 60% 45%)" : "hsl(185 100% 50% / 0.35)",
-                color: copyFeedback ? "hsl(140 60% 60%)" : "hsl(185 100% 50%)",
-              }}
-              onMouseEnter={(e) => {
-                if (copyFeedback) return;
-                e.currentTarget.style.borderColor = "hsl(185 100% 50%)";
-                e.currentTarget.style.color = "hsl(185 100% 75%)";
-              }}
-              onMouseLeave={(e) => {
-                if (copyFeedback) return;
-                e.currentTarget.style.borderColor = "hsl(185 100% 50% / 0.35)";
-                e.currentTarget.style.color = "hsl(185 100% 50%)";
-              }}
-            >
-              {copyFeedback ? "LINK COPIED!" : "COPY LINK"}
-            </button>
-          </div>
 
-          {/* Players */}
-          <div className="px-4 pt-4 pb-2">
-            <div className="text-xs tracking-widest uppercase mb-3" style={{ color: "hsl(210 30% 45%)" }}>
-              Players ({players.length})
-            </div>
-            {kickError && (
-              <div className="text-xs mb-3" style={{ color: "hsl(0 75% 60%)" }}>
-                {kickError}
+
+      {/* Role Deck Area */}
+      <div className="flex flex-col lg:flex-row flex-1 lg:min-h-0 relative overflow-y-auto lg:overflow-hidden">
+        {/* LEFT SIDEBAR — players (desktop only, hidden on mobile) */}
+        <div className="hidden lg:flex w-64 shrink-0 flex-col border-r" style={{ background: "hsl(220 30% 6%)", borderColor: "hsl(210 30% 14%)" }}>
+           <div className="p-5 border-b" style={{ borderColor: "hsl(210 30% 14%)" }}>
+              <div className="text-[10px] tracking-[0.4em] uppercase font-mono mb-1.5" style={{ color: "hsl(210 30% 45%)" }}>Operational_Session</div>
+              <div className="font-orbitron font-black text-2xl tracking-[0.2em]" style={{ color: "hsl(185 100% 60%)" }}>{roomCode}</div>
+              <div className="mt-2 flex items-center justify-between">
+                 <div className="text-[9px] font-mono uppercase tracking-widest" style={{ color: "hsl(210 30% 35%)" }}>{players.length}/10 Units</div>
+                 <button 
+                  onClick={handleCopyLink}
+                  className="text-[9px] font-orbitron tracking-widest uppercase hover:text-white transition-colors"
+                  style={{ color: copyFeedback ? "hsl(140 60% 60%)" : "hsl(185 100% 50% / 0.7)" }}
+                 >
+                   {copyFeedback ? "Copied" : "Copy_Link"}
+                 </button>
               </div>
-            )}
-            <div className="flex flex-col gap-2">
-              {players.map((player) => (
-                <motion.div
-                  key={player.id}
-                  initial={{ opacity: 0, x: -20, filter: "brightness(2) contrast(2)" }}
-                  animate={{ opacity: 1, x: 0, filter: "brightness(1) contrast(1)" }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                  className="flex items-center gap-2 px-3 py-2 rounded"
-                  style={{ background: "hsl(220 28% 10%)", border: "1px solid hsl(210 30% 15%)" }}
-                  data-testid={`player-row-${player.id}`}
-                >
-                  <span className="font-orbitron text-xs tracking-wider truncate min-w-0 flex-1" style={{ color: "hsl(190 60% 75%)" }}>
-                    {player.name}{player.isYou && <span style={{ color: "hsl(185 100% 55%)" }}> (You)</span>}
-                  </span>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span
-                      className="text-xs tracking-wider font-bold"
-                      style={{ color: player.isHost ? "hsl(45 90% 60%)" : "hsl(140 70% 55%)" }}
-                    >
-                      {player.isHost ? "HOST" : "READY"}
-                    </span>
-                    {amIHost && !player.isYou && (
-                      <button
-                        onClick={() => handleKickPlayer(player)}
-                        className="px-2 py-0.5 rounded border font-orbitron text-[10px] tracking-wider"
-                        style={{
-                          borderColor: "hsl(0 75% 55% / 0.5)",
-                          color: "hsl(0 80% 68%)",
-                          background: "hsl(0 40% 12% / 0.45)",
-                        }}
-                        data-testid={`button-kick-${player.id}`}
-                      >
-                        KICK
-                      </button>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
-          {/* Role summary: only show in lobby, hide after game starts */}
-          {showActiveRoles && (
-            <div className="px-4 pt-4 mt-auto pb-4 border-t" style={{ borderColor: "hsl(210 30% 14%)" }}>
-              <div className="text-xs tracking-widest uppercase mb-3" style={{ color: "hsl(210 30% 45%)" }}>Active Roles</div>
-              <div className="flex flex-col gap-1">
-                {ROLES.filter((r) => (roleCounts[r.id] || 0) > 0).map((r) => (
-                  <div key={r.id} className="flex items-center justify-between">
-                    <span
-                      className="text-xs"
-                      style={{
-                        color: r.team === "alien" ? "hsl(270 80% 65%)" : r.team === "chaotic" ? "hsl(300 70% 65%)" : "hsl(185 100% 60%)",
-                        textShadow: "none",
-                        filter: "none",
-                        mixBlendMode: "normal"
+           </div>
+           
+           <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+              <div className="space-y-1">
+                 {players.map((player) => (
+                    <div 
+                      key={player.id} 
+                      className="group relative flex items-center justify-between p-2 rounded transition-all duration-200"
+                      style={{ 
+                        background: player.isYou ? "hsl(185 100% 50% / 0.05)" : "transparent",
+                        border: player.isYou ? "1px solid hsl(185 100% 50% / 0.15)" : "1px solid transparent"
                       }}
                     >
-                      {r.name}
-                    </span>
-                    <span className="font-orbitron text-xs" style={{ color: "hsl(190 60% 75%)" }}>x{roleCounts[r.id]}</span>
-                  </div>
-                ))}
-                {ROLES.every((r) => (roleCounts[r.id] || 0) === 0) && (
-                  <div className="text-xs" style={{ color: "hsl(210 30% 35%)" }}>No roles selected yet</div>
-                )}
+                       <div className="flex items-center gap-3 min-w-0">
+                          <div className={`w-1.5 h-1.5 rounded-full ${player.isYou ? "bg-cyan-500 animate-pulse" : "bg-cyan-950"}`} />
+                          <span className={`font-orbitron text-[11px] tracking-widest uppercase truncate ${player.isYou ? "text-white" : "text-white/40"}`}>
+                            {player.name}
+                          </span>
+                       </div>
+                       {player.isHost && (
+                          <div className="px-1.5 py-0.5 rounded-[2px] bg-cyan-500/10 border border-cyan-500/20 text-[7px] font-orbitron tracking-widest text-cyan-400">
+                             HOST
+                          </div>
+                       )}
+                       {amIHost && !player.isYou && (
+                         <button
+                           onClick={() => handleKickPlayer(player)}
+                           className="opacity-0 group-hover:opacity-100 absolute right-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-500 text-[8px] px-1.5 py-0.5 transition-all"
+                         >
+                           KICK
+                         </button>
+                       )}
+                    </div>
+                 ))}
               </div>
-            </div>
-          )}
+           </div>
+
+           {/* Balance Display (Sidebar) */}
+           <div className="p-5 bg-black/40 border-t" style={{ borderColor: "hsl(210 30% 14%)" }}>
+              <div className="text-[9px] font-mono tracking-[0.3em] uppercase mb-2" style={{ color: "hsl(210 30% 40%)" }}>Account_Balance</div>
+              <div className="flex items-baseline gap-2">
+                 <span className="font-orbitron text-2xl font-black text-white">{credits.toLocaleString()}</span>
+                 <span className="text-cyan-500 font-mono text-[10px] font-bold tracking-widest uppercase">CC</span>
+              </div>
+           </div>
         </div>
 
         {/* CENTER PANEL */}
-        <div className="flex-1 overflow-y-auto lg:overflow-hidden px-6 py-4">
+        <div className="flex-1 lg:overflow-y-auto px-6 py-4">
 
           {/* Mobile-only: room code + player list */}
           <div className="lg:hidden mb-5 pb-5 border-b" style={{ borderColor: "hsl(210 30% 14%)" }}>
@@ -850,32 +780,20 @@ export default function RoleConfigPage() {
                 {copyFeedback ? "COPIED!" : "COPY LINK"}
               </button>
             </div>
-            <div className="flex flex-wrap gap-1.5">
+            
+            {/* Horizontal scrolling player list on mobile */}
+            <div className="flex overflow-x-auto gap-1.5 pb-2 scrollbar-none">
               {players.map((player) => (
                 <div
                   key={player.id}
-                  className="px-2.5 py-1 rounded font-orbitron text-xs tracking-wider flex items-center gap-2 max-w-full"
+                  className="px-2.5 py-1 rounded font-orbitron text-xs tracking-wider flex items-center gap-2 whitespace-nowrap shrink-0"
                   style={{
                     background: "hsl(220 28% 10%)",
                     border: player.isYou ? "1px solid hsl(185 100% 50% / 0.5)" : "1px solid hsl(210 30% 15%)",
                     color: player.isYou ? "hsl(185 100% 70%)" : "hsl(190 60% 70%)",
                   }}
                 >
-                  <span className="truncate min-w-0">{player.name}{player.isHost ? " HOST" : ""}{player.isYou ? " ★" : ""}</span>
-                  {amIHost && !player.isYou && (
-                    <button
-                      onClick={() => handleKickPlayer(player)}
-                      className="px-1.5 py-0.5 rounded border font-orbitron text-[9px] tracking-wider shrink-0"
-                      style={{
-                        borderColor: "hsl(0 75% 55% / 0.5)",
-                        color: "hsl(0 80% 68%)",
-                        background: "hsl(0 40% 12% / 0.45)",
-                      }}
-                      data-testid={`button-kick-mobile-${player.id}`}
-                    >
-                      KICK
-                    </button>
-                  )}
+                  <span>{player.name}{player.isHost ? " HOST" : ""}{player.isYou ? " ★" : ""}</span>
                 </div>
               ))}
             </div>
@@ -884,6 +802,15 @@ export default function RoleConfigPage() {
                 {kickError}
               </div>
             )}
+
+            {/* Mobile Balance Display */}
+            <div className="mt-4 p-3 bg-cyan-500/5 border border-cyan-500/20 rounded flex items-center justify-between">
+               <span className="font-mono text-[9px] uppercase tracking-widest text-white/40">Balance</span>
+               <div className="flex items-center gap-1.5">
+                  <span className="font-orbitron font-black text-cyan-400">{credits.toLocaleString()}</span>
+                  <span className="font-mono text-[8px] font-bold text-cyan-600 tracking-tighter">CC</span>
+               </div>
+            </div>
           </div>
 
           {/* Action buttons — host only, anchored above the role cards */}
@@ -1052,37 +979,6 @@ export default function RoleConfigPage() {
         </div>
       </Modal>
 
-          {/* Premium Protocols — only show when locked premium roles exist */}
-          {PREMIUM_ROLE_IDS.some(id => !unlockedRoles.includes(id)) && (
-            <div className="mb-8 p-4 rounded-lg bg-cyan-950/20 border border-cyan-500/20">
-               <div className="flex items-center gap-3 mb-4">
-                <span
-                  className="font-orbitron font-bold text-[10px] tracking-[0.3em] uppercase px-3"
-                  style={{ color: "hsl(185 100% 65%)", textShadow: "0 0 8px hsl(185 100% 50% / 0.7)" }}
-                >
-                  PREMIUM PROTOCOLS
-                </span>
-                <div className="h-px flex-1 bg-gradient-to-r from-cyan-500/30 to-transparent" />
-              </div>
-              <div className="flex overflow-x-auto gap-4 pb-2 scrollbar-thin scrollbar-thumb-cyan-500/30 scrollbar-track-transparent">
-                {ROLES.filter(r => PREMIUM_ROLE_IDS.includes(r.id) && !unlockedRoles.includes(r.id)).map((role) => (
-                  <div key={role.id} className="w-24 shrink-0">
-                    <RoleCard
-                      role={role}
-                      count={0}
-                      isSelected={selectedRole.id === role.id}
-                      showControls={false}
-                      onSelect={handleSelectRole}
-                      onAdd={handleAdd}
-                      onRemove={handleRemove}
-                      isLocked={true}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Alien Team */}
           <div className="mb-4">
             <div className="flex items-center gap-3 mb-4">
@@ -1102,12 +998,12 @@ export default function RoleConfigPage() {
               />
             </div>
             <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-8 gap-2">
-              {ALIEN_ROLES.filter(r => !PREMIUM_ROLE_IDS.includes(r.id) || unlockedRoles.includes(r.id)).map((role) => (
+              {ALIEN_ROLES.map((role) => (
                 <RoleCard
                   key={role.id}
                   role={role}
                   count={roleCounts[role.id] || 0}
-                  isSelected={selectedRole.id === role.id}
+                  isSelected={selectedRole?.id === role.id}
                   showControls={amIHost}
                   onSelect={handleSelectRole}
                   onAdd={handleAdd}
@@ -1137,12 +1033,12 @@ export default function RoleConfigPage() {
               />
             </div>
             <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-8 gap-2">
-              {CHAOTIC_ROLES.filter(r => !PREMIUM_ROLE_IDS.includes(r.id) || unlockedRoles.includes(r.id)).map((role) => (
+              {CHAOTIC_ROLES.map((role) => (
                 <RoleCard
                   key={role.id}
                   role={role}
                   count={roleCounts[role.id] || 0}
-                  isSelected={selectedRole.id === role.id}
+                  isSelected={selectedRole?.id === role.id}
                   showControls={amIHost}
                   onSelect={handleSelectRole}
                   onAdd={handleAdd}
@@ -1177,7 +1073,7 @@ export default function RoleConfigPage() {
                   key={role.id}
                   role={role}
                   count={roleCounts[role.id] || 0}
-                  isSelected={selectedRole.id === role.id}
+                  isSelected={selectedRole?.id === role.id}
                   showControls={amIHost}
                   onSelect={handleSelectRole}
                   onAdd={handleAdd}
@@ -1190,17 +1086,14 @@ export default function RoleConfigPage() {
 
         </div>
 
-        {/* RIGHT PANEL — flexible width on desktop, strip on mobile */}
+        {/* RIGHT PANEL — preview and details */}
         <div
-          className="flex w-full min-h-[140px] lg:h-auto lg:w-[clamp(200px,28%,380px)] shrink-0 flex-col border-t lg:border-t-0 lg:border-l overflow-y-auto lg:overflow-hidden"
-          style={{
-            background: "hsl(220 28% 7%)",
-            borderColor: "hsl(185 100% 50% / 0.15)",
-          }}
+          className={`flex w-full ${selectedRole ? "min-h-[400px] opacity-100" : "h-0 opacity-0 lg:h-auto lg:opacity-100"} lg:w-[clamp(200px,28%,380px)] shrink-0 flex-col border-t lg:border-t-0 lg:border-l overflow-hidden transition-all duration-300 ease-in-out`}
+          style={{ background: "hsl(220 30% 6%)", borderColor: "hsl(210 30% 14%)" }}
         >
           <RolePreview 
             role={selectedRole} 
-            isLocked={PREMIUM_ROLE_IDS.includes(selectedRole.id) && !unlockedRoles.includes(selectedRole.id)}
+            isLocked={selectedRole ? (PREMIUM_ROLE_IDS.includes(selectedRole.id) && !unlockedRoles.includes(selectedRole.id)) : false}
             onUnlock={handleUnlockRole}
             userCredits={credits}
             isUnlocking={isUnlocking}
@@ -1382,7 +1275,7 @@ const ROLE_PRICES: Record<string, number> = {
 };
 
 function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLoggedIn, onShowProfile, onBuyCredits }: { 
-  role: Role; 
+  role: Role | null; 
   isLocked: boolean; 
   onUnlock: (id: string) => void; 
   userCredits: number; 
@@ -1391,6 +1284,20 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
   onShowProfile: () => void;
   onBuyCredits: () => void;
 }) {
+  if (!role) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-black/20">
+        <div className="w-16 h-16 rounded-full border border-white/5 flex items-center justify-center mb-6 opacity-20">
+          <div className="w-8 h-8 border border-cyan-500/20 rounded-full animate-pulse" />
+        </div>
+        <h3 className="font-orbitron text-[10px] tracking-[0.4em] uppercase text-white/30 mb-2">Neural_Link_Standby</h3>
+        <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-white/10 max-w-[200px]">
+          Select a role protocol from the grid to establish identity uplink and view tactical parameters.
+        </p>
+      </div>
+    );
+  }
+
   const accentColor =
     role.team === "alien"
       ? "hsl(270 80% 55%)"
