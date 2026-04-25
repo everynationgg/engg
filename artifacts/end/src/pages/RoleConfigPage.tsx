@@ -390,8 +390,8 @@ export default function RoleConfigPage() {
   const showActiveRoles = livePlayers.length > 0 && (typeof window !== "undefined" ? (sessionStorage.getItem("lp_assignedRole") === null) : true);
 
   // Derive host status from server-provided player list.  Falls back to
-  // isCreating only before the first server response arrives.
-  const amIHost = livePlayers.find((p) => p.isYou)?.isHost ?? isCreating;
+  // isCreating or single-player status to ensure command authority.
+  const amIHost = livePlayers.find((p) => p.isYou)?.isHost || (livePlayers.length === 1 && livePlayers[0].isYou) || isCreating;
 
   // Use livePlayers if populated, else fallback to current user only
   const players: LivePlayer[] = livePlayers.length > 0
@@ -838,11 +838,56 @@ export default function RoleConfigPage() {
                 </div>
               </div>
             )}
+
+            {/* Mobile Action Buttons (Host Only) */}
+            {amIHost && (
+              <div className="mt-4 flex flex-col gap-2">
+                {startError && (
+                  <div className="text-[10px] text-red-500 font-mono uppercase tracking-widest mb-1">{startError}</div>
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                   <button
+                    onClick={handleRandomize}
+                    className="px-3 py-2 font-orbitron font-bold text-[10px] tracking-[0.1em] uppercase rounded border transition-all"
+                    style={{
+                      background: "hsl(45 90% 15% / 0.4)",
+                      borderColor: "hsl(45 90% 50% / 0.5)",
+                      color: "hsl(45 90% 70%)"
+                    }}
+                  >
+                    RANDOMIZE
+                  </button>
+                  <button
+                    onClick={() => setCustomGameOpen(true)}
+                    className="px-3 py-2 font-orbitron font-bold text-[10px] tracking-[0.1em] uppercase rounded border transition-all"
+                    style={{
+                      background: "hsl(270 80% 15% / 0.4)",
+                      borderColor: "hsl(270 80% 50% / 0.5)",
+                      color: "hsl(270 80% 70%)"
+                    }}
+                  >
+                    CUSTOM
+                  </button>
+                </div>
+                <button
+                  onClick={handleStartGame}
+                  className="w-full py-3 font-orbitron font-bold text-xs tracking-[0.3em] uppercase rounded border-2 transition-all"
+                  style={{
+                    background: rolesReady ? "hsl(185 100% 15% / 0.6)" : "hsl(220 28% 10%)",
+                    borderColor: rolesReady ? "hsl(185 100% 50%)" : "hsl(210 30% 20%)",
+                    color: rolesReady ? "hsl(185 100% 65%)" : "hsl(210 30% 40%)",
+                    boxShadow: rolesReady ? "0 0 15px hsl(185 100% 50% / 0.2)" : "none"
+                  }}
+                >
+                  START GAME
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Action buttons — host only, anchored above the role cards */}
+          {/* Desktop Action buttons — host only, anchored above the role cards */}
           {amIHost && (
-            <div className="flex flex-wrap items-center gap-3 mb-5">
+            <div className="hidden lg:flex flex-wrap items-center gap-3 mb-5">
               {startError && (
                 <span
                   className="w-full text-xs tracking-wider"
