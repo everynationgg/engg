@@ -735,14 +735,30 @@ export default function RoleConfigPage() {
               </div>
            </div>
 
-           {/* Balance Display (Sidebar) */}
-           <div className="p-5 bg-black/40 border-t" style={{ borderColor: "hsl(210 30% 14%)" }}>
-              <div className="text-[9px] font-mono tracking-[0.3em] uppercase mb-2" style={{ color: "hsl(210 30% 40%)" }}>Account_Balance</div>
-              <div className="flex items-baseline gap-2">
-                 <span className="font-orbitron text-2xl font-black text-white">{credits.toLocaleString()}</span>
-                 <span className="text-cyan-500 font-mono text-[10px] font-bold tracking-widest uppercase">CC</span>
-              </div>
-           </div>
+           {/* Role summary: only show in lobby, hide after game starts */}
+           {showActiveRoles && (
+             <div className="px-4 pt-4 mt-auto pb-4 border-t" style={{ borderColor: "hsl(210 30% 14%)" }}>
+               <div className="text-xs tracking-widest uppercase mb-3" style={{ color: "hsl(210 30% 45%)" }}>Active Roles</div>
+               <div className="flex flex-col gap-1">
+                 {ROLES.filter((r) => (roleCounts[r.id] || 0) > 0).map((r) => (
+                   <div key={r.id} className="flex items-center justify-between">
+                     <span
+                       className="text-xs"
+                       style={{
+                         color: r.team === "alien" ? "hsl(270 80% 65%)" : r.team === "chaotic" ? "hsl(300 70% 65%)" : "hsl(185 100% 60%)",
+                       }}
+                     >
+                       {r.name}
+                     </span>
+                     <span className="font-orbitron text-xs" style={{ color: "hsl(190 60% 75%)" }}>x{roleCounts[r.id]}</span>
+                   </div>
+                 ))}
+                 {ROLES.every((r) => (roleCounts[r.id] || 0) === 0) && (
+                   <div className="text-xs" style={{ color: "hsl(210 30% 35%)" }}>No roles selected yet</div>
+                 )}
+               </div>
+             </div>
+           )}
         </div>
 
         {/* CENTER PANEL */}
@@ -803,14 +819,25 @@ export default function RoleConfigPage() {
               </div>
             )}
 
-            {/* Mobile Balance Display */}
-            <div className="mt-4 p-3 bg-cyan-500/5 border border-cyan-500/20 rounded flex items-center justify-between">
-               <span className="font-mono text-[9px] uppercase tracking-widest text-white/40">Balance</span>
-               <div className="flex items-center gap-1.5">
-                  <span className="font-orbitron font-black text-cyan-400">{credits.toLocaleString()}</span>
-                  <span className="font-mono text-[8px] font-bold text-cyan-600 tracking-tighter">CC</span>
-               </div>
-            </div>
+            {/* Mobile Active Roles Summary */}
+            {showActiveRoles && (
+              <div className="mt-4 p-3 bg-white/5 border border-white/10 rounded">
+                <div className="text-[10px] tracking-widest uppercase mb-2 opacity-40">Active Roles</div>
+                <div className="flex flex-wrap gap-x-4 gap-y-1">
+                  {ROLES.filter((r) => (roleCounts[r.id] || 0) > 0).map((r) => (
+                    <div key={r.id} className="flex items-center gap-2">
+                      <span className="text-[10px]" style={{ color: r.team === "alien" ? "hsl(270 80% 65%)" : r.team === "chaotic" ? "hsl(300 70% 65%)" : "hsl(185 100% 60%)" }}>
+                        {r.name}
+                      </span>
+                      <span className="font-orbitron text-[10px] text-white/60">x{roleCounts[r.id]}</span>
+                    </div>
+                  ))}
+                  {ROLES.every((r) => (roleCounts[r.id] || 0) === 0) && (
+                    <div className="text-[10px] text-white/20">No roles selected</div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Action buttons — host only, anchored above the role cards */}
