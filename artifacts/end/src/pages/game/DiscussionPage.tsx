@@ -378,7 +378,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
             <div className="lg:col-span-7 flex flex-col gap-6">
               <h3 className="font-orbitron text-xs tracking-[0.4em] uppercase mb-4 flex items-center gap-2" style={{ color: "hsl(185 100% 50%)" }}>
                 <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full" />
-                Biometric Manifest — {sessionPlayers.filter(p => !p.isSpectator).length} Active Subjects
+                Biometric Manifest — {sessionPlayers.length > 0 ? sessionPlayers.filter(p => !p.isSpectator).length : "SYNCING"} Active Subjects
               </h3>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -626,7 +626,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
         {/* Player list */}
         <div className="rounded-md p-4" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 15%)" }}>
           <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(210 30% 50%)" }}>
-            CREW MANIFEST — {sessionPlayers.filter(p => !p.isSpectator).length} ABOARD
+            CREW MANIFEST — {sessionPlayers.length > 0 ? sessionPlayers.filter(p => !p.isSpectator).length : (sessionStorage.getItem("lp_totalPlayers") || "SYNCING")} ABOARD
           </div>
           <div className="flex flex-col gap-2">
             {sessionPlayers.filter(p => !p.isSpectator).map((p) => {
@@ -677,39 +677,8 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
           </div>
         )}
 
-        {/* Emergency vote button */}
-        {!isSpectator && (
-          <div className="mt-4">
-            <div className="flex justify-between items-center mb-2 px-1">
-              <span className="text-[9px] uppercase tracking-[0.2em] text-white/20 font-mono">Skip to Voting</span>
-              {cooldownLeft > 0 && (
-                <span className="text-[9px] uppercase tracking-[0.2em] text-red-500 font-bold animate-pulse">
-                  System Cooldown: {cooldownLeft}s
-                </span>
-              )}
-            </div>
-            <button
-              data-testid="button-emergency-vote"
-              onClick={handleCallEmergencyVote}
-              disabled={evLoading || cooldownLeft > 0 || !!evPopup}
-              className="w-full py-2.5 font-orbitron font-bold text-xs tracking-[0.2em] uppercase rounded-md border transition-all duration-150 group"
-              style={{
-                background: (cooldownLeft > 0 || !!evPopup) ? "hsl(220 28% 8%)" : "hsl(0 60% 20% / 0.4)",
-                borderColor: (cooldownLeft > 0 || !!evPopup) ? "hsl(210 30% 18%)" : "hsl(0 75% 45%)",
-                color: (cooldownLeft > 0 || !!evPopup) ? "hsl(210 30% 35%)" : "hsl(0 75% 70%)",
-                cursor: (cooldownLeft > 0 || !!evPopup) ? "not-allowed" : "pointer",
-                opacity: (cooldownLeft > 0 || !!evPopup) ? 0.6 : 1,
-              }}
-            >
-              {cooldownLeft > 0 ? "COOLDOWN_ACTIVE" : "Initiate Emergency Vote"}
-            </button>
-            <p className="mt-2 text-[8px] text-center uppercase tracking-widest text-white/20 font-mono">
-              Requires 40% consensus to skip discussion phase
-            </p>
-          </div>
-        )}
-
       </div>
+
 
       {/* Emergency vote popup */}
       {!isSpectator && evPopup && (

@@ -529,7 +529,11 @@ export default function RoleRevealPage() {
               className="text-xs tracking-wider text-center"
               style={{ color: "hsl(210 30% 45%)", fontFamily: "'Exo 2', sans-serif" }}
             >
-              {readyCount} / {livePlayers.filter(p => !p.isSpectator).length} players ready
+              {livePlayers.length > 0 ? (
+                <span>{readyCount} / {livePlayers.filter(p => !p.isSpectator).length} players ready</span>
+              ) : (
+                <span className="animate-pulse">Syncing crew manifest... ({readyCount} / {totalPlayers})</span>
+              )}
             </div>
 
             {/* Chaotic Choice UI */}

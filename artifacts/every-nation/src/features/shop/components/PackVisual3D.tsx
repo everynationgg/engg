@@ -13,10 +13,6 @@ const PackShape = ({ rarity, color, isSelected }: PackVisual3DProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
   
   useFrame((state) => {
-    // Explicitly update the timer to calculate the current delta
-    if (state.clock && (state.clock as any).update) {
-      (state.clock as any).update();
-    }
     const delta = state.clock.getDelta();
 
     if (meshRef.current) {
@@ -71,18 +67,11 @@ const PackShape = ({ rarity, color, isSelected }: PackVisual3DProps) => {
 };
 
 export default function PackVisual3D({ rarity, color, isSelected }: PackVisual3DProps) {
-  // Use THREE.Timer to resolve deprecation warning of THREE.Clock in Three.js r169+
-  const timer = useRef(new (THREE as any).Timer());
-
   return (
     <div className={`w-32 h-32 relative z-10 transition-transform duration-700 ${isSelected ? "scale-110 -translate-y-2" : "opacity-80 group-hover:opacity-100"}`}>
       <Canvas 
         camera={{ position: [0, 0, 4.5], fov: 50 }} 
         gl={{ alpha: true }}
-        onCreated={(state) => {
-          // Replace the default clock with our Timer
-          state.set({ clock: timer.current as any });
-        }}
       >
         <ambientLight intensity={0.2} />
         <spotLight position={[10, 10, 10]} intensity={2} color={color} penumbra={1} />

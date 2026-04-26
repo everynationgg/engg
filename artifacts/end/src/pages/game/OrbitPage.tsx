@@ -396,7 +396,11 @@ export default function OrbitPage() {
                 />
               </div>
               <div className="mt-2 font-mono text-[9px] text-cyan-500/60 uppercase">
-                {completedCount} / {sessionPlayers.filter(p => !p.isSpectator).length} Neural Links Established
+                {sessionPlayers.length > 0 ? (
+                  <span>{completedCount} / {sessionPlayers.filter(p => !p.isSpectator).length} Neural Links Established</span>
+                ) : (
+                  <span className="animate-pulse">Syncing Neural Grid...</span>
+                )}
               </div>
             </div>
 
