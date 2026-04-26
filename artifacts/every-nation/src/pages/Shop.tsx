@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
-import { FaGem, FaArrowLeft, FaShieldAlt, FaLock, FaCheckCircle, FaBolt, FaCrown, FaDatabase, FaExchangeAlt, FaHdd, FaTimes } from "react-icons/fa";
+import { FaGem, FaArrowLeft, FaShieldAlt, FaLock, FaCheckCircle, FaBolt, FaCrown, FaDatabase, FaExchangeAlt, FaHdd } from "react-icons/fa";
 import { Link, useLocation } from "wouter";
 import WarpJump from "@/components/common/WarpJump";
 import TacticalSlate from "@/components/common/TacticalSlate";
@@ -386,114 +386,40 @@ export default function Shop() {
                animate={{ scale: 1, y: 0 }}
                exit={{ scale: 0.9, y: 20 }}
                onClick={(e) => e.stopPropagation()}
-               className="w-full max-w-2xl overflow-hidden"
+               className="w-full max-w-md"
             >
-              <TacticalSlate className="p-0 relative overflow-hidden" showScanner={true}>
-                {/* Close Button */}
-                <button 
-                  onClick={() => setCheckoutMode(false)} 
-                  className="absolute top-6 right-6 z-50 text-white/40 hover:text-white transition-all p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg group"
-                >
-                  <FaTimes className="text-xs group-hover:rotate-90 transition-transform duration-300" />
-                </button>
-
-                <div className="flex flex-col md:flex-row min-h-[450px]">
-                  {/* Left: 3D Asset Preview */}
-                  <div className="w-full md:w-[45%] bg-black/40 border-b md:border-b-0 md:border-r border-white/5 relative flex items-center justify-center p-12 overflow-hidden">
-                    <div className="absolute inset-0 pointer-events-none">
-                       <div className="absolute top-0 left-0 w-full h-full opacity-20 bg-[linear-gradient(to_bottom,transparent_0%,rgba(6,182,212,0.1)_50%,transparent_100%)] animate-scanline" />
-                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.1)_0%,transparent_70%)]" />
-                    </div>
-                    
-                    <div className="relative z-10 w-full aspect-square flex items-center justify-center">
-                      <PackVisual3D 
-                        rarity={selectedPack.rarity} 
-                        color={(RARITY_CONFIG[selectedPack.rarity] || RARITY_CONFIG.common).color}
-                        isSelected={true}
-                      />
-                      
-                      {/* Holographic Labels */}
-                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full text-center">
-                         <div className="font-mono text-[7px] text-cyan-400/40 uppercase tracking-[0.5em] mb-1">Asset_Class_Identification</div>
-                         <div className="h-px w-32 bg-cyan-500/20 mx-auto" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right: Checkout Details */}
-                  <div className="flex-1 p-8 md:p-12 flex flex-col justify-between">
-                    <div>
-                      <div className="flex flex-col gap-1 mb-8">
-                        <div className="flex items-center gap-3">
-                          <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_8px_cyan]" />
-                          <span className="font-mono text-[8px] text-cyan-500 uppercase tracking-[0.5em]">Secure_Channel_Active</span>
-                        </div>
-                        <h3 className="font-orbitron text-3xl uppercase font-black text-white tracking-widest leading-none mt-2" style={{ color: (RARITY_CONFIG[selectedPack.rarity] || RARITY_CONFIG.common).color }}>
-                          {selectedPack.name}
-                        </h3>
-                        <p className="font-mono text-[9px] text-white/30 tracking-[0.3em] uppercase mt-1">Asset_Acquisition_Protocol_V2.4</p>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-8 mb-10 pb-8 border-b border-white/10">
-                        <div className="flex flex-col">
-                          <span className="font-mono text-[8px] uppercase tracking-widest text-white/30 mb-2">Total_Investment</span>
-                          <span className="font-orbitron text-3xl font-black text-white">${selectedPack.price}</span>
-                          <span className="font-mono text-[8px] text-white/20 uppercase mt-1">USD (SECURE_GATEWAY)</span>
-                        </div>
-                        <div className="flex flex-col items-end text-right relative">
-                          <span className="font-mono text-[8px] uppercase tracking-widest text-white/30 mb-2">Expected_Yield</span>
-                          <span className="font-orbitron text-3xl font-black text-cyan-400">
-                            +{isFirstPurchase ? (selectedPack.amount * 2).toLocaleString() : selectedPack.amount.toLocaleString()}
-                            <span className="text-xs ml-1 opacity-60">CC</span>
-                          </span>
-                          
-                          {isFirstPurchase && (
-                            <motion.div 
-                              animate={{ opacity: [0.4, 1, 0.4] }}
-                              transition={{ repeat: Infinity, duration: 1.5 }}
-                              className="text-red-500 font-orbitron text-[7px] font-black tracking-widest mt-1 bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/20"
-                            >
-                              X2_BONUS_APPLIED
-                            </motion.div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-6">
-                      {isSyncing ? (
-                        <div className="flex flex-col items-center gap-4 py-8">
-                          <div className="w-8 h-8 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
-                          <span className="font-mono text-[10px] uppercase tracking-[0.5em] text-cyan-400/60 animate-pulse">Neural_Sync_Active...</span>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="flex items-center gap-4 opacity-40">
-                             <div className="h-px flex-1 bg-gradient-to-r from-transparent to-white/20" />
-                             <span className="font-mono text-[8px] uppercase tracking-widest">Select_Gateway</span>
-                             <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/20" />
-                          </div>
-                          
-                          <div className="relative group">
-                            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition duration-1000" />
-                            <PayPalScriptProvider options={{ "clientId": import.meta.env.VITE_PAYPAL_CLIENT_ID || "sb" }}>
-                               <PayPalButtons
-                                 style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay", height: 50 }}
-                                 createOrder={handleCreateOrder}
-                                 onApprove={handleApprove}
-                               />
-                            </PayPalScriptProvider>
-                          </div>
-                        </>
-                      )}
-                      
-                      <div className="flex items-center justify-center gap-6 opacity-20">
-                         <FaShieldAlt className="text-xs" />
-                         <span className="font-mono text-[7px] uppercase tracking-[0.4em]">Encrypted_SSL_Channel_Active</span>
-                      </div>
-                    </div>
-                  </div>
+              <TacticalSlate className="p-8 relative">
+                <button onClick={() => setCheckoutMode(false)} className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors p-2 text-xs font-mono uppercase tracking-widest border border-white/10 rounded">Dismiss</button>
+                <div className="flex flex-col gap-1 mb-8">
+                  <h3 className="font-orbitron text-2xl uppercase font-black text-white tracking-widest" style={{ color: (RARITY_CONFIG[selectedPack.rarity] || RARITY_CONFIG.common).color }}>{selectedPack.name}</h3>
+                  <p className="font-mono text-[10px] text-white/40 tracking-[0.2em] uppercase">Asset Acquisition Protocol</p>
                 </div>
+                
+                <div className="flex items-center justify-between mb-8 pb-8 border-b border-white/10">
+                   <div className="flex flex-col">
+                     <span className="font-mono text-[8px] uppercase tracking-widest text-white/30">Total_Amount</span>
+                     <span className="font-orbitron text-2xl font-black">${selectedPack.price}</span>
+                   </div>
+                   <div className="flex flex-col text-right">
+                     <span className="font-mono text-[8px] uppercase tracking-widest text-white/30">Yield</span>
+                     <span className="font-orbitron text-xl font-bold text-cyan-400">+{selectedPack.amount} CC</span>
+                   </div>
+                </div>
+                
+                {isSyncing ? (
+                  <div className="flex flex-col items-center gap-4 py-8">
+                    <div className="w-8 h-8 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
+                    <span className="font-mono text-[10px] uppercase tracking-[0.5em] text-cyan-400/60 animate-pulse">Neural_Sync_Active...</span>
+                  </div>
+                ) : (
+                  <PayPalScriptProvider options={{ "clientId": import.meta.env.VITE_PAYPAL_CLIENT_ID || "sb" }}>
+                     <PayPalButtons
+                       style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay", height: 45 }}
+                       createOrder={handleCreateOrder}
+                       onApprove={handleApprove}
+                     />
+                  </PayPalScriptProvider>
+                )}
               </TacticalSlate>
             </motion.div>
           </motion.div>
