@@ -36,7 +36,7 @@ export default function App() {
   const [location] = useLocation();
   const [isWarping, setIsWarping] = useState(false);
   const [prevLocation, setPrevLocation] = useState(location);
-  const isHomePage = location === "/";
+  const isHomePage = location === "/" || location === "";
 
   useEffect(() => {
     if (location !== prevLocation) {
