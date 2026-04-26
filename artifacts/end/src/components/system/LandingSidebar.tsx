@@ -155,63 +155,76 @@ export default function LandingSidebar({
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 left-0 h-full w-[280px] z-[80] flex flex-col border-r border-cyan-500/20"
+              className="fixed top-0 left-0 h-full w-[280px] sm:w-[320px] z-[80] flex flex-col border-r border-cyan-500/30"
               style={{
-                background: "rgba(10, 15, 30, 0.85)",
-                backdropFilter: "blur(12px)",
+                background: "#0a0f1e", // Solid deep navy/black
+                boxShadow: "10px 0 30px rgba(0,0,0,0.5)",
               }}
             >
-              <div className="flex items-center justify-between p-6 border-b border-white/5">
+              {/* Decorative Accent Strip */}
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-500 via-cyan-400 to-cyan-600 shadow-[0_0_15px_rgba(6,182,212,0.5)]" />
+
+              {/* Sidebar Header */}
+              <div className="flex items-center justify-between p-6 border-b border-white/10 bg-white/5">
                 <div className="flex flex-col">
-                  <span className="font-orbitron font-black text-lg tracking-widest text-cyan-400">ENGG</span>
-                  <span className="text-[8px] font-orbitron tracking-[0.4em] text-white/40 uppercase">Operational_Unify</span>
+                  <span className="font-orbitron font-black text-xl tracking-widest text-white">
+                    ENGG<span className="text-cyan-400">.</span>
+                  </span>
+                  <span className="text-[7px] font-orbitron tracking-[0.5em] text-cyan-400/60 uppercase">Operational_Nexus</span>
                 </div>
                 
                 <button 
                   onClick={closeMenu}
-                  className="p-2 text-white/40 hover:text-cyan-400 transition-colors"
+                  className="p-2 text-white/40 hover:text-white transition-colors hover:bg-white/5 rounded-lg"
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                     <line x1="18" y1="6" x2="6" y2="18" />
                     <line x1="6" y1="6" x2="18" y2="18" />
                   </svg>
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto py-8 px-4 space-y-2">
-                <div className="text-[9px] font-orbitron tracking-[0.3em] text-white/20 mb-4 px-4 uppercase">Navigation_Nodes</div>
+              {/* Navigation Nodes */}
+              <div className="flex-1 overflow-y-auto py-8 px-4 space-y-3">
+                <div className="text-[9px] font-orbitron tracking-[0.3em] text-cyan-500/40 mb-6 px-4 uppercase flex items-center gap-2">
+                  <div className="w-4 h-px bg-cyan-500/20" />
+                  Main_Nodes
+                </div>
                 
                 {menuItems.map((item) => (
                   <button
                     key={item.id}
                     onClick={item.onClick}
-                    className="w-full flex items-center gap-4 px-4 py-3 rounded-md transition-all duration-200 hover:bg-cyan-500/10 group relative text-left"
+                    className="w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 hover:bg-white/5 group relative overflow-hidden"
                   >
-                    <div className="text-cyan-400 opacity-60 group-hover:opacity-100 transition-opacity">
+                    <div className="text-white opacity-40 group-hover:opacity-100 group-hover:text-cyan-400 transition-all duration-300 transform group-hover:scale-110">
                       {item.icon}
                     </div>
-                    <span className="font-orbitron text-xs tracking-widest text-white/70 group-hover:text-white transition-colors">
+                    <span className="font-orbitron text-[11px] tracking-[0.15em] text-white/60 group-hover:text-white transition-colors uppercase font-bold">
                       {item.label}
                     </span>
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-cyan-400 transition-all duration-200 group-hover:h-1/2" />
+                    
+                    {/* Active Glow State */}
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-0.5 h-0 bg-cyan-400 transition-all duration-300 group-hover:h-3/4 shadow-[0_0_10px_#22d3ee]" />
                   </button>
                 ))}
               </div>
 
-              <div className="p-6 border-t border-white/5 space-y-4">
+              {/* Bottom Actions */}
+              <div className="p-6 bg-black/20 border-t border-white/10 space-y-4">
                 {isLoggedIn && (
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-4 px-4 py-3 rounded-md transition-all duration-200 hover:bg-red-500/10 group"
+                    className="w-full flex items-center gap-4 px-5 py-3 rounded-xl transition-all duration-300 hover:bg-red-500/10 group border border-transparent hover:border-red-500/20"
                   >
-                    <LogoutIcon className="text-red-400" />
-                    <span className="font-orbitron text-xs tracking-widest text-red-400/70 group-hover:text-red-400 uppercase">LOGOUT</span>
+                    <LogoutIcon className="text-red-500/60 group-hover:text-red-500" />
+                    <span className="font-orbitron text-[10px] tracking-widest text-red-500/60 group-hover:text-red-500 uppercase font-bold">TERMINATE_SESSION</span>
                   </button>
                 )}
                 
-                <div className="text-center">
-                  <div className="text-[7px] font-orbitron tracking-widest text-white/10 uppercase">
-                    &copy; 2026 ENGG | Operational_Unify
+                <div className="pt-4 text-center">
+                  <div className="text-[7px] font-orbitron tracking-[0.4em] text-white/10 uppercase">
+                    &copy; 2026 ENGG | Secure_Channel_v1
                   </div>
                 </div>
               </div>
