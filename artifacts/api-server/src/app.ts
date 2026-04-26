@@ -26,19 +26,23 @@ app.use(
         defaultSrc: ["'self'"],
         scriptSrc: [
           "'self'", 
-          "https://www.paypal.com", 
-          "https://www.paypalobjects.com",
-          "https://www.sandbox.paypal.com",
-          "'unsafe-inline'", // Required for some PayPal/Analytics handoffs
-          "'unsafe-eval'",   // Required for certain dynamic translations/bots
+          "https://*.paypal.com:*", 
+          "https://*.paypalobjects.com",
+          "https://*.braintreegateway.com",
+          "https://apis.google.com",
+          "https://static.cloudflareinsights.com",
+          "'unsafe-inline'",
+          "'unsafe-eval'",
         ],
         connectSrc: [
           "'self'",
-          "https://www.paypal.com",
-          "https://www.sandbox.paypal.com",
+          "https://*.paypal.com:*",
+          "https://*.paypalobjects.com",
+          "https://*.braintreegateway.com",
           "https://api-m.paypal.com",
           "https://api-m.sandbox.paypal.com",
-          "wss://*.engg.online", // Allow production sockets
+          "https://static.cloudflareinsights.com",
+          "wss://*.engg.online",
         ],
         frameSrc: [
           "'self'",
