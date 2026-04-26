@@ -439,6 +439,19 @@ export function acknowledgeRole(
     state.roleAcknowledgements.push(playerId);
   }
   if (revealAction) {
+    const roleId = state.rolesAssigned[playerId];
+    
+    // ROLE AUTHORITY VALIDATION (Reveal Phase)
+    if (roleId === "virus" && revealAction.type !== "packet_loss") {
+       return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "invalid virus action" };
+    }
+    if (roleId === "router" && revealAction.type !== "gateway_hijack") {
+       return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "invalid router action" };
+    }
+    if (roleId !== "virus" && roleId !== "router" && roleId !== "chaotic") {
+       return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "unauthorized reveal action" };
+    }
+
     // Prevent reveal-phase roles (Virus, Router) from targeting spectators
     for (const tId of (revealAction.targets || [])) {
       const targetPlayer = state.players.find(p => p.id === tId);
@@ -552,14 +565,40 @@ export function submitAction(
   action: PlayerAction,
 ): ActionResult {
   if (state.phase !== "orbit_action") {
-    return { accepted: false, allSubmitted: false, error: "wrong phase" };
-  }
-  if (!state.players.some((p) => p.id === playerId)) {
-    return { accepted: false, allSubmitted: false, error: "not in session" };
+    return { accepted: false, allSubmitted: false, error: "Phase protocol mismatch: orbit_action required" };
   }
   const player = state.players.find(p => p.id === playerId);
-  if (player?.isSpectator) {
-    return { accepted: false, allSubmitted: false, error: "spectators cannot act" };
+  if (!player) {
+    return { accepted: false, allSubmitted: false, error: "Identity verification failed: player not in session" };
+  }
+  if (player.isSpectator) {
+    return { accepted: false, allSubmitted: false, error: "Spectator interference prohibited" };
+  }
+
+  // ── FINALITY LOCK ──
+  // Prevent race conditions or double-submissions
+  if (state.orbitCompleted.includes(playerId)) {
+    return { accepted: false, allSubmitted: false, error: "Action already synchronized" };
+  }
+
+  // ── ROLE AUTHORITY VALIDATION ──
+  // Strictly enforce that the player's role is allowed to perform the submitted action type
+  const roleId = state.rolesAssigned[playerId];
+  const allowedActions: Record<string, string[]> = {
+    scanner: ["scan_player", "scan_deck", "skip"],
+    alien: ["alien_view", "skip"],
+    disruptor: ["disrupt", "skip"],
+    commander: ["boost", "skip"],
+    warper: ["warp", "skip"],
+    shifter: ["exchange", "skip"],
+    sentinel: ["watch", "skip"],
+    seeker: ["seek", "skip"],
+    parasite: ["passive", "none"], // Auto-handled
+    crew: ["none"], // Auto-handled
+  };
+
+  if (!allowedActions[roleId]?.includes(action.type)) {
+    return { accepted: false, allSubmitted: false, error: `Unauthorized protocol for role: ${roleId}` };
   }
 
   // Prevent targeting spectators in Orbit phase
@@ -568,7 +607,7 @@ export function submitAction(
     if (tId.startsWith("center_")) continue;
     const targetPlayer = state.players.find(p => p.id === tId);
     if (targetPlayer && targetPlayer.isSpectator) {
-      return { accepted: false, allSubmitted: false, error: "cannot target spectators" };
+      return { accepted: false, allSubmitted: false, error: "Targeting spectators is prohibited" };
     }
   }
 
@@ -1077,32 +1116,33 @@ export function castVote(
   targetId: string,
 ): VoteCastResult {
   if (state.phase !== "voting") {
-    return { accepted: false, votingComplete: false, error: "wrong phase" };
-  }
-  if (!state.players.some((p) => p.id === voterId)) {
-    return { accepted: false, votingComplete: false, error: "not in session" };
+    return { accepted: false, votingComplete: false, error: "Phase protocol mismatch: voting phase required" };
   }
   const voter = state.players.find(p => p.id === voterId);
-  if (voter?.isSpectator) {
-    return { accepted: false, votingComplete: false, error: "spectators cannot vote" };
+  if (!voter) {
+    return { accepted: false, votingComplete: false, error: "Identity verification failed: player not in session" };
+  }
+  if (voter.isSpectator) {
+    return { accepted: false, votingComplete: false, error: "Spectators cannot vote" };
   }
 
-  // No re-voting
-  if (state.votes[voterId] !== undefined) {
-    return { accepted: true, votingComplete: false };
+  // ── FINALITY LOCK ──
+  // Prevent changing votes or double-voting once synchronized
+  if (state.votes[voterId]) {
+    return { accepted: false, votingComplete: false, error: "Vote already synchronized and locked" };
   }
 
   // Validate target
   if (targetId !== "abstain") {
     if (targetId === voterId) {
-      return { accepted: false, votingComplete: false, error: "no self-vote" };
+      return { accepted: false, votingComplete: false, error: "Self-targeting prohibited in voting protocol" };
     }
     const targetPlayer = state.players.find((p) => p.id === targetId);
     if (!targetPlayer) {
-      return { accepted: false, votingComplete: false, error: "invalid target" };
+      return { accepted: false, votingComplete: false, error: "Target not found in session" };
     }
     if (targetPlayer.isSpectator) {
-      return { accepted: false, votingComplete: false, error: "cannot target spectators" };
+      return { accepted: false, votingComplete: false, error: "Targeting spectators is prohibited" };
     }
   }
 
@@ -1309,9 +1349,10 @@ export function tallyVotes(state: GameState): VoteResult {
   const isAnyEvilInPlay = isAlienInPlay || isParasiteInPlay || isVirusInPlay;
 
   if (topTargets.length !== 1 || !topTargets[0]) {
+    // TIE OR NO VOTES: Bad roles win by default if present
     return {
       eliminatedId: null,
-      eliminatedName: null,
+      eliminatedName: topTargets.length > 1 ? "DEADLOCK: Consensus failure" : "No protocol targeted",
       eliminatedRole: null,
       winTeam: isAnyEvilInPlay ? "alien" : "tie",
       allRoles,
@@ -1602,12 +1643,14 @@ export function processRevealActions(state: GameState): void {
     if (role === "virus") {
       const targetId = action.targets[0];
       const targetRole = state.rolesAssigned[targetId];
-      if (targetRole !== "router") {
-        state.jammedPlayerId = targetId || null;
+      // REFINEMENT: Router is immune to Packet Loss (Jamming)
+      if (targetId && targetRole !== "router") {
+        state.jammedPlayerId = targetId;
       }
     } else if (role === "router") {
       const [sourceId, destId] = action.targets;
       const sourceRole = state.rolesAssigned[sourceId];
+      // REFINEMENT: Virus is immune to Gateway Hijack
       if (sourceId && destId && sourceRole !== "virus") {
         state.hijackedTargets[sourceId] = destId;
       }

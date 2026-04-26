@@ -18,7 +18,58 @@ Sentry.init({
 const app: Express = express();
 app.set("trust proxy", 1); // Trust the first proxy (Fly.io/Vercel) to satisfy express-rate-limit security checks
 // Security headers
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      reportOnly: true, // Start in report-only mode as requested
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'", 
+          "https://www.paypal.com", 
+          "https://www.paypalobjects.com",
+          "https://www.sandbox.paypal.com",
+          "'unsafe-inline'", // Required for some PayPal/Analytics handoffs
+          "'unsafe-eval'",   // Required for certain dynamic translations/bots
+        ],
+        connectSrc: [
+          "'self'",
+          "https://www.paypal.com",
+          "https://www.sandbox.paypal.com",
+          "https://api-m.paypal.com",
+          "https://api-m.sandbox.paypal.com",
+          "wss://*.engg.online", // Allow production sockets
+        ],
+        frameSrc: [
+          "'self'",
+          "https://www.paypal.com",
+          "https://www.sandbox.paypal.com",
+        ],
+        imgSrc: [
+          "'self'", 
+          "data:", 
+          "https://www.paypalobjects.com",
+        ],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: [],
+      },
+    },
+    hsts: {
+      maxAge: 31536000, // 1 year
+      includeSubDomains: true,
+      preload: true,
+    },
+    referrerPolicy: {
+      policy: "strict-origin-when-cross-origin",
+    },
+    frameguard: {
+      action: "deny",
+    },
+    xContentTypeOptions: true,
+  })
+);
 
 const DEFAULT_ALLOWED_ORIGINS = new Set([
   "https://engg.online",

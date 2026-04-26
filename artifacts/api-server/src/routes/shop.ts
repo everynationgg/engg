@@ -74,9 +74,16 @@ router.get("/shop/config", async (req, res) => {
   });
 });
 
+import { createOrderSchema, captureOrderSchema } from "./shop.schemas.js";
+
 router.post("/shop/create-order", authMiddleware, async (req: AuthRequest, res) => {
   try {
-    const { packId } = req.body;
+    const result = createOrderSchema.safeParse(req.body);
+    if (!result.success) {
+      res.status(400).json({ error: result.error.errors[0].message });
+      return;
+    }
+    const { packId } = result.data;
     const pack = CREDIT_PACKS.find((p) => p.id === packId);
 
     if (!pack) {
@@ -108,25 +115,31 @@ router.post("/shop/create-order", authMiddleware, async (req: AuthRequest, res) 
 
     const order = await response.json() as any;
     if (!response.ok) {
+      logger.error({ order, status: response.status }, "PayPal order creation failed at provider");
       res.status(response.status).json({ error: order.message || "Failed to create PayPal order" });
       return;
     }
     res.json(order);
   } catch (error: any) {
-    logger.error({ error }, "PayPal order creation failed");
+    logger.error({ error }, "PayPal order creation failed internally");
     if (error.message === "MISSING_PAYPAL_CREDENTIALS") {
       res.status(500).json({ error: "Server Error: PayPal secrets not configured on host." });
     } else if (error.message.startsWith("PAYPAL_OAUTH_FAILED:")) {
       res.status(500).json({ error: `PayPal Auth Error: ${error.message.split(":")[1]}` });
     } else {
-      res.status(500).json({ error: "Failed to create PayPal order" });
+      res.status(500).json({ error: "Internal server error during order creation" });
     }
   }
 });
 
 router.post("/shop/capture-order", authMiddleware, async (req: AuthRequest, res) => {
   try {
-    const { orderID, packId } = req.body;
+    const result = captureOrderSchema.safeParse(req.body);
+    if (!result.success) {
+      res.status(400).json({ error: result.error.errors[0].message });
+      return;
+    }
+    const { orderID, packId } = result.data;
     const pack = CREDIT_PACKS.find((p) => p.id === packId);
 
     if (!pack) {

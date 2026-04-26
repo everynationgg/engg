@@ -11,6 +11,7 @@ import { ttsRouter } from "./tts";
 import metricsRouter from "./metrics";
 import shopRouter from "./shop";
 import userRouter from "./user";
+import adminRouter from "./admin.js";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use(ttsRouter);
 router.use(metricsRouter);
 router.use(shopRouter);
 router.use(userRouter);
+router.use("/admin", adminRouter);
 
 export default router;

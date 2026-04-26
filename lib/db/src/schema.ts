@@ -9,6 +9,7 @@ export const usersTable = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   isVerified: boolean("is_verified").default(false),
   credits: integer("credits").default(0).notNull(),
+  isAdmin: boolean("is_admin").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -119,6 +120,26 @@ export const sessionSnapshotsTable = pgTable("session_snapshots", {
   sessionId: text("session_id").primaryKey(),
   gameState: jsonb("game_state").notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const refreshTokensTable = pgTable("refresh_tokens", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const systemAuditLogsTable = pgTable("system_audit_logs", {
+  id: bigserial("id", { mode: "bigint" }).primaryKey(),
+  userId: text("user_id"),
+  eventType: text("event_type").notNull(),
+  description: text("description"),
+  metadata: jsonb("metadata"),
+  ipAddress: text("ip_address"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export type User = InferSelectModel<typeof usersTable>;

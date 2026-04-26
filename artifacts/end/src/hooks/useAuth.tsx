@@ -8,6 +8,7 @@ interface AuthContextType {
   token: string | null;
   email: string | null;
   isVerified: boolean;
+  isAdmin: boolean;
   credits: number;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, username: string, password: string) => Promise<void>;
@@ -22,10 +23,12 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const STORAGE_KEY_TOKEN = "lp_auth_token";
+const STORAGE_KEY_REFRESH_TOKEN = "lp_refresh_token";
 const STORAGE_KEY_USER_ID = "lp_user_id";
 const STORAGE_KEY_USERNAME = "lp_username";
 const STORAGE_KEY_EMAIL = "lp_email";
 const STORAGE_KEY_IS_VERIFIED = "lp_is_verified";
+const STORAGE_KEY_IS_ADMIN = "lp_is_admin";
 const STORAGE_KEY_CREDITS = "lp_credits";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -35,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const [isVerified, setIsVerified] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [credits, setCredits] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,6 +65,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsVerified(newIsVerified);
         localStorage.setItem(STORAGE_KEY_IS_VERIFIED, String(newIsVerified));
         
+        const newIsAdmin = data.isAdmin === true;
+        setIsAdmin(newIsAdmin);
+        localStorage.setItem(STORAGE_KEY_IS_ADMIN, String(newIsAdmin));
+        
         if (data.credits !== undefined) {
           setCredits(data.credits);
           localStorage.setItem(STORAGE_KEY_CREDITS, String(data.credits));
@@ -70,11 +78,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUsername(data.username);
           localStorage.setItem(STORAGE_KEY_USERNAME, data.username);
         }
+      } else if (response.status === 401) {
+        // Attempt to refresh if unauthorized
+        await performTokenRefresh();
       }
     } catch (err) {
       console.error("Failed to refresh user:", err);
     }
   }, [token]);
+
+  const performTokenRefresh = useCallback(async () => {
+    const refreshToken = localStorage.getItem(STORAGE_KEY_REFRESH_TOKEN);
+    if (!refreshToken) {
+      logout();
+      return;
+    }
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const newToken = data.token;
+        setToken(newToken);
+        localStorage.setItem(STORAGE_KEY_TOKEN, newToken);
+        return newToken;
+      } else {
+        logout();
+      }
+    } catch (err) {
+      console.error("Token rotation failed:", err);
+      logout();
+    }
+  }, []);
+
+  // Auto-refresh timer to keep session alive
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    
+    // Refresh access token every 20 hours (before it expires at 24h)
+    const interval = setInterval(performTokenRefresh, 20 * 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [isLoggedIn, performTokenRefresh]);
 
   // Initialize from localStorage on mount
   useEffect(() => {
@@ -83,6 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const savedUsername = localStorage.getItem(STORAGE_KEY_USERNAME);
     const savedEmail = localStorage.getItem(STORAGE_KEY_EMAIL);
     const savedIsVerified = localStorage.getItem(STORAGE_KEY_IS_VERIFIED) === "true";
+    const savedIsAdmin = localStorage.getItem(STORAGE_KEY_IS_ADMIN) === "true";
     const savedCredits = parseInt(localStorage.getItem(STORAGE_KEY_CREDITS) || "0", 10);
     
     if (savedToken && savedUserId) {
@@ -91,6 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUsername(savedUsername);
       setEmail(savedEmail);
       setIsVerified(savedIsVerified);
+      setIsAdmin(savedIsAdmin);
       setCredits(savedCredits);
       setIsLoggedIn(true);
       
@@ -117,16 +168,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const data = await response.json();
       const newToken = data.token;
+      const newRefreshToken = data.refreshToken;
       const newUserId = data.id;
       const newUsername = data.username;
       const newIsVerified = data.isVerified === true;
 
+      const newIsAdmin = data.isAdmin === true;
+
       // Save to localStorage
       localStorage.setItem(STORAGE_KEY_TOKEN, newToken);
+      localStorage.setItem(STORAGE_KEY_REFRESH_TOKEN, newRefreshToken);
       localStorage.setItem(STORAGE_KEY_USER_ID, newUserId);
       localStorage.setItem(STORAGE_KEY_USERNAME, newUsername);
       localStorage.setItem(STORAGE_KEY_EMAIL, email);
       localStorage.setItem(STORAGE_KEY_IS_VERIFIED, String(newIsVerified));
+      localStorage.setItem(STORAGE_KEY_IS_ADMIN, String(newIsAdmin));
 
       // Update state
       setToken(newToken);
@@ -134,6 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUsername(newUsername);
       setEmail(email);
       setIsVerified(newIsVerified);
+      setIsAdmin(newIsAdmin);
       setIsLoggedIn(true);
       
     } catch (err) {
@@ -162,16 +219,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const data = await response.json();
       const newToken = data.token;
+      const newRefreshToken = data.refreshToken;
       const newUserId = data.id;
       const newUsername = data.username;
       const newIsVerified = data.isVerified === true;
 
+      const newIsAdmin = data.isAdmin === true;
+
       // Save to localStorage
       localStorage.setItem(STORAGE_KEY_TOKEN, newToken);
+      localStorage.setItem(STORAGE_KEY_REFRESH_TOKEN, newRefreshToken);
       localStorage.setItem(STORAGE_KEY_USER_ID, newUserId);
       localStorage.setItem(STORAGE_KEY_USERNAME, newUsername);
       localStorage.setItem(STORAGE_KEY_EMAIL, email);
       localStorage.setItem(STORAGE_KEY_IS_VERIFIED, String(newIsVerified));
+      localStorage.setItem(STORAGE_KEY_IS_ADMIN, String(newIsAdmin));
 
       // Update state
       setToken(newToken);
@@ -179,6 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUsername(newUsername);
       setEmail(email);
       setIsVerified(newIsVerified);
+      setIsAdmin(newIsAdmin);
       setIsLoggedIn(true);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Registration failed";
@@ -190,11 +253,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    const refreshToken = localStorage.getItem(STORAGE_KEY_REFRESH_TOKEN);
+    if (refreshToken) {
+      fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken }),
+      }).catch(err => console.error("Logout notification failed:", err));
+    }
+
     localStorage.removeItem(STORAGE_KEY_TOKEN);
+    localStorage.removeItem(STORAGE_KEY_REFRESH_TOKEN);
     localStorage.removeItem(STORAGE_KEY_USER_ID);
     localStorage.removeItem(STORAGE_KEY_USERNAME);
     localStorage.removeItem(STORAGE_KEY_EMAIL);
     localStorage.removeItem(STORAGE_KEY_IS_VERIFIED);
+    localStorage.removeItem(STORAGE_KEY_IS_ADMIN);
     localStorage.removeItem(STORAGE_KEY_CREDITS);
 
     setToken(null);
@@ -202,6 +276,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUsername(null);
     setEmail(null);
     setIsVerified(false);
+    setIsAdmin(false);
     setCredits(0);
     setIsLoggedIn(false);
     setError(null);
@@ -244,6 +319,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token,
         email,
         isVerified,
+        isAdmin,
         credits,
         login,
         register,

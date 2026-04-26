@@ -1,26 +1,51 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { Router, type IRouter } from "express";
 import { z } from "zod";
-import { db, usersTable, emailVerificationTokensTable, passwordResetTokensTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { db, usersTable, emailVerificationTokensTable, passwordResetTokensTable, refreshTokensTable } from "@workspace/db";
+import { eq, and, gt } from "drizzle-orm";
 import {
   RegisterUserBody,
   LoginUserBody,
   LoginUserResponse,
   GetCurrentUserResponse,
+  RefreshTokenBody,
 } from "@workspace/api-zod";
-import { hashPassword, comparePassword, generateToken } from "../lib/auth.js";
+import { hashPassword, comparePassword, generateToken, generateRefreshToken, verifyRefreshToken } from "../lib/auth.js";
 import { sendEmail, generateVerificationEmailHTML, generatePasswordResetEmailHTML } from "../lib/email.js";
 import { authMiddleware, type AuthRequest } from "../middlewares/auth.js";
 import xss from "xss";
 import { Filter } from "bad-words";
 import { logger } from "../lib/logger.js";
+import { logAudit } from "../lib/audit.js";
+
+import { rateLimit } from "express-rate-limit";
 
 const filter = new Filter();
 const router: IRouter = Router();
 
+// ── RATE LIMITERS ────────────────────────────────────────────────────────────
+// Brute-force protection for sensitive auth endpoints
+const authLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Limit each IP to 10 attempts
+  message: { error: "Too many authentication attempts. Please try again in 15 minutes." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const resetLimit = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3, // Limit each IP to 3 reset requests
+  message: { error: "Too many reset requests. Please try again in 1 hour." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Username validation helper
 function validateUsername(username: string): { valid: boolean; error?: string } {
+  if (username.length < 3 || username.length > 30) {
+    return { valid: false, error: "Username must be between 3 and 30 characters" };
+  }
   if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
     return { valid: false, error: "Username can only contain letters, numbers, underscores, and hyphens" };
   }
@@ -31,9 +56,14 @@ function validateUsername(username: string): { valid: boolean; error?: string } 
 }
 
 // Register endpoint
-router.post("/auth/register", async (req, res) => {
+router.post("/auth/register", authLimit, async (req, res) => {
   try {
     const body = RegisterUserBody.parse(req.body);
+
+    if (body.password.length < 8) {
+      res.status(400).json({ error: "Security protocol requires a minimum of 8 characters for passwords" });
+      return;
+    }
 
     // Sanitize inputs
     const sanitizedEmail = xss(body.email.trim().toLowerCase());
@@ -117,15 +147,33 @@ router.post("/auth/register", async (req, res) => {
     }
 
     const token = generateToken(userId);
+    const refreshToken = generateRefreshToken(userId);
+
+    // Store refresh token
+    await db.insert(refreshTokensTable).values({
+      id: randomUUID(),
+      userId,
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+    });
 
     const response: z.infer<typeof LoginUserResponse> = {
       id: user[0].id,
       email: user[0].email,
       username: user[0].username,
       token,
+      refreshToken,
       isVerified: false,
       credits: user[0].credits,
+      isAdmin: false,
     };
+
+    await logAudit({
+      userId,
+      eventType: "AUTH_REGISTER_SUCCESS",
+      description: `New user protocol initiated for: ${sanitizedUsername}`,
+      req,
+    });
 
     res.status(201).json(response);
   } catch (error) {
@@ -135,7 +183,7 @@ router.post("/auth/register", async (req, res) => {
 });
 
 // Login endpoint
-router.post("/auth/login", async (req, res) => {
+router.post("/auth/login", authLimit, async (req, res) => {
   try {
     const body = LoginUserBody.parse(req.body);
     const sanitizedEmail = xss(body.email.trim().toLowerCase());
@@ -147,6 +195,11 @@ router.post("/auth/login", async (req, res) => {
       .limit(1);
 
     if (users.length === 0) {
+      await logAudit({
+        eventType: "AUTH_LOGIN_FAILURE",
+        description: `Failed login attempt for email: ${sanitizedEmail} (User not found)`,
+        req,
+      });
       res.status(401).json({ error: "Invalid credentials" });
       return;
     }
@@ -155,19 +208,43 @@ router.post("/auth/login", async (req, res) => {
 
     const isPasswordValid = await comparePassword(body.password, user.passwordHash);
     if (!isPasswordValid) {
+      await logAudit({
+        userId: user.id,
+        eventType: "AUTH_LOGIN_FAILURE",
+        description: `Failed login attempt for user: ${user.username} (Incorrect password)`,
+        req,
+      });
       res.status(401).json({ error: "Invalid credentials" });
       return;
     }
 
+    await logAudit({
+      userId: user.id,
+      eventType: "AUTH_LOGIN_SUCCESS",
+      description: `Session synchronized for: ${user.username}`,
+      req,
+    });
+
     const token = generateToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
+
+    // Store refresh token
+    await db.insert(refreshTokensTable).values({
+      id: randomUUID(),
+      userId: user.id,
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+    });
 
     const response: z.infer<typeof LoginUserResponse> = {
       id: user.id,
       email: user.email,
       username: user.username,
       token,
+      refreshToken,
       isVerified: user.isVerified === true,
       credits: user.credits,
+      isAdmin: user.isAdmin === true,
     };
 
     res.json(response);
@@ -186,7 +263,15 @@ router.get("/auth/me", authMiddleware, async (req: AuthRequest, res) => {
     }
 
     const users = await db
-      .select({ id: usersTable.id, email: usersTable.email, username: usersTable.username, isVerified: usersTable.isVerified, createdAt: usersTable.createdAt, credits: usersTable.credits })
+      .select({ 
+        id: usersTable.id, 
+        email: usersTable.email, 
+        username: usersTable.username, 
+        isVerified: usersTable.isVerified, 
+        createdAt: usersTable.createdAt, 
+        credits: usersTable.credits,
+        isAdmin: usersTable.isAdmin
+      })
       .from(usersTable)
       .where(eq(usersTable.id, req.userId))
       .limit(1);
@@ -204,6 +289,7 @@ router.get("/auth/me", authMiddleware, async (req: AuthRequest, res) => {
       createdAt: user.createdAt,
       isVerified: user.isVerified === true,
       credits: user.credits,
+      isAdmin: user.isAdmin === true,
     };
 
     res.json(response);
@@ -261,7 +347,7 @@ router.post(["/auth/verify", "/auth/verify-email"], async (req, res) => {
 });
 
 // Resend verification email
-router.post(["/auth/resend", "/auth/resend-verification-email"], authMiddleware, async (req: AuthRequest, res) => {
+router.post(["/auth/resend", "/auth/resend-verification-email"], authLimit, authMiddleware, async (req: AuthRequest, res) => {
   try {
     if (!req.userId) {
       res.status(401).json({ error: "Unauthorized" });
@@ -322,7 +408,7 @@ router.post(["/auth/resend", "/auth/resend-verification-email"], authMiddleware,
 });
 
 // Request password reset
-router.post("/auth/request-password-reset", async (req, res) => {
+router.post("/auth/request-password-reset", resetLimit, async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -371,6 +457,14 @@ router.post("/auth/request-password-reset", async (req, res) => {
         subject: "Reset your Errant Night password",
         html: generatePasswordResetEmailHTML(user.username, resetLink),
       });
+      
+      await logAudit({
+        userId: user.id,
+        eventType: "AUTH_PASSWORD_RESET_REQUEST",
+        description: `Identity recovery requested for: ${user.username}`,
+        req,
+      });
+
       res.json({ success: true, message: "If the email exists, a reset link has been sent" });
     } catch (emailError) {
       logger.error({ emailError, email }, "Failed to send password reset email");
@@ -383,7 +477,7 @@ router.post("/auth/request-password-reset", async (req, res) => {
 });
 
 // Reset password
-router.post("/auth/reset-password", async (req, res) => {
+router.post("/auth/reset-password", authLimit, async (req, res) => {
   try {
     const { token, newPassword } = req.body;
 
@@ -445,6 +539,55 @@ router.post("/auth/reset-password", async (req, res) => {
   } catch (error) {
     logger.error({ error }, "Password reset error");
     res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Refresh Token endpoint
+router.post("/auth/refresh", async (req, res) => {
+  try {
+    const { refreshToken } = RefreshTokenBody.parse(req.body);
+    
+    // 1. Verify token cryptographically
+    const userId = verifyRefreshToken(refreshToken);
+    if (!userId) {
+      res.status(401).json({ error: "Invalid refresh token" });
+      return;
+    }
+
+    // 2. Verify token in DB (lookup and expiry)
+    const storedTokens = await db
+      .select()
+      .from(refreshTokensTable)
+      .where(and(eq(refreshTokensTable.token, refreshToken), eq(refreshTokensTable.userId, userId)))
+      .limit(1);
+
+    if (storedTokens.length === 0 || new Date() > storedTokens[0].expiresAt) {
+      res.status(401).json({ error: "Refresh token expired or revoked" });
+      return;
+    }
+
+    // 3. Issue new access token
+    const newAccessToken = generateToken(userId);
+    
+    // Optional: Rotate refresh token (issue a new one and delete the old one)
+    // For simplicity we'll keep the same refresh token but we could rotate it here.
+
+    res.json({ token: newAccessToken });
+  } catch (err) {
+    res.status(400).json({ error: "Invalid request" });
+  }
+});
+
+// Logout endpoint
+router.post("/auth/logout", async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    if (refreshToken) {
+      await db.delete(refreshTokensTable).where(eq(refreshTokensTable.token, refreshToken));
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Logout failed" });
   }
 });
 

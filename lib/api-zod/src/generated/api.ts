@@ -49,8 +49,10 @@ export const LoginUserResponse = zod.object({
   "email": zod.string(),
   "username": zod.string(),
   "token": zod.string(),
+  "refreshToken": zod.string(),
   "isVerified": zod.boolean(),
-  "credits": zod.number()
+  "credits": zod.number(),
+  "isAdmin": zod.boolean()
 })
 
 
@@ -64,7 +66,8 @@ export const GetCurrentUserResponse = zod.object({
   "username": zod.string(),
   "createdAt": zod.coerce.date(),
   "isVerified": zod.boolean(),
-  "credits": zod.number()
+  "credits": zod.number(),
+  "isAdmin": zod.boolean()
 })
 
 
@@ -114,6 +117,14 @@ export const GetLeaderboardResponse = zod.object({
   "rank": zod.number()
 })),
   "totalPlayers": zod.number()
+})
+
+/**
+ * Exchange a valid refresh token for a new access token
+ * @summary Refresh access token
+ */
+export const RefreshTokenBody = zod.object({
+  "refreshToken": zod.string()
 })
 
 

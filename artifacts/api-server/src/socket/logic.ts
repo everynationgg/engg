@@ -12,6 +12,7 @@ import {
   sortPlayersByStatus
 } from "../modules/game/game.engine.js";
 import { syncUserAchievements } from "../routes/achievements.js";
+import { logAudit } from "../lib/audit.js";
 import type { MaybeSession } from "./types.js";
 
 export async function handleSaveConflict(
@@ -71,6 +72,12 @@ export async function recordGameResults(io: SocketIOServer, sessionId: string, v
         }
       }
     }
+    
+    await logAudit({
+      eventType: "GAME_RESULTS_RECORDED",
+      description: `Outcome finalized for session ${sessionId}`,
+      metadata: { sessionId, winTeam: voteResult.winTeam },
+    });
   } catch (err) {
     logger.error({ err, sessionId }, "Failed to record game results");
   }
@@ -119,6 +126,13 @@ export async function checkAndRunResolution(
            // Success logic moved to individual handlers or emitters if needed
            // For now keeping it simple as it was in socket.ts
            phaseUpdate(io, sessionId, current);
+
+           await logAudit({
+             eventType: "GAME_ROUND_RESOLVED",
+             description: `Round resolution finalized for session ${sessionId}`,
+             metadata: { sessionId },
+           });
+
            return;
         }
       }
@@ -127,4 +141,3 @@ export async function checkAndRunResolution(
     }
   }, 1200);
 }
-

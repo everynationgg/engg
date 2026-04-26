@@ -37,10 +37,11 @@ import {
   sortPlayersByStatus
 } from "../../modules/game/game.engine.js";
 import { db, usersTable, creditTransactionsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { phaseUpdate, chatSystemMessage, logGameEvent } from "../emitters.js";
 import { handleSaveConflict, checkAndRunResolution, recordGameResults } from "../logic.js";
 import { checkRateLimit } from "../../lib/rate-limit.js";
+import { logAudit } from "../../lib/audit.js";
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
 
@@ -104,6 +105,14 @@ export function registerGameHandlers(
 
     phaseUpdate(io, sessionId, cas.session);
     logGameEvent("game_started", sessionId, socket.id, { players: cas.session.players.length });
+    
+    await logAudit({
+      userId: state.currentUserId,
+      eventType: "GAME_START",
+      description: `Host initiated round deployment in session ${sessionId}`,
+      metadata: { sessionId, playerCount: cas.session.players.length },
+    });
+
     ack?.({ success: true });
   });
 
@@ -126,18 +135,33 @@ export function registerGameHandlers(
     try {
       const result = await db.transaction(async (tx) => {
         const user = await tx.select().from(usersTable).where(eq(usersTable.id, state.currentUserId!)).limit(1);
-        if (!user.length || user[0].credits < price) return false;
+        if (!user.length || user[0].credits < price) return "insufficient_funds";
 
         const session = await getSession(sessionId);
         if (session?.unlockedRoles.includes(roleId)) return "already_unlocked";
 
+        // ── IDEMPOTENCY CHECK ──
+        // Prevent double-spend if the socket event is retried or double-clicked
+        const idempotencyKey = `unlock:${sessionId}:${roleId}`;
+        const existingTx = await tx
+          .select()
+          .from(creditTransactionsTable)
+          .where(sql`${creditTransactionsTable.userId} = ${state.currentUserId!} AND ${creditTransactionsTable.packId} = ${idempotencyKey}`)
+          .limit(1);
+        
+        if (existingTx.length > 0) return "already_processed";
+
+        // Deduct and log
         await tx.update(usersTable).set({ credits: user[0].credits - price }).where(eq(usersTable.id, state.currentUserId!));
         await tx.insert(creditTransactionsTable).values({
           id: randomUUID(),
           userId: state.currentUserId!,
+          username: user[0].username,
+          email: user[0].email,
           amount: -price,
           type: "spend",
-          description: `Unlocked ${roleId} in lobby ${sessionId}`,
+          packId: idempotencyKey, // Used as idempotency key for game unlocks
+          description: `Authorized role protocol: ${roleId.toUpperCase()} in session ${sessionId}`,
         });
         return true;
       });
@@ -153,9 +177,22 @@ export function registerGameHandlers(
         const fresh = await getSession(sessionId);
         if (fresh) phaseUpdate(io, sessionId, fresh);
         chatSystemMessage(io, sessionId, `${roleId.toUpperCase()} protocol initialized`);
+        
+        await logAudit({
+          userId: state.currentUserId,
+          eventType: "CREDIT_SPEND_UNLOCK",
+          description: `User unlocked premium protocol: ${roleId.toUpperCase()}`,
+          metadata: { sessionId, roleId, price },
+        });
+
         ack?.({ success: true });
       } else {
-        ack?.({ success: false, error: result === "already_unlocked" ? "Already unlocked" : "Insufficient credits" });
+        let error = "Internal error";
+        if (result === "already_unlocked") error = "Already unlocked in this session";
+        if (result === "already_processed") error = "Transaction already processed";
+        if (result === "insufficient_funds") error = "Insufficient credits for this protocol";
+        
+        ack?.({ success: false, error });
       }
     } catch (err) {
       logger.error({ err, sessionId }, "Failed to unlock role");
@@ -240,6 +277,16 @@ export function registerGameHandlers(
       if (votingComplete && voteResult) {
         io.to(sessionId).emit("vote_result", voteResult);
         io.to(sessionId).emit("round_summary", cas.session.roundSummary);
+
+        if (voteResult.eliminatedId) {
+          await logAudit({
+            userId: voteResult.eliminatedId,
+            eventType: "PLAYER_ELIMINATED",
+            description: `Player protocol terminated: ${voteResult.eliminatedName} (${voteResult.eliminatedRole})`,
+            metadata: { sessionId, eliminatedRole: voteResult.eliminatedRole },
+          });
+        }
+
         if (cas.session.phase === "result") {
           await recordGameResults(io, sessionId, voteResult, cas.session);
         }
@@ -307,6 +354,14 @@ export function registerGameHandlers(
     if (cas) {
       phaseUpdate(io, sessionId, cas.session);
       chatSystemMessage(io, sessionId, "Systems rebooting... New game starting.");
+      
+      await logAudit({
+        userId: state.currentUserId,
+        eventType: "GAME_RESTART",
+        description: `Host requested round reset in session ${sessionId}`,
+        metadata: { sessionId },
+      });
+
       ack?.({ success: true });
     }
   });
@@ -344,6 +399,14 @@ export function registerGameHandlers(
 
     if (cas) {
       io.to(sessionId).emit("session_closed", { message: "The host has ended the session." });
+      
+      await logAudit({
+        userId: state.currentUserId,
+        eventType: "GAME_END",
+        description: `Host terminated session ${sessionId}`,
+        metadata: { sessionId },
+      });
+
       ack?.({ success: true });
     }
   });
@@ -362,6 +425,14 @@ export function registerGameHandlers(
 
     if (cas) {
       phaseUpdate(io, sessionId, cas.session);
+      
+      await logAudit({
+        userId: state.currentUserId,
+        eventType: "MOD_KICK_PLAYER",
+        description: `Host ejected player from session ${sessionId}`,
+        metadata: { sessionId, targetPlayerId },
+      });
+
       ack?.({ success: true });
     }
   });
