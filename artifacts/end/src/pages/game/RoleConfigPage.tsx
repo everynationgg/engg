@@ -716,7 +716,7 @@ export default function RoleConfigPage() {
 
            {/* Role summary: moved to top for better visibility */}
            {showActiveRoles && (
-             <div className="px-5 py-4 border-b bg-cyan-500/5" style={{ borderColor: "hsl(210 30% 14%)" }}>
+             <div className="px-5 py-4 border-b bg-cyan-500/5 pb-6" style={{ borderColor: "hsl(210 30% 14%)" }}>
                <div className="text-[10px] tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(210 30% 55%)" }}>Active Roles Manifest</div>
                <div className="flex flex-wrap gap-1.5 mb-2">
                  {ROLES.filter((r) => (roleCounts[r.id] || 0) > 0).map((r) => (
@@ -784,7 +784,7 @@ export default function RoleConfigPage() {
         </div>
 
         {/* CENTER PANEL */}
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 pt-10 sm:pt-14 pb-8 h-full custom-scrollbar">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 pt-16 sm:pt-14 pb-8 h-full custom-scrollbar">
 
           {/* Mobile-only: room code + player list */}
           <div className="lg:hidden mb-5 pb-5 border-b" style={{ borderColor: "hsl(210 30% 14%)" }}>
@@ -1493,7 +1493,7 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
         </div>
 
         {/* Details */}
-        <div className="flex-1 lg:overflow-y-auto px-3 lg:px-4 py-1 lg:py-2 flex flex-col gap-1.5 lg:gap-3 pb-24">
+        <div className="flex-1 lg:overflow-y-auto px-3 lg:px-4 py-1 lg:py-2 flex flex-col gap-1.5 lg:gap-3 pb-32">
           <InfoBlock label="Alignment" value={role.alignment} accentColor={accentColorLight} />
           <InfoBlock label="Win Condition" value={role.winCondition} accentColor={accentColorLight} />
           <InfoBlock label="Ability" value={role.ability} accentColor={accentColorLight} />
