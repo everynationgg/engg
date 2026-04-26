@@ -55,7 +55,7 @@ router.get("/logs", async (req, res) => {
     const total = totalResult[0]?.count || 0;
 
     res.json({
-      logs,
+      logs: logs.map(l => ({ ...l, id: l.id.toString() })),
       pagination: {
         page,
         limit,

@@ -58,7 +58,7 @@ messagesRouter.get(
           .where(sql`${privateMessagesTable.id} IN ${unreadIds}`);
       }
 
-      res.json(messages.reverse());
+      res.json(messages.map(m => ({ ...m, id: m.id.toString() })).reverse());
     } catch (error) {
       logger.error({ err: error }, "Error fetching private messages");
       res.status(500).json({ error: "Failed to fetch private messages" });
@@ -96,7 +96,7 @@ messagesRouter.post(
 
       // TODO: Emit socket event for real-time delivery
       
-      res.json(newMessage);
+      res.json({ ...newMessage, id: newMessage.id.toString() });
     } catch (error) {
       logger.error({ err: error }, "Error sending private message");
       res.status(500).json({ error: "Failed to send message" });
