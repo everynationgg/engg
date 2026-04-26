@@ -187,6 +187,14 @@ export default function Shop() {
       <div className="fixed inset-0 pointer-events-none z-10 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" />
 
       <main className="relative z-20 w-full max-w-[1600px] px-6 py-32 md:py-40 flex flex-col items-center">
+        {/* Navigation Action - Non-sticky */}
+        <div className="w-full max-w-[1400px] mb-8">
+           <SciFiButton variant="outline" onClick={handleReturn} className="bg-white/5 border-white/10">
+             <FaArrowLeft className="text-xs group-hover:-translate-x-1 transition-transform mr-2" />
+             Return_Home
+           </SciFiButton>
+        </div>
+
         {/* Header Section */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
@@ -205,35 +213,6 @@ export default function Shop() {
             Acquire high-density CC assets to unlock premium operational roles and advanced tactical protocols.
           </p>
         </motion.div>
-
-        {/* Top HUD Bar - Positioned below global Navbar */}
-        <header className="fixed left-0 right-0 z-50 p-6 flex justify-between items-start pointer-events-none transition-all duration-500 top-[72px] lg:top-[88px]">
-           <div className="pointer-events-auto">
-              <SciFiButton variant="outline" onClick={handleReturn} className="bg-[#020408]/80 backdrop-blur-md">
-                <FaArrowLeft className="text-xs group-hover:-translate-x-1 transition-transform" />
-                Return_Home
-              </SciFiButton>
-           </div>
-
-           {isLoggedIn && (
-             <div className="pointer-events-auto">
-               <TacticalSlate className="px-6 py-3 bg-[#020408]/80 backdrop-blur-md" showScanner={false}>
-                 <div className="flex items-center gap-6">
-                   <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-                     <FaHdd className="text-cyan-400 text-lg animate-pulse" />
-                   </div>
-                   <div className="flex flex-col">
-                     <span className="font-mono text-[8px] uppercase tracking-[0.4em] text-white/30">Available_Assets</span>
-                     <div className="flex items-baseline gap-2">
-                       <span className="font-orbitron text-2xl font-black text-white">{displayCredits.toLocaleString()}</span>
-                       <span className="font-orbitron text-[9px] text-cyan-500 font-bold tracking-widest">CC</span>
-                     </div>
-                   </div>
-                 </div>
-               </TacticalSlate>
-             </div>
-           )}
-        </header>
 
         {/* Status Messages */}
         <AnimatePresence>

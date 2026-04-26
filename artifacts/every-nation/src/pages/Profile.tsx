@@ -138,6 +138,14 @@ export default function Profile() {
       <div className="fixed inset-0 pointer-events-none z-10 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" />
 
       <main className="relative z-20 w-full max-w-[1400px] px-6 py-32 md:py-40 flex flex-col items-center">
+        {/* Navigation Action - Non-sticky */}
+        <div className="w-full max-w-[1400px] mb-8">
+           <SciFiButton variant="outline" onClick={handleReturn} className="bg-white/5 border-white/10">
+             <FaArrowLeft className="text-xs group-hover:-translate-x-1 transition-transform mr-2" />
+             Return_Home
+           </SciFiButton>
+        </div>
+
         {loading ? (
           <div className="flex flex-col items-center gap-6 mt-32">
              <div className="w-12 h-12 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
@@ -384,13 +392,6 @@ export default function Profile() {
                        </div>
                     </TacticalSlate>
 
-                    <SciFiButton 
-                      onClick={handleReturn}
-                      variant="outline" className="mt-auto border-white/10 text-white/60 hover:text-white"
-                    >
-                      <FaArrowLeft className="text-xs opacity-40 mr-2" />
-                      Command_Base
-                    </SciFiButton>
                  </div>
               </div>
             </div>

@@ -1,9 +1,10 @@
 import { motion, useScroll, useTransform } from "framer-motion";
-import { FaExternalLinkAlt, FaLock, FaTerminal, FaShieldAlt, FaCubes } from "react-icons/fa";
+import { FaExternalLinkAlt, FaLock, FaTerminal, FaShieldAlt, FaCubes, FaArrowLeft } from "react-icons/fa";
 import AlliesSidebar from "@/components/AlliesSidebar";
 import TacticalSlate from "@/components/common/TacticalSlate";
 import { useParallax } from "@/hooks/useParallax";
 import { useRef } from "react";
+import { SciFiButton } from "@/components/common/SciFiButton";
 
 interface GameCardProps {
   title: string;
@@ -126,8 +127,18 @@ export default function Hub() {
       {/* Global HUD Scanning Line */}
       <div className="fixed inset-0 pointer-events-none z-20 scanline" />
 
-      {/* Header Overlay */}
-      <header className="relative z-10 w-full max-w-[1440px] px-8 md:px-16 pt-16 md:pt-24 flex flex-col gap-4 mb-8 md:mb-0">
+      {/* Main Content Area */}
+      <main className="relative z-20 w-full max-w-[1440px] px-8 md:px-16 pt-32 flex flex-col items-center">
+        {/* Navigation Action - Non-sticky */}
+        <div className="w-full mb-8">
+           <SciFiButton variant="outline" onClick={() => window.location.href = "/"} className="bg-white/5 border-white/10">
+             <FaArrowLeft className="text-xs group-hover:-translate-x-1 transition-transform mr-2" />
+             Return_Home
+           </SciFiButton>
+        </div>
+
+        {/* Header Overlay */}
+        <header className="w-full flex flex-col gap-4 mb-8 md:mb-0">
         <div className="flex items-center gap-4">
           <div className="w-12 h-[2px] bg-cyan-500 shadow-[0_0_15px_#00f3ff]" />
           <span className="font-mono text-[10px] uppercase tracking-[0.8em] text-cyan-500">Mission_Select</span>
@@ -159,6 +170,7 @@ export default function Hub() {
           ))}
         </div>
       </div>
+    </main>
 
       {/* System Footer Info */}
       <footer className="relative z-10 mt-auto w-full border-t border-white/5 bg-black/40 backdrop-blur-md py-8">

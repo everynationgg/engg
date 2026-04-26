@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaUser, FaSignOutAlt, FaBars, FaTimes } from "react-icons/fa";
+import { FaUser, FaSignOutAlt, FaBars, FaTimes, FaArrowRight } from "react-icons/fa";
 import { SciFiButton } from "@/components/common/SciFiButton";
 
 export default function Navbar() {
@@ -151,7 +151,7 @@ export default function Navbar() {
                 onClick={() => navigate("/login")}
                 className="border-white/10 bg-white/5"
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 pl-12">
                   <div className="relative">
                     <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
                     <div className="absolute inset-0 blur-[3px] bg-cyan-400 animate-pulse" />
@@ -167,10 +167,10 @@ export default function Navbar() {
 
         {/* MOBILE TOGGLE */}
         <button
-          className="lg:hidden p-2 text-white/60"
+          className="lg:hidden p-4 text-cyan-400/60 hover:text-cyan-400 transition-colors"
           onClick={() => setIsOpen(!isOpen)}
         >
-          {isOpen ? <FaTimes /> : <FaBars />}
+          {isOpen ? <FaTimes className="text-xl" /> : <FaBars className="text-xl" />}
         </button>
       </div>
 
@@ -178,21 +178,71 @@ export default function Navbar() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden bg-black/95 border-t border-white/10"
+            initial={{ opacity: 0, x: "100%" }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: "100%" }}
+            className="fixed inset-0 top-[72px] lg:hidden z-[1000] bg-[#020408]/95 backdrop-blur-xl border-l border-white/5"
           >
-            <div className="px-6 py-10 flex flex-col gap-6">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  className="text-sm uppercase text-white/70"
-                >
-                  {link.name}
-                </Link>
-              ))}
+            <div className="p-10 flex flex-col h-full gap-12">
+               {/* Nav Links */}
+               <div className="flex flex-col gap-8">
+                  <span className="font-mono text-[9px] uppercase tracking-[0.6em] text-white/20">Navigation_Nodes</span>
+                  {navLinks.map((link) => (
+                    <Link
+                      key={link.name}
+                      href={link.href}
+                      onClick={() => setIsOpen(false)}
+                      className="group flex items-center justify-between py-2"
+                    >
+                      <span className="font-orbitron text-2xl font-black uppercase tracking-[0.1em] text-white/60 group-hover:text-cyan-400 transition-colors">
+                        {link.name}
+                      </span>
+                      <FaArrowRight className="text-white/10 group-hover:text-cyan-400/40 group-hover:translate-x-2 transition-all" />
+                    </Link>
+                  ))}
+               </div>
+
+               {/* Auth Section */}
+               <div className="mt-auto border-t border-white/5 pt-12 flex flex-col gap-8">
+                  {isLoggedIn ? (
+                    <div className="flex flex-col gap-8">
+                       <div className="flex items-center gap-6">
+                          <div className="w-12 h-12 rounded-full border border-cyan-500/20 bg-cyan-500/5 flex items-center justify-center">
+                             <FaUser className="text-cyan-400/40" />
+                          </div>
+                          <div className="flex flex-col">
+                             <span className="font-mono text-[9px] uppercase tracking-widest text-white/20">Authenticated_Op</span>
+                             <span className="font-orbitron font-black text-white text-lg">{username}</span>
+                          </div>
+                       </div>
+                       <SciFiButton 
+                          onClick={() => { navigate("/profile"); setIsOpen(false); }}
+                          variant="primary" className="w-full"
+                       >
+                          Open_Command_Nexus
+                       </SciFiButton>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-6">
+                       <span className="font-mono text-[9px] uppercase tracking-[0.6em] text-white/20 text-center">Identity_Required</span>
+                       <SciFiButton 
+                          onClick={() => { navigate("/login"); setIsOpen(false); }}
+                          variant="primary" className="w-full"
+                       >
+                          Initialize_Identity
+                       </SciFiButton>
+                    </div>
+                  )}
+               </div>
+
+               {/* Footer Decoration */}
+               <div className="flex items-center justify-between mt-8">
+                  <div className="flex flex-col gap-1">
+                     <span className="font-mono text-[7px] uppercase tracking-widest text-white/10">System_Clock</span>
+                     <span className="font-mono text-[8px] text-white/30">{new Date().toLocaleTimeString()}</span>
+                  </div>
+                  <div className="w-32 h-px bg-gradient-to-r from-transparent to-white/5" />
+               </div>
             </div>
           </motion.div>
         )}
