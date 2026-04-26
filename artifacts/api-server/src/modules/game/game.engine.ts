@@ -1313,7 +1313,7 @@ export function tallyVotes(state: GameState): VoteResult {
       eliminatedId: null,
       eliminatedName: null,
       eliminatedRole: null,
-      winTeam: isAnyEvilInPlay ? "alien" : "crew",
+      winTeam: isAnyEvilInPlay ? "alien" : "tie",
       allRoles,
       centerCards,
     };

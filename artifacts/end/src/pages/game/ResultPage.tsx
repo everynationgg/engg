@@ -276,12 +276,12 @@ export default function ResultPage() {
   const bannerDim = crewWon ? "hsl(185 100% 50% / 0.1)" : alienWon ? "hsl(0 75% 55% / 0.1)" : "hsl(270 70% 60% / 0.1)";
   const bgTint = crewWon ? "hsl(200 30% 6%)" : alienWon ? "hsl(0 40% 6%)" : "hsl(270 30% 6%)";
 
-  const winLabel = crewWon ? "CREW VICTORY" : alienWon ? "ALIEN VICTORY" : "STALEMATE DETECTED";
+  const winLabel = crewWon ? "CREW VICTORY" : alienWon ? "ALIEN VICTORY" : "CONSENSUS REACHED";
   const winSub = crewWon
     ? "The alien has been identified and eliminated."
     : alienWon
       ? "The alien survived. The infestation continues."
-      : "Consensus threshold not met. The alien remains active within the facility.";
+      : "The crew has reached a consensus. No threats were eliminated.";
 
   useEffect(() => {
     if (!summary) {

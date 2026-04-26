@@ -137,7 +137,7 @@ export default function Profile() {
       {/* Global Scanline Overlay */}
       <div className="fixed inset-0 pointer-events-none z-10 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" />
 
-      <main className="relative z-20 w-full max-w-[1400px] px-6 py-32 md:py-40 flex flex-col items-center">
+      <main className="relative z-20 w-full max-w-[1400px] px-6 pt-52 pb-40 flex flex-col items-center">
         {/* Navigation Action - Non-sticky */}
         <div className="w-full max-w-[1400px] mb-8">
            <SciFiButton variant="outline" onClick={handleReturn} className="bg-white/5 border-white/10">
@@ -174,7 +174,7 @@ export default function Profile() {
               <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
                  <div className="lg:col-span-5">
                     <TacticalSlate color="#00f3ff" className="h-full">
-                       <div className="p-12 pt-16 flex flex-col items-center lg:items-start text-center lg:text-left gap-8">
+                       <div className="p-16 pt-24 flex flex-col items-center lg:items-start text-center lg:text-left gap-8">
                           <div className="relative">
                              <div className="w-32 h-32 rounded-full border-2 border-cyan-500/20 p-2 relative">
                                 <div className="absolute inset-0 border-2 border-cyan-500/40 rounded-full animate-[spin_10s_linear_infinite] border-t-transparent" />
@@ -215,7 +215,7 @@ export default function Profile() {
 
                  <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-8">
                     <TacticalSlate color="#a855f7" showScanner={false} className="h-full">
-                       <div className="p-12 pt-16 flex flex-col gap-6">
+                       <div className="p-16 pt-24 flex flex-col gap-6">
                           <div className="flex items-center justify-between">
                              <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-purple-400/60">CC_Assets</span>
                              <FaWallet className="text-purple-400/40" />
@@ -237,7 +237,7 @@ export default function Profile() {
                     </TacticalSlate>
 
                     <TacticalSlate color="#eab308" showScanner={false} className="h-full">
-                       <div className="p-12 pt-16 flex flex-col gap-6">
+                       <div className="p-16 pt-24 flex flex-col gap-6">
                           <div className="flex items-center justify-between">
                              <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-yellow-500/60">Combat_Telemetry</span>
                              <FaTrophy className="text-yellow-500/40" />

@@ -603,41 +603,6 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
           </div>
         )}
 
-        {roundSummary && (
-          <div className="rounded-xl p-5" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(185 100% 50% / 0.15)", boxShadow: "0 0 30px hsl(185 100% 50% / 0.03)" }}>
-            <h3 className="font-orbitron text-xs tracking-[0.4em] uppercase mb-4 flex items-center gap-2" style={{ color: "hsl(185 100% 60%)" }}>
-              <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
-              Intelligence Report: Previous Cycle
-            </h3>
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-3">
-                {roundSummary.abilityLog.filter(e => {
-                  const actor = sessionPlayers.find(p => p.name === e.actorName);
-                  return !actor?.isSpectator;
-                }).length > 0 ? (
-                  roundSummary.abilityLog
-                    .filter(e => {
-                      const actor = sessionPlayers.find(p => p.name === e.actorName);
-                      return !actor?.isSpectator;
-                    })
-                    .map((entry, idx) => (
-                      <div key={idx} className="flex gap-4 p-3 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-colors">
-                        <span className="font-orbitron text-xs font-black text-purple-500/60 mt-0.5">{String(idx + 1).padStart(2, '0')}</span>
-                        <div className="text-sm leading-relaxed">
-                          <span className="font-bold text-cyan-400 uppercase tracking-wider text-xs">{entry.actorName}</span>
-                          <span className="text-white/60 ml-2 font-light" style={{ fontFamily: "'Exo 2', sans-serif" }}>{entry.event}</span>
-                        </div>
-                      </div>
-                    ))
-                ) : (
-                  <div className="py-4 text-center text-white/20 font-orbitron text-[10px] tracking-widest uppercase">
-                    No active abilities recorded
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Player list */}
         <div className="rounded-md p-4" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 15%)" }}>

@@ -128,7 +128,7 @@ export default function Hub() {
       <div className="fixed inset-0 pointer-events-none z-20 scanline" />
 
       {/* Main Content Area */}
-      <main className="relative z-20 w-full max-w-[1440px] px-8 md:px-16 pt-32 flex flex-col items-center">
+      <main className="relative z-20 w-full max-w-[1440px] px-8 md:px-16 pt-52 flex flex-col items-center">
         {/* Navigation Action - Non-sticky */}
         <div className="w-full mb-8">
            <SciFiButton variant="outline" onClick={() => window.location.href = "/"} className="bg-white/5 border-white/10">
