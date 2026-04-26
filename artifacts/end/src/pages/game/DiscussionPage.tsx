@@ -604,22 +604,39 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
               The orbit is stable. Engage the crew via local comms to determine the infestation threat.
             </p>
 
-            <button
-              onClick={() => {
-                playSciFiClick();
-                onOpenChat?.();
-              }}
-              className="w-full py-4 flex items-center justify-center gap-3 font-orbitron font-black text-sm tracking-[0.3em] uppercase rounded-md border-2 transition-all duration-200 group active:scale-[0.98]"
-              style={{
-                background: "hsl(185 100% 50% / 0.1)",
-                borderColor: "hsl(185 100% 50% / 0.4)",
-                color: "hsl(185 100% 70%)",
-                boxShadow: "0 0 15px hsl(185 100% 50% / 0.15)"
-              }}
-            >
-              <FaComments className="text-xl group-hover:scale-110 transition-transform" />
-              Open Chat Terminal
-            </button>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  playSciFiClick();
+                  onOpenChat?.();
+                }}
+                className="w-full py-4 flex items-center justify-center gap-3 font-orbitron font-black text-sm tracking-[0.3em] uppercase rounded-md border-2 transition-all duration-200 group active:scale-[0.98]"
+                style={{
+                  background: "hsl(185 100% 50% / 0.1)",
+                  borderColor: "hsl(185 100% 50% / 0.4)",
+                  color: "hsl(185 100% 70%)",
+                  boxShadow: "0 0 15px hsl(185 100% 50% / 0.15)"
+                }}
+              >
+                <FaComments className="text-xl group-hover:scale-110 transition-transform" />
+                Open Chat Terminal
+              </button>
+
+              <button
+                onClick={handleCallEmergencyVote}
+                disabled={evLoading || cooldownLeft > 0}
+                className="w-full py-2.5 font-orbitron font-bold text-[10px] tracking-[0.3em] uppercase rounded border transition-all duration-200"
+                style={{
+                  background: cooldownLeft > 0 ? "transparent" : "hsl(0 75% 55% / 0.08)",
+                  borderColor: cooldownLeft > 0 ? "hsl(210 30% 20%)" : "hsl(0 75% 55% / 0.4)",
+                  color: cooldownLeft > 0 ? "hsl(210 30% 45%)" : "hsl(0 75% 75%)",
+                  opacity: (evLoading || cooldownLeft > 0) ? 0.6 : 1,
+                  cursor: (evLoading || cooldownLeft > 0) ? "not-allowed" : "pointer"
+                }}
+              >
+                {evLoading ? "INITIATING..." : cooldownLeft > 0 ? `COOLDOWN (${cooldownLeft}S)` : "INITIATE EMERGENCY VOTE"}
+              </button>
+            </div>
           </div>
         )}
 
