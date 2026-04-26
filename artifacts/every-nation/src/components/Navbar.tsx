@@ -4,11 +4,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaUser, FaSignOutAlt, FaBars, FaTimes } from "react-icons/fa";
 
-const [, navigate] = useLocation();
-
 export default function Navbar() {
   const { isLoggedIn, username, credits, logout } = useAuth();
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 

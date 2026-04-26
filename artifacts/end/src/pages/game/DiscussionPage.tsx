@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { getSocket } from "@/lib/socket";
 import { ROLES } from "@/data/roles";
 import { getRoomCode, getCallsign, getInitialRoleId, getOrbitResult } from "@/lib/gameHelpers";
@@ -187,14 +187,14 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
     const handleEmergencyVoteResult = (data: { passed: boolean }) => {
       setEvPopup(null);
       if (data.passed) {
-        setEvResult({ passed: true, msg: "Emergency vote passed — initiating vote." });
+        setEvResult({ passed: true, msg: "Emergency vote passed  -  initiating vote." });
       } else {
         setEvResult({ passed: false, msg: "Vote denied. 60-second cooldown active." });
         startCooldown();
       }
     };
 
-    // Receive private ability result — delivered by the server when discussion phase begins
+    // Receive private ability result  -  delivered by the server when discussion phase begins
     const handleOrbitResult = (result: { type: string; data?: unknown }) => {
       setOrbitResultState(result);
       sessionStorage.setItem("lp_orbit_result", JSON.stringify(result));
@@ -258,7 +258,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
       setEvLoading(false);
       if (!resp.success) {
         if (resp.error === "cooldown") {
-          setEvResult({ passed: false, msg: "Cooldown active — cannot call yet." });
+          setEvResult({ passed: false, msg: "Cooldown active  -  cannot call yet." });
         }
       }
     });
@@ -378,7 +378,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
                         return (
                           <div key={roleId} className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-white/[0.03]" style={{ borderColor: teamColor + "33" }}>
                             <span className="font-orbitron text-[10px] font-bold uppercase tracking-widest" style={{ color: teamColor }}>{r?.name ?? roleId}</span>
-                            <span className="text-[10px] text-white/30 font-bold">×{count}</span>
+                            <span className="text-[10px] text-white/30 font-bold">x{count}</span>
                           </div>
                         );
                       })}
@@ -391,7 +391,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
             <div className="lg:col-span-7 flex flex-col gap-6">
               <h3 className="font-orbitron text-xs tracking-[0.4em] uppercase mb-4 flex items-center gap-2" style={{ color: "hsl(185 100% 50%)" }}>
                 <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full" />
-                Biometric Manifest — {sessionPlayers.length > 0 ? sessionPlayers.filter(p => !p.isSpectator).length : (sessionStorage.getItem("lp_totalPlayers") || 0)} Active Subjects
+                Biometric Manifest  -  {sessionPlayers.length > 0 ? sessionPlayers.filter(p => !p.isSpectator).length : (sessionStorage.getItem("lp_totalPlayers") || 0)} Active Subjects
               </h3>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -566,7 +566,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
           {abilityResultText}
         </div>
 
-        {/* Roles in Play — same for all players, no identity info */}
+        {/* Roles in Play */}
         {Object.keys(roleCounts).length > 0 && (
           <div className="rounded-md p-4" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 15%)" }}>
             <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(210 30% 50%)" }}>
@@ -574,7 +574,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
             </div>
             <div className="flex flex-wrap gap-2">
               {Object.entries(roleCounts)
-                .filter(([, count]) => count > 0)
+                .filter(([roleId, count]) => count > 0 && roleId !== "spectator")
                 .sort(([a], [b]) => a.localeCompare(b))
                 .map(([roleId, count]) => {
                   const r = ROLES.find((x) => x.id === roleId);
@@ -593,7 +593,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
                       </span>
                       {count > 1 && (
                         <span className="text-xs font-bold" style={{ color: "hsl(210 30% 50%)", fontFamily: "'Exo 2', sans-serif" }}>
-                          ×{count}
+                          x{count}
                         </span>
                       )}
                     </div>
@@ -603,11 +603,46 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
           </div>
         )}
 
+        {roundSummary && (
+          <div className="rounded-xl p-5" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(185 100% 50% / 0.15)", boxShadow: "0 0 30px hsl(185 100% 50% / 0.03)" }}>
+            <h3 className="font-orbitron text-xs tracking-[0.4em] uppercase mb-4 flex items-center gap-2" style={{ color: "hsl(185 100% 60%)" }}>
+              <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
+              Intelligence Report: Previous Cycle
+            </h3>
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-3">
+                {roundSummary.abilityLog.filter(e => {
+                  const actor = sessionPlayers.find(p => p.name === e.actorName);
+                  return !actor?.isSpectator;
+                }).length > 0 ? (
+                  roundSummary.abilityLog
+                    .filter(e => {
+                      const actor = sessionPlayers.find(p => p.name === e.actorName);
+                      return !actor?.isSpectator;
+                    })
+                    .map((entry, idx) => (
+                      <div key={idx} className="flex gap-4 p-3 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-colors">
+                        <span className="font-orbitron text-xs font-black text-purple-500/60 mt-0.5">{String(idx + 1).padStart(2, '0')}</span>
+                        <div className="text-sm leading-relaxed">
+                          <span className="font-bold text-cyan-400 uppercase tracking-wider text-xs">{entry.actorName}</span>
+                          <span className="text-white/60 ml-2 font-light" style={{ fontFamily: "'Exo 2', sans-serif" }}>{entry.event}</span>
+                        </div>
+                      </div>
+                    ))
+                ) : (
+                  <div className="py-4 text-center text-white/20 font-orbitron text-[10px] tracking-widest uppercase">
+                    No active abilities recorded
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Player list */}
         <div className="rounded-md p-4" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 15%)" }}>
           <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(210 30% 50%)" }}>
-            CREW MANIFEST — {sessionPlayers.length > 0 ? sessionPlayers.filter(p => !p.isSpectator).length : (sessionStorage.getItem("lp_totalPlayers") || 0)} ABOARD
+            CREW MANIFEST  -  {sessionPlayers.length > 0 ? sessionPlayers.filter(p => !p.isSpectator).length : (sessionStorage.getItem("lp_totalPlayers") || 0)} ABOARD
           </div>
           <div className="flex flex-col gap-2">
             {sessionPlayers.filter(p => !p.isSpectator).map((p) => {
@@ -636,6 +671,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
               </div>
             )})}
           </div>
+        </div>
         {/* Communication terminal */}
         {!isSpectator && (
           <div className="rounded-md p-5" style={{ background: "hsl(185 80% 8% / 0.3)", border: "1px solid hsl(185 100% 50% / 0.2)", boxShadow: "0 0 20px hsl(185 100% 50% / 0.05)" }}>
@@ -748,21 +784,22 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
       )}
 
       {/* Shine animation style */}
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes wing-shine {
           0%, 100% { opacity: 0; transform: translateX(-100%) skewX(-15deg); }
           40%, 60% { opacity: 0.35; }
           50% { transform: translateX(200%) skewX(-15deg); }
         }
         .wing-shine { animation: wing-shine 4s ease-in-out infinite; }
-      `}</style>
+      `}} />
       </div>
     </div>
   );
 }
 
 // Wing icon with looping silver shine
-function WingIcon({ accentColor }: { accentColor: string }) {
+function WingIcon(props: { accentColor: string }) {
+  const { accentColor } = props;
   return (
     <div
       className="absolute -bottom-1 -right-1 w-5 h-5 rounded overflow-hidden"
@@ -816,11 +853,11 @@ function renderOrbitResultSummary(
   }
 
   if (!result || result.type === "no_ability") {
-    return <p className="text-sm" style={muted}>You have no active ability — you observed the orbit phase.</p>;
+    return <p className="text-sm" style={muted}>You have no active ability  -  you observed the orbit phase.</p>;
   }
 
   if (result.type === "passive") {
-    return <p className="text-sm" style={muted}>Your ability is passive — no orbit action was required from you.</p>;
+    return <p className="text-sm" style={muted}>Your ability is passive  -  no orbit action was required from you.</p>;
   }
 
   if (result.type === "no_action") {
@@ -835,15 +872,15 @@ function renderOrbitResultSummary(
 
   switch (result.type) {
     case "blocked":
-      return <p className="text-sm leading-relaxed" style={warn}>Your ability was blocked — it did not take effect.</p>;
+      return <p className="text-sm leading-relaxed" style={warn}>Your ability was blocked  -  it did not take effect.</p>;
 
     case "disrupt_ineffective":
-      return <p className="text-sm leading-relaxed" style={warn}>Your block attempt failed — that target cannot be blocked.</p>;
+      return <p className="text-sm leading-relaxed" style={warn}>Your block attempt failed  -  that target cannot be blocked.</p>;
 
     case "scan_player":
       return (
         <p className="text-sm" style={info}>
-          You scanned <span className="font-bold" style={{ color: accentLight }}>{String(d?.targetName ?? "target")}</span> — their initial role was{" "}
+          You scanned <span className="font-bold" style={{ color: accentLight }}>{String(d?.targetName ?? "target")}</span>  -  their initial role was{" "}
           <span className="font-bold" style={{ color: accentLight }}>{String(d?.roleId ?? "unknown").toUpperCase()}</span>.
         </p>
       );
@@ -861,7 +898,7 @@ function renderOrbitResultSummary(
     case "alien_view":
       return (
         <p className="text-sm" style={info}>
-          You viewed center card {Number(d?.cardIndex ?? 0) + 1} — it contained{" "}
+          You viewed center card {Number(d?.cardIndex ?? 0) + 1}  -  it contained{" "}
           <span className="font-bold" style={{ color: accentLight }}>{String(d?.roleId ?? "unknown").toUpperCase()}</span>.
         </p>
       );
@@ -869,7 +906,7 @@ function renderOrbitResultSummary(
     case "seek_result":
       return (
         <p className="text-sm" style={info}>
-          You checked <span className="font-bold" style={{ color: accentLight }}>{String(d?.targetName ?? "target")}</span> — they are{" "}
+          You checked <span className="font-bold" style={{ color: accentLight }}>{String(d?.targetName ?? "target")}</span>  -  they are{" "}
           <span className="font-bold" style={{ color: d?.alignment === "Bad" ? "hsl(0 75% 60%)" : "hsl(140 70% 55%)" }}>
             {String(d?.alignment ?? "unknown").toUpperCase()}
           </span>.
@@ -889,7 +926,7 @@ function renderOrbitResultSummary(
     case "commander_boost":
       return (
         <p className="text-sm leading-relaxed" style={good}>
-          You activated your command authority — your vote counts as <span className="font-bold">×2</span> this round.
+          You activated your command authority  -  your vote counts as <span className="font-bold">x2</span> this round.
         </p>
       );
 
