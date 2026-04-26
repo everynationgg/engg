@@ -1,13 +1,13 @@
 # ==========================================
 # EVERY NATION // CENTRAL GAMING HUB
-# Mission: Error Newform Detected (ENGG)
+# Mission: Errant Night (ENGG)
 # ==========================================
 #
 # Welcome, Operative. This is the Central Gaming Hub for Every Nation.
 # A premier destination for high-fidelity, deep-space multiplayer experiences.
 # 
 # FEATURED OPERATIONS:
-# - Error Newform Detected: Tactical Social Deduction Engine.
+# - Errant Night: Tactical Social Deduction Engine.
 # - Triple Triad: Strategic Neural Card Warfare (In-Development).
 # - Orbital Swarm: Defensive Tower Protocols (In-Development).
 #

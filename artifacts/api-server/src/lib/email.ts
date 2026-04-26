@@ -190,7 +190,7 @@ export function generateVerificationEmailHTML(
 
         <div style="color: #ffaa00; font-size: 11px; margin-top: 40px; padding: 15px; border-left: 2px solid #ffaa00; background: rgba(255, 170, 0, 0.05);">
           [!] SECURITY WARNING: THIS KEY EXPIRES IN 24 HOURS.<br>
-          UNAUTHORIZED ACCESS IS A BREACH OF ERROR NEWFORM DETECTED PROTOCOLS.
+          UNAUTHORIZED ACCESS IS A BREACH OF ERRANT NIGHT PROTOCOLS.
         </div>
       </div>
       

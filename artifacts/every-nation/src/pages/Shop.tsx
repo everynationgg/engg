@@ -259,8 +259,8 @@ export default function Shop() {
                   <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/30 mb-12 leading-relaxed">
                     Secure Handshake Required for Asset Exchange.
                   </p>
-                  <SciFiButton asChild variant="ghost" size="lg" className="border border-cyan-500/40">
-                    <Link href="/login">Authorize Identity</Link>
+                  <SciFiButton onClick={() => window.location.href = "/login"} variant="ghost" size="lg" className="border border-cyan-500/40">
+                     Authorize Identity
                   </SciFiButton>
                </TacticalSlate>
             </div>

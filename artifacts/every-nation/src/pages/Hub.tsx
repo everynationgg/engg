@@ -93,7 +93,7 @@ export default function Hub() {
       title: "Errant Night",
       subtitle: "Neural Defense Protocol",
       description: "A high-stakes network defense simulator. Trace the anomaly through the digital ether before system-wide compromise.",
-      image: "/hub_newform.webp",
+      image: "/hub_errant.webp",
       href: "/end",
       status: "online" as const
     },

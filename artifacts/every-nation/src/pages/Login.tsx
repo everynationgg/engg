@@ -148,11 +148,9 @@ export default function Login() {
                    <div className="h-px flex-1 bg-white/5" />
                 </div>
 
-                <SciFiButton asChild variant="outline" className="w-full text-white/40 hover:text-white/80">
-                  <Link href="/register">
-                    <FaTerminal className="text-[10px] opacity-20 mr-2" />
-                    Register_New_Identity
-                  </Link>
+                <SciFiButton onClick={() => window.location.href = "/register"} variant="outline" className="w-full text-white/40 hover:text-white/80">
+                  <FaTerminal className="text-[10px] opacity-20 mr-2" />
+                  Register_New_Identity
                 </SciFiButton>
               </div>
             </form>

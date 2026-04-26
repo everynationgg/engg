@@ -336,7 +336,7 @@ export default function RoleRevealPage() {
             className="font-orbitron font-black text-lg tracking-widest uppercase leading-none"
             style={{ color: accentColorLight, textShadow: `0 0 12px ${accentGlow}` }}
           >
-            ERROR: NEWFORM
+            ERRANT NIGHT
           </div>
           <div
             className="font-orbitron font-bold text-xs tracking-[0.3em] uppercase"

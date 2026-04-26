@@ -56,7 +56,7 @@ export default function Register() {
       >
         <TacticalSlate color="#a855f7">
           <div className="p-12 md:p-16 flex flex-col gap-10">
-            {/* Header: Newform Enrollment */}
+            {/* Header: Errant Night Enrollment */}
             <div className="text-center flex flex-col items-center gap-6">
               <div className="relative">
                 <div className="w-20 h-20 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center relative">

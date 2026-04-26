@@ -161,21 +161,16 @@ export default function LandingPage() {
                 className="block font-orbitron font-black text-3xl sm:text-4xl tracking-widest uppercase leading-none"
                 style={{ color: "hsl(185 100% 55%)", textShadow: "0 0 16px hsl(185 100% 50% / 0.9), 0 0 40px hsl(185 100% 50% / 0.4)" }}
               >
-                ERROR:
+                ERRANT
               </span>
               <span
                 className="block font-orbitron font-black text-3xl sm:text-4xl tracking-widest uppercase leading-none mt-1"
                 style={{ color: "hsl(185 100% 55%)", textShadow: "0 0 16px hsl(185 100% 50% / 0.9), 0 0 40px hsl(185 100% 50% / 0.4)" }}
               >
-                NEWFORM
+                NIGHT
               </span>
             </h1>
-            <div
-              className="font-orbitron font-bold text-lg sm:text-xl tracking-[0.3em] uppercase mb-3"
-              style={{ color: "hsl(270 80% 70%)", textShadow: "0 0 10px hsl(270 80% 55% / 0.9), 0 0 30px hsl(270 80% 55% / 0.4)" }}
-            >
-              DETECTED
-            </div>
+            <div className="mb-3" />
 
             {/* Divider line */}
             <div

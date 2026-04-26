@@ -481,7 +481,7 @@ export default function VotingPage() {
       >
         <div>
           <div className="font-orbitron font-black text-lg tracking-widest uppercase leading-none" style={{ color: accentLight, textShadow: `0 0 12px ${accentGlow}` }}>
-            ERROR: NEWFORM
+            ERRANT NIGHT
           </div>
           <div className="font-orbitron font-bold text-xs tracking-[0.3em] uppercase" style={{ color: "hsl(270 80% 65%)" }}>
             DETECTED

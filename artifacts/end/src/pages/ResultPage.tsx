@@ -388,7 +388,7 @@ export default function ResultPage() {
       >
         <div>
           <div className="font-orbitron font-black text-lg tracking-widest uppercase leading-none" style={{ color: bannerColor, textShadow: `0 0 12px ${bannerGlow}` }}>
-            ERROR: NEWFORM
+            ERRANT NIGHT
           </div>
           <div className="font-orbitron font-bold text-xs tracking-[0.3em] uppercase" style={{ color: "hsl(270 80% 65%)" }}>
             DETECTED
