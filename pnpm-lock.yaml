@@ -502,6 +502,9 @@ importers:
       '@types/three':
         specifier: ^0.184.0
         version: 0.184.0
+      socket.io-client:
+        specifier: ^4.8.3
+        version: 4.8.3
       three:
         specifier: ^0.184.0
         version: 0.184.0
