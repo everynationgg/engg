@@ -29,7 +29,7 @@ export default function Navbar() {
   const isGamePage = location.startsWith("/end") || location.startsWith("/room");
   const isShopPage = location.startsWith("/shop");
   const showSolidBg = scrolled || isOpen || isGamePage;
-  const isHidden = isShopPage && !scrolled && !isOpen;
+  const isHidden = false; // Always show navbar as per user request
 
   return (
     <nav

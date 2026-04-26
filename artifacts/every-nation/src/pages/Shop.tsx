@@ -186,7 +186,7 @@ export default function Shop() {
       {/* Global HUD Scanning Line Overlay */}
       <div className="fixed inset-0 pointer-events-none z-10 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" />
 
-      <main className="relative z-20 w-full max-w-[1600px] px-6 py-24 md:py-32 flex flex-col items-center">
+      <main className="relative z-20 w-full max-w-[1600px] px-6 py-32 md:py-40 flex flex-col items-center">
         {/* Header Section */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
@@ -206,8 +206,8 @@ export default function Shop() {
           </p>
         </motion.div>
 
-        {/* Top HUD Bar - Stays away from global Navbar when scrolled */}
-        <header className={`fixed left-0 right-0 z-50 p-6 flex justify-between items-start pointer-events-none transition-all duration-500 ${scrolled ? "top-[72px] lg:top-[88px]" : "top-0"}`}>
+        {/* Top HUD Bar - Positioned below global Navbar */}
+        <header className="fixed left-0 right-0 z-50 p-6 flex justify-between items-start pointer-events-none transition-all duration-500 top-[72px] lg:top-[88px]">
            <div className="pointer-events-auto">
               <SciFiButton variant="outline" onClick={handleReturn} className="bg-[#020408]/80 backdrop-blur-md">
                 <FaArrowLeft className="text-xs group-hover:-translate-x-1 transition-transform" />
