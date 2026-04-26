@@ -5,7 +5,7 @@ import { playSciFiClick } from "@/lib/sound";
 import { startLobbyMusic, stopLobbyMusic, getSoundEnabled, setSoundEnabled } from "@/lib/music";
 import { useAuth } from "@/hooks/useAuth";
 import AuthModal from "@/components/auth/AuthModal";
-import HamburgerMenu from "@/components/system/HamburgerMenu";
+import LandingSidebar from "@/components/system/LandingSidebar";
 import SettingsModal from "@/components/system/SettingsModal";
 import ProfileModal from "@/components/profile/ProfileModal";
 import HowToPlayModal from "@/components/game/HowToPlayModal";
@@ -135,8 +135,8 @@ export default function LandingPage() {
         }}
       />
 
-{/* Hamburger Menu */}
-      <HamburgerMenu
+{/* Mobile Sidebar Menu */}
+      <LandingSidebar
         onShowSettings={() => setShowSettingsModal(true)}
         onShowProfile={() => setShowProfileModal(true)}
         onShowHowToPlay={() => setShowHowToPlay(true)}

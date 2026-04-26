@@ -173,11 +173,11 @@ export default function HamburgerMenu({
 
       {menuOpen && (
         <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center">
-           {/* Tactical Ring Background */}
-           <div className={`absolute w-[280px] h-[280px] sm:w-[400px] sm:h-[400px] border border-cyan-500/10 rounded-full transition-all duration-700 ${menuClosing ? "scale-0 opacity-0" : "scale-100 opacity-100"}`}>
-              <div className="absolute inset-0 border-t-2 border-cyan-500/20 rounded-full animate-[spin_20s_linear_infinite]" />
-              <div className="absolute inset-4 border border-white/5 rounded-full" />
-           </div>
+          {/* Tactical Ring Background */}
+          <div className={`absolute w-[280px] h-[280px] sm:w-[400px] sm:h-[400px] border border-cyan-500/10 rounded-full transition-all duration-700 ${menuClosing ? "scale-0 opacity-0" : "scale-100 opacity-100"}`}>
+            <div className="absolute inset-0 border-t-2 border-cyan-500/20 rounded-full animate-[spin_20s_linear_infinite]" />
+            <div className="absolute inset-4 border border-white/5 rounded-full" />
+          </div>
 
           {menuItems.map((item, index) => {
             const arcAngle = 90; // Standard 90-degree quadrant
@@ -207,11 +207,11 @@ export default function HamburgerMenu({
               >
                 {/* Animated Scanline for each button */}
                 <div className="absolute inset-x-0 top-0 h-px bg-white/20 shadow-[0_0_5px_white] animate-[scan_2s_linear_infinite]" />
-                
+
                 <div className="relative z-10 transition-transform group-hover:scale-110">
-                   {item.icon}
+                  {item.icon}
                 </div>
-                
+
                 <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none">
                   {/* Animated Scanline for each button */}
                   <div className="absolute inset-x-0 top-0 h-px bg-white/20 shadow-[0_0_5px_white] animate-[scan_2s_linear_infinite]" />
@@ -220,14 +220,14 @@ export default function HamburgerMenu({
 
                 {/* Hover Label */}
                 <div className="absolute whitespace-nowrap flex flex-row items-center transition-all duration-300 pointer-events-none opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 z-50"
-                      style={{ 
-                        right: "120%",
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        textShadow: "0 0 10px rgba(0,0,0,0.8)"
-                      }}>
+                  style={{
+                    right: "120%",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    textShadow: "0 0 10px rgba(0,0,0,0.8)"
+                  }}>
                   <span className="px-3 py-1 bg-black/95 border border-white/20 text-[9px] font-orbitron tracking-[0.3em] shadow-[0_0_20px_rgba(0,0,0,0.8)]"
-                        style={{ color: item.color, borderRightColor: item.color, borderRightWidth: '2px' }}>
+                    style={{ color: item.color, borderRightColor: item.color, borderRightWidth: '2px' }}>
                     {item.label}
                   </span>
                 </div>
@@ -248,22 +248,22 @@ export default function HamburgerMenu({
         }}
       >
         <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/5 to-transparent" />
-        
+
         <svg viewBox="0 0 100 100" width="28" height="28" className="relative z-10 transition-all duration-500" style={{ transform: menuOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
-           {menuOpen ? (
-              <path d="M30 30 L70 70 M70 30 L30 70" stroke={menuOpen ? "#00f3ff" : "white"} strokeWidth="6" strokeLinecap="square" />
-           ) : (
-              <>
-                 <path d="M20 35 L80 35" stroke="white" strokeWidth="4" strokeLinecap="square" className="opacity-40" />
-                 <path d="M20 50 L80 50" stroke="#00f3ff" strokeWidth="4" strokeLinecap="square" />
-                 <path d="M20 65 L50 65" stroke="white" strokeWidth="4" strokeLinecap="square" className="opacity-40" />
-              </>
-           )}
+          {menuOpen ? (
+            <path d="M30 30 L70 70 M70 30 L30 70" stroke={menuOpen ? "#00f3ff" : "white"} strokeWidth="6" strokeLinecap="square" />
+          ) : (
+            <>
+              <path d="M20 35 L80 35" stroke="white" strokeWidth="4" strokeLinecap="square" className="opacity-40" />
+              <path d="M20 50 L80 50" stroke="#00f3ff" strokeWidth="4" strokeLinecap="square" />
+              <path d="M20 65 L50 65" stroke="white" strokeWidth="4" strokeLinecap="square" className="opacity-40" />
+            </>
+          )}
         </svg>
 
         {/* Pulse Effect when closed */}
         {!menuOpen && (
-           <div className="absolute inset-0 border border-cyan-500/20 rounded-full animate-ping opacity-20" />
+          <div className="absolute inset-0 border border-cyan-500/20 rounded-full animate-ping opacity-20" />
         )}
       </button>
 
@@ -288,7 +288,8 @@ export default function HamburgerMenu({
         />
       )}
 
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes scan {
           0% { top: 0%; opacity: 0; }
           5% { opacity: 1; }
