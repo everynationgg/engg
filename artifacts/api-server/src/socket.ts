@@ -9,7 +9,7 @@ import { registerHandlers } from "./socket/handlers/index.js";
  * Initialize the Socket.IO server, attach it to the HTTP server,
  * and register all game event handlers.
  */
-export function initSocketServer(httpServer: HttpServer): SocketIOServer {
+export function attachSocketIO(httpServer: HttpServer): SocketIOServer {
   const envOrigins = (process.env.ALLOWED_ORIGINS || "").split(",").filter(Boolean);
   const defaultAllowedOrigins = new Set([
     "http://localhost:5173",

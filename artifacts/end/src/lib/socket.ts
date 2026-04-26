@@ -1,5 +1,5 @@
 import { io, type Socket } from "socket.io-client";
-import { systemToast } from "@/components/SystemToast";
+import { systemToast } from "@/components/common/SystemToast";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "";
 
