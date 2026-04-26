@@ -107,7 +107,7 @@ export default function GlobalHUD({ isWarping = false }) {
 
         <div className="flex justify-between items-end font-mono text-[10px] tracking-tighter text-cyan-400">
           <div className="flex flex-col">
-            <span>ENFESTATION_OS v2.4.2</span>
+            <span>ERRANT_NIGHT_OS v2.4.2</span>
             <div className="flex gap-1 mt-1">
               {[1, 2, 3, 4, 5].map(i => (
                 <div key={i} className="w-1 h-1 bg-cyan-500 animate-pulse" style={{ animationDelay: `${i * 0.2}s` }} />

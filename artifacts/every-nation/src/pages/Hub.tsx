@@ -90,7 +90,7 @@ export default function Hub() {
 
   const games = [
     {
-      title: "Error: Newform Detected",
+      title: "Errant Night",
       subtitle: "Neural Defense Protocol",
       description: "A high-stakes network defense simulator. Trace the anomaly through the digital ether before system-wide compromise.",
       image: "/hub_newform.webp",

@@ -368,7 +368,7 @@ router.post("/auth/request-password-reset", async (req, res) => {
     try {
       await sendEmail({
         to: user.email,
-        subject: "Reset your ERROR: NEWFORM DETECTED password",
+        subject: "Reset your Errant Night password",
         html: generatePasswordResetEmailHTML(user.username, resetLink),
       });
       res.json({ success: true, message: "If the email exists, a reset link has been sent" });

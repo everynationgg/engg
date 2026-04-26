@@ -760,6 +760,7 @@ export function attachSocketIO(httpServer: HttpServer) {
         let gameInProgress = false;
         let playersBeforeJoin = 0;
         let isReconnect = false;
+        let isRedundantJoin = false;
 
         const cas = await withCasRetry(sessionId, (session) => {
           // Guard: join_session must never create a new session — only operate on existing ones.
@@ -792,14 +793,23 @@ export function attachSocketIO(httpServer: HttpServer) {
               playerDidQuit = true;
               return CAS_SKIP;
             }
-            isReconnect = true;
             // Cancel in-process grace timer (best-effort; multi-instance safe via CAS)
             const oldSocketId = existing.id;
             cancelRemovePlayer(sessionId, oldSocketId);
-            // Remap all session data from old socketId → new socketId, mark connected.
-            // session.players is never reassigned — engineReconnectPlayer mutates in place.
-            // reconnectPlayer also removes the player from grace tracking.
-            engineReconnectPlayer(session, oldSocketId, socket.id);
+
+            if (oldSocketId === socket.id) {
+              // Socket never dropped; redundant join (e.g. from page navigation)
+              existing.connected = true;
+              existing.connectionStatus = "connected";
+              isRedundantJoin = true;
+              isReconnect = false;
+            } else {
+              isReconnect = true;
+              // Remap all session data from old socketId → new socketId, mark connected.
+              // session.players is never reassigned — engineReconnectPlayer mutates in place.
+              // reconnectPlayer also removes the player from grace tracking.
+              engineReconnectPlayer(session, oldSocketId, socket.id);
+            }
 
             // DO NOT auto-resume — host must explicitly use continue_game
             return true as const;
@@ -817,11 +827,17 @@ export function attachSocketIO(httpServer: HttpServer) {
               playerDidQuit = true;
               return CAS_SKIP;
             }
-            isReconnect = true;
-            if (legacyByName.id !== socket.id) {
-              cancelRemovePlayer(sessionId, legacyByName.id);
+            
+            cancelRemovePlayer(sessionId, legacyByName.id);
+
+            if (legacyByName.id === socket.id) {
+              isRedundantJoin = true;
+              isReconnect = false;
+            } else {
+              isReconnect = true;
               engineReconnectPlayer(session, legacyByName.id, socket.id);
             }
+
             legacyByName.playerId = playerId;
             legacyByName.connected = true;
             legacyByName.connectionStatus = "connected";
@@ -914,14 +930,16 @@ export function attachSocketIO(httpServer: HttpServer) {
           socket.emit("orbit_result", cas.session.orbitFeedback[socket.id]);
         }
 
-        logger.info(
-          { sessionId, playerName, playerId, playersBeforeJoin, playersAfterJoin: cas.session.players.length },
-          "Player joined",
-        );
-        logGameEvent("player_joined", sessionId, socket.id, { playerName, playerId });
+        if (!isRedundantJoin) {
+          logger.info(
+            { sessionId, playerName, playerId, playersBeforeJoin, playersAfterJoin: cas.session.players.length },
+            "Player joined",
+          );
+          logGameEvent("player_joined", sessionId, socket.id, { playerName, playerId });
 
-        // Broadcast updated grace state so clients clear reconnect banners on rejoin
-        graceUpdate(io, sessionId, cas.session, playerName);
+          // Broadcast updated grace state so clients clear reconnect banners on rejoin
+          graceUpdate(io, sessionId, cas.session, playerName);
+        }
 
         // On reconnect: emit system chat message and send recent chat history
         if (isReconnect) {

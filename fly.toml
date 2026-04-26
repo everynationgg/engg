@@ -1,4 +1,4 @@
-# fly.toml — Fly.io configuration for enfestation API server
+# fly.toml — Fly.io configuration for errant-night API server
 # Deploy from repo root: fly deploy
 
 app = 'engg'

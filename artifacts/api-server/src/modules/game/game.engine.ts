@@ -1,5 +1,5 @@
 /**
- * Game Engine — pure, deterministic game logic for Enfestation.
+ * Game Engine — pure, deterministic game logic for Errant Night.
  *
  * This module contains ALL gameplay logic extracted from socket.ts and
  * resolution.ts. It is completely independent of Socket.IO, Express, and
