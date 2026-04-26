@@ -1797,10 +1797,9 @@ export function endGame(
   if (!requester.isHost) return { accepted: false, error: "Only host can end the game" };
   if (state.phase !== "interrupted") return { accepted: false, error: "Game is not interrupted" };
 
-  // Mark that the host ended the interrupt — prevents auto-resume on late reconnects.
-  // restartGame() clears this along with interruptedFromPhase and playersInGrace.
-  state.hostEndedInterrupt = true;
-  restartGame(state);
+  // Mark that the host ended the session — terminates for all players.
+  state.status = "closed";
+  state.joinable = false;
   return { accepted: true };
 }
 

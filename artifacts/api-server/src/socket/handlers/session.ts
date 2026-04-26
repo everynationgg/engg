@@ -274,6 +274,55 @@ export function registerSessionHandlers(
     ack?.({ success: true, session });
   });
 
+  socket.on("quit_game", async (data: unknown, ack) => {
+    const parsed = validate(sessionOnlySchema, data, ack);
+    if (!parsed) return;
+    const { sessionId } = parsed;
+    const playerId = state.currentPlayerId;
+
+    if (!playerId) {
+      ack?.({ success: false, error: "Player ID missing" });
+      return;
+    }
+
+    state.playerQuit = true; // Mark as explicit quit to avoid grace period
+
+    let isHost = false;
+    let playerName = "Unknown Operative";
+
+    await withCasRetry(sessionId, (session) => {
+      const player = session.players.find(p => (p.playerId === playerId || p.id === socket.id));
+      if (!player) return CAS_SKIP;
+      
+      isHost = player.isHost;
+      playerName = player.name;
+      player.connected = false;
+
+      if (isHost) {
+        session.status = "closed";
+        session.joinable = false;
+      } else {
+        removePlayer(session, playerId);
+      }
+      return true as const;
+    });
+
+    if (isHost) {
+      io.to(sessionId).emit("session_closed", { 
+        message: "The host has terminated the session. Connection severed." 
+      });
+    } else {
+      chatSystemMessage(io, sessionId, `${playerName} has left the session.`);
+      const latest = await getSession(sessionId);
+      if (latest) {
+        phaseUpdate(io, sessionId, latest);
+      }
+    }
+
+    ack?.({ success: true });
+    socket.leave(sessionId);
+  });
+
   socket.on("disconnect", async () => {
     if (state.currentSessionId && state.currentPlayerId) {
       const sessionId = state.currentSessionId;
@@ -316,11 +365,23 @@ export function registerSessionHandlers(
 
           removePlayerFromGrace(session, playerId);
           if (session.phase === "lobby" || session.phase === "role_config") {
-            removePlayer(session, playerId);
+            const player = session.players.find(p => p.id === playerId);
+            if (player?.isHost) {
+              session.status = "closed";
+              gameEnded = true;
+            } else {
+              removePlayer(session, playerId);
+            }
             return true as const;
           }
           const player = session.players.find(p => p.id === playerId);
-          if (player) player.connectionStatus = "disconnected";
+          if (player) {
+            player.connectionStatus = "disconnected";
+            if (player.isHost) {
+              session.status = "closed";
+              gameEnded = true;
+            }
+          }
 
           const edgeCase = checkSinglePlayerEdgeCase(session);
           if (edgeCase.shouldEnd) { gameEnded = true; return true as const; }
@@ -345,6 +406,11 @@ export function registerSessionHandlers(
           chatSystemMessage(io, sessionId, `${playerName} disconnected`);
           graceUpdate(io, sessionId, latest, playerName ?? "");
           phaseUpdate(io, sessionId, latest);
+          if (gameEnded || latest.status === "closed") {
+            io.to(sessionId).emit("session_closed", { 
+              message: "The host has disconnected. Session terminated." 
+            });
+          }
           if (votingResolved) {
              io.to(sessionId).emit("vote_result", voteResult);
           }
