@@ -213,8 +213,6 @@ export default function LandingSidebar({
                 // All solid — no transparency anywhere
                 backgroundColor: "#0a0f1e",
                 background: "#0a0f1e",
-                // Force own GPU compositing layer so parent
-                // backdrop-filters cannot bleed through
                 isolation: "isolate",
                 willChange: "transform",
                 WebkitTransform: "translateZ(0)",
@@ -223,6 +221,23 @@ export default function LandingSidebar({
                 borderRight: "1px solid rgba(6,182,212,0.3)",
               }}
             >
+              {/* Premium Texture Overlay */}
+              <div style={{ 
+                position: "absolute", 
+                inset: 0, 
+                opacity: 0.05, 
+                pointerEvents: "none", 
+                background: "url('https://grainy-gradients.vercel.app/noise.svg')",
+                mixBlendMode: "overlay"
+              }} />
+              
+              {/* Subtle Depth Gradient */}
+              <div style={{ 
+                position: "absolute", 
+                inset: 0, 
+                background: "radial-gradient(circle at 0% 0%, rgba(6,182,212,0.1), transparent 70%)",
+                pointerEvents: "none"
+              }} />
               {/* Cyan accent strip */}
               <div
                 style={{

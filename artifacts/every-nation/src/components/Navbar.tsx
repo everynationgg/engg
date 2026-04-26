@@ -178,15 +178,25 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* MOBILE MENU */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, x: "100%" }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: "100%" }}
-            className="fixed inset-0 top-[72px] lg:hidden z-[1000] bg-[#020408]/95 backdrop-blur-xl border-l border-white/5"
-          >
+          <>
+            {/* Mobile Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+              className="fixed inset-0 z-[999] bg-black/60 lg:hidden"
+            />
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed top-[72px] bottom-0 right-0 w-[300px] lg:hidden z-[1000] bg-[#020408] border-l border-white/10 flex flex-col shadow-[-20px_0_40px_rgba(0,0,0,0.8)]"
+              style={{ isolation: "isolate" }}
+            >
             <div className="p-10 flex flex-col h-full gap-12">
                {/* Nav Links */}
                <div className="flex flex-col gap-8">
@@ -249,6 +259,7 @@ export default function Navbar() {
                </div>
             </div>
           </motion.div>
+        </>
         )}
       </AnimatePresence>
     </nav>

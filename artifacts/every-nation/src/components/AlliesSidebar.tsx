@@ -330,7 +330,7 @@ export default function AlliesSidebar() {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-8 right-8 z-[100] w-14 h-14 md:w-16 md:h-16 bg-[#0a0b1e]/60 border border-cyan-500/20 backdrop-blur-xl hover:bg-cyan-500/10 hover:border-cyan-400/50 transition-all shadow-[0_0_30px_rgba(6,182,212,0.1)] group flex items-center justify-center overflow-hidden"
+          className="fixed bottom-8 right-8 z-[100] w-14 h-14 md:w-16 md:h-16 bg-[#0a0b1e] border border-cyan-500/20 hover:bg-cyan-500/10 hover:border-cyan-400/50 transition-all shadow-[0_0_30px_rgba(6,182,212,0.1)] group flex items-center justify-center overflow-hidden"
         >
           {/* HUD Corner Accents */}
           <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-cyan-500/40 group-hover:border-cyan-400" />

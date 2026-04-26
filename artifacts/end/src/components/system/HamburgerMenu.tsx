@@ -195,7 +195,7 @@ export default function HamburgerMenu({
                 onClick={item.onClick}
                 className="absolute flex items-center justify-center w-14 h-14 rounded-full cursor-pointer pointer-events-auto group"
                 style={{
-                  background: "rgba(12, 16, 22, 0.9)",
+                  background: "rgb(12, 16, 22)",
                   border: `1px solid ${item.color}40`,
                   color: item.color,
                   backdropFilter: "blur(10px)",
