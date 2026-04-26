@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Float, MeshDistortMaterial, Icosahedron, Dodecahedron, Tetrahedron, TorusKnot } from "@react-three/drei";
+import { Float, MeshDistortMaterial, Icosahedron, Dodecahedron, Tetrahedron, TorusKnot, Environment, ContactShadows } from "@react-three/drei";
 import * as THREE from "three";
 
 interface PackVisual3DProps {
@@ -24,7 +24,9 @@ const PackShape = ({ rarity, color, isSelected }: PackVisual3DProps) => {
   const materialProps = {
     color: color,
     emissive: color,
-    emissiveIntensity: isSelected ? 0.8 : 0.2,
+    emissiveIntensity: isSelected ? 0.8 : 0.4,
+    metalness: 0.9,
+    roughness: 0.1,
     toneMapped: false,
     wireframe: rarity === "epic",
   };
@@ -45,7 +47,7 @@ const PackShape = ({ rarity, color, isSelected }: PackVisual3DProps) => {
             <meshStandardMaterial {...materialProps} wireframe />
           </Icosahedron>
           <Icosahedron args={[0.8, 0]}>
-            <meshStandardMaterial {...materialProps} wireframe={false} emissiveIntensity={isSelected ? 1 : 0.5} />
+            <meshStandardMaterial {...materialProps} wireframe={false} emissiveIntensity={isSelected ? 1.2 : 0.6} />
           </Icosahedron>
         </group>
       ) : (
@@ -65,11 +67,16 @@ const PackShape = ({ rarity, color, isSelected }: PackVisual3DProps) => {
 export default function PackVisual3D({ rarity, color, isSelected }: PackVisual3DProps) {
   return (
     <div className={`w-32 h-32 relative z-10 transition-transform duration-700 ${isSelected ? "scale-110 -translate-y-2" : "opacity-80 group-hover:opacity-100"}`}>
-      <Canvas camera={{ position: [0, 0, 4], fov: 50 }} gl={{ alpha: true }}>
-        <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} intensity={1} color={color} />
-        <pointLight position={[-10, -10, -10]} intensity={0.5} />
+      <Canvas camera={{ position: [0, 0, 4.5], fov: 50 }} gl={{ alpha: true }}>
+        <ambientLight intensity={0.2} />
+        <spotLight position={[10, 10, 10]} intensity={2} color={color} penumbra={1} />
+        <pointLight position={[-10, -10, -10]} intensity={1} color="#ffffff" />
+        
+        <Environment preset="city" />
+        
         <PackShape rarity={rarity} color={color} isSelected={isSelected} />
+        
+        <ContactShadows position={[0, -2, 0]} opacity={0.4} scale={10} blur={2} far={4} color={color} />
       </Canvas>
     </div>
   );

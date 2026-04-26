@@ -40,14 +40,16 @@ const RARITY_CONFIG = {
 export default function Shop() {
   const { x, y } = useParallax(25);
   const { isLoggedIn, credits, token, logout, refreshUser } = useAuth();
-  const [packs, setPacks] = useState<Pack[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successCredits, setSuccessCredits] = useState<number | null>(null);
-  const [isInjecting, setIsInjecting] = useState(false);
+  const [, setLocation] = useLocation();
+  const [packs, setPacks] = useState<Pack[]>(FALLBACK_PACKS);
   const [selectedPack, setSelectedPack] = useState<Pack | null>(null);
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [checkoutMode, setCheckoutMode] = useState<boolean>(false);
+  const [loading, setLoading] = useState(true);
   const [isWarping, setIsWarping] = useState(false);
+  const [isInjecting, setIsInjecting] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Animated counter for credits
   const [displayCredits, setDisplayCredits] = useState(credits);
@@ -189,38 +191,34 @@ export default function Shop() {
           </p>
         </motion.div>
 
-        {/* Global Balance Bar */}
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-2xl mb-24"
-        >
-          <TacticalSlate className="p-6" showScanner={false}>
-            <div className={`flex flex-col md:flex-row items-center gap-8 px-4 ${isLoggedIn ? "justify-between" : "justify-center"}`}>
-              {isLoggedIn && (
-                <>
-                  <div className="flex items-center gap-6">
-                    <div className="w-12 h-12 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-                      <FaHdd className="text-cyan-400 text-xl animate-pulse" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-white/30">Available_Assets</span>
-                      <div className="flex items-baseline gap-2">
-                        <span className="font-orbitron text-3xl font-black text-white">{displayCredits.toLocaleString()}</span>
-                        <span className="font-orbitron text-[10px] text-cyan-500 font-bold tracking-widest">CC</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="h-12 w-px bg-white/5 hidden md:block" />
-                </>
-              )}
-              <SciFiButton variant="outline" onClick={handleReturn}>
+        {/* Top HUD Bar */}
+        <header className="fixed top-0 left-0 right-0 z-50 p-6 flex justify-between items-start pointer-events-none">
+           <div className="pointer-events-auto">
+              <SciFiButton variant="outline" onClick={handleReturn} className="bg-[#020408]/80 backdrop-blur-md">
                 <FaArrowLeft className="text-xs group-hover:-translate-x-1 transition-transform" />
                 Return_Home
               </SciFiButton>
-            </div>
-          </TacticalSlate>
-        </motion.div>
+           </div>
+
+           {isLoggedIn && (
+             <div className="pointer-events-auto">
+               <TacticalSlate className="px-6 py-3 bg-[#020408]/80 backdrop-blur-md" showScanner={false}>
+                 <div className="flex items-center gap-6">
+                   <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
+                     <FaHdd className="text-cyan-400 text-lg animate-pulse" />
+                   </div>
+                   <div className="flex flex-col">
+                     <span className="font-mono text-[8px] uppercase tracking-[0.4em] text-white/30">Available_Assets</span>
+                     <div className="flex items-baseline gap-2">
+                       <span className="font-orbitron text-2xl font-black text-white">{displayCredits.toLocaleString()}</span>
+                       <span className="font-orbitron text-[9px] text-cyan-500 font-bold tracking-widest">CC</span>
+                     </div>
+                   </div>
+                 </div>
+               </TacticalSlate>
+             </div>
+           )}
+        </header>
 
         {/* Status Messages */}
         <AnimatePresence>
@@ -277,9 +275,13 @@ export default function Shop() {
               >
                 <TacticalSlate 
                   color={selectedPack?.id === pack.id ? (RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color : "#ffffff10"}
-                  className={`h-full transition-transform duration-500 ${selectedPack?.id === pack.id ? "scale-[1.02]" : "hover:scale-[1.01]"}`}
+                  className={`h-full transition-transform duration-500 overflow-hidden ${selectedPack?.id === pack.id ? "scale-[1.02]" : "hover:scale-[1.01]"}`}
                 >
-                  <div className="p-8 flex flex-col items-center h-full min-h-[500px]">
+                  <div 
+                     className={`absolute top-0 left-0 right-0 h-48 opacity-20 pointer-events-none transition-opacity duration-700 ${selectedPack?.id === pack.id ? "opacity-30" : "group-hover:opacity-30"}`} 
+                     style={{ background: `radial-gradient(ellipse at top, ${(RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color}, transparent 70%)` }} 
+                  />
+                  <div className="p-8 flex flex-col items-center h-full min-h-[500px] relative z-10">
                     {/* Rarity & Header */}
                     <div className="w-full flex justify-between items-start mb-10">
                       <div className="flex flex-col">
@@ -328,24 +330,14 @@ export default function Shop() {
                     {/* Purchase Interface */}
                     <div className="w-full mt-auto">
                       {selectedPack?.id === pack.id ? (
-                        <div className="min-h-[140px] flex items-center justify-center">
-                          {isSyncing ? (
-                            <div className="flex flex-col items-center gap-4">
-                              <div className="w-5 h-5 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
-                              <span className="font-mono text-[8px] uppercase tracking-[0.4em] text-cyan-400/60 animate-pulse">Neural_Sync...</span>
-                            </div>
-                          ) : (
-                            <div className="w-full animate-in fade-in slide-in-from-bottom-4">
-                               <PayPalScriptProvider options={{ "clientId": import.meta.env.VITE_PAYPAL_CLIENT_ID || "sb" }}>
-                                  <PayPalButtons
-                                    style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay", height: 45 }}
-                                    createOrder={handleCreateOrder}
-                                    onApprove={handleApprove}
-                                  />
-                                </PayPalScriptProvider>
-                            </div>
-                          )}
-                        </div>
+                        <SciFiButton 
+                           variant="primary" 
+                           className="w-full"
+                           onClick={(e) => { e.stopPropagation(); setCheckoutMode(true); }}
+                        >
+                           <span className="font-mono uppercase tracking-[0.2em] text-[10px]">Secure Asset</span>
+                           <span className="font-orbitron font-black text-lg ml-2">${pack.price}</span>
+                        </SciFiButton>
                       ) : (
                         <button className="w-full py-4 border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 transition-all flex items-center justify-center gap-3">
                           <span className="font-mono text-xs opacity-30">$</span>
@@ -360,6 +352,61 @@ export default function Shop() {
           </div>
         )}
       </main>
+
+      {/* Checkout Modal */}
+      <AnimatePresence>
+        {checkoutMode && selectedPack && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-[#020408]/90 backdrop-blur-md p-4"
+            onClick={() => setCheckoutMode(false)}
+          >
+            <motion.div
+               initial={{ scale: 0.9, y: 20 }}
+               animate={{ scale: 1, y: 0 }}
+               exit={{ scale: 0.9, y: 20 }}
+               onClick={(e) => e.stopPropagation()}
+               className="w-full max-w-md"
+            >
+              <TacticalSlate className="p-8 relative">
+                <button onClick={() => setCheckoutMode(false)} className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors p-2 text-xs font-mono uppercase tracking-widest border border-white/10 rounded">Dismiss</button>
+                <div className="flex flex-col gap-1 mb-8">
+                  <h3 className="font-orbitron text-2xl uppercase font-black text-white tracking-widest" style={{ color: (RARITY_CONFIG[selectedPack.rarity] || RARITY_CONFIG.common).color }}>{selectedPack.name}</h3>
+                  <p className="font-mono text-[10px] text-white/40 tracking-[0.2em] uppercase">Asset Acquisition Protocol</p>
+                </div>
+                
+                <div className="flex items-center justify-between mb-8 pb-8 border-b border-white/10">
+                   <div className="flex flex-col">
+                     <span className="font-mono text-[8px] uppercase tracking-widest text-white/30">Total_Amount</span>
+                     <span className="font-orbitron text-2xl font-black">${selectedPack.price}</span>
+                   </div>
+                   <div className="flex flex-col text-right">
+                     <span className="font-mono text-[8px] uppercase tracking-widest text-white/30">Yield</span>
+                     <span className="font-orbitron text-xl font-bold text-cyan-400">+{selectedPack.amount} CC</span>
+                   </div>
+                </div>
+                
+                {isSyncing ? (
+                  <div className="flex flex-col items-center gap-4 py-8">
+                    <div className="w-8 h-8 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
+                    <span className="font-mono text-[10px] uppercase tracking-[0.5em] text-cyan-400/60 animate-pulse">Neural_Sync_Active...</span>
+                  </div>
+                ) : (
+                  <PayPalScriptProvider options={{ "clientId": import.meta.env.VITE_PAYPAL_CLIENT_ID || "sb" }}>
+                     <PayPalButtons
+                       style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay", height: 45 }}
+                       createOrder={handleCreateOrder}
+                       onApprove={handleApprove}
+                     />
+                  </PayPalScriptProvider>
+                )}
+              </TacticalSlate>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Credit Injection Animation */}
       <AnimatePresence>
