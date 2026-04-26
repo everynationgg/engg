@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { FaGem, FaArrowLeft, FaShieldAlt, FaLock, FaCheckCircle, FaBolt, FaCrown, FaDatabase, FaExchangeAlt, FaHdd } from "react-icons/fa";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import WarpJump from "@/components/WarpJump";
 import TacticalSlate from "@/components/TacticalSlate";
 import { useParallax } from "@/hooks/useParallax";
