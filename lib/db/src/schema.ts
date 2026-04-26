@@ -142,6 +142,15 @@ export const systemAuditLogsTable = pgTable("system_audit_logs", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const privateMessagesTable = pgTable("private_messages", {
+  id: bigserial("id", { mode: "bigint" }).primaryKey(),
+  senderId: text("sender_id").notNull(),
+  receiverId: text("receiver_id").notNull(),
+  message: text("message").notNull(),
+  isRead: boolean("is_read").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export type User = InferSelectModel<typeof usersTable>;
 export type Achievement = InferSelectModel<typeof achievementsTable>;
 export type SessionSnapshot = InferSelectModel<typeof sessionSnapshotsTable>;

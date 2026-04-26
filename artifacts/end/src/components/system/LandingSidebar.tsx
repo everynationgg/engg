@@ -26,7 +26,6 @@ export default function LandingSidebar({
   const [menuOpen, setMenuOpen] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
 
-  // Lock background scroll when menu is open
   useEffect(() => {
     if (menuOpen) {
       document.body.style.overflow = "hidden";
@@ -75,7 +74,12 @@ export default function LandingSidebar({
     setMenuOpen(!menuOpen);
   };
 
-  const menuItems = [];
+  const menuItems: {
+    id: string;
+    icon: React.ReactNode;
+    label: string;
+    onClick: () => void;
+  }[] = [];
 
   if (isLoggedIn) {
     menuItems.push({
@@ -104,31 +108,68 @@ export default function LandingSidebar({
     id: "howtoplay",
     icon: <ManualIcon />,
     label: "MANUAL",
-    onClick: () => { playSound(); closeMenu(); setShowHowToPlay(true); },
+    onClick: () => {
+      playSound();
+      closeMenu();
+      setShowHowToPlay(true);
+    },
   });
 
   menuItems.push({
     id: "sound",
     icon: musicOn ? <SoundOnIcon /> : <SoundOffIcon />,
     label: musicOn ? "AUDIO ON" : "AUDIO OFF",
-    onClick: () => { playSound(); onToggleMusic(); },
+    onClick: () => {
+      playSound();
+      onToggleMusic();
+    },
   });
 
   return (
     <>
-      {/* --- Hamburger Trigger Button --- */}
-      <div className="fixed top-6 left-6 z-[60] sm:hidden">
+      {/* Hamburger Trigger Button */}
+      <div
+        style={{
+          position: "fixed",
+          top: "24px",
+          left: "24px",
+          zIndex: 60,
+        }}
+        className="sm:hidden"
+      >
         <button
           onClick={toggleMenu}
-          className="group relative flex items-center justify-center w-12 h-12 rounded-lg border border-cyan-500/30 transition-all duration-300 hover:scale-110 hover:brightness-125 active:scale-95"
           style={{
-            background: "rgba(10, 15, 30, 0.8)",
-            boxShadow: "0 0 15px rgba(0, 243, 255, 0.15)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "48px",
+            height: "48px",
+            borderRadius: "8px",
+            border: "1px solid rgba(6,182,212,0.3)",
+            backgroundColor: "rgb(10,15,30)",
+            boxShadow: "0 0 15px rgba(0,243,255,0.15)",
+            cursor: "pointer",
+            transition: "transform 0.3s, filter 0.3s",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.1)";
+            (e.currentTarget as HTMLButtonElement).style.filter = "brightness(1.25)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
+            (e.currentTarget as HTMLButtonElement).style.filter = "brightness(1)";
           }}
         >
-          <div className="absolute inset-0 rounded-lg bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity blur-md" />
-
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-cyan-400">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#22d3ee"
+            strokeWidth="2"
+            strokeLinecap="round"
+          >
             <line x1="4" y1="8" x2="20" y2="8" />
             <line x1="4" y1="12" x2="20" y2="12" />
             <line x1="4" y1="16" x2="16" y2="16" />
@@ -136,110 +177,259 @@ export default function LandingSidebar({
         </button>
       </div>
 
-      {/* --- Sidebar Menu --- */}
       <AnimatePresence>
         {menuOpen && (
           <>
-            {/* Dark Backdrop — NO backdrop-blur so it doesn't bleed into sidebar */}
+            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={closeMenu}
-              className="fixed inset-0 z-[70] bg-black/60"
+              style={{
+                position: "fixed",
+                inset: 0,
+                zIndex: 70,
+                backgroundColor: "rgba(0,0,0,0.65)",
+                // NO backdrop-filter here — it causes bleed-through
+              }}
             />
 
-            {/* Sidebar Content */}
+            {/* Sidebar — nuclear solid background */}
             <motion.div
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 left-0 h-full w-[280px] sm:w-[320px] z-[80] flex flex-col border-r border-cyan-500/30"
               style={{
-                // KEY FIX: isolation creates a new compositing layer,
-                // preventing parent backdrop-filter from bleeding through
-                isolation: "isolate",
+                position: "fixed",
+                top: 0,
+                left: 0,
+                height: "100%",
+                width: "280px",
+                zIndex: 80,
+                display: "flex",
+                flexDirection: "column",
+                // All solid — no transparency anywhere
                 backgroundColor: "#0a0f1e",
                 background: "#0a0f1e",
-                boxShadow: "10px 0 30px rgba(0,0,0,0.8)",
+                // Force own GPU compositing layer so parent
+                // backdrop-filters cannot bleed through
+                isolation: "isolate",
+                willChange: "transform",
+                WebkitTransform: "translateZ(0)",
+                transform: "translateZ(0)",
+                boxShadow: "10px 0 40px rgba(0,0,0,0.95)",
+                borderRight: "1px solid rgba(6,182,212,0.3)",
               }}
             >
-              {/* Decorative Accent Strip */}
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-500 via-cyan-400 to-cyan-600 shadow-[0_0_15px_rgba(6,182,212,0.5)]" />
-
-              {/* Sidebar Header */}
+              {/* Cyan accent strip */}
               <div
-                className="flex items-center justify-between p-6 border-b border-white/10"
-                style={{ backgroundColor: "#161c2d" }}
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: "3px",
+                  background:
+                    "linear-gradient(to bottom, #06b6d4, #22d3ee, #0891b2)",
+                  boxShadow: "0 0 15px rgba(6,182,212,0.5)",
+                  zIndex: 1,
+                }}
+              />
+
+              {/* Header */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "24px",
+                  backgroundColor: "#161c2d",
+                  borderBottom: "1px solid rgba(255,255,255,0.1)",
+                  flexShrink: 0,
+                }}
               >
-                <div className="flex flex-col">
-                  <span className="font-orbitron font-black text-xl tracking-widest text-white">
-                    ENGG<span className="text-cyan-400">.</span>
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <span
+                    className="font-orbitron"
+                    style={{
+                      fontWeight: 900,
+                      fontSize: "20px",
+                      letterSpacing: "0.15em",
+                      color: "#ffffff",
+                    }}
+                  >
+                    ENGG
+                    <span style={{ color: "#22d3ee" }}>.</span>
                   </span>
-                  <span className="text-[7px] font-orbitron tracking-[0.5em] text-cyan-400/60 uppercase">
+                  <span
+                    className="font-orbitron"
+                    style={{
+                      fontSize: "7px",
+                      letterSpacing: "0.5em",
+                      color: "rgba(34,211,238,0.6)",
+                      textTransform: "uppercase",
+                    }}
+                  >
                     Operational_Nexus
                   </span>
                 </div>
 
                 <button
                   onClick={closeMenu}
-                  className="p-2 text-white/40 hover:text-white transition-colors hover:bg-white/10 rounded-lg"
+                  style={{
+                    padding: "8px",
+                    color: "rgba(255,255,255,0.4)",
+                    background: "none",
+                    border: "none",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "color 0.2s, background 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.color = "#fff";
+                    (e.currentTarget as HTMLButtonElement).style.background =
+                      "rgba(255,255,255,0.1)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.color =
+                      "rgba(255,255,255,0.4)";
+                    (e.currentTarget as HTMLButtonElement).style.background =
+                      "none";
+                  }}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                  >
                     <line x1="18" y1="6" x2="6" y2="18" />
                     <line x1="6" y1="6" x2="18" y2="18" />
                   </svg>
                 </button>
               </div>
 
-              {/* Navigation Nodes */}
-              <div className="flex-1 overflow-y-auto py-8 px-4 space-y-3">
-                <div className="text-[9px] font-orbitron tracking-[0.3em] text-cyan-500/40 mb-6 px-4 uppercase flex items-center gap-2">
-                  <div className="w-4 h-px bg-cyan-500/20" />
+              {/* Nav Items */}
+              <div
+                style={{
+                  flex: 1,
+                  overflowY: "auto",
+                  padding: "32px 16px",
+                  backgroundColor: "#0a0f1e",
+                }}
+              >
+                {/* Section Label */}
+                <div
+                  className="font-orbitron"
+                  style={{
+                    fontSize: "9px",
+                    letterSpacing: "0.3em",
+                    color: "rgba(6,182,212,0.4)",
+                    marginBottom: "24px",
+                    paddingLeft: "16px",
+                    textTransform: "uppercase",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "16px",
+                      height: "1px",
+                      backgroundColor: "rgba(6,182,212,0.2)",
+                    }}
+                  />
                   Main_Nodes
                 </div>
 
-                {menuItems.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={item.onClick}
-                    className="w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 hover:bg-[#1a2138] group relative overflow-hidden"
-                  >
-                    <div className="text-white opacity-40 group-hover:opacity-100 group-hover:text-cyan-400 transition-all duration-300 transform group-hover:scale-110">
-                      {item.icon}
-                    </div>
-                    <span className="font-orbitron text-[11px] tracking-[0.15em] text-white/60 group-hover:text-white transition-colors uppercase font-bold">
-                      {item.label}
-                    </span>
-
-                    {/* Active Glow State */}
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-0.5 h-0 bg-cyan-400 transition-all duration-300 group-hover:h-3/4 shadow-[0_0_10px_#22d3ee]" />
-                  </button>
-                ))}
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: "4px" }}
+                >
+                  {menuItems.map((item) => (
+                    <SidebarNavItem
+                      key={item.id}
+                      icon={item.icon}
+                      label={item.label}
+                      onClick={item.onClick}
+                    />
+                  ))}
+                </div>
               </div>
 
-              {/* Bottom Actions */}
+              {/* Footer */}
               <div
-                className="p-6 border-t border-white/10 space-y-4"
-                style={{ backgroundColor: "#080c16" }}
+                style={{
+                  padding: "24px",
+                  borderTop: "1px solid rgba(255,255,255,0.1)",
+                  backgroundColor: "#080c16",
+                  flexShrink: 0,
+                }}
               >
                 {isLoggedIn && (
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-4 px-5 py-3 rounded-xl transition-all duration-300 hover:bg-[#2d1212] group border border-transparent hover:border-red-500/20"
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "16px",
+                      padding: "12px 20px",
+                      borderRadius: "12px",
+                      background: "none",
+                      border: "1px solid transparent",
+                      cursor: "pointer",
+                      marginBottom: "16px",
+                      transition: "background 0.3s, border-color 0.3s",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                        "#2d1212";
+                      (e.currentTarget as HTMLButtonElement).style.borderColor =
+                        "rgba(239,68,68,0.2)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                        "transparent";
+                      (e.currentTarget as HTMLButtonElement).style.borderColor =
+                        "transparent";
+                    }}
                   >
-                    <LogoutIcon className="text-red-500/60 group-hover:text-red-500" />
-                    <span className="font-orbitron text-[10px] tracking-widest text-red-500/60 group-hover:text-red-500 uppercase font-bold">
+                    <span style={{ color: "rgba(239,68,68,0.6)", display: "flex" }}>
+                      <LogoutIcon />
+                    </span>
+                    <span
+                      className="font-orbitron"
+                      style={{
+                        fontSize: "10px",
+                        letterSpacing: "0.2em",
+                        color: "rgba(239,68,68,0.6)",
+                        textTransform: "uppercase",
+                        fontWeight: 700,
+                      }}
+                    >
                       TERMINATE_SESSION
                     </span>
                   </button>
                 )}
 
-                <div className="pt-4 text-center">
-                  <div className="text-[7px] font-orbitron tracking-[0.4em] text-white/10 uppercase">
+                <div style={{ textAlign: "center", paddingTop: "16px" }}>
+                  <span
+                    className="font-orbitron"
+                    style={{
+                      fontSize: "7px",
+                      letterSpacing: "0.4em",
+                      color: "rgba(255,255,255,0.1)",
+                      textTransform: "uppercase",
+                    }}
+                  >
                     &copy; 2026 ENGG | Secure_Channel_v1
-                  </div>
+                  </span>
                 </div>
               </div>
             </motion.div>
@@ -247,8 +437,83 @@ export default function LandingSidebar({
         )}
       </AnimatePresence>
 
-      {showHowToPlay && <HowToPlayModal onClose={() => setShowHowToPlay(false)} />}
+      {showHowToPlay && (
+        <HowToPlayModal onClose={() => setShowHowToPlay(false)} />
+      )}
     </>
+  );
+}
+
+// Isolated nav item to avoid inline onMouseEnter repetition
+function SidebarNavItem({
+  icon,
+  label,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        gap: "16px",
+        padding: "16px 20px",
+        borderRadius: "12px",
+        background: hovered ? "#1a2138" : "none",
+        border: "none",
+        cursor: "pointer",
+        transition: "background 0.3s",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <span
+        style={{
+          color: hovered ? "#22d3ee" : "rgba(255,255,255,0.4)",
+          display: "flex",
+          transition: "color 0.3s",
+          transform: hovered ? "scale(1.1)" : "scale(1)",
+        }}
+      >
+        {icon}
+      </span>
+      <span
+        className="font-orbitron"
+        style={{
+          fontSize: "11px",
+          letterSpacing: "0.15em",
+          color: hovered ? "#ffffff" : "rgba(255,255,255,0.6)",
+          textTransform: "uppercase",
+          fontWeight: 700,
+          transition: "color 0.3s",
+        }}
+      >
+        {label}
+      </span>
+
+      {/* Right glow bar on hover */}
+      <div
+        style={{
+          position: "absolute",
+          right: 0,
+          top: "50%",
+          transform: "translateY(-50%)",
+          width: "2px",
+          height: hovered ? "75%" : "0%",
+          backgroundColor: "#22d3ee",
+          boxShadow: "0 0 10px #22d3ee",
+          transition: "height 0.3s",
+        }}
+      />
+    </button>
   );
 }
 
@@ -261,9 +526,9 @@ function ProfileIcon() {
   );
 }
 
-function LogoutIcon({ className }: { className?: string }) {
+function LogoutIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
       <polyline points="16 17 21 12 16 7" />
       <line x1="21" y1="12" x2="9" y2="12" />
