@@ -7,6 +7,7 @@ import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } fro
 import HamburgerMenu from "@/components/system/HamburgerMenu";
 import SettingsModal from "@/components/system/SettingsModal";
 import ProfileModal from "@/components/profile/ProfileModal";
+import { FaComments } from "react-icons/fa";
 
 interface LivePlayer {
   id: string;
@@ -21,7 +22,7 @@ interface LivePlayer {
 
 
 
-export default function DiscussionPage() {
+export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void }) {
   const roomCode = getRoomCode();
   const callsign = getCallsign();
   const initialRoleId = getInitialRoleId();
@@ -589,6 +590,39 @@ export default function DiscussionPage() {
           </div>
         )}
 
+        {/* Communication terminal */}
+        {!isSpectator && (
+          <div className="rounded-md p-5" style={{ background: "hsl(185 80% 8% / 0.3)", border: "1px solid hsl(185 100% 50% / 0.2)", boxShadow: "0 0 20px hsl(185 100% 50% / 0.05)" }}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+              <div className="font-orbitron text-xs tracking-[0.25em] uppercase font-bold text-cyan-400">
+                COMMUNICATION TERMINAL
+              </div>
+            </div>
+            
+            <p className="text-[10px] leading-relaxed uppercase tracking-wider mb-5 text-white/40 font-mono">
+              The orbit is stable. Engage the crew via local comms to determine the infestation threat.
+            </p>
+
+            <button
+              onClick={() => {
+                playSciFiClick();
+                onOpenChat?.();
+              }}
+              className="w-full py-4 flex items-center justify-center gap-3 font-orbitron font-black text-sm tracking-[0.3em] uppercase rounded-md border-2 transition-all duration-200 group active:scale-[0.98]"
+              style={{
+                background: "hsl(185 100% 50% / 0.1)",
+                borderColor: "hsl(185 100% 50% / 0.4)",
+                color: "hsl(185 100% 70%)",
+                boxShadow: "0 0 15px hsl(185 100% 50% / 0.15)"
+              }}
+            >
+              <FaComments className="text-xl group-hover:scale-110 transition-transform" />
+              Open Chat Terminal
+            </button>
+          </div>
+        )}
+
         {/* Player list */}
         <div className="rounded-md p-4" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 15%)" }}>
           <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(210 30% 50%)" }}>
@@ -645,21 +679,34 @@ export default function DiscussionPage() {
 
         {/* Emergency vote button */}
         {!isSpectator && (
-          <button
-            data-testid="button-emergency-vote"
-            onClick={handleCallEmergencyVote}
-            disabled={evLoading || cooldownLeft > 0 || !!evPopup}
-            className="w-full py-2.5 font-orbitron font-bold text-xs tracking-[0.2em] uppercase rounded-md border transition-all duration-150 cursor-pointer"
-            style={{
-              background: (cooldownLeft > 0 || !!evPopup) ? "hsl(220 28% 8%)" : "hsl(0 60% 20% / 0.8)",
-              borderColor: (cooldownLeft > 0 || !!evPopup) ? "hsl(210 30% 18%)" : "hsl(0 75% 55%)",
-              color: (cooldownLeft > 0 || !!evPopup) ? "hsl(210 30% 35%)" : "hsl(0 75% 70%)",
-              cursor: (cooldownLeft > 0 || !!evPopup) ? "not-allowed" : "pointer",
-              boxShadow: (cooldownLeft > 0 || !!evPopup) ? "none" : "0 0 8px hsl(0 75% 55% / 0.3)",
-            }}
-          >
-            {cooldownLeft > 0 ? `EMERGENCY VOTE (${cooldownLeft}s)` : "EMERGENCY VOTE"}
-          </button>
+          <div className="mt-4">
+            <div className="flex justify-between items-center mb-2 px-1">
+              <span className="text-[9px] uppercase tracking-[0.2em] text-white/20 font-mono">Skip to Voting</span>
+              {cooldownLeft > 0 && (
+                <span className="text-[9px] uppercase tracking-[0.2em] text-red-500 font-bold animate-pulse">
+                  System Cooldown: {cooldownLeft}s
+                </span>
+              )}
+            </div>
+            <button
+              data-testid="button-emergency-vote"
+              onClick={handleCallEmergencyVote}
+              disabled={evLoading || cooldownLeft > 0 || !!evPopup}
+              className="w-full py-2.5 font-orbitron font-bold text-xs tracking-[0.2em] uppercase rounded-md border transition-all duration-150 group"
+              style={{
+                background: (cooldownLeft > 0 || !!evPopup) ? "hsl(220 28% 8%)" : "hsl(0 60% 20% / 0.4)",
+                borderColor: (cooldownLeft > 0 || !!evPopup) ? "hsl(210 30% 18%)" : "hsl(0 75% 45%)",
+                color: (cooldownLeft > 0 || !!evPopup) ? "hsl(210 30% 35%)" : "hsl(0 75% 70%)",
+                cursor: (cooldownLeft > 0 || !!evPopup) ? "not-allowed" : "pointer",
+                opacity: (cooldownLeft > 0 || !!evPopup) ? 0.6 : 1,
+              }}
+            >
+              {cooldownLeft > 0 ? "COOLDOWN_ACTIVE" : "Initiate Emergency Vote"}
+            </button>
+            <p className="mt-2 text-[8px] text-center uppercase tracking-widest text-white/20 font-mono">
+              Requires 40% consensus to skip discussion phase
+            </p>
+          </div>
         )}
 
       </div>

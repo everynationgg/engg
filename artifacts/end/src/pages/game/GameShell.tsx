@@ -405,7 +405,7 @@ export default function GameShell() {
       case "role_reveal": return <RoleRevealPage />;
       case "orbit_action":
       case "orbit_resolution": return <OrbitPage />;
-      case "discussion": return <DiscussionPage />;
+      case "discussion": return <DiscussionPage onOpenChat={() => setChatOpen(true)} />;
       case "voting": return <VotingPage />;
       case "result": return <ResultPage />;
       case "interrupted": return <InterruptedPage />;
