@@ -8,8 +8,6 @@ import WarpJump from "@/components/common/WarpJump";
 import TacticalSlate from "@/components/common/TacticalSlate";
 import { useParallax } from "@/hooks/useParallax";
 import PackVisual3D from "@/features/shop/components/PackVisual3D";
-import CurrencyChip3D from "@/features/shop/components/CurrencyChip3D";
-import CreditInjection3D from "@/features/shop/components/CreditInjection3D";
 import { SciFiButton } from "@/components/common/SciFiButton";
 
 interface Pack {
@@ -174,26 +172,11 @@ export default function Shop() {
         style={{ x, y }}
       >
         <div className="absolute inset-0 bg-[url('/background.png')] bg-cover bg-center" />
-        
-        {/* 3D Perspective Grid */}
-        <div 
-          className="absolute inset-0 z-0 opacity-30"
-          style={{ 
-            backgroundImage: 'linear-gradient(to right, rgba(6,182,212,0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(6,182,212,0.1) 1px, transparent 1px)',
-            backgroundSize: '80px 80px',
-            transform: 'perspective(1000px) rotateX(60deg) translateY(-200px) scale(2)',
-            transformOrigin: 'top center'
-          }} 
-        />
-
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#020408]/60 to-[#020408]" />
       </motion.div>
 
       {/* Global HUD Scanning Line Overlay */}
       <div className="fixed inset-0 pointer-events-none z-10 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" />
-      
-      {/* Volumetric Fog Overlay */}
-      <div className="fixed inset-0 z-0 opacity-[0.07] bg-[radial-gradient(circle_at_50%_50%,rgba(6,182,212,0.5),transparent_70%)] pointer-events-none" />
 
       <main className="relative z-20 w-full max-w-[1600px] px-6 py-24 md:py-32 flex flex-col items-center">
         {/* Header Section */}
@@ -233,10 +216,10 @@ export default function Shop() {
                    </div>
                    <div className="flex flex-col">
                      <span className="font-mono text-[8px] uppercase tracking-[0.4em] text-white/30">Available_Assets</span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-orbitron text-2xl font-black text-white">{displayCredits.toLocaleString()}</span>
-                        <CurrencyChip3D size={0.5} className="w-6 h-6" />
-                      </div>
+                     <div className="flex items-baseline gap-2">
+                       <span className="font-orbitron text-2xl font-black text-white">{displayCredits.toLocaleString()}</span>
+                       <span className="font-orbitron text-[9px] text-cyan-500 font-bold tracking-widest">CC</span>
+                     </div>
                    </div>
                  </div>
                </TacticalSlate>
@@ -292,19 +275,14 @@ export default function Shop() {
               <motion.div
                 key={pack.id}
                 initial={{ opacity: 0, y: 30 }}
-                animate={{ 
-                  opacity: 1, 
-                  y: 0,
-                  rotateX: selectedPack?.id === pack.id ? 5 : 0 
-                }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1, duration: 0.6 }}
                 onClick={() => handlePackSelect(pack)}
                 className="relative"
-                style={{ perspective: 1000 }}
               >
                 <TacticalSlate 
                   color={selectedPack?.id === pack.id ? (RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color : "#ffffff10"}
-                  className={`h-full transition-all duration-500 overflow-hidden ${selectedPack?.id === pack.id ? "scale-[1.05] -translate-y-4 shadow-[0_20px_50px_rgba(0,0,0,0.5)]" : "hover:scale-[1.02] hover:-translate-y-2"}`}
+                  className={`h-full transition-transform duration-500 overflow-hidden ${selectedPack?.id === pack.id ? "scale-[1.02]" : "hover:scale-[1.01]"}`}
                 >
                   <div 
                      className={`absolute top-0 left-0 right-0 h-48 opacity-20 pointer-events-none transition-opacity duration-700 ${selectedPack?.id === pack.id ? "opacity-30" : "group-hover:opacity-30"}`} 
@@ -354,11 +332,11 @@ export default function Shop() {
                     {/* Value Data */}
                     <div className="text-center mb-10 flex-1">
                       <h3 className="font-orbitron text-sm tracking-[0.4em] uppercase text-white/60 mb-2">{pack.name}</h3>
-                      <div className="flex items-center justify-center gap-2">
+                      <div className="flex items-baseline justify-center gap-2">
                         <span className="font-orbitron text-4xl font-black text-white">
                           {isFirstPurchase ? (pack.amount * 2).toLocaleString() : pack.amount.toLocaleString()}
                         </span>
-                        <CurrencyChip3D size={0.6} className="w-8 h-8" />
+                        <span className="font-orbitron text-[10px] text-cyan-500 font-bold">CC</span>
                       </div>
                       {pack.bonus && (
                         <div className="mt-3 px-3 py-1 bg-white/5 border border-white/10 rounded-full inline-block">
@@ -464,12 +442,10 @@ export default function Shop() {
                         </div>
                         <div className="flex flex-col items-end text-right relative">
                           <span className="font-mono text-[8px] uppercase tracking-widest text-white/30 mb-2">Expected_Yield</span>
-                          <div className="flex items-center gap-2">
-                            <span className="font-orbitron text-3xl font-black text-cyan-400">
-                              +{isFirstPurchase ? (selectedPack.amount * 2).toLocaleString() : selectedPack.amount.toLocaleString()}
-                            </span>
-                            <CurrencyChip3D size={0.7} className="w-10 h-10" />
-                          </div>
+                          <span className="font-orbitron text-3xl font-black text-cyan-400">
+                            +{isFirstPurchase ? (selectedPack.amount * 2).toLocaleString() : selectedPack.amount.toLocaleString()}
+                            <span className="text-xs ml-1 opacity-60">CC</span>
+                          </span>
                           
                           {isFirstPurchase && (
                             <motion.div 
@@ -492,7 +468,7 @@ export default function Shop() {
                         </div>
                       ) : (
                         <>
-                          <div className="items-center gap-4 opacity-40 flex">
+                          <div className="flex items-center gap-4 opacity-40">
                              <div className="h-px flex-1 bg-gradient-to-r from-transparent to-white/20" />
                              <span className="font-mono text-[8px] uppercase tracking-widest">Select_Gateway</span>
                              <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/20" />
@@ -531,20 +507,34 @@ export default function Shop() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[1100] pointer-events-none"
+            className="fixed inset-0 z-[1100] pointer-events-none flex items-center justify-center"
           >
-            <CreditInjection3D />
-            
-            <div className="absolute inset-0 flex items-center justify-center bg-cyan-500/5 backdrop-blur-[2px]">
-               <motion.div 
-                 initial={{ scale: 0.8, opacity: 0 }}
-                 animate={{ scale: 1, opacity: 1 }}
-                 className="px-12 py-6 border-2 border-cyan-500/50 bg-[#020408]/80 backdrop-blur-xl text-center"
-               >
-                 <h2 className="font-orbitron text-4xl font-black text-cyan-400 tracking-[0.3em] mb-2">ASSET_SECURED</h2>
-                 <p className="font-mono text-xs text-white/40 uppercase tracking-widest">Neural_Transfer_Complete</p>
-               </motion.div>
-            </div>
+            {[...Array(30)].map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{ 
+                  x: (Math.random() - 0.5) * 400, 
+                  y: (Math.random() - 0.5) * 400,
+                  scale: 0,
+                  rotate: 0,
+                  opacity: 1 
+                }}
+                animate={{ 
+                  x: 0, 
+                  y: -500, 
+                  scale: [1, 0.5, 0],
+                  rotate: 360,
+                  opacity: [1, 1, 0]
+                }}
+                transition={{ 
+                  duration: 2.5, 
+                  delay: Math.random() * 0.5,
+                  ease: "circIn"
+                }}
+                className="absolute w-4 h-4 bg-cyan-400 shadow-[0_0_20px_#00f3ff]"
+                style={{ clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)" }}
+              />
+            ))}
           </motion.div>
         )}
       </AnimatePresence>
