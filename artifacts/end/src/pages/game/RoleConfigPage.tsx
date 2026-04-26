@@ -1091,7 +1091,7 @@ export default function RoleConfigPage() {
                 style={{ background: "linear-gradient(90deg, transparent, hsl(270 80% 55% / 0.6))" }}
               />
             </div>
-            <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-8 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-8 gap-1.5 lg:gap-2">
               {ALIEN_ROLES.map((role) => (
                 <RoleCard
                   key={role.id}
@@ -1127,7 +1127,7 @@ export default function RoleConfigPage() {
                 style={{ background: "linear-gradient(90deg, transparent, hsl(300 70% 50% / 0.6))" }}
               />
             </div>
-            <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-8 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-8 gap-1.5 lg:gap-2">
               {CHAOTIC_ROLES.map((role) => (
                 <RoleCard
                   key={role.id}
@@ -1162,7 +1162,7 @@ export default function RoleConfigPage() {
                 style={{ background: "linear-gradient(90deg, transparent, hsl(185 100% 50% / 0.6))" }}
               />
             </div>
-            <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-8 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-8 gap-1.5 lg:gap-2">
               {CREW_ROLES.map((role) => (
                 <RoleCard
                   key={role.id}
@@ -1219,18 +1219,33 @@ interface RoleCardProps {
 function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRemove, isLocked }: RoleCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-  const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0, showBelow: false });
+  const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0, showBelow: false, transformX: "-50%" });
 
   useEffect(() => {
     if (isHovered && cardRef.current) {
       const rect = cardRef.current.getBoundingClientRect();
-      const spaceAbove = rect.top;
-      const showBelow = spaceAbove < 150; // Not enough space above, show below card
+      const tooltipWidth = 190; // Default minWidth
+      const padding = 12;
       
+      let left = rect.left + rect.width / 2;
+      let transformX = "-50%";
+      
+      // Boundary check for mobile/small screens
+      if (left - tooltipWidth / 2 < padding) {
+        // Too close to left
+        left = padding;
+        transformX = "0%";
+      } else if (left + tooltipWidth / 2 > window.innerWidth - padding) {
+        // Too close to right
+        left = window.innerWidth - padding;
+        transformX = "-100%";
+      }
+
       setTooltipPos({
-        top: showBelow ? rect.bottom + 5 : rect.top - 5,
-        left: rect.left + rect.width / 2,
-        showBelow
+        top: rect.top < 150 ? rect.bottom + 5 : rect.top - 5,
+        left: left,
+        showBelow: rect.top < 150,
+        transformX
       });
     }
   }, [isHovered]);
@@ -1266,6 +1281,25 @@ function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRe
           : "none",
       }}
     >
+      {/* Selection Pulse Ring */}
+      <AnimatePresence>
+        {isSelected && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="absolute -inset-1 rounded-lg pointer-events-none z-0"
+            style={{ border: `1px solid ${accentColor}` }}
+          >
+            <motion.div 
+              animate={{ opacity: [0.1, 0.3, 0.1] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="absolute inset-0 rounded-lg"
+              style={{ background: accentColor }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Image */}
       <div className="relative w-full aspect-[1/0.95] overflow-hidden">
         <img
@@ -1365,11 +1399,11 @@ function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRe
 
       {isHovered && (
         <div
-          className="pointer-events-none fixed z-[9999] -translate-x-1/2"
+          className="pointer-events-none fixed z-[9999]"
           style={{
             top: tooltipPos.top,
             left: tooltipPos.left,
-            transform: `translateX(-50%) translateY(${tooltipPos.showBelow ? "0" : "-100%"})`,
+            transform: `translateX(${tooltipPos.transformX}) translateY(${tooltipPos.showBelow ? "0" : "-100%"})`,
             minWidth: "170px",
             maxWidth: "220px",
             background: "hsl(220 28% 10% / 0.98)",
@@ -1445,7 +1479,7 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
   return (
     <div className="flex flex-col lg:h-full">
       {/* Role image/video — square frame */}
-      <div className="relative w-full lg:w-[85%] lg:mx-auto aspect-square overflow-hidden shrink-0 p-2 lg:p-3">
+      <div className="relative w-full lg:w-[85%] lg:mx-auto aspect-[21/12] lg:aspect-square overflow-hidden shrink-0 p-2 lg:p-3">
         <div className="relative w-full h-full rounded-lg border border-white/10 overflow-hidden">
           <video
             key={role.id}
@@ -1484,10 +1518,11 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
           style={{ borderColor: "hsl(210 30% 14%)" }}
         >
           <div
-            className="font-orbitron font-black text-xs lg:text-lg tracking-widest uppercase"
+            className="font-orbitron font-black text-xs lg:text-lg tracking-widest uppercase flex items-center gap-2"
             style={{ color: accentColorLight, textShadow: `0 0 10px ${accentColor}` }}
             data-testid="text-preview-name"
           >
+            <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 2 }} className="w-1.5 h-1.5 rounded-full bg-current shadow-[0_0_8px_currentColor]" />
             {role.name}
           </div>
         </div>
