@@ -266,15 +266,17 @@ export default function Shop() {
           </div>
         ) : !isLoggedIn ? (
             <div className="flex items-center justify-center min-h-[400px] w-full">
-               <TacticalSlate className="w-full max-w-xl p-16 text-center">
-                  <FaLock className="mx-auto text-5xl text-cyan-500/30 mb-8" />
-                  <h2 className="font-orbitron text-2xl tracking-[0.5em] uppercase mb-6">Connection Required</h2>
-                  <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/30 mb-12 leading-relaxed">
-                    Secure Handshake Required for Asset Exchange.
-                  </p>
-                  <SciFiButton onClick={() => window.location.href = "/login"} variant="ghost" size="lg" className="border border-cyan-500/40">
-                     Authorize Identity
-                  </SciFiButton>
+               <TacticalSlate className="w-full max-w-xl text-center">
+                  <div className="p-16 pt-24 flex flex-col items-center">
+                    <FaLock className="mx-auto text-5xl text-cyan-500/30 mb-8" />
+                    <h2 className="font-orbitron text-2xl tracking-[0.5em] uppercase mb-6">Connection Required</h2>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/30 mb-12 leading-relaxed">
+                      Secure Handshake Required for Asset Exchange.
+                    </p>
+                    <SciFiButton onClick={() => window.location.href = "/login"} variant="ghost" size="lg" className="border border-cyan-500/40 px-10">
+                       Authorize Identity
+                    </SciFiButton>
+                  </div>
                </TacticalSlate>
             </div>
         ) : (

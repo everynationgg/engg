@@ -148,7 +148,7 @@ export default function Navbar() {
                 variant="outline" 
                 size="sm" 
                 onClick={() => navigate("/login")}
-                className="border-white/10 bg-white/5 pl-8 pr-10"
+                className="border-white/10 bg-white/5 pl-10 pr-6 justify-start"
               >
                 <div className="flex items-center gap-4">
                   <div className="relative">

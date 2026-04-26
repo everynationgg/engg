@@ -149,7 +149,7 @@ export default function Profile() {
             <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
                <div className="lg:col-span-5">
                   <TacticalSlate color="#00f3ff" className="h-full">
-                     <div className="p-10 flex flex-col items-center lg:items-start text-center lg:text-left gap-8">
+                     <div className="p-12 pt-16 flex flex-col items-center lg:items-start text-center lg:text-left gap-8">
                         <div className="relative">
                            <div className="w-32 h-32 rounded-full border-2 border-cyan-500/20 p-2 relative">
                               <div className="absolute inset-0 border-2 border-cyan-500/40 rounded-full animate-[spin_10s_linear_infinite] border-t-transparent" />
@@ -190,7 +190,7 @@ export default function Profile() {
 
                <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-8">
                   <TacticalSlate color="#a855f7" showScanner={false} className="h-full">
-                     <div className="p-10 flex flex-col gap-6">
+                     <div className="p-12 pt-16 flex flex-col gap-6">
                         <div className="flex items-center justify-between">
                            <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-purple-400/60">CC_Assets</span>
                            <FaWallet className="text-purple-400/40" />
@@ -212,7 +212,7 @@ export default function Profile() {
                   </TacticalSlate>
 
                   <TacticalSlate color="#eab308" showScanner={false} className="h-full">
-                     <div className="p-10 flex flex-col gap-6">
+                     <div className="p-12 pt-16 flex flex-col gap-6">
                         <div className="flex items-center justify-between">
                            <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-yellow-500/60">Combat_Telemetry</span>
                            <FaTrophy className="text-yellow-500/40" />

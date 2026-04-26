@@ -159,7 +159,7 @@ export default function AlliesSidebar() {
               />
 
               {/* Top Scanning Header */}
-              <div className="relative pt-10 px-8 pb-6 border-b border-white/5">
+              <div className="relative pt-16 px-8 pb-6 border-b border-white/5">
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent animate-pulse" />
                 
                 <div className="flex items-center justify-between mb-2">
