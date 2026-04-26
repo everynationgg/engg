@@ -165,7 +165,7 @@ export default function LandingSidebar({
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-500 via-cyan-400 to-cyan-600 shadow-[0_0_15px_rgba(6,182,212,0.5)]" />
 
               {/* Sidebar Header */}
-              <div className="flex items-center justify-between p-6 border-b border-white/10 bg-white/5">
+              <div className="flex items-center justify-between p-6 border-b border-white/10" style={{ background: "#161c2d" }}>
                 <div className="flex flex-col">
                   <span className="font-orbitron font-black text-xl tracking-widest text-white">
                     ENGG<span className="text-cyan-400">.</span>
@@ -175,7 +175,7 @@ export default function LandingSidebar({
                 
                 <button 
                   onClick={closeMenu}
-                  className="p-2 text-white/40 hover:text-white transition-colors hover:bg-white/5 rounded-lg"
+                  className="p-2 text-white/40 hover:text-white transition-colors hover:bg-white/10 rounded-lg"
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                     <line x1="18" y1="6" x2="6" y2="18" />
@@ -195,7 +195,7 @@ export default function LandingSidebar({
                   <button
                     key={item.id}
                     onClick={item.onClick}
-                    className="w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 hover:bg-white/5 group relative overflow-hidden"
+                    className="w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-300 hover:bg-[#1a2138] group relative overflow-hidden"
                   >
                     <div className="text-white opacity-40 group-hover:opacity-100 group-hover:text-cyan-400 transition-all duration-300 transform group-hover:scale-110">
                       {item.icon}
@@ -211,11 +211,11 @@ export default function LandingSidebar({
               </div>
 
               {/* Bottom Actions */}
-              <div className="p-6 bg-black/20 border-t border-white/10 space-y-4">
+              <div className="p-6 border-t border-white/10 space-y-4" style={{ background: "#080c16" }}>
                 {isLoggedIn && (
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-4 px-5 py-3 rounded-xl transition-all duration-300 hover:bg-red-500/10 group border border-transparent hover:border-red-500/20"
+                    className="w-full flex items-center gap-4 px-5 py-3 rounded-xl transition-all duration-300 hover:bg-[#2d1212] group border border-transparent hover:border-red-500/20"
                   >
                     <LogoutIcon className="text-red-500/60 group-hover:text-red-500" />
                     <span className="font-orbitron text-[10px] tracking-widest text-red-500/60 group-hover:text-red-500 uppercase font-bold">TERMINATE_SESSION</span>
