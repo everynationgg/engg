@@ -3,9 +3,9 @@ import { getSocket } from "@/lib/socket";
 import { playSciFiClick } from "@/lib/sound";
 import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
 import { isPlayerConnected, isPlayerReconnecting, isPlayerDisconnected } from "@/lib/utils";
-import HamburgerMenu from "@/components/HamburgerMenu";
-import SettingsModal from "@/components/SettingsModal";
-import ProfileModal from "@/components/ProfileModal";
+import HamburgerMenu from "@/components/system/HamburgerMenu";
+import SettingsModal from "@/components/system/SettingsModal";
+import ProfileModal from "@/components/profile/ProfileModal";
 
 interface LivePlayer {
   id: string;
@@ -481,3 +481,4 @@ export default function InterruptedPage() {
     </div>
   );
 }
+

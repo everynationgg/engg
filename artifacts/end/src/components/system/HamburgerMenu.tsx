@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import HowToPlayModal from "@/components/HowToPlayModal";
-import { useQuitGame } from "@/components/QuitGameButton";
-import ConfirmModal from "@/components/ConfirmModal";
+import HowToPlayModal from "@/components/game/HowToPlayModal";
+import { useQuitGame } from "@/components/system/QuitGameButton";
+import ConfirmModal from "@/components/common/ConfirmModal";
 import { playMechanicalChunk } from "@/lib/sound";
 
 interface HamburgerMenuProps {

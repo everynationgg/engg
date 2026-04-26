@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { getSocket, disconnectSocket } from "@/lib/socket";
-import ConfirmModal from "@/components/ConfirmModal";
+import ConfirmModal from "@/components/common/ConfirmModal";
 
 const GAME_SESSION_KEYS = [
   "lp_callsign",
@@ -141,3 +141,4 @@ export default function QuitGameButton({ playSound, onOpenModal }: QuitGameButto
     </>
   );
 }
+

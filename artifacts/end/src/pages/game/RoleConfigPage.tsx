@@ -1,20 +1,20 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Modal from "@/components/Modal";
+import Modal from "@/components/common/Modal";
 import { useLocation } from "wouter";
 import { ROLES, ALIEN_ROLES, CHAOTIC_ROLES, CREW_ROLES, type Role } from "@/data/roles";
 import { playSciFiClick, playLobbyJoin } from "@/lib/sound";
 import { getSocket } from "@/lib/socket";
 import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
-import { systemToast } from "@/components/SystemToast";
-import HamburgerMenu from "@/components/HamburgerMenu";
-import SettingsModal from "@/components/SettingsModal";
-import ConfirmModal from "@/components/ConfirmModal";
-import ProfileModal from "@/components/ProfileModal";
+import { systemToast } from "@/components/common/SystemToast";
+import HamburgerMenu from "@/components/system/HamburgerMenu";
+import SettingsModal from "@/components/system/SettingsModal";
+import ConfirmModal from "@/components/common/ConfirmModal";
+import ProfileModal from "@/components/profile/ProfileModal";
 import { useAuth } from "@/hooks/useAuth";
 import { FaLock, FaBolt, FaCoins } from "react-icons/fa";
-import ShopModal from "@/components/ShopModal";
-import AuthModal from "@/components/AuthModal";
+import ShopModal from "@/components/shop/ShopModal";
+import AuthModal from "@/components/auth/AuthModal";
 
 const SPECTATOR_ROLES = ROLES.filter((r) => r.team === "spectator");
 const NON_SPECTATOR_ROLES = ROLES.filter((r) => r.team !== "spectator");
@@ -1567,4 +1567,5 @@ function InfoBlock({ label, value, accentColor, dim }: { label: string; value: s
     </div>
   );
 }
+
 

@@ -4,11 +4,11 @@ import wallpaperImg from "@assets/wallpaper-landing-page.webp";
 import { playSciFiClick } from "@/lib/sound";
 import { startLobbyMusic, stopLobbyMusic, getSoundEnabled, setSoundEnabled } from "@/lib/music";
 import { useAuth } from "@/hooks/useAuth";
-import AuthModal from "@/components/AuthModal";
-import HamburgerMenu from "@/components/HamburgerMenu";
-import SettingsModal from "@/components/SettingsModal";
-import ProfileModal from "@/components/ProfileModal";
-import HowToPlayModal from "@/components/HowToPlayModal";
+import AuthModal from "@/components/auth/AuthModal";
+import HamburgerMenu from "@/components/system/HamburgerMenu";
+import SettingsModal from "@/components/system/SettingsModal";
+import ProfileModal from "@/components/profile/ProfileModal";
+import HowToPlayModal from "@/components/game/HowToPlayModal";
 import howToPlayImg from "@assets/How_to_Play.webp";
 
 function generateRoomCode() {
@@ -525,3 +525,4 @@ export default function LandingPage() {
     </article>
   );
 }
+

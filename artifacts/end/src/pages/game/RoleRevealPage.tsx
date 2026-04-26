@@ -4,10 +4,10 @@ import { ROLES, type Role } from "@/data/roles";
 import { playSciFiClick, playBassDrop } from "@/lib/sound";
 import { getSocket } from "@/lib/socket";
 import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
-import HamburgerMenu from "@/components/HamburgerMenu";
-import SettingsModal from "@/components/SettingsModal";
-import ProfileModal from "@/components/ProfileModal";
-import { TeamIcon } from "@/components/TeamIcon";
+import HamburgerMenu from "@/components/system/HamburgerMenu";
+import SettingsModal from "@/components/system/SettingsModal";
+import ProfileModal from "@/components/profile/ProfileModal";
+import { TeamIcon } from "@/components/common/TeamIcon";
 function getAssignedRole(): Role {
   const roleId = sessionStorage.getItem("lp_assignedRole");
   const found = ROLES.find((r) => r.id === roleId);
@@ -753,3 +753,4 @@ function TargetSelector({
     </div>
   );
 }
+

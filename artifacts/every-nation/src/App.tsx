@@ -12,8 +12,8 @@ import NotFound from "@/pages/not-found";
 import { AuthProvider } from "@/hooks/useAuth";
 
 import Navbar from "@/components/Navbar";
-import WarpJump from "@/components/WarpJump";
-import SystemToastContainer from "@/components/SystemToast";
+import WarpJump from "@/components/common/WarpJump";
+import SystemToastContainer from "@/components/common/SystemToast";
 
 function Router() {
   return (
@@ -30,7 +30,7 @@ function Router() {
   );
 }
 
-import { HUDFilters } from "@/components/HUDRenderer";
+import { HUDFilters } from "@/components/common/HUDRenderer";
 
 export default function App() {
   const [location] = useLocation();

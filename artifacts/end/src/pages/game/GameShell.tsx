@@ -4,20 +4,20 @@ import { useLocation, useParams } from "wouter";
 import { getSocket, disconnectSocket } from "@/lib/socket";
 import { playPhaseTransition } from "@/lib/sound";
 import { stopLobbyMusic } from "@/lib/music";
-import { systemToast } from "@/components/SystemToast";
-import RoleConfigPage from "@/pages/RoleConfigPage";
-import RoleRevealPage from "@/pages/RoleRevealPage";
-import OrbitPage from "@/pages/OrbitPage";
-import DiscussionPage from "@/pages/DiscussionPage";
-import VotingPage from "@/pages/VotingPage";
-import ResultPage from "@/pages/ResultPage";
-import InterruptedPage from "@/pages/InterruptedPage";
-import ReconnectGraceBanner from "@/components/ReconnectGraceBanner";
-import PlayerStatusList from "@/components/PlayerStatusList";
-import HostGameControls from "@/components/HostGameControls";
-import ChatModal from "@/components/ChatModal";
-import FloatingChatButton from "@/components/FloatingChatButton";
-import GlobalHUD from "@/components/GlobalHUD";
+import { systemToast } from "@/components/common/SystemToast";
+import RoleConfigPage from "@/pages/game/RoleConfigPage";
+import RoleRevealPage from "@/pages/game/RoleRevealPage";
+import OrbitPage from "@/pages/game/OrbitPage";
+import DiscussionPage from "@/pages/game/DiscussionPage";
+import VotingPage from "@/pages/game/VotingPage";
+import ResultPage from "@/pages/game/ResultPage";
+import InterruptedPage from "@/pages/game/InterruptedPage";
+import ReconnectGraceBanner from "@/components/game/ReconnectGraceBanner";
+import PlayerStatusList from "@/components/game/PlayerStatusList";
+import HostGameControls from "@/components/game/HostGameControls";
+import ChatModal from "@/components/game/ChatModal";
+import FloatingChatButton from "@/components/game/FloatingChatButton";
+import GlobalHUD from "@/components/game/GlobalHUD";
 
 // Phases that warrant a dramatic countdown overlay before switching
 const DRAMATIC_PHASES = new Set(["voting", "result", "discussion"]);
@@ -498,3 +498,4 @@ export default function GameShell() {
     </div>
   );
 }
+

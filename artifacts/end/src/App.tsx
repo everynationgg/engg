@@ -2,22 +2,22 @@ import { Switch, Route, Router as WouterRouter, useLocation, useParams } from "w
 import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import SystemToastContainer from "@/components/SystemToast";
+import SystemToastContainer from "@/components/common/SystemToast";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { PreferencesProvider } from "@/hooks/usePreferences";
-import LandingPage from "@/pages/LandingPage";
-import ProfilePage from "@/pages/ProfilePage";
-import SettingsPage from "@/pages/SettingsPage";
-import VerifyEmailPage from "@/pages/VerifyEmailPage";
-import ResetPasswordPage from "@/pages/ResetPasswordPage";
-import JoinPage from "@/pages/JoinPage";
-import GameShell from "@/pages/GameShell";
+import LandingPage from "@/pages/marketing/LandingPage";
+import ProfilePage from "@/pages/user/ProfilePage";
+import SettingsPage from "@/pages/user/SettingsPage";
+import VerifyEmailPage from "@/pages/auth/VerifyEmailPage";
+import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
+import JoinPage from "@/pages/marketing/JoinPage";
+import GameShell from "@/pages/game/GameShell";
 import NotFound from "@/pages/not-found";
-import GlobalControls from "@/components/GlobalControls";
-import ShipOSBoot from "@/components/ShipOSBoot";
-import ParallaxBackground from "@/components/ParallaxBackground";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import GlobalControls from "@/components/system/GlobalControls";
+import ShipOSBoot from "@/components/system/ShipOSBoot";
+import ParallaxBackground from "@/components/common/ParallaxBackground";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -97,3 +97,4 @@ function App() {
 }
 
 export default App;
+

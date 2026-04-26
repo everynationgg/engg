@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useGameChat, isPlayerMessage, isSystemMessage } from "@/hooks/useGameChat";
 import { useTTS } from "@/hooks/useTTS";
-import ConnectionIndicator from "@/components/ConnectionIndicator";
+import ConnectionIndicator from "@/components/common/ConnectionIndicator";
 
 interface ChatModalProps {
   gameId: string | null;
@@ -596,3 +596,4 @@ export default function ChatModal({ gameId, isOpen, onToggle, onUnreadChange, on
     </>
   );
 }
+

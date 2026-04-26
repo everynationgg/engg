@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaUser, FaEnvelope, FaLock, FaArrowRight, FaIdCard, FaShieldAlt } from "react-icons/fa";
 import { useParallax } from "@/hooks/useParallax";
-import TacticalSlate from "@/components/TacticalSlate";
+import TacticalSlate from "@/components/common/TacticalSlate";
 
 export default function Register() {
   const { x, y } = useParallax(15);

@@ -6,11 +6,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { useGameChat } from "@/hooks/useGameChat";
 import { useRecordGameResult, determinePlayerWon, generateGameId } from "@/hooks/useRecordGameResult";
 import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
-import HamburgerMenu from "@/components/HamburgerMenu";
-import SettingsModal from "@/components/SettingsModal";
-import StatsDisplay from "@/components/StatsDisplay";
-import ProfileModal from "@/components/ProfileModal";
-import { TeamIcon } from "@/components/TeamIcon";
+import HamburgerMenu from "@/components/system/HamburgerMenu";
+import SettingsModal from "@/components/system/SettingsModal";
+import StatsDisplay from "@/components/profile/StatsDisplay";
+import ProfileModal from "@/components/profile/ProfileModal";
+import { TeamIcon } from "@/components/common/TeamIcon";
 
 interface VoteResult {
   eliminatedId: string | null;
@@ -1016,3 +1016,4 @@ function EjectionCinematic({
     </div>
   );
 }
+

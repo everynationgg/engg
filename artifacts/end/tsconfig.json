@@ -10,8 +10,11 @@
     "allowImportingTsExtensions": true,
     "moduleResolution": "bundler",
     "types": ["node", "vite/client"],
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["src/*"],
+      "@assets": ["../../attached_assets"],
+      "@assets/*": ["../../attached_assets/*"]
     }
   },
   "references": [

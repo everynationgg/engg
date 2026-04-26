@@ -3,17 +3,17 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRecordGameResult } from "@/hooks/useRecordGameResult";
 import { useAchievements } from "@/hooks/useAchievements";
 import { useFriends } from "@/hooks/useFriends";
-import RoleStatsDisplay from "@/components/RoleStatsDisplay";
-import GameHistoryDisplay from "@/components/GameHistoryDisplay";
-import AggregateStats from "@/components/AggregateStats";
-import { AchievementsDisplay } from "@/components/AchievementsDisplay";
-import { FriendsDisplay } from "@/components/FriendsDisplay";
-import HamburgerMenu from "@/components/HamburgerMenu";
-import SettingsModal from "@/components/SettingsModal";
+import RoleStatsDisplay from "@/components/profile/RoleStatsDisplay";
+import GameHistoryDisplay from "@/components/profile/GameHistoryDisplay";
+import AggregateStats from "@/components/profile/AggregateStats";
+import { AchievementsDisplay } from "@/components/profile/AchievementsDisplay";
+import { FriendsDisplay } from "@/components/profile/FriendsDisplay";
+import HamburgerMenu from "@/components/system/HamburgerMenu";
+import SettingsModal from "@/components/system/SettingsModal";
 import { playSciFiClick } from "@/lib/sound";
 import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
 import { FaCoins } from "react-icons/fa";
-import ShopModal from "@/components/ShopModal";
+import ShopModal from "@/components/shop/ShopModal";
 import { useEffect, useState, useMemo } from "react";
 
 export default function ProfilePage() {
@@ -320,3 +320,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

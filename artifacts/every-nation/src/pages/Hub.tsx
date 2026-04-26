@@ -1,7 +1,7 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { FaExternalLinkAlt, FaLock, FaTerminal, FaShieldAlt, FaCubes } from "react-icons/fa";
 import AlliesSidebar from "@/components/AlliesSidebar";
-import TacticalSlate from "@/components/TacticalSlate";
+import TacticalSlate from "@/components/common/TacticalSlate";
 import { useParallax } from "@/hooks/useParallax";
 import { useRef } from "react";
 

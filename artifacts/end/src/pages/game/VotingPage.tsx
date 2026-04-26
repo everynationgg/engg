@@ -4,10 +4,10 @@ import { ROLES } from "@/data/roles";
 import { playSciFiClick, playMechanicalChunk } from "@/lib/sound";
 import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
 import { isPlayerConnected } from "@/lib/utils";
-import HamburgerMenu from "@/components/HamburgerMenu";
-import SettingsModal from "@/components/SettingsModal";
-import ProfileModal from "@/components/ProfileModal";
-import HolographicCard from "@/components/HolographicCard";
+import HamburgerMenu from "@/components/system/HamburgerMenu";
+import SettingsModal from "@/components/system/SettingsModal";
+import ProfileModal from "@/components/profile/ProfileModal";
+import HolographicCard from "@/components/common/HolographicCard";
 
 interface LivePlayer {
   id: string;
@@ -713,3 +713,4 @@ export default function VotingPage() {
     </div>
   );
 }
+

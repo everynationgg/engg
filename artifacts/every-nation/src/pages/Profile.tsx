@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { FaUser, FaWallet, FaHistory, FaShieldAlt, FaTrophy, FaGamepad, FaLink, FaEnvelope, FaCalendarAlt, FaArrowLeft, FaArrowRight, FaLock, FaSkull, FaKey, FaCheckCircle, FaSatelliteDish, FaTerminal, FaSignOutAlt } from "react-icons/fa";
-import WarpJump from "@/components/WarpJump";
+import WarpJump from "@/components/common/WarpJump";
 import AlliesSidebar from "@/components/AlliesSidebar";
-import { systemToast } from "../components/SystemToast";
+import { systemToast } from "../components/common/SystemToast";
 import { useParallax } from "@/hooks/useParallax";
-import TacticalSlate from "@/components/TacticalSlate";
-import { SciFiButton } from "@/components/SciFiButton";
+import TacticalSlate from "@/components/common/TacticalSlate";
+import { SciFiButton } from "@/components/common/SciFiButton";
 
 interface Activity {
   id: string;

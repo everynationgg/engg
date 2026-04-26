@@ -5,7 +5,7 @@ import alienRightImg from "@assets/alien-right.webp";
 import { playSciFiClick } from "@/lib/sound";
 import { startLobbyMusic, stopLobbyMusic, getSoundEnabled, setSoundEnabled } from "@/lib/music";
 import howToPlayImg from "@assets/How_to_Play.webp";
-import HowToPlayModal from "@/components/HowToPlayModal";
+import HowToPlayModal from "@/components/game/HowToPlayModal";
 
 export default function JoinPage() {
   const params = useParams<{ roomCode: string }>();
@@ -195,3 +195,4 @@ export default function JoinPage() {
     </div>
   );
 }
+

@@ -4,9 +4,9 @@ import { ROLES, type Role } from "@/data/roles";
 import { getAssignedRole, getRoomCode, getMySocketId } from "@/lib/gameHelpers";
 import { playSciFiClick, playActionConfirm } from "@/lib/sound";
 import { getSocket } from "@/lib/socket";
-import HamburgerMenu from "@/components/HamburgerMenu";
-import SettingsModal from "@/components/SettingsModal";
-import ProfileModal from "@/components/ProfileModal";
+import HamburgerMenu from "@/components/system/HamburgerMenu";
+import SettingsModal from "@/components/system/SettingsModal";
+import ProfileModal from "@/components/profile/ProfileModal";
 import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -789,4 +789,5 @@ function PassiveParasiteInfo({
     </div>
   );
 }
+
 

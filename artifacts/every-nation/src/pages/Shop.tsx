@@ -4,11 +4,11 @@ import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion"
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { FaGem, FaArrowLeft, FaShieldAlt, FaLock, FaCheckCircle, FaBolt, FaCrown, FaDatabase, FaExchangeAlt, FaHdd } from "react-icons/fa";
 import { Link, useLocation } from "wouter";
-import WarpJump from "@/components/WarpJump";
-import TacticalSlate from "@/components/TacticalSlate";
+import WarpJump from "@/components/common/WarpJump";
+import TacticalSlate from "@/components/common/TacticalSlate";
 import { useParallax } from "@/hooks/useParallax";
-import PackVisual3D from "@/components/PackVisual3D";
-import { SciFiButton } from "@/components/SciFiButton";
+import PackVisual3D from "@/features/shop/components/PackVisual3D";
+import { SciFiButton } from "@/components/common/SciFiButton";
 
 interface Pack {
   id: string;

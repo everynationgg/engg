@@ -4,9 +4,9 @@ import { ROLES } from "@/data/roles";
 import { getRoomCode, getCallsign, getInitialRoleId, getOrbitResult } from "@/lib/gameHelpers";
 import { playSciFiClick, playEmergencyVoteCalled } from "@/lib/sound";
 import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
-import HamburgerMenu from "@/components/HamburgerMenu";
-import SettingsModal from "@/components/SettingsModal";
-import ProfileModal from "@/components/ProfileModal";
+import HamburgerMenu from "@/components/system/HamburgerMenu";
+import SettingsModal from "@/components/system/SettingsModal";
+import ProfileModal from "@/components/profile/ProfileModal";
 
 interface LivePlayer {
   id: string;
@@ -882,3 +882,4 @@ function renderOrbitResultSummary(
       return <p className="text-sm" style={warn}>Your ability result was recorded.</p>;
   }
 }
+

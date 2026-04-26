@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ALIEN_ROLES, CREW_ROLES, CHAOTIC_ROLES, Role } from "@/data/roles";
 import howToPlayImg from "@assets/How_to_Play.webp";
-import { TeamIcon } from "@/components/TeamIcon";
+import { TeamIcon } from "@/components/common/TeamIcon";
 import { playSciFiClick } from "@/lib/sound";
 
 interface HowToPlayModalProps {
@@ -198,3 +198,4 @@ function RoleSection({ team, color, roles }: { team: string; color: string; role
     </div>
   );
 }
+

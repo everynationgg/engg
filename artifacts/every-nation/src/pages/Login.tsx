@@ -4,8 +4,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaShieldAlt, FaLock, FaUser, FaArrowRight, FaFingerprint, FaTerminal } from "react-icons/fa";
 import { useParallax } from "@/hooks/useParallax";
-import TacticalSlate from "@/components/TacticalSlate";
-import { SciFiButton } from "@/components/SciFiButton";
+import TacticalSlate from "@/components/common/TacticalSlate";
+import { SciFiButton } from "@/components/common/SciFiButton";
 
 export default function Login() {
   const { x, y } = useParallax(15);

@@ -1,5 +1,5 @@
 import React from "react";
-import { systemToast } from "@/components/SystemToast";
+import { systemToast } from "@/components/common/SystemToast";
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -38,3 +38,4 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     return this.props.children;
   }
 }
+
