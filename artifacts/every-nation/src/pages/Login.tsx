@@ -42,8 +42,13 @@ export default function Login() {
         className="fixed inset-0 z-0 opacity-20 pointer-events-none"
         style={{ x, y }}
       >
-        <div className="absolute inset-0 bg-[url('/background.png')] bg-cover bg-center" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#020408]/60 to-[#020408]" />
+        <div className="absolute inset-0 bg-[url('/background.png')] bg-cover bg-center opacity-40" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#020408]/80 via-transparent to-[#020408]" />
+        
+        {/* Floating Data Nodes */}
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-cyan-500/10 blur-[100px] rounded-full animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/5 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: "2s" }} />
+        <div className="absolute top-1/2 right-1/3 w-32 h-32 bg-cyan-400/5 blur-[60px] rounded-full animate-pulse" style={{ animationDelay: "1s" }} />
       </motion.div>
 
       {/* Global Scanline Overlay */}
@@ -95,13 +100,17 @@ export default function Login() {
                 <div className="flex flex-col gap-3">
                   <label className="font-mono text-[8px] uppercase tracking-[0.4em] text-white/30 ml-2">Operator_ID (Email)</label>
                   <div className="relative group overflow-hidden">
-                    <div className="absolute bottom-0 left-0 h-[2px] bg-cyan-400 w-full -translate-x-full group-focus-within:translate-x-0 transition-transform duration-500 z-10 shadow-[0_0_10px_#00f3ff]" />
+                    {/* Tactical Input Brackets */}
+                    <div className="absolute top-0 left-0 w-2 h-2 border-l border-t border-cyan-500/0 group-focus-within:border-cyan-500/60 transition-all duration-300 group-focus-within:scale-110" />
+                    <div className="absolute bottom-0 right-0 w-2 h-2 border-r border-b border-cyan-500/0 group-focus-within:border-cyan-500/60 transition-all duration-300 group-focus-within:scale-110" />
+                    
+                    <div className="absolute bottom-0 left-0 h-[2px] bg-cyan-400 w-full -translate-x-full group-focus-within:translate-x-0 transition-transform duration-700 z-10 shadow-[0_0_15px_#00f3ff]" />
                     <FaUser className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-cyan-400 transition-colors z-20" />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="relative z-0 w-full bg-white/[0.02] border border-white/10 py-5 pr-5 pl-16 tactical-input font-mono text-sm tracking-wider text-white outline-none focus:border-cyan-500/50 focus:bg-cyan-500/5 transition-all"
+                      className="relative z-0 w-full bg-white/[0.03] border border-white/10 py-6 pr-5 pl-16 tactical-input font-mono text-sm tracking-wider text-white outline-none focus:border-cyan-500/30 focus:bg-cyan-500/[0.02] transition-all"
                       placeholder="ACCESS_EMAIL"
                       required
                     />
@@ -116,13 +125,17 @@ export default function Login() {
                      </Link>
                   </div>
                   <div className="relative group overflow-hidden">
-                    <div className="absolute bottom-0 left-0 h-[2px] bg-cyan-400 w-full -translate-x-full group-focus-within:translate-x-0 transition-transform duration-500 z-10 shadow-[0_0_10px_#00f3ff]" />
+                    {/* Tactical Input Brackets */}
+                    <div className="absolute top-0 left-0 w-2 h-2 border-l border-t border-cyan-500/0 group-focus-within:border-cyan-500/60 transition-all duration-300 group-focus-within:scale-110" />
+                    <div className="absolute bottom-0 right-0 w-2 h-2 border-r border-b border-cyan-500/0 group-focus-within:border-cyan-500/60 transition-all duration-300 group-focus-within:scale-110" />
+                    
+                    <div className="absolute bottom-0 left-0 h-[2px] bg-cyan-400 w-full -translate-x-full group-focus-within:translate-x-0 transition-transform duration-700 z-10 shadow-[0_0_15px_#00f3ff]" />
                     <FaLock className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-cyan-400 transition-colors z-20" />
                     <input
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="relative z-0 w-full bg-white/[0.02] border border-white/10 py-5 pr-5 pl-16 tactical-input font-mono text-sm tracking-[0.4em] text-white outline-none focus:border-cyan-500/50 focus:bg-cyan-500/5 transition-all"
+                      className="relative z-0 w-full bg-white/[0.03] border border-white/10 py-6 pr-5 pl-16 tactical-input font-mono text-sm tracking-[0.4em] text-white outline-none focus:border-cyan-500/30 focus:bg-cyan-500/[0.02] transition-all"
                       placeholder="••••••••"
                       required
                     />
@@ -134,12 +147,13 @@ export default function Login() {
                 <SciFiButton
                   type="submit"
                   disabled={loading}
-                  variant="ghost"
-                  className="w-full border border-cyan-500/40"
-                  size="lg"
+                  variant="primary"
+                  className="w-full bg-cyan-500 text-[#020408] h-14"
                 >
-                  <span className="relative z-10">{loading ? "Establishing_Link..." : "Initiate_Handshake"}</span>
-                  <FaArrowRight className="relative z-10 text-[10px] group-hover:translate-x-1 transition-transform" />
+                  <div className="flex items-center gap-4">
+                    <span className="font-orbitron font-black tracking-[0.2em] text-sm">{loading ? "ESTABLISHING_LINK..." : "INITIATE_HANDSHAKE"}</span>
+                    <FaArrowRight className={`text-xs transition-transform ${loading ? "animate-pulse" : "group-hover:translate-x-1"}`} />
+                  </div>
                 </SciFiButton>
 
                 <div className="flex items-center justify-center gap-6">

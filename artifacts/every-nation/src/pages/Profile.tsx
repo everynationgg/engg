@@ -137,7 +137,7 @@ export default function Profile() {
       {/* Global Scanline Overlay */}
       <div className="fixed inset-0 pointer-events-none z-10 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" />
 
-      <main className="relative z-20 w-full max-w-[1400px] px-6 py-24 md:py-32 flex flex-col items-center">
+      <main className="relative z-20 w-full max-w-[1400px] px-6 py-32 md:py-40 flex flex-col items-center">
         {loading ? (
           <div className="flex flex-col items-center gap-6 mt-32">
              <div className="w-12 h-12 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
@@ -161,11 +161,11 @@ export default function Profile() {
                               {isVerified ? "Verified_Op" : "Unverified"}
                            </div>
                         </div>
-                        <div className="flex flex-col gap-2">
-                           <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-white/30">Subject_Identification</span>
-                           <h1 className="font-orbitron text-4xl font-black uppercase text-white tracking-tighter">
-                              {username}
-                           </h1>
+                         <div className="flex flex-col gap-1">
+                            <span className="font-mono text-[9px] uppercase tracking-[0.5em] text-cyan-500/40">Subject_Identification</span>
+                            <h1 className="font-orbitron text-5xl font-black uppercase text-white tracking-tighter drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                               {username}
+                            </h1>
                            <div className="flex items-center gap-4 text-white/40 font-mono text-[10px] tracking-widest mt-2">
                               <FaEnvelope className="text-cyan-500/40" />
                               <span>{email}</span>
@@ -246,10 +246,12 @@ export default function Profile() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
                {/* Timeline: Operational Logs */}
                <div className="lg:col-span-8 flex flex-col gap-8">
-                  <div className="flex items-center gap-6">
-                     <FaHistory className="text-cyan-500/40" />
-                     <h2 className="font-orbitron text-lg font-black uppercase tracking-[0.4em]">Operational_Logs</h2>
-                     <div className="h-px flex-1 bg-gradient-to-r from-cyan-500/20 to-transparent" />
+                  <div className="flex items-center gap-6 mb-4">
+                     <div className="p-2 bg-cyan-500/10 border border-cyan-500/20 rounded">
+                        <FaHistory className="text-cyan-500 animate-[pulse_3s_infinite]" />
+                     </div>
+                     <h2 className="font-orbitron text-xl font-black uppercase tracking-[0.5em] text-white">Operational_Logs</h2>
+                     <div className="h-px flex-1 bg-gradient-to-r from-cyan-500/30 via-cyan-500/10 to-transparent" />
                   </div>
 
                   <div className="flex flex-col gap-6">
@@ -261,31 +263,34 @@ export default function Profile() {
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: idx * 0.05 }}
                            >
-                              <TacticalSlate color={activity.type === "purchase" ? "#a855f7" : "#00f3ff"} showScanner={false} className="p-6">
-                                 <div className="flex items-center justify-between gap-6">
-                                    <div className="flex items-center gap-6">
-                                       <div className={`p-3 rounded bg-white/[0.03] border border-white/5 ${activity.type === "purchase" ? "text-purple-400" : "text-cyan-400"}`}>
-                                          {activity.type === "purchase" ? <FaWallet /> : <FaSatelliteDish />}
-                                       </div>
-                                       <div className="flex flex-col gap-1">
-                                          <span className="font-mono text-[7px] uppercase tracking-widest text-white/20">
-                                             {new Date(activity.timestamp).toLocaleString()}
-                                          </span>
-                                          <p className="font-mono text-xs uppercase tracking-wider text-white/80">
-                                             {activity.description}
-                                          </p>
-                                       </div>
-                                    </div>
-                                    {activity.amount && (
-                                       <div className="flex flex-col items-end">
-                                          <span className={`font-orbitron text-sm font-black ${activity.type === "purchase" ? "text-purple-400" : "text-cyan-400"}`}>
-                                             {activity.amount > 0 ? "+" : ""}{activity.amount}
-                                          </span>
-                                          <span className="font-mono text-[7px] text-white/20 uppercase tracking-widest">Units</span>
-                                       </div>
-                                    )}
-                                 </div>
-                              </TacticalSlate>
+                               <TacticalSlate color={activity.type === "purchase" ? "#a855f7" : "#00f3ff"} showScanner={false} className="p-4 md:p-6 group/log transition-all hover:bg-white/[0.02]">
+                                  <div className="flex items-center justify-between gap-6">
+                                     <div className="flex items-center gap-6">
+                                        <div className={`p-4 rounded-lg bg-black/40 border border-white/5 transition-colors group-hover/log:border-white/20 ${activity.type === "purchase" ? "text-purple-400" : "text-cyan-400"}`}>
+                                           {activity.type === "purchase" ? <FaWallet className="text-lg" /> : <FaSatelliteDish className="text-lg" />}
+                                        </div>
+                                        <div className="flex flex-col gap-1.5">
+                                           <div className="flex items-center gap-3">
+                                              <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-white/20">
+                                                 {new Date(activity.timestamp).toLocaleString()}
+                                              </span>
+                                              <div className={`w-1 h-1 rounded-full animate-pulse ${activity.type === "purchase" ? "bg-purple-500" : "bg-cyan-500"}`} />
+                                           </div>
+                                           <p className="font-mono text-sm uppercase tracking-widest text-white/90 group-hover/log:text-white transition-colors">
+                                              {activity.description}
+                                           </p>
+                                        </div>
+                                     </div>
+                                     {activity.amount && (
+                                        <div className="flex flex-col items-end gap-1">
+                                           <span className={`font-orbitron text-xl font-black ${activity.type === "purchase" ? "text-purple-400" : "text-cyan-400"}`}>
+                                              {activity.amount > 0 ? "+" : ""}{activity.amount}
+                                           </span>
+                                           <span className="font-mono text-[8px] text-white/20 uppercase tracking-[0.3em]">Units_CC</span>
+                                        </div>
+                                     )}
+                                  </div>
+                               </TacticalSlate>
                            </motion.div>
                         ))
                      ) : (
@@ -378,7 +383,7 @@ export default function Profile() {
       {/* Cipher Modal */}
       <AnimatePresence>
         {showCipherModal && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center px-6">
+          <div className="fixed top-[72px] lg:top-[88px] left-0 right-0 bottom-0 z-[1000] flex items-center justify-center px-6">
             <motion.div 
                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                className="absolute inset-0 bg-[#020408]/90 backdrop-blur-md" 
@@ -447,7 +452,7 @@ export default function Profile() {
       {/* Delete Modal */}
       <AnimatePresence>
         {showDeleteModal && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center px-6">
+          <div className="fixed top-[72px] lg:top-[88px] left-0 right-0 bottom-0 z-[1000] flex items-center justify-center px-6">
             <motion.div 
                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                className="absolute inset-0 bg-red-900/40 backdrop-blur-md" 
