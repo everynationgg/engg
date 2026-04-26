@@ -144,237 +144,255 @@ export default function Profile() {
              <span className="font-mono text-[10px] uppercase tracking-[0.5em] text-cyan-500/60 animate-pulse">Scanning_Biometrics...</span>
           </div>
         ) : (
-          <div className="w-full flex flex-col gap-12">
-            {/* Header HUD: Biometric Profile */}
-            <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-               <div className="lg:col-span-5">
-                  <TacticalSlate color="#00f3ff" className="h-full">
-                     <div className="p-12 pt-16 flex flex-col items-center lg:items-start text-center lg:text-left gap-8">
-                        <div className="relative">
-                           <div className="w-32 h-32 rounded-full border-2 border-cyan-500/20 p-2 relative">
-                              <div className="absolute inset-0 border-2 border-cyan-500/40 rounded-full animate-[spin_10s_linear_infinite] border-t-transparent" />
-                              <div className="w-full h-full bg-cyan-500/10 rounded-full flex items-center justify-center overflow-hidden">
-                                 <FaUser className="text-4xl text-cyan-500/40" />
-                              </div>
-                           </div>
-                           <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-4 py-1 bg-cyan-500 text-[#020408] font-orbitron text-[8px] font-black tracking-widest uppercase">
-                              {isVerified ? "Verified_Op" : "Unverified"}
-                           </div>
-                        </div>
-                         <div className="flex flex-col gap-1">
-                            <span className="font-mono text-[9px] uppercase tracking-[0.5em] text-cyan-500/40">Subject_Identification</span>
-                            <h1 className="font-orbitron text-5xl font-black uppercase text-white tracking-tighter drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-                               {username}
-                            </h1>
-                           <div className="flex items-center gap-4 text-white/40 font-mono text-[10px] tracking-widest mt-2">
-                              <FaEnvelope className="text-cyan-500/40" />
-                              <span>{email}</span>
-                           </div>
-                        </div>
-                        <div className="w-full h-px bg-gradient-to-r from-cyan-500/20 via-cyan-500/5 to-transparent" />
-                        <div className="flex items-center gap-8">
-                           <div className="flex flex-col">
-                              <span className="font-mono text-[8px] uppercase tracking-[0.3em] text-white/20">Operational_Uptime</span>
-                              <span className="font-orbitron text-xs text-white/60">
-                                 {new Date(createdAt).toLocaleDateString()}
-                              </span>
-                           </div>
-                           <div className="flex flex-col">
-                              <span className="font-mono text-[8px] uppercase tracking-[0.3em] text-white/20">Assigned_Sector</span>
-                              <span className="font-orbitron text-xs text-white/60">PRIME_ROOT</span>
-                           </div>
-                        </div>
-                     </div>
-                  </TacticalSlate>
-               </div>
+          <div className="w-full flex flex-col gap-16">
+            {/* HUD Header Section */}
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center gap-6 mb-12 text-center"
+            >
+              <div className="flex items-center gap-4 text-cyan-500/60 font-mono text-[10px] tracking-[0.6em] uppercase">
+                <div className="w-12 h-px bg-cyan-500/20" />
+                <span>Neural_Identity_Interface</span>
+                <div className="w-12 h-px bg-cyan-500/20" />
+              </div>
+              <h1 className="font-orbitron font-black text-3xl md:text-5xl tracking-[0.2em] uppercase text-white">
+                Command <span className="text-cyan-400">Nexus</span>
+              </h1>
+            </motion.div>
 
-               <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <TacticalSlate color="#a855f7" showScanner={false} className="h-full">
-                     <div className="p-12 pt-16 flex flex-col gap-6">
-                        <div className="flex items-center justify-between">
-                           <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-purple-400/60">CC_Assets</span>
-                           <FaWallet className="text-purple-400/40" />
-                        </div>
-                        <div className="flex items-baseline gap-3">
-                           <span className="font-orbitron text-5xl font-black text-white">{credits?.toLocaleString()}</span>
-                           <span className="font-orbitron text-xs text-purple-500 font-bold tracking-widest">CC</span>
-                        </div>
-                        <p className="font-mono text-[9px] text-white/30 uppercase tracking-widest leading-relaxed">
-                           Credits secured and ready for terminal deployment.
-                        </p>
-                        <SciFiButton 
-                           onClick={() => window.location.href = "/shop"}
-                           className="mt-4 border border-purple-500/30 text-purple-400 hover:text-purple-300 hover:border-purple-500/60"
-                        >
-                           Initialize_Exchange
-                        </SciFiButton>
-                     </div>
-                  </TacticalSlate>
-
-                  <TacticalSlate color="#eab308" showScanner={false} className="h-full">
-                     <div className="p-12 pt-16 flex flex-col gap-6">
-                        <div className="flex items-center justify-between">
-                           <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-yellow-500/60">Combat_Telemetry</span>
-                           <FaTrophy className="text-yellow-500/40" />
-                        </div>
-                        <div className="grid grid-cols-2 gap-8">
+            <div className="w-full flex flex-col gap-12">
+              {/* Header HUD: Biometric Profile */}
+              <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+                 <div className="lg:col-span-5">
+                    <TacticalSlate color="#00f3ff" className="h-full">
+                       <div className="p-12 pt-16 flex flex-col items-center lg:items-start text-center lg:text-left gap-8">
+                          <div className="relative">
+                             <div className="w-32 h-32 rounded-full border-2 border-cyan-500/20 p-2 relative">
+                                <div className="absolute inset-0 border-2 border-cyan-500/40 rounded-full animate-[spin_10s_linear_infinite] border-t-transparent" />
+                                <div className="w-full h-full bg-cyan-500/10 rounded-full flex items-center justify-center overflow-hidden">
+                                   <FaUser className="text-4xl text-cyan-500/40" />
+                                </div>
+                             </div>
+                             <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-4 py-1 bg-cyan-500 text-[#020408] font-orbitron text-[8px] font-black tracking-widest uppercase">
+                                {isVerified ? "Verified_Op" : "Unverified"}
+                             </div>
+                          </div>
                            <div className="flex flex-col gap-1">
-                              <span className="font-orbitron text-2xl font-black text-white">{stats?.totalGames || 0}</span>
-                              <span className="font-mono text-[8px] uppercase tracking-widest text-white/20">Sorties</span>
+                              <span className="font-mono text-[9px] uppercase tracking-[0.5em] text-cyan-500/40">Subject_Identification</span>
+                              <h1 className="font-orbitron text-5xl font-black uppercase text-white tracking-tighter drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                                 {username}
+                              </h1>
+                             <div className="flex items-center gap-4 text-white/40 font-mono text-[10px] tracking-widest mt-2">
+                                <FaEnvelope className="text-cyan-500/40" />
+                                <span>{email}</span>
+                             </div>
+                          </div>
+                          <div className="w-full h-px bg-gradient-to-r from-cyan-500/20 via-cyan-500/5 to-transparent" />
+                          <div className="flex items-center gap-8">
+                             <div className="flex flex-col">
+                                <span className="font-mono text-[8px] uppercase tracking-[0.3em] text-white/20">Operational_Uptime</span>
+                                <span className="font-orbitron text-xs text-white/60">
+                                   {new Date(createdAt).toLocaleDateString()}
+                                </span>
+                             </div>
+                             <div className="flex flex-col">
+                                <span className="font-mono text-[8px] uppercase tracking-[0.3em] text-white/20">Assigned_Sector</span>
+                                <span className="font-orbitron text-xs text-white/60">PRIME_ROOT</span>
+                             </div>
+                          </div>
+                       </div>
+                    </TacticalSlate>
+                 </div>
+
+                 <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <TacticalSlate color="#a855f7" showScanner={false} className="h-full">
+                       <div className="p-12 pt-16 flex flex-col gap-6">
+                          <div className="flex items-center justify-between">
+                             <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-purple-400/60">CC_Assets</span>
+                             <FaWallet className="text-purple-400/40" />
+                          </div>
+                          <div className="flex items-baseline gap-3">
+                             <span className="font-orbitron text-5xl font-black text-white">{credits?.toLocaleString()}</span>
+                             <span className="font-orbitron text-xs text-purple-500 font-bold tracking-widest">CC</span>
+                          </div>
+                          <p className="font-mono text-[9px] text-white/30 uppercase tracking-widest leading-relaxed">
+                             Credits secured and ready for terminal deployment.
+                          </p>
+                          <SciFiButton 
+                             onClick={() => window.location.href = "/shop"}
+                             className="mt-4 border border-purple-500/30 text-purple-400 hover:text-purple-300 hover:border-purple-500/60"
+                          >
+                             Initialize_Exchange
+                          </SciFiButton>
+                       </div>
+                    </TacticalSlate>
+
+                    <TacticalSlate color="#eab308" showScanner={false} className="h-full">
+                       <div className="p-12 pt-16 flex flex-col gap-6">
+                          <div className="flex items-center justify-between">
+                             <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-yellow-500/60">Combat_Telemetry</span>
+                             <FaTrophy className="text-yellow-500/40" />
+                          </div>
+                          <div className="grid grid-cols-2 gap-8">
+                             <div className="flex flex-col gap-1">
+                                <span className="font-orbitron text-2xl font-black text-white">{stats?.totalGames || 0}</span>
+                                <span className="font-mono text-[8px] uppercase tracking-widest text-white/20">Sorties</span>
+                             </div>
+                             <div className="flex flex-col gap-1">
+                                <span className="font-orbitron text-2xl font-black text-white">{stats?.wins || 0}</span>
+                                <span className="font-mono text-[8px] uppercase tracking-widest text-white/20">Success</span>
+                             </div>
+                          </div>
+                          <div className="w-full flex gap-[2px] h-2">
+                             {[...Array(20)].map((_, i) => {
+                               const ratio = stats?.totalGames > 0 ? stats.wins / stats.totalGames : 0;
+                               const isActive = i < Math.floor(ratio * 20);
+                               return (
+                                 <div key={i} className={`flex-1 h-full rounded-sm transition-all duration-500 ${isActive ? "bg-yellow-500 shadow-[0_0_8px_#eab308]" : "bg-white/5"}`} />
+                               );
+                             })}
+                          </div>
+                          <span className="font-mono text-[8px] uppercase tracking-[0.4em] text-white/20 text-right">Efficiency_Rating</span>
+                       </div>
+                    </TacticalSlate>
+                 </div>
+              </section>
+
+              {/* Main Content Area */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                 {/* Timeline: Operational Logs */}
+                 <div className="lg:col-span-8 flex flex-col gap-8">
+                    <div className="flex items-center gap-6 mb-4">
+                       <div className="p-2 bg-cyan-500/10 border border-cyan-500/20 rounded">
+                          <FaHistory className="text-cyan-500 animate-[pulse_3s_infinite]" />
+                       </div>
+                       <h2 className="font-orbitron text-xl font-black uppercase tracking-[0.5em] text-white">Operational_Logs</h2>
+                       <div className="h-px flex-1 bg-gradient-to-r from-cyan-500/30 via-cyan-500/10 to-transparent" />
+                    </div>
+
+                    <div className="flex flex-col gap-6">
+                       {activities?.length > 0 ? (
+                          activities.map((activity: Activity, idx: number) => (
+                             <motion.div
+                                key={activity.id}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: idx * 0.05 }}
+                             >
+                                 <TacticalSlate color={activity.type === "purchase" ? "#a855f7" : "#00f3ff"} showScanner={false} className="p-4 md:p-6 group/log transition-all hover:bg-white/[0.02]">
+                                    <div className="flex items-center justify-between gap-6">
+                                       <div className="flex items-center gap-6">
+                                          <div className={`p-4 rounded-lg bg-black/40 border border-white/5 transition-colors group-hover/log:border-white/20 ${activity.type === "purchase" ? "text-purple-400" : "text-cyan-400"}`}>
+                                             {activity.type === "purchase" ? <FaWallet className="text-lg" /> : <FaSatelliteDish className="text-lg" />}
+                                          </div>
+                                          <div className="flex flex-col gap-1.5">
+                                             <div className="flex items-center gap-3">
+                                                <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-white/20">
+                                                   {new Date(activity.timestamp).toLocaleString()}
+                                                </span>
+                                                <div className={`w-1 h-1 rounded-full animate-pulse ${activity.type === "purchase" ? "bg-purple-500" : "bg-cyan-500"}`} />
+                                             </div>
+                                             <p className="font-mono text-sm uppercase tracking-widest text-white/90 group-hover/log:text-white transition-colors">
+                                                {activity.description}
+                                             </p>
+                                          </div>
+                                       </div>
+                                       {activity.amount && (
+                                          <div className="flex flex-col items-end gap-1">
+                                             <span className={`font-orbitron text-xl font-black ${activity.type === "purchase" ? "text-purple-400" : "text-cyan-400"}`}>
+                                                {activity.amount > 0 ? "+" : ""}{activity.amount}
+                                             </span>
+                                             <span className="font-mono text-[8px] text-white/20 uppercase tracking-[0.3em]">Units_CC</span>
+                                          </div>
+                                       )}
+                                    </div>
+                                 </TacticalSlate>
+                             </motion.div>
+                          ))
+                       ) : (
+                          <div className="p-12 text-center border border-white/5 bg-white/[0.02] rounded-xl">
+                             <p className="font-mono text-[10px] uppercase tracking-[0.5em] text-white/20">No logs found in secure storage.</p>
+                          </div>
+                       )}
+                    </div>
+                 </div>
+
+                 {/* Control Panel: Security & Settings */}
+                 <div className="lg:col-span-4 flex flex-col gap-8">
+                    <div className="flex items-center gap-6">
+                       <FaShieldAlt className="text-red-500/40" />
+                       <h2 className="font-orbitron text-lg font-black uppercase tracking-[0.4em]">Control_Panel</h2>
+                    </div>
+
+                    <TacticalSlate color="#ef4444" showScanner={false} className="p-8">
+                       <div className="flex flex-col gap-8">
+                          <div className="flex flex-col gap-2">
+                             <span className="font-orbitron text-[11px] font-black uppercase tracking-[0.2em] text-white/80">Security_Encryption</span>
+                             <p className="font-mono text-[9px] uppercase tracking-widest text-white/30 leading-relaxed">
+                                Manage your terminal access keys and encryption protocols.
+                             </p>
+                          </div>
+                          
+                           <div className="flex flex-col gap-4">
+                               <SciFiButton 
+                                  onClick={() => setShowCipherModal(true)}
+                                  variant="outline" className="w-full justify-start text-white/60 hover:text-white"
+                               >
+                                  <FaKey className="text-xs opacity-40 mr-4" />
+                                  Update_Cipher
+                               </SciFiButton>
+
+                               <SciFiButton 
+                                  onClick={() => {
+                                    logout();
+                                    window.location.href = "/?login=true";
+                                  }}
+                                  className="w-full justify-start border border-cyan-500/20 text-cyan-400"
+                               >
+                                  <FaSignOutAlt className="text-xs opacity-40 mr-4" />
+                                  Logout_Protocol
+                               </SciFiButton>
+
+                               <SciFiButton 
+                                  onClick={() => setShowDeleteModal(true)}
+                                  variant="danger" className="w-full justify-start"
+                               >
+                                  <FaSkull className="text-xs opacity-40 mr-4" />
+                                  Account_Termination
+                               </SciFiButton>
                            </div>
-                           <div className="flex flex-col gap-1">
-                              <span className="font-orbitron text-2xl font-black text-white">{stats?.wins || 0}</span>
-                              <span className="font-mono text-[8px] uppercase tracking-widest text-white/20">Success</span>
-                           </div>
-                        </div>
-                        <div className="w-full flex gap-[2px] h-2">
-                           {[...Array(20)].map((_, i) => {
-                             const ratio = stats?.totalGames > 0 ? stats.wins / stats.totalGames : 0;
-                             const isActive = i < Math.floor(ratio * 20);
-                             return (
-                               <div key={i} className={`flex-1 h-full rounded-sm transition-all duration-500 ${isActive ? "bg-yellow-500 shadow-[0_0_8px_#eab308]" : "bg-white/5"}`} />
-                             );
-                           })}
-                        </div>
-                        <span className="font-mono text-[8px] uppercase tracking-[0.4em] text-white/20 text-right">Efficiency_Rating</span>
-                     </div>
-                  </TacticalSlate>
-               </div>
-            </section>
+                       </div>
+                    </TacticalSlate>
 
-            {/* Main Content Area */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-               {/* Timeline: Operational Logs */}
-               <div className="lg:col-span-8 flex flex-col gap-8">
-                  <div className="flex items-center gap-6 mb-4">
-                     <div className="p-2 bg-cyan-500/10 border border-cyan-500/20 rounded">
-                        <FaHistory className="text-cyan-500 animate-[pulse_3s_infinite]" />
-                     </div>
-                     <h2 className="font-orbitron text-xl font-black uppercase tracking-[0.5em] text-white">Operational_Logs</h2>
-                     <div className="h-px flex-1 bg-gradient-to-r from-cyan-500/30 via-cyan-500/10 to-transparent" />
-                  </div>
+                    <TacticalSlate color="#00f3ff" showScanner={false} className="p-8">
+                       <div className="flex flex-col gap-6">
+                          <div className="flex items-center justify-between">
+                             <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-cyan-400">Achv_Protocol</span>
+                             <FaTerminal className="text-cyan-400/40" />
+                          </div>
+                          <div className="flex flex-col gap-4">
+                             {achievements?.length > 0 ? achievements.slice(0, 3).map((ach: any) => (
+                                <div key={ach.id} className="flex items-center gap-4 group/ach">
+                                   <div className="w-2 h-2 rounded-full bg-cyan-500/20 group-hover/ach:bg-cyan-500 transition-colors" />
+                                   <span className="font-mono text-[10px] uppercase tracking-widest text-white/60">{ach.title}</span>
+                                </div>
+                             )) : (
+                                <span className="font-mono text-[9px] text-white/20 uppercase tracking-widest italic">No medals awarded yet.</span>
+                             )}
+                          </div>
+                       </div>
+                    </TacticalSlate>
 
-                  <div className="flex flex-col gap-6">
-                     {activities?.length > 0 ? (
-                        activities.map((activity: Activity, idx: number) => (
-                           <motion.div
-                              key={activity.id}
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: idx * 0.05 }}
-                           >
-                               <TacticalSlate color={activity.type === "purchase" ? "#a855f7" : "#00f3ff"} showScanner={false} className="p-4 md:p-6 group/log transition-all hover:bg-white/[0.02]">
-                                  <div className="flex items-center justify-between gap-6">
-                                     <div className="flex items-center gap-6">
-                                        <div className={`p-4 rounded-lg bg-black/40 border border-white/5 transition-colors group-hover/log:border-white/20 ${activity.type === "purchase" ? "text-purple-400" : "text-cyan-400"}`}>
-                                           {activity.type === "purchase" ? <FaWallet className="text-lg" /> : <FaSatelliteDish className="text-lg" />}
-                                        </div>
-                                        <div className="flex flex-col gap-1.5">
-                                           <div className="flex items-center gap-3">
-                                              <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-white/20">
-                                                 {new Date(activity.timestamp).toLocaleString()}
-                                              </span>
-                                              <div className={`w-1 h-1 rounded-full animate-pulse ${activity.type === "purchase" ? "bg-purple-500" : "bg-cyan-500"}`} />
-                                           </div>
-                                           <p className="font-mono text-sm uppercase tracking-widest text-white/90 group-hover/log:text-white transition-colors">
-                                              {activity.description}
-                                           </p>
-                                        </div>
-                                     </div>
-                                     {activity.amount && (
-                                        <div className="flex flex-col items-end gap-1">
-                                           <span className={`font-orbitron text-xl font-black ${activity.type === "purchase" ? "text-purple-400" : "text-cyan-400"}`}>
-                                              {activity.amount > 0 ? "+" : ""}{activity.amount}
-                                           </span>
-                                           <span className="font-mono text-[8px] text-white/20 uppercase tracking-[0.3em]">Units_CC</span>
-                                        </div>
-                                     )}
-                                  </div>
-                               </TacticalSlate>
-                           </motion.div>
-                        ))
-                     ) : (
-                        <div className="p-12 text-center border border-white/5 bg-white/[0.02] rounded-xl">
-                           <p className="font-mono text-[10px] uppercase tracking-[0.5em] text-white/20">No logs found in secure storage.</p>
-                        </div>
-                     )}
-                  </div>
-               </div>
-
-               {/* Control Panel: Security & Settings */}
-               <div className="lg:col-span-4 flex flex-col gap-8">
-                  <div className="flex items-center gap-6">
-                     <FaShieldAlt className="text-red-500/40" />
-                     <h2 className="font-orbitron text-lg font-black uppercase tracking-[0.4em]">Control_Panel</h2>
-                  </div>
-
-                  <TacticalSlate color="#ef4444" showScanner={false} className="p-8">
-                     <div className="flex flex-col gap-8">
-                        <div className="flex flex-col gap-2">
-                           <span className="font-orbitron text-[11px] font-black uppercase tracking-[0.2em] text-white/80">Security_Encryption</span>
-                           <p className="font-mono text-[9px] uppercase tracking-widest text-white/30 leading-relaxed">
-                              Manage your terminal access keys and encryption protocols.
-                           </p>
-                        </div>
-                        
-                         <div className="flex flex-col gap-4">
-                             <SciFiButton 
-                                onClick={() => setShowCipherModal(true)}
-                                variant="outline" className="w-full justify-start text-white/60 hover:text-white"
-                             >
-                                <FaKey className="text-xs opacity-40 mr-4" />
-                                Update_Cipher
-                             </SciFiButton>
-
-                             <SciFiButton 
-                                onClick={() => {
-                                  logout();
-                                  window.location.href = "/?login=true";
-                                }}
-                                className="w-full justify-start border border-cyan-500/20 text-cyan-400"
-                             >
-                                <FaSignOutAlt className="text-xs opacity-40 mr-4" />
-                                Logout_Protocol
-                             </SciFiButton>
-
-                             <SciFiButton 
-                                onClick={() => setShowDeleteModal(true)}
-                                variant="danger" className="w-full justify-start"
-                             >
-                                <FaSkull className="text-xs opacity-40 mr-4" />
-                                Account_Termination
-                             </SciFiButton>
-                         </div>
-                     </div>
-                  </TacticalSlate>
-
-                  <TacticalSlate color="#00f3ff" showScanner={false} className="p-8">
-                     <div className="flex flex-col gap-6">
-                        <div className="flex items-center justify-between">
-                           <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-cyan-400">Achv_Protocol</span>
-                           <FaTerminal className="text-cyan-400/40" />
-                        </div>
-                        <div className="flex flex-col gap-4">
-                           {achievements?.length > 0 ? achievements.slice(0, 3).map((ach: any) => (
-                              <div key={ach.id} className="flex items-center gap-4 group/ach">
-                                 <div className="w-2 h-2 rounded-full bg-cyan-500/20 group-hover/ach:bg-cyan-500 transition-colors" />
-                                 <span className="font-mono text-[10px] uppercase tracking-widest text-white/60">{ach.title}</span>
-                              </div>
-                           )) : (
-                              <span className="font-mono text-[9px] text-white/20 uppercase tracking-widest italic">No medals awarded yet.</span>
-                           )}
-                        </div>
-                     </div>
-                  </TacticalSlate>
-
-                  <SciFiButton 
-                    onClick={handleReturn}
-                    variant="outline" className="mt-auto border-white/10 text-white/60 hover:text-white"
-                  >
-                    <FaArrowLeft className="text-xs opacity-40 mr-2" />
-                    Command_Base
-                  </SciFiButton>
-               </div>
+                    <SciFiButton 
+                      onClick={handleReturn}
+                      variant="outline" className="mt-auto border-white/10 text-white/60 hover:text-white"
+                    >
+                      <FaArrowLeft className="text-xs opacity-40 mr-2" />
+                      Command_Base
+                    </SciFiButton>
+                 </div>
+              </div>
             </div>
           </div>
         )}
