@@ -257,11 +257,12 @@ export function registerGameHandlers(
       if (session.phase !== "discussion") return CAS_SKIP;
       const res = startEmergencyVote(session, socket.id);
       if (!res.accepted) return CAS_SKIP;
-      return true as const;
+      return res;
     });
 
     if (cas) {
       phaseUpdate(io, sessionId, cas.session);
+      io.to(sessionId).emit("emergency_vote_started", { callerName: cas.result.callerName });
       chatSystemMessage(io, sessionId, "EMERGENCY VOTE INITIATED");
       ack?.({ success: true });
     }
@@ -272,14 +273,20 @@ export function registerGameHandlers(
     if (!parsed) return;
     const { sessionId, vote } = parsed;
 
+    let outcome: boolean | null = null;
+
     const cas = await withCasRetry(sessionId, (session) => {
       if (!session.emergencyVote?.active) return CAS_SKIP;
-      castEmergencyVote(session, socket.id, vote);
+      const res = castEmergencyVote(session, socket.id, vote);
+      outcome = res.outcome;
       return true as const;
     });
 
     if (cas) {
       phaseUpdate(io, sessionId, cas.session);
+      if (outcome !== null) {
+        io.to(sessionId).emit("emergency_vote_result", { passed: outcome });
+      }
       ack?.({ success: true });
     }
   });

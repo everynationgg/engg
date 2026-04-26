@@ -145,13 +145,16 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
   useEffect(() => {
     const socket = getSocket();
 
-    const handlePhaseUpdate = (session: { phase: string; players: LivePlayer[]; roleCounts?: Record<string, number>; rolesAssigned?: Record<string, string>; initialRoles?: Record<string, string>; roundSummary?: any }) => {
+    const handlePhaseUpdate = (session: any) => {
       const myPlayerId = sessionStorage.getItem("lp_playerId");
       const myId = socket.id;
-      const players = session.players.map((p) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === myId }));
+      const players = (session.players || []).map((p: any) => ({ 
+        ...p, 
+        isYou: myPlayerId ? p.playerId === myPlayerId : p.id === myId 
+      }));
       setSessionPlayers(players);
       
-      const me = players.find((p) => p.isYou);
+      const me = players.find((p: any) => p.isYou);
       if (me) {
         setIsHost(!!me.isHost);
       }
@@ -161,7 +164,17 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
       if (session.initialRoles) setInitialRoles(session.initialRoles);
       if (session.roundSummary) setRoundSummary(session.roundSummary);
       
-      // GameShell handles phase navigation
+      // Handle Emergency Vote state sync (for late-joins or refreshes)
+      if (session.emergencyVote?.active) {
+        setEvPopup({ callerName: session.emergencyVote.callerName });
+        if (session.emergencyVote.yesVoters?.includes(myId)) {
+          setEvCast("yes");
+        } else if (session.emergencyVote.noVoters?.includes(myId)) {
+          setEvCast("no");
+        }
+      } else if (!session.emergencyVote?.active && evPopup) {
+        setEvPopup(null);
+      }
     };
 
     const handleEmergencyVoteStarted = (data: { callerName: string }) => {
