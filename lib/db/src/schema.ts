@@ -30,6 +30,7 @@ export const creditTransactionsTable = pgTable("credit_transactions", {
   type: text("type").notNull(),
   description: text("description"),
   paypalOrderId: text("paypal_order_id"),
+  packId: text("pack_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

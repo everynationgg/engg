@@ -18,6 +18,7 @@ interface Pack {
   currency: string;
   bonus?: string;
   rarity: "common" | "rare" | "epic" | "legendary";
+  hasBonus?: boolean;
 }
 
 // Hardcoded Fallback Packs to ensure Shop is never empty
@@ -51,6 +52,13 @@ export default function Shop() {
   const [isInjecting, setIsInjecting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isFirstPurchase, setIsFirstPurchase] = useState(true);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Animated counter for credits
   const [displayCredits, setDisplayCredits] = useState(credits);
@@ -198,8 +206,8 @@ export default function Shop() {
           </p>
         </motion.div>
 
-        {/* Top HUD Bar */}
-        <header className="fixed top-0 left-0 right-0 z-50 p-6 flex justify-between items-start pointer-events-none">
+        {/* Top HUD Bar - Stays away from global Navbar when scrolled */}
+        <header className={`fixed left-0 right-0 z-50 p-6 flex justify-between items-start pointer-events-none transition-all duration-500 ${scrolled ? "top-[72px] lg:top-[88px]" : "top-0"}`}>
            <div className="pointer-events-auto">
               <SciFiButton variant="outline" onClick={handleReturn} className="bg-[#020408]/80 backdrop-blur-md">
                 <FaArrowLeft className="text-xs group-hover:-translate-x-1 transition-transform" />
@@ -315,7 +323,7 @@ export default function Shop() {
                           color={(RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color}
                           isSelected={selectedPack?.id === pack.id}
                        />
-                       {isFirstPurchase && (
+                       {pack.hasBonus && (
                           <motion.div
                             animate={{ scale: [1, 1.05, 1], rotate: [-2, 2, -2] }}
                             transition={{ repeat: Infinity, duration: 4 }}
@@ -334,7 +342,7 @@ export default function Shop() {
                       <h3 className="font-orbitron text-sm tracking-[0.4em] uppercase text-white/60 mb-2">{pack.name}</h3>
                       <div className="flex items-baseline justify-center gap-2">
                         <span className="font-orbitron text-4xl font-black text-white">
-                          {isFirstPurchase ? (pack.amount * 2).toLocaleString() : pack.amount.toLocaleString()}
+                          {pack.hasBonus ? (pack.amount * 2).toLocaleString() : pack.amount.toLocaleString()}
                         </span>
                         <span className="font-orbitron text-[10px] text-cyan-500 font-bold">CC</span>
                       </div>
@@ -402,7 +410,12 @@ export default function Shop() {
                    </div>
                    <div className="flex flex-col text-right">
                      <span className="font-mono text-[8px] uppercase tracking-widest text-white/30">Yield</span>
-                     <span className="font-orbitron text-xl font-bold text-cyan-400">+{selectedPack.amount} CC</span>
+                     <span className="font-orbitron text-xl font-bold text-cyan-400">
+                       +{selectedPack.hasBonus ? selectedPack.amount * 2 : selectedPack.amount} CC
+                     </span>
+                     {selectedPack.hasBonus && (
+                       <span className="font-mono text-[7px] text-red-500 uppercase tracking-widest mt-1 animate-pulse">X2 Bonus Applied</span>
+                     )}
                    </div>
                 </div>
                 

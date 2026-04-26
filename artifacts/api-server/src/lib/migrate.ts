@@ -102,6 +102,9 @@ export async function migrateDb(): Promise<void> {
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'achievements' AND column_name = 'prestige_xp') THEN
           ALTER TABLE achievements ADD COLUMN prestige_xp INTEGER NOT NULL DEFAULT 0;
         END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'credit_transactions' AND column_name = 'pack_id') THEN
+          ALTER TABLE credit_transactions ADD COLUMN pack_id TEXT;
+        END IF;
       END $$
     `);
 

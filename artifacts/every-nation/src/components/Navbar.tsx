@@ -28,11 +28,17 @@ export default function Navbar() {
   ];
 
   const isGamePage = location.startsWith("/end") || location.startsWith("/room");
+  const isShopPage = location === "/shop";
   const showSolidBg = scrolled || isOpen || isGamePage;
+  
+  // Hide Navbar at the top of pages that have their own custom HUD (like the Shop)
+  const isHidden = isShopPage && !scrolled && !isOpen;
 
   return (
     <nav 
       className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 border-b ${
+        isHidden ? "-translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100"
+      } ${
         showSolidBg 
           ? "bg-black/90 backdrop-blur-xl border-white/10 py-4" 
           : "bg-transparent border-transparent py-6"

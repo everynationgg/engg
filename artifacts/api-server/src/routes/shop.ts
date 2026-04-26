@@ -46,32 +46,31 @@ async function getPayPalAccessToken() {
 }
 
 router.get("/shop/config", async (req, res) => {
-  const authHeader = req.headers.authorization;
-  let isFirstPurchase = true;
+  const userId = req.query.userId as string;
+  let purchasedPackIds: string[] = [];
 
-  if (authHeader && authHeader.startsWith("Bearer ")) {
+  if (userId) {
     try {
-      const token = authHeader.split(" ")[1];
-      // Basic token check (middleware would be better but this keeps config simple)
-      const userId = req.query.userId as string; // Frontend can pass this for convenience if token is present
+      const existingPurchases = await db
+        .select({ packId: creditTransactionsTable.packId })
+        .from(creditTransactionsTable)
+        .where(sql`${creditTransactionsTable.userId} = ${userId} AND ${creditTransactionsTable.type} = 'purchase'`);
       
-      if (userId) {
-        const existingPurchases = await db
-          .select()
-          .from(creditTransactionsTable)
-          .where(sql`${creditTransactionsTable.userId} = ${userId} AND ${creditTransactionsTable.type} = 'purchase'`)
-          .limit(1);
-        
-        isFirstPurchase = existingPurchases.length === 0;
-      }
+      purchasedPackIds = existingPurchases
+        .map(p => p.packId)
+        .filter((id): id is string => !!id);
     } catch (err) {
-      logger.error({ err }, "Error checking first purchase in config");
+      logger.error({ err }, "Error checking purchased packs in config");
     }
   }
 
   res.json({ 
-    packs: CREDIT_PACKS,
-    isFirstPurchase 
+    packs: CREDIT_PACKS.map(pack => ({
+      ...pack,
+      hasBonus: !purchasedPackIds.includes(pack.id)
+    })),
+    // Backward compatibility for older clients
+    isFirstPurchase: purchasedPackIds.length === 0 
   });
 });
 
@@ -163,19 +162,19 @@ router.post("/shop/capture-order", authMiddleware, async (req: AuthRequest, res)
 
       if (userId) {
         try {
-          let isFirstPurchase = true;
+          let isFirstPurchase = false;
           let finalCreditAmount = pack.amount;
 
           await db.transaction(async (tx) => {
-            // Check if this is the first purchase to apply X2 bonus
-            const previousPurchases = await tx
+            // Check if this SPECIFIC pack was purchased before to apply X2 bonus
+            const previousPackPurchases = await tx
               .select()
               .from(creditTransactionsTable)
-              .where(sql`${creditTransactionsTable.userId} = ${userId} AND ${creditTransactionsTable.type} = 'purchase'`)
+              .where(sql`${creditTransactionsTable.userId} = ${userId} AND ${creditTransactionsTable.type} = 'purchase' AND ${creditTransactionsTable.packId} = ${pack.id}`)
               .limit(1);
 
-            isFirstPurchase = previousPurchases.length === 0;
-            finalCreditAmount = isFirstPurchase ? pack.amount * 2 : pack.amount;
+            const isFirstPackPurchase = previousPackPurchases.length === 0;
+            finalCreditAmount = isFirstPackPurchase ? pack.amount * 2 : pack.amount;
 
             // 2. IDEMPOTENCY CHECK
             const existing = await tx.select().from(creditTransactionsTable).where(eq(creditTransactionsTable.paypalOrderId, orderID)).limit(1);
@@ -193,7 +192,7 @@ router.post("/shop/capture-order", authMiddleware, async (req: AuthRequest, res)
               .set({ credits: sql`${usersTable.credits} + ${finalCreditAmount}` })
               .where(eq(usersTable.id, userId));
 
-            // 4. Record transaction with PayPal ID and User details
+            // 4. Record transaction with PayPal ID, User details, and packId
             await tx.insert(creditTransactionsTable).values({
               id: randomUUID(),
               userId,
@@ -202,10 +201,13 @@ router.post("/shop/capture-order", authMiddleware, async (req: AuthRequest, res)
               amount: finalCreditAmount,
               type: "purchase",
               paypalOrderId: orderID,
-              description: isFirstPurchase 
-                ? `First Time Purchase X2 Bonus: ${finalCreditAmount} credits via PayPal`
-                : `Purchased ${finalCreditAmount} credits via PayPal`,
+              packId: pack.id,
+              description: isFirstPackPurchase 
+                ? `First Time Purchase X2 Bonus (${pack.name}): ${finalCreditAmount} credits via PayPal`
+                : `Purchased ${finalCreditAmount} credits via PayPal (${pack.name})`,
             });
+
+            isFirstPurchase = isFirstPackPurchase;
           });
 
           logger.info({ userId, creditAmount: finalCreditAmount, orderID, isFirstPurchase }, "Credits successfully added via PayPal");
