@@ -161,7 +161,7 @@ export default function HamburgerMenu({
 
   return (
     <div
-      className="fixed z-50 right-12 bottom-12"
+      className="fixed z-50 right-4 bottom-24 sm:right-12 sm:bottom-12"
     >
       {/* Backdrop overlay */}
       {menuOpen && (
@@ -174,7 +174,7 @@ export default function HamburgerMenu({
       {menuOpen && (
         <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center">
            {/* Tactical Ring Background */}
-           <div className={`absolute w-[400px] h-[400px] border border-cyan-500/10 rounded-full transition-all duration-700 ${menuClosing ? "scale-0 opacity-0" : "scale-100 opacity-100"}`}>
+           <div className={`absolute w-[280px] h-[280px] sm:w-[400px] sm:h-[400px] border border-cyan-500/10 rounded-full transition-all duration-700 ${menuClosing ? "scale-0 opacity-0" : "scale-100 opacity-100"}`}>
               <div className="absolute inset-0 border-t-2 border-cyan-500/20 rounded-full animate-[spin_20s_linear_infinite]" />
               <div className="absolute inset-4 border border-white/5 rounded-full" />
            </div>
@@ -184,7 +184,7 @@ export default function HamburgerMenu({
             const startAngle = 180; // Start left and fan towards up (180-270)
             const angleOffset = menuItems.length > 1 ? arcAngle / (menuItems.length - 1) : 0;
             const angle = startAngle + (index * angleOffset);
-            const radius = 200; // Increased radius for better separation
+            const radius = typeof window !== 'undefined' && window.innerWidth < 640 ? 140 : 200;
             const rad = angle * (Math.PI / 180);
             const x = radius * Math.cos(rad);
             const y = radius * Math.sin(rad);

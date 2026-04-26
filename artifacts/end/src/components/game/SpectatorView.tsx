@@ -1,5 +1,12 @@
 import React from "react";
-import { GameState, SpectatorInfo } from "../hooks/useSpectator";
+import { GameState, SpectatorInfo } from "@/hooks/useSpectator";
+
+interface SpectatorPlayer {
+  userId: string;
+  username: string;
+  role: string;
+  won: boolean;
+}
 
 interface SpectatorViewProps {
   gameState: GameState | null;
@@ -114,7 +121,7 @@ export function SpectatorView({
 
       {/* Players Grid */}
       <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12">
-        {gameState.players.map((player) => {
+        {gameState.players.map((player: SpectatorPlayer) => {
           const colorClass = roleColors[player.role] || roleColors.crew;
           return (
             <div

@@ -1,5 +1,5 @@
 import React from "react";
-import { SpectatingGame } from "../hooks/useSpectator";
+import { SpectatingGame } from "@/hooks/useSpectator";
 
 interface SpectatingListProps {
   games: SpectatingGame[];

@@ -16,6 +16,9 @@ export function attachSocketIO(httpServer: HttpServer): SocketIOServer {
     "http://localhost:3000",
     "https://every-nation.vercel.app",
     "https://errant-night.vercel.app",
+    "https://engg.online",
+    "https://www.engg.online",
+    "https://end.engg.online",
   ]);
 
   const corsOrigin = (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
@@ -28,6 +31,7 @@ export function attachSocketIO(httpServer: HttpServer): SocketIOServer {
     const allowed =
       /\.vercel\.app$/.test(origin)
       || defaultAllowedOrigins.has(origin)
+      || defaultAllowedOrigins.has(origin.replace(/\/$/, "")) // Handle trailing slash
       || envOrigins.includes(origin);
 
     if (allowed) {

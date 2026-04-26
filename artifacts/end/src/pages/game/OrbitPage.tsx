@@ -30,6 +30,7 @@ interface LivePlayer {
   isYou?: boolean;
   playerId?: string;
   isSpectator?: boolean;
+  hasActed?: boolean;
 }
 
 type PageState =
@@ -324,12 +325,13 @@ export default function OrbitPage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   if (isSpectator) {
+    const completedCount = sessionPlayers.filter(p => !p.isSpectator && p.hasActed).length;
     return (
-      <div className="relative min-h-screen w-full flex flex-col ix-page-enter" style={{ background: "hsl(210 30% 8%)", color: "hsl(190 80% 90%)" }}>
+      <div className="relative min-h-screen w-full flex flex-col ix-page-enter" style={{ background: "hsl(220 30% 4%)", color: "hsl(190 80% 90%)", overflow: "hidden" }}>
         <HamburgerMenu
           onShowSettings={() => setShowSettingsModal(true)}
           onShowProfile={() => setShowProfileModal(true)}
-          onShowHowToPlay={() => setShowHowToPlay(true)}
+          onShowHowToPlay={() => {}}
           musicOn={musicOn}
           onToggleMusic={handleToggleMusic}
           playSound={playSciFiClick}
@@ -339,50 +341,99 @@ export default function OrbitPage() {
         />
         <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
         <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
-        
-        <div className="w-full px-6 py-3 flex items-center justify-between border-b shrink-0" style={{ background: "hsl(220 28% 7%)", borderColor: "hsl(185 100% 50% / 0.2)" }}>
-          <div className="font-orbitron font-black text-lg tracking-widest uppercase leading-none" style={{ color: "hsl(185 100% 70%)" }}>
-            OBSERVER LINK
+
+        {/* Tactical HUD — Sidebars */}
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-between px-2 sm:px-6 z-20">
+          {/* Left Sidebar Tabs */}
+          <div className="flex flex-col gap-4 pointer-events-auto">
+            <HudSidebarTab label="PLAYERS" active />
+            <HudSidebarTab label="MAP" />
+            <HudSidebarTab label="STATS" />
           </div>
-          <div className="text-right">
-            <div className="text-xs tracking-widest uppercase mb-1" style={{ color: "hsl(210 30% 50%)" }}>Orbit Phase</div>
-            <div className="font-orbitron font-bold text-sm tracking-[0.2em]" style={{ color: "hsl(185 100% 70%)" }}>
-              MONITORING
-            </div>
+          
+          {/* Right Sidebar Tabs */}
+          <div className="flex flex-col gap-4 pointer-events-auto items-end">
+            <HudSidebarTab label="WATCHING" active right />
+            <HudSidebarTab label="ALL GAME" right />
+            <HudSidebarTab label="CHAT" right />
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <div className="w-24 h-24 mb-8 relative">
-            <div className="absolute inset-0 rounded-full border-4 border-cyan-500/20 animate-ping" />
-            <div className="absolute inset-2 rounded-full border-2 border-cyan-400 animate-spin" style={{ borderTopColor: "transparent", borderBottomColor: "transparent" }} />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <svg className="w-10 h-10 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
+        {/* Center Content */}
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center relative z-10">
+          <div className="w-48 h-48 lg:w-64 lg:h-64 mb-12 relative group">
+             {/* Circular Tactical Frame */}
+             <div className="absolute inset-0 rounded-full border border-cyan-500/20 animate-[spin_30s_linear_infinite]" />
+             <div className="absolute inset-4 rounded-full border border-white/5" />
+             <div className="absolute inset-[-10%] rounded-full border-t-2 border-cyan-500/30 animate-spin" />
+             
+             {/* Character Image / Icon */}
+             <div className="absolute inset-8 rounded-full overflow-hidden bg-black/40 border border-cyan-500/10 flex items-center justify-center">
+                <svg className="w-16 h-16 text-cyan-400 opacity-50 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+             </div>
+             
+             {/* Tactical Label Overlay */}
+             <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded backdrop-blur-md">
+                <div className="font-orbitron text-[9px] tracking-[0.4em] uppercase text-cyan-400">Spectator_Link_Active</div>
+             </div>
+          </div>
+
+          <div className="max-w-md">
+            <h1 className="font-orbitron text-4xl lg:text-5xl font-black tracking-[0.2em] uppercase mb-4" style={{ color: "hsl(185 100% 70%)", textShadow: "0 0 32px hsl(185 100% 50% / 0.5)" }}>
+              SPECTATOR
+            </h1>
+            <div className="h-px w-24 mx-auto mb-6" style={{ background: "linear-gradient(90deg, transparent, hsl(185 100% 50%), transparent)" }} />
+            
+            <div className="mb-8">
+              <div className="font-orbitron text-[10px] tracking-[0.3em] uppercase mb-3" style={{ color: "hsl(210 30% 50%)" }}>Synchronization Progress</div>
+              <div className="w-full max-w-xs mx-auto h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                <div 
+                  className="h-full bg-cyan-500 shadow-[0_0_10px_hsl(185,100%,50%)] transition-all duration-700" 
+                  style={{ width: `${(completedCount / Math.max(1, sessionPlayers.filter(p => !p.isSpectator).length)) * 100}%` }}
+                />
+              </div>
+              <div className="mt-2 font-mono text-[9px] text-cyan-500/60 uppercase">
+                {completedCount} / {sessionPlayers.filter(p => !p.isSpectator).length} Neural Links Established
+              </div>
             </div>
+
+            <p className="text-xs text-white/40 leading-relaxed font-light tracking-wide italic" style={{ fontFamily: "'Exo 2', sans-serif" }}>
+              "Neural phase sync complete. Observation deck active. <br className="hidden sm:block" />
+              Ghosting active mission Errant Night."
+            </p>
           </div>
-          
-          <div className="font-orbitron text-2xl lg:text-3xl font-black tracking-widest uppercase mb-4" style={{ color: "hsl(185 100% 70%)" }}>
-            ORBIT IN PROGRESS
-          </div>
-          <div className="max-w-md text-sm lg:text-base leading-relaxed mb-8" style={{ color: "hsl(210 30% 65%)", fontFamily: "'Exo 2', sans-serif" }}>
-            Players are currently executing their specialized abilities. <br />
-            As an observer, you are witnessing the tactical layer of the mission. <br />
-            Stand by for Deliberation.
-          </div>
-          
-          <WaitingPanel
-            accentColor="hsl(185 100% 50%)"
-            label="Neural sync status"
-            completedCount={completedCount}
-            totalCount={sessionPlayers.filter(p => !p.isSpectator).length}
-          />
         </div>
+
+        {/* Mobile View Padding Fix */}
+        <div className="h-20 lg:hidden shrink-0" />
       </div>
     );
   }
+
+// Sidebar Tab Sub-component for Tactical HUD
+function HudSidebarTab({ label, active, right }: { label: string; active?: boolean; right?: boolean }) {
+  return (
+    <div className={`flex items-center gap-0 group cursor-pointer transition-all ${right ? 'flex-row-reverse' : 'flex-row'}`}>
+       <div 
+         className={`h-20 sm:h-24 w-8 flex items-center justify-center transition-all ${active ? 'opacity-100' : 'opacity-30 group-hover:opacity-60'}`}
+         style={{ 
+           background: active ? "hsl(185 100% 50% / 0.1)" : "hsl(220 30% 8% / 0.8)",
+           border: active ? "1px solid hsl(185 100% 50% / 0.3)" : "1px solid hsl(210 30% 15%)",
+           borderLeft: !right && active ? "3px solid hsl(185 100% 50%)" : undefined,
+           borderRight: right && active ? "3px solid hsl(185 100% 50%)" : undefined,
+           backdropFilter: "blur(4px)"
+         }}
+       >
+         <div className="rotate-[-90deg] whitespace-nowrap font-orbitron text-[8px] sm:text-[9px] font-black tracking-[0.3em] uppercase" style={{ color: active ? "hsl(185 100% 60%)" : "white" }}>
+           {label}
+         </div>
+       </div>
+    </div>
+  );
+}
   return (
     <motion.div
       animate={isSurging ? { 

@@ -662,7 +662,7 @@ export default function RoleConfigPage() {
           </div>
         </div>
 
-        <div className="text-right shrink-0 hidden sm:block">
+        <div className="text-right shrink-0 flex items-center">
           {isLoggedIn ? (
             <div className="flex flex-col items-end">
               <div className="text-[10px] tracking-widest uppercase mb-1" style={{ color: "hsl(185 100% 50% / 0.5)" }}>Your Balance</div>

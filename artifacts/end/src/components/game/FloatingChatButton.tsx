@@ -19,7 +19,7 @@ export default function FloatingChatButton({
       className="fixed z-20 flex items-center justify-center transition-all duration-200 ix-btn"
       style={{
         left: 0,
-        top: "50%",
+        top: typeof window !== 'undefined' && window.innerWidth < 640 ? "70%" : "50%",
         transform: "translateY(-50%)",
         width: "28px",
         height: "64px",

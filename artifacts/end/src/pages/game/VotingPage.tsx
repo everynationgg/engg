@@ -298,147 +298,77 @@ export default function VotingPage() {
         <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
         <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
         
-        {/* Header */}
-        <div className="w-full px-4 sm:px-6 py-4 flex items-center justify-between border-b shrink-0" style={{ background: "hsl(220 28% 5%)", borderColor: "hsl(185 100% 50% / 0.2)" }}>
-          <div className="flex items-center gap-4">
-            <div className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
-            <div className="font-orbitron font-black text-lg tracking-[0.3em] uppercase leading-none">
-              STALEMATE PROTOCOL
-            </div>
+        {/* Tactical HUD — Sidebars */}
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-between px-2 sm:px-6 z-20">
+          <div className="flex flex-col gap-4 pointer-events-auto">
+            <HudSidebarTab label="PLAYERS" active />
+            <HudSidebarTab label="MAP" />
+            <HudSidebarTab label="STATS" />
           </div>
-          <div className="text-right">
-            <div className="text-[10px] tracking-[0.3em] uppercase mb-1 text-cyan-600">Syncing Votes</div>
-            <div className="font-orbitron font-bold text-lg tracking-widest text-white/90">
-              {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, '0')}
-            </div>
+          <div className="flex flex-col gap-4 pointer-events-auto items-end">
+            <HudSidebarTab label="WATCHING" active right />
+            <HudSidebarTab label="ALL GAME" right />
+            <HudSidebarTab label="CHAT" right />
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10">
-          <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
-            
-            {/* Left Column: Live Vote Tally */}
-            <div className="lg:col-span-5 flex flex-col gap-6">
-              <h3 className="font-orbitron text-[10px] tracking-[0.4em] uppercase mb-2 text-white/40 flex items-center gap-2">
-                <span className="w-1 h-1 bg-white/40 rounded-full" />
-                Live Transmission
-              </h3>
-              <div className="rounded-2xl p-5 space-y-3" style={{ background: "hsl(220 28% 9%)", border: "1px solid white/5" }}>
-                {Object.keys(votes).length > 0 ? (
-                  Object.entries(votes).map(([voterId, targetId], idx) => {
-                    const voter = sessionPlayers.find(p => p.id === voterId);
-                    const target = sessionPlayers.find(p => p.id === targetId);
-                    const isAbstain = targetId === "abstain";
-                    return (
-                      <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/[0.05]">
-                        <span className="font-orbitron text-xs font-bold text-cyan-400">{voter?.name || "Unknown"}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] text-white/20 uppercase tracking-tighter">targeting</span>
-                          <span className="font-orbitron text-xs font-black" style={{ color: isAbstain ? "hsl(210 20% 40%)" : "hsl(185 100% 70%)" }}>
-                            {isAbstain ? "ABSTAIN" : (target?.name || "---")}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="py-12 text-center text-white/10 font-orbitron text-[10px] tracking-[0.4em] uppercase animate-pulse">
-                    Scanning for votes...
-                  </div>
-                )}
-              </div>
+        {/* Center Content */}
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center relative z-10">
+          <div className="w-40 h-40 mb-8 relative group">
+             <div className="absolute inset-0 rounded-full border border-red-500/20 animate-[spin_30s_linear_infinite]" />
+             <div className="absolute inset-[-10%] rounded-full border-t-2 border-red-500/30 animate-spin" />
+             <div className="absolute inset-6 rounded-full overflow-hidden bg-black/40 border border-red-500/10 flex items-center justify-center">
+                <svg className="w-12 h-12 text-red-500 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+             </div>
+             <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-red-500/10 border border-red-500/30 rounded backdrop-blur-md">
+                <div className="font-orbitron text-[8px] tracking-[0.3em] uppercase text-red-500">Stalemate_Detected</div>
+             </div>
+          </div>
 
-              {/* Progress Summary */}
-              <div className="p-5 rounded-2xl border border-white/5 bg-white/[0.02] flex items-center justify-between">
-                <div>
-                  <div className="text-[10px] tracking-widest text-white/30 uppercase mb-1">Transmission Progress</div>
-                  <div className="font-orbitron font-black text-2xl">{votesIn} / {totalPlayers}</div>
-                </div>
-                <div className="w-16 h-16 rounded-full border-2 border-white/5 flex items-center justify-center relative">
-                   <svg className="w-12 h-12 -rotate-90">
-                      <circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="2" fill="transparent" className="text-white/5" />
-                      <circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="2" fill="transparent" className="text-cyan-500" strokeDasharray={138} strokeDashoffset={138 - (138 * (votesIn / (totalPlayers || 1)))} />
-                   </svg>
-                   <span className="absolute font-orbitron text-[10px] font-bold text-white/50">{Math.round((votesIn / (totalPlayers || 1)) * 100)}%</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column: Vote Distribution */}
-            <div className="lg:col-span-7 flex flex-col gap-6">
-              <h3 className="font-orbitron text-[10px] tracking-[0.4em] uppercase mb-2 text-white/40 flex items-center gap-2">
-                <span className="w-1 h-1 bg-white/40 rounded-full" />
-                Target Analysis
-              </h3>
-              
-              <div className="space-y-3">
-                {activePlayers.map((p) => {
-                  const voteCount = Object.values(votes).filter(targetId => targetId === p.id).length;
-                  const isLeading = leadingVoteGetters.has(p.id);
-
-                  return (
-                    <div key={p.id} className={`p-4 rounded-xl border transition-all duration-300 ${isLeading ? 'bg-red-500/5 border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.1)]' : 'bg-white/[0.03] border-white/5'}`}>
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-2 h-2 rounded-full ${isLeading ? 'bg-red-500 animate-ping' : 'bg-white/20'}`} />
-                          <span className="font-orbitron text-sm font-bold tracking-widest">{p.name}</span>
-                        </div>
-                        <div className="font-orbitron font-black text-lg" style={{ color: isLeading ? 'hsl(0 75% 60%)' : 'inherit' }}>
-                          {voteCount}
-                        </div>
-                      </div>
-                      <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full transition-all duration-500 rounded-full ${isLeading ? 'bg-red-500' : 'bg-cyan-500'}`} 
-                          style={{ width: `${(voteCount / (totalPlayers || 1)) * 100}%` }} 
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {/* Abstain Count */}
-                {Object.values(votes).filter(v => v === "abstain").length > 0 && (
-                  <div className="p-4 rounded-xl border bg-white/[0.01] border-white/[0.03]">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-white/10" />
-                        <span className="font-orbitron text-sm font-bold tracking-widest text-white/30 italic">ABSTAINED</span>
-                      </div>
-                      <div className="font-orbitron font-black text-lg text-white/20">
-                        {Object.values(votes).filter(v => v === "abstain").length}
-                      </div>
-                    </div>
-                    <div className="w-full h-1 bg-white/[0.02] rounded-full overflow-hidden">
-                      <div 
-                        className="h-full transition-all duration-500 rounded-full bg-white/10" 
-                        style={{ width: `${(Object.values(votes).filter(v => v === "abstain").length / (totalPlayers || 1)) * 100}%` }} 
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-              </div>
-
-              {/* Pending Voters */}
-              {pendingVoters.length > 0 && (
-                <div className="mt-8">
-                  <h4 className="font-orbitron text-[9px] tracking-[0.4em] uppercase mb-3 text-white/20">Pending Decision</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {pendingVoters.map(p => (
-                      <span key={p.id} className="px-3 py-1 rounded-full bg-white/[0.03] border border-white/5 font-orbitron text-[9px] text-white/40 tracking-widest uppercase">
-                        {p.name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
+          <h1 className="font-orbitron text-4xl font-black tracking-[0.3em] uppercase mb-2" style={{ color: "hsl(0 75% 70%)", textShadow: "0 0 24px hsl(0 75% 50% / 0.4)" }}>
+            VOTING
+          </h1>
+          <div className="font-orbitron text-[10px] tracking-[0.5em] uppercase text-white/30 mb-8">Observation Mode</div>
+          
+          <div className="max-w-md w-full p-4 rounded-xl border border-white/5 bg-white/[0.02] backdrop-blur-sm">
+             <div className="flex items-center justify-between mb-4">
+                <span className="font-orbitron text-[9px] tracking-widest text-white/40 uppercase">Voter Turnout</span>
+                <span className="font-orbitron text-xs font-bold text-cyan-400">{votesIn} / {totalPlayers}</span>
+             </div>
+             <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                <div className="h-full bg-cyan-500 shadow-[0_0_8px_hsl(185,100%,50%)] transition-all duration-500" style={{ width: `${(votesIn/totalPlayers)*100}%` }} />
+             </div>
+          </div>
         </div>
+
+        {/* Mobile Spacer */}
+        <div className="h-20 lg:hidden shrink-0" />
       </div>
     );
   }
+
+function HudSidebarTab({ label, active, right }: { label: string; active?: boolean; right?: boolean }) {
+  return (
+    <div className={`flex items-center gap-0 group cursor-pointer transition-all ${right ? 'flex-row-reverse' : 'flex-row'}`}>
+       <div 
+         className={`h-20 w-8 flex items-center justify-center transition-all ${active ? 'opacity-100' : 'opacity-30 group-hover:opacity-60'}`}
+         style={{ 
+           background: active ? "hsl(185 100% 50% / 0.1)" : "hsl(220 30% 8% / 0.8)",
+           border: active ? "1px solid hsl(185 100% 50% / 0.3)" : "1px solid hsl(210 30% 15%)",
+           borderLeft: !right && active ? "3px solid hsl(185 100% 50%)" : undefined,
+           borderRight: right && active ? "3px solid hsl(185 100% 50%)" : undefined,
+           backdropFilter: "blur(4px)"
+         }}
+       >
+         <div className="rotate-[-90deg] whitespace-nowrap font-orbitron text-[8px] font-black tracking-[0.3em] uppercase" style={{ color: active ? "hsl(185 100% 60%)" : "white" }}>
+           {label}
+         </div>
+       </div>
+    </div>
+  );
+}
 
   return (
     <div

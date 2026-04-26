@@ -1,5 +1,5 @@
 import React from "react";
-import { Achievement } from "../hooks/useAchievements";
+import { Achievement } from "@/hooks/useAchievements";
 
 interface AchievementsDisplayProps {
   totalAchievements: number;

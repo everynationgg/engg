@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { type ChatMessage, isPlayerMessage, isSystemMessage } from "../hooks/useGameChat";
+import { type ChatMessage, isPlayerMessage, isSystemMessage } from "@/hooks/useGameChat";
 
 interface ChatDisplayProps {
   messages: ChatMessage[];

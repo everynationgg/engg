@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Friend, FriendRequest, SearchResult } from "../hooks/useFriends";
+import { Friend, FriendRequest, SearchResult } from "@/hooks/useFriends";
 
 interface FriendsDisplayProps {
   friends: Friend[];

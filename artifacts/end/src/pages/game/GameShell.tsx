@@ -48,7 +48,7 @@ function PhaseTimeline({ currentPhase }: { currentPhase: string }) {
   if (currentIndex === -1) return null;
 
   return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 hidden lg:flex items-center gap-1 pointer-events-none">
+    <div className="flex items-center justify-center gap-1 py-1 px-4 z-50 bg-black/40 border-b border-white/5 backdrop-blur-sm shrink-0">
       {TIMELINE_PHASES.map((phase, idx) => {
         const isActive = idx === currentIndex;
         const isPast = idx < currentIndex;
