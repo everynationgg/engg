@@ -33,6 +33,7 @@ export default function Navbar() {
   const isHidden = false; // Always show navbar as per user request
 
   return (
+    <>
     <nav
       className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 border-b ${isHidden
           ? "-translate-y-full opacity-0 pointer-events-none"
@@ -178,90 +179,102 @@ export default function Navbar() {
         </button>
       </div>
 
-      <AnimatePresence>
-        {isOpen && (
-          <>
-            {/* Mobile Backdrop */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsOpen(false)}
-              className="fixed inset-0 z-[999] bg-black/60 lg:hidden"
-            />
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-[72px] bottom-0 right-0 w-[300px] lg:hidden z-[1000] bg-[#020408] border-l border-white/10 flex flex-col shadow-[-20px_0_40px_rgba(0,0,0,0.8)]"
-              style={{ isolation: "isolate" }}
-            >
-            <div className="p-10 flex flex-col h-full gap-12">
-               {/* Nav Links */}
-               <div className="flex flex-col gap-8">
-                  <span className="font-mono text-[9px] uppercase tracking-[0.6em] text-white/20">Navigation_Nodes</span>
-                  {navLinks.map((link) => (
-                    <Link
-                      key={link.name}
-                      href={link.href}
-                      onClick={() => setIsOpen(false)}
-                      className="group flex items-center justify-between py-2"
-                    >
-                      <span className="font-orbitron text-2xl font-black uppercase tracking-[0.1em] text-white/60 group-hover:text-cyan-400 transition-colors">
-                        {link.name}
-                      </span>
-                      <FaArrowRight className="text-white/10 group-hover:text-cyan-400/40 group-hover:translate-x-2 transition-all" />
-                    </Link>
-                  ))}
-               </div>
-
-               {/* Auth Section */}
-               <div className="mt-auto border-t border-white/5 pt-12 flex flex-col gap-8">
-                  {isLoggedIn ? (
-                    <div className="flex flex-col gap-8">
-                       <div className="flex items-center gap-6">
-                          <div className="w-12 h-12 rounded-full border border-cyan-500/20 bg-cyan-500/5 flex items-center justify-center">
-                             <FaUser className="text-cyan-400/40" />
-                          </div>
-                          <div className="flex flex-col">
-                             <span className="font-mono text-[9px] uppercase tracking-widest text-white/20">Authenticated_Op</span>
-                             <span className="font-orbitron font-black text-white text-lg">{username}</span>
-                          </div>
-                       </div>
-                       <SciFiButton 
-                          onClick={() => { navigate("/profile"); setIsOpen(false); }}
-                          variant="primary" className="w-full"
-                       >
-                          Open_Command_Nexus
-                       </SciFiButton>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-6">
-                       <span className="font-mono text-[9px] uppercase tracking-[0.6em] text-white/20 text-center">Identity_Required</span>
-                       <SciFiButton 
-                          onClick={() => { navigate("/login"); setIsOpen(false); }}
-                          variant="primary" className="w-full"
-                       >
-                          Initialize_Identity
-                       </SciFiButton>
-                    </div>
-                  )}
-               </div>
-
-               {/* Footer Decoration */}
-               <div className="flex items-center justify-between mt-8">
-                  <div className="flex flex-col gap-1">
-                     <span className="font-mono text-[7px] uppercase tracking-widest text-white/10">System_Clock</span>
-                     <span className="font-mono text-[8px] text-white/30">{new Date().toLocaleTimeString()}</span>
-                  </div>
-                  <div className="w-32 h-px bg-gradient-to-r from-transparent to-white/5" />
-               </div>
-            </div>
-          </motion.div>
-        </>
-        )}
-      </AnimatePresence>
     </nav>
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Mobile Backdrop */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsOpen(false)}
+            className="fixed inset-0 z-[999] bg-black/60 lg:hidden"
+          />
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="fixed top-0 bottom-0 right-0 w-[300px] lg:hidden z-[1000] bg-[#020408] border-l border-white/10 flex flex-col shadow-[-20px_0_40px_rgba(0,0,0,0.8)]"
+            style={{ isolation: "isolate" }}
+          >
+          <div className="p-10 flex flex-col h-full gap-12">
+             {/* Header in sidebar */}
+             <div className="flex items-center justify-between">
+                <div className="flex flex-col">
+                   <span className="font-orbitron font-black text-xl tracking-widest text-white">MENU</span>
+                   <span className="font-mono text-[7px] text-cyan-400/60 uppercase tracking-[0.4em]">Nexus_Control</span>
+                </div>
+                <button onClick={() => setIsOpen(false)} className="p-2 text-white/40 hover:text-white">
+                   <FaTimes className="text-xl" />
+                </button>
+             </div>
+
+             {/* Nav Links */}
+             <div className="flex flex-col gap-8">
+                <span className="font-mono text-[9px] uppercase tracking-[0.6em] text-white/20">Navigation_Nodes</span>
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    onClick={() => setIsOpen(false)}
+                    className="group flex items-center justify-between py-2"
+                  >
+                    <span className="font-orbitron text-2xl font-black uppercase tracking-[0.1em] text-white/60 group-hover:text-cyan-400 transition-colors">
+                      {link.name}
+                    </span>
+                    <FaArrowRight className="text-white/10 group-hover:text-cyan-400/40 group-hover:translate-x-2 transition-all" />
+                  </Link>
+                ))}
+             </div>
+
+             {/* Auth Section */}
+             <div className="mt-auto border-t border-white/5 pt-12 flex flex-col gap-8">
+                {isLoggedIn ? (
+                  <div className="flex flex-col gap-8">
+                     <div className="flex items-center gap-6">
+                        <div className="w-12 h-12 rounded-full border border-cyan-500/20 bg-cyan-500/5 flex items-center justify-center">
+                           <FaUser className="text-cyan-400/40" />
+                        </div>
+                        <div className="flex flex-col">
+                           <span className="font-mono text-[9px] uppercase tracking-widest text-white/20">Authenticated_Op</span>
+                           <span className="font-orbitron font-black text-white text-lg">{username}</span>
+                        </div>
+                     </div>
+                     <SciFiButton 
+                        onClick={() => { navigate("/profile"); setIsOpen(false); }}
+                        variant="primary" className="w-full"
+                     >
+                        Open_Command_Nexus
+                     </SciFiButton>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-6">
+                     <span className="font-mono text-[9px] uppercase tracking-[0.6em] text-white/20 text-center">Identity_Required</span>
+                     <SciFiButton 
+                        onClick={() => { navigate("/login"); setIsOpen(false); }}
+                        variant="primary" className="w-full"
+                     >
+                        Initialize_Identity
+                     </SciFiButton>
+                  </div>
+                )}
+             </div>
+
+             {/* Footer Decoration */}
+             <div className="flex items-center justify-between mt-8">
+                <div className="flex flex-col gap-1">
+                   <span className="font-mono text-[7px] uppercase tracking-widest text-white/10">System_Clock</span>
+                   <span className="font-mono text-[8px] text-white/30">{new Date().toLocaleTimeString()}</span>
+                </div>
+                <div className="w-32 h-px bg-gradient-to-r from-transparent to-white/5" />
+             </div>
+          </div>
+        </motion.div>
+      </>
+      )}
+    </AnimatePresence>
+  </>
   );
 }
