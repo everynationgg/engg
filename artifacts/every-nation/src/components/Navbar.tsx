@@ -148,9 +148,9 @@ export default function Navbar() {
                 variant="outline" 
                 size="sm" 
                 onClick={() => navigate("/login")}
-                className="border-white/10 bg-white/5 pl-4 pr-6"
+                className="border-white/10 bg-white/5 pl-8 pr-10"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   <div className="relative">
                     <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
                     <div className="absolute inset-0 blur-[3px] bg-cyan-400 animate-pulse" />
