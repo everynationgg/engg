@@ -603,6 +603,39 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
           </div>
         )}
 
+
+        {/* Player list */}
+        <div className="rounded-md p-4" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 15%)" }}>
+          <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(210 30% 50%)" }}>
+            CREW MANIFEST — {sessionPlayers.length > 0 ? sessionPlayers.filter(p => !p.isSpectator).length : (sessionStorage.getItem("lp_totalPlayers") || 0)} ABOARD
+          </div>
+          <div className="flex flex-col gap-2">
+            {sessionPlayers.filter(p => !p.isSpectator).map((p) => {
+              const isTyping = typingUsers.includes(p.name);
+              return (
+              <div
+                key={p.id}
+                className="flex items-center justify-between px-3 py-2 rounded relative"
+                style={{ background: "hsl(220 28% 12%)", border: p.isYou ? `1px solid ${accentColor.replace(")", " / 0.5)")}` : "1px solid hsl(210 30% 16%)" }}
+              >
+                <div className="flex items-center gap-2 relative">
+                  {isTyping && (
+                    <span className="absolute left-[-20px] text-[10px] text-cyan-400 ix-typing-dots">
+                      <span>.</span><span>.</span><span>.</span>
+                    </span>
+                  )}
+                  <span className="font-orbitron text-sm tracking-wider uppercase" style={{ color: p.isYou ? accentLight : "hsl(190 60% 75%)" }}>
+                    {p.name}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {p.isYou && (
+                    <span className="text-xs tracking-widest uppercase" style={{ color: "hsl(210 30% 40%)" }}>YOU</span>
+                  )}
+                </div>
+              </div>
+            )})}
+          </div>
         {/* Communication terminal */}
         {!isSpectator && (
           <div className="rounded-md p-5" style={{ background: "hsl(185 80% 8% / 0.3)", border: "1px solid hsl(185 100% 50% / 0.2)", boxShadow: "0 0 20px hsl(185 100% 50% / 0.05)" }}>
@@ -642,40 +675,6 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
             </button>
           </div>
         )}
-
-        {/* Player list */}
-        <div className="rounded-md p-4" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 15%)" }}>
-          <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(210 30% 50%)" }}>
-            CREW MANIFEST — {sessionPlayers.length > 0 ? sessionPlayers.filter(p => !p.isSpectator).length : (sessionStorage.getItem("lp_totalPlayers") || 0)} ABOARD
-          </div>
-          <div className="flex flex-col gap-2">
-            {sessionPlayers.filter(p => !p.isSpectator).map((p) => {
-              const isTyping = typingUsers.includes(p.name);
-              return (
-              <div
-                key={p.id}
-                className="flex items-center justify-between px-3 py-2 rounded relative"
-                style={{ background: "hsl(220 28% 12%)", border: p.isYou ? `1px solid ${accentColor.replace(")", " / 0.5)")}` : "1px solid hsl(210 30% 16%)" }}
-              >
-                <div className="flex items-center gap-2 relative">
-                  {isTyping && (
-                    <span className="absolute left-[-20px] text-[10px] text-cyan-400 ix-typing-dots">
-                      <span>.</span><span>.</span><span>.</span>
-                    </span>
-                  )}
-                  <span className="font-orbitron text-sm tracking-wider uppercase" style={{ color: p.isYou ? accentLight : "hsl(190 60% 75%)" }}>
-                    {p.name}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {p.isYou && (
-                    <span className="text-xs tracking-widest uppercase" style={{ color: "hsl(210 30% 40%)" }}>YOU</span>
-                  )}
-                </div>
-              </div>
-            )})}
-          </div>
-        </div>
 
         {/* Emergency vote result notice */}
         {evResult && (
