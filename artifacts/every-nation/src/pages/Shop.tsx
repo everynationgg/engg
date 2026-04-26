@@ -7,6 +7,8 @@ import { Link } from "wouter";
 import WarpJump from "@/components/WarpJump";
 import TacticalSlate from "@/components/TacticalSlate";
 import { useParallax } from "@/hooks/useParallax";
+import PackVisual3D from "@/components/PackVisual3D";
+import { SciFiButton } from "@/components/SciFiButton";
 
 interface Pack {
   id: string;
@@ -194,27 +196,28 @@ export default function Shop() {
           className="w-full max-w-2xl mb-24"
         >
           <TacticalSlate className="p-6" showScanner={false}>
-            <div className="flex flex-col md:flex-row items-center justify-between gap-8 px-4">
-              <div className="flex items-center gap-6">
-                <div className="w-12 h-12 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-                  <FaHdd className="text-cyan-400 text-xl animate-pulse" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-white/30">Available_Assets</span>
-                  <div className="flex items-baseline gap-2">
-                    <span className="font-orbitron text-3xl font-black text-white">{displayCredits.toLocaleString()}</span>
-                    <span className="font-orbitron text-[10px] text-cyan-500 font-bold tracking-widest">CC</span>
+            <div className={`flex flex-col md:flex-row items-center gap-8 px-4 ${isLoggedIn ? "justify-between" : "justify-center"}`}>
+              {isLoggedIn && (
+                <>
+                  <div className="flex items-center gap-6">
+                    <div className="w-12 h-12 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
+                      <FaHdd className="text-cyan-400 text-xl animate-pulse" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-white/30">Available_Assets</span>
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-orbitron text-3xl font-black text-white">{displayCredits.toLocaleString()}</span>
+                        <span className="font-orbitron text-[10px] text-cyan-500 font-bold tracking-widest">CC</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-              <div className="h-12 w-px bg-white/5 hidden md:block" />
-              <button 
-                onClick={handleReturn}
-                className="flex items-center gap-4 group/btn px-8 py-3 bg-white/5 border border-white/10 hover:border-cyan-500/40 hover:bg-cyan-500/5 transition-all"
-              >
-                <FaArrowLeft className="text-xs group-hover/btn:-translate-x-1 transition-transform" />
-                <span className="font-orbitron text-[10px] uppercase tracking-[0.4em]">Return_Home</span>
-              </button>
+                  <div className="h-12 w-px bg-white/5 hidden md:block" />
+                </>
+              )}
+              <SciFiButton variant="outline" onClick={handleReturn}>
+                <FaArrowLeft className="text-xs group-hover:-translate-x-1 transition-transform" />
+                Return_Home
+              </SciFiButton>
             </div>
           </TacticalSlate>
         </motion.div>
@@ -256,9 +259,9 @@ export default function Shop() {
                   <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/30 mb-12 leading-relaxed">
                     Secure Handshake Required for Asset Exchange.
                   </p>
-                  <Link href="/login" className="px-12 py-5 bg-cyan-500/10 border border-cyan-500/40 hover:bg-cyan-500/20 transition-all font-orbitron text-[10px] uppercase tracking-[0.6em] text-cyan-400">
-                    Authorize Identity
-                  </Link>
+                  <SciFiButton asChild variant="ghost" size="lg" className="border border-cyan-500/40">
+                    <Link href="/login">Authorize Identity</Link>
+                  </SciFiButton>
                </TacticalSlate>
             </div>
         ) : (
@@ -293,20 +296,17 @@ export default function Shop() {
                       </div>
                     </div>
 
-                    {/* Pack Visual */}
+                    {/* Pack Visual (Real 3D) */}
                     <div className="relative w-32 h-32 mb-8 mt-4 flex items-center justify-center">
                        <div className="absolute inset-0 blur-[40px] opacity-20 scale-125 transition-all duration-1000"
                             style={{ backgroundColor: (RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color, opacity: selectedPack?.id === pack.id ? 0.4 : 0.1 }} />
-                       <img 
-                         src={creditCoreImg} 
-                         alt="Core"
-                         className={`w-24 h-24 object-contain relative z-10 transition-all duration-700 ${selectedPack?.id === pack.id ? "scale-110 -translate-y-2" : "opacity-70 group-hover:opacity-100"}`}
-                         style={{ 
-                            filter: selectedPack?.id === pack.id 
-                              ? `drop-shadow(0 0 20px ${(RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color})`
-                              : `grayscale(0.5) brightness(0.8)`
-                         }}
+                       
+                       <PackVisual3D 
+                          rarity={pack.rarity} 
+                          color={(RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color}
+                          isSelected={selectedPack?.id === pack.id}
                        />
+
                        {/* Holographic Base */}
                        <div className="absolute -bottom-2 w-20 h-1 bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
                     </div>

@@ -7,6 +7,7 @@ import AlliesSidebar from "@/components/AlliesSidebar";
 import { systemToast } from "../components/SystemToast";
 import { useParallax } from "@/hooks/useParallax";
 import TacticalSlate from "@/components/TacticalSlate";
+import { SciFiButton } from "@/components/SciFiButton";
 
 interface Activity {
   id: string;
@@ -201,12 +202,12 @@ export default function Profile() {
                         <p className="font-mono text-[9px] text-white/30 uppercase tracking-widest leading-relaxed">
                            Credits secured and ready for terminal deployment.
                         </p>
-                        <button 
+                        <SciFiButton 
                            onClick={() => window.location.href = "/shop"}
-                           className="mt-4 py-4 bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 transition-all font-orbitron text-[9px] uppercase tracking-[0.4em] text-purple-400"
+                           className="mt-4 border border-purple-500/30 text-purple-400 hover:text-purple-300 hover:border-purple-500/60"
                         >
                            Initialize_Exchange
-                        </button>
+                        </SciFiButton>
                      </div>
                   </TacticalSlate>
 
@@ -226,12 +227,14 @@ export default function Profile() {
                               <span className="font-mono text-[8px] uppercase tracking-widest text-white/20">Success</span>
                            </div>
                         </div>
-                        <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                           <motion.div 
-                              initial={{ width: 0 }}
-                              animate={{ width: `${Math.min(100, (stats?.wins / stats?.totalGames) * 100 || 0)}%` }}
-                              className="h-full bg-yellow-500 shadow-[0_0_10px_#eab308]"
-                           />
+                        <div className="w-full flex gap-[2px] h-2">
+                           {[...Array(20)].map((_, i) => {
+                             const ratio = stats?.totalGames > 0 ? stats.wins / stats.totalGames : 0;
+                             const isActive = i < Math.floor(ratio * 20);
+                             return (
+                               <div key={i} className={`flex-1 h-full rounded-sm transition-all duration-500 ${isActive ? "bg-yellow-500 shadow-[0_0_8px_#eab308]" : "bg-white/5"}`} />
+                             );
+                           })}
                         </div>
                         <span className="font-mono text-[8px] uppercase tracking-[0.4em] text-white/20 text-right">Efficiency_Rating</span>
                      </div>
@@ -310,32 +313,32 @@ export default function Profile() {
                         </div>
                         
                          <div className="flex flex-col gap-4">
-                            <button 
-                               onClick={() => setShowCipherModal(true)}
-                               className="w-full py-4 border border-white/10 bg-white/5 hover:bg-white/10 transition-all flex items-center justify-center gap-4"
-                            >
-                               <FaKey className="text-xs opacity-40" />
-                               <span className="font-orbitron text-[9px] uppercase tracking-[0.4em]">Update_Cipher</span>
-                            </button>
+                             <SciFiButton 
+                                onClick={() => setShowCipherModal(true)}
+                                variant="outline" className="w-full justify-start text-white/60 hover:text-white"
+                             >
+                                <FaKey className="text-xs opacity-40 mr-4" />
+                                Update_Cipher
+                             </SciFiButton>
 
-                            <button 
-                               onClick={() => {
-                                 logout();
-                                 window.location.href = "/?login=true";
-                               }}
-                               className="w-full py-4 border border-cyan-500/20 bg-cyan-500/5 hover:bg-cyan-500/10 transition-all flex items-center justify-center gap-4 text-cyan-400"
-                            >
-                               <FaSignOutAlt className="text-xs opacity-40" />
-                               <span className="font-orbitron text-[9px] uppercase tracking-[0.4em]">Logout_Protocol</span>
-                            </button>
+                             <SciFiButton 
+                                onClick={() => {
+                                  logout();
+                                  window.location.href = "/?login=true";
+                                }}
+                                className="w-full justify-start border border-cyan-500/20 text-cyan-400"
+                             >
+                                <FaSignOutAlt className="text-xs opacity-40 mr-4" />
+                                Logout_Protocol
+                             </SciFiButton>
 
-                            <button 
-                               onClick={() => setShowDeleteModal(true)}
-                               className="w-full py-4 border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 transition-all flex items-center justify-center gap-4 text-red-500/60"
-                            >
-                               <FaSkull className="text-xs opacity-40" />
-                               <span className="font-orbitron text-[9px] uppercase tracking-[0.4em]">Account_Termination</span>
-                            </button>
+                             <SciFiButton 
+                                onClick={() => setShowDeleteModal(true)}
+                                variant="danger" className="w-full justify-start"
+                             >
+                                <FaSkull className="text-xs opacity-40 mr-4" />
+                                Account_Termination
+                             </SciFiButton>
                          </div>
                      </div>
                   </TacticalSlate>
@@ -359,13 +362,13 @@ export default function Profile() {
                      </div>
                   </TacticalSlate>
 
-                  <button 
+                  <SciFiButton 
                     onClick={handleReturn}
-                    className="mt-auto py-5 bg-white/5 border border-white/10 hover:border-cyan-500/40 transition-all flex items-center justify-center gap-4"
+                    variant="outline" className="mt-auto border-white/10 text-white/60 hover:text-white"
                   >
-                    <FaArrowLeft className="text-xs opacity-40" />
-                    <span className="font-orbitron text-[10px] uppercase tracking-[0.5em]">Command_Base</span>
-                  </button>
+                    <FaArrowLeft className="text-xs opacity-40 mr-2" />
+                    Command_Base
+                  </SciFiButton>
                </div>
             </div>
           </div>
@@ -426,12 +429,12 @@ export default function Profile() {
                         </div>
 
                         <div className="flex gap-4 mt-4">
-                           <button type="submit" disabled={isProcessing} className="flex-1 py-5 bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 font-orbitron text-[10px] uppercase tracking-[0.4em] hover:bg-cyan-500/20 disabled:opacity-50">
+                           <SciFiButton type="submit" disabled={isProcessing} className="flex-1 border border-cyan-500/50">
                               {isProcessing ? "Processing..." : "Commit_Cipher"}
-                           </button>
-                           <button type="button" onClick={() => setShowCipherModal(false)} className="px-8 py-5 border border-white/10 font-orbitron text-[10px] uppercase tracking-[0.4em] hover:bg-white/5">
+                           </SciFiButton>
+                           <SciFiButton type="button" variant="outline" onClick={() => setShowCipherModal(false)}>
                               Abort
-                           </button>
+                           </SciFiButton>
                         </div>
                      </form>
                   </div>
@@ -478,12 +481,12 @@ export default function Profile() {
                      </div>
 
                      <div className="flex gap-4">
-                        <button onClick={handleTerminateAccount} disabled={isProcessing} className="flex-1 py-5 bg-red-500/10 border border-red-500/50 text-red-500 font-orbitron text-[10px] uppercase tracking-[0.4em] hover:bg-red-500/20 disabled:opacity-50">
+                        <SciFiButton onClick={handleTerminateAccount} disabled={isProcessing} variant="danger" className="flex-1">
                            {isProcessing ? "Wiping..." : "Execute_Termination"}
-                        </button>
-                        <button onClick={() => setShowDeleteModal(false)} className="px-8 py-5 border border-white/10 font-orbitron text-[10px] uppercase tracking-[0.4em] hover:bg-white/5">
+                        </SciFiButton>
+                        <SciFiButton onClick={() => setShowDeleteModal(false)} variant="outline">
                            Abort
-                        </button>
+                        </SciFiButton>
                      </div>
                   </div>
                </TacticalSlate>
