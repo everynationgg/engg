@@ -22,6 +22,7 @@ const chatPollLimiter = rateLimit({
   message: { error: "Too many polling requests, please slow down." },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false },
 });
 
 // POST /api/games/:gameId/chat - Send chat message (logged-in or guest)

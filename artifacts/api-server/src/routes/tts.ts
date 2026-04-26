@@ -10,6 +10,7 @@ const ttsLimiter = rateLimit({
   message: { error: "Too many TTS requests, please slow down." },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false },
 });
 
 // POST /api/tts — convert text to speech via OpenAI TTS API
