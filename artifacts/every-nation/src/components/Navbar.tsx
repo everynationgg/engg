@@ -147,10 +147,11 @@ export default function Navbar() {
               <SciFiButton 
                 variant="outline" 
                 size="sm" 
+                justify="start"
                 onClick={() => navigate("/login")}
-                className="border-white/10 bg-white/5 pl-10 pr-6 justify-start"
+                className="border-white/10 bg-white/5"
               >
-                <div className="flex items-center gap-4 ml-6">
+                <div className="flex items-center gap-4">
                   <div className="relative">
                     <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
                     <div className="absolute inset-0 blur-[3px] bg-cyan-400 animate-pulse" />

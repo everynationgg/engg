@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const sciFiButtonVariants = cva(
-  "relative group inline-flex items-center justify-center transition-all duration-300 font-orbitron uppercase tracking-[0.3em] active:scale-95 disabled:pointer-events-none disabled:opacity-50",
+  "relative group inline-flex items-center transition-all duration-300 font-orbitron uppercase tracking-[0.3em] active:scale-95 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
@@ -20,10 +20,16 @@ const sciFiButtonVariants = cva(
         lg: "h-14 px-12 text-sm",
         icon: "h-12 w-12",
       },
+      justify: {
+        start: "justify-start",
+        center: "justify-center",
+        end: "justify-end",
+      }
     },
     defaultVariants: {
       variant: "default",
       size: "default",
+      justify: "center",
     },
   }
 );
@@ -35,7 +41,7 @@ export interface SciFiButtonProps
 }
 
 const SciFiButton = forwardRef<HTMLButtonElement, SciFiButtonProps>(
-  ({ className, variant, size, asChild = false, children, ...props }, ref) => {
+  ({ className, variant, size, justify, asChild = false, children, ...props }, ref) => {
     
     // The inner clip path for the chamfered look
     const chamferStyle = {
@@ -47,7 +53,7 @@ const SciFiButton = forwardRef<HTMLButtonElement, SciFiButtonProps>(
     return (
       <Comp
         ref={ref}
-        className={cn(sciFiButtonVariants({ variant, size, className }))}
+        className={cn(sciFiButtonVariants({ variant, size, justify, className }))}
         {...props}
       >
         {/* Outer glowing border effect container */}
@@ -86,7 +92,11 @@ const SciFiButton = forwardRef<HTMLButtonElement, SciFiButtonProps>(
         </div>
 
         {/* Content */}
-        <span className="relative z-10 flex items-center gap-3">
+        <span className={cn(
+          "relative z-10 flex items-center gap-3",
+          justify === "start" && "pl-8",
+          justify === "end" && "pr-8"
+        )}>
           {children}
         </span>
       </Comp>
