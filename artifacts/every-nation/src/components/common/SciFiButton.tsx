@@ -75,6 +75,11 @@ const SciFiButton = forwardRef<HTMLButtonElement, SciFiButtonProps>(
           />
         )}
 
+        {/* Holographic Scanline Effect */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none" style={chamferStyle}>
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-white/20 blur-[1px] -translate-y-full group-hover:animate-[scanline_2s_linear_infinite]" />
+        </div>
+
         {/* Content */}
         <span className="relative z-10 flex items-center gap-3">
           {children}
@@ -86,3 +91,6 @@ const SciFiButton = forwardRef<HTMLButtonElement, SciFiButtonProps>(
 SciFiButton.displayName = "SciFiButton";
 
 export { SciFiButton, sciFiButtonVariants };
+
+// Add scanline animation to global styles via a side effect or ensure it's in index.css
+// @keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(500%); } }

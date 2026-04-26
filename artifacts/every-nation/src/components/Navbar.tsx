@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaUser, FaSignOutAlt, FaBars, FaTimes } from "react-icons/fa";
+import { SciFiButton } from "@/components/common/SciFiButton";
 
 export default function Navbar() {
   const { isLoggedIn, username, credits, logout } = useAuth();
@@ -138,12 +139,23 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <Link
-              href="/login"
-              className="px-4 py-2 bg-white/5 border border-white/10 text-white text-[9px] uppercase"
-            >
-              Initialize
-            </Link>
+            <div className="flex items-center gap-4">
+              <div className="hidden xl:flex flex-col items-end opacity-30 group-hover:opacity-60 transition-opacity">
+                <span className="font-mono text-[7px] tracking-[0.3em] uppercase">Auth_Gate_01</span>
+                <span className="font-mono text-[7px] tracking-[0.3em] uppercase text-cyan-500/60">Level_Alpha</span>
+              </div>
+              <SciFiButton 
+                variant="outline" 
+                size="sm" 
+                onClick={() => navigate("/login")}
+                className="border-white/10 bg-white/5"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-pulse" />
+                  Initialize
+                </div>
+              </SciFiButton>
+            </div>
           )}
         </div>
 

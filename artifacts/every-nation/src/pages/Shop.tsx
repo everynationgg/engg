@@ -365,10 +365,14 @@ export default function Shop() {
                            <span className="font-orbitron font-black text-lg ml-2">${pack.price}</span>
                         </SciFiButton>
                       ) : (
-                        <button className="w-full py-4 border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 transition-all flex items-center justify-center gap-3">
-                          <span className="font-mono text-xs opacity-30">$</span>
+                        <SciFiButton 
+                          variant="outline" 
+                          className="w-full border-white/10 bg-white/[0.02]"
+                          onClick={(e) => { e.stopPropagation(); setSelectedPack(pack); }}
+                        >
+                          <span className="font-mono text-xs opacity-30 tracking-normal">$</span>
                           <span className="font-orbitron text-2xl font-black">{pack.price}</span>
-                        </button>
+                        </SciFiButton>
                       )}
                     </div>
                   </div>
