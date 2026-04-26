@@ -1187,22 +1187,63 @@ export default function RoleConfigPage() {
         </div>
 
         {/* RIGHT PANEL — preview and details */}
-        <div
-          className={`fixed lg:relative inset-x-0 bottom-0 z-50 lg:z-0 flex w-full ${selectedRole ? "min-h-[70vh] opacity-100 translate-y-0" : "h-0 opacity-0 translate-y-full lg:h-full lg:opacity-100 lg:translate-y-0"} lg:w-[clamp(240px,30%,400px)] shrink-0 flex-col border-t lg:border-t-0 lg:border-l lg:h-full lg:overflow-hidden transition-all duration-500 ease-in-out shadow-[0_-20px_40px_rgba(0,0,0,0.5)] lg:shadow-none backdrop-blur-xl lg:backdrop-blur-0`}
-          style={{ background: typeof window !== 'undefined' && window.innerWidth < 1024 ? "hsl(220 30% 6% / 0.95)" : "hsl(220 30% 6%)", borderColor: "hsl(210 30% 14%)" }}
-        >
-          <RolePreview 
-            role={selectedRole} 
-            isLocked={selectedRole ? (PREMIUM_ROLE_IDS.includes(selectedRole.id) && !unlockedRoles.includes(selectedRole.id)) : false}
-            onUnlock={handleUnlockRole}
-            userCredits={credits}
-            isUnlocking={isUnlocking}
-            isLoggedIn={isLoggedIn}
-            onShowProfile={() => isLoggedIn ? setShowProfileModal(true) : setShowAuthModal(true)}
-            onBuyCredits={() => setShowShopModal(true)}
-            onClose={() => setSelectedRole(null)}
-          />
-        </div>
+        <AnimatePresence>
+          {selectedRole && (
+            <>
+              {/* Mobile Backdrop — click anywhere to hide */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setSelectedRole(null)}
+                className="lg:hidden fixed inset-0 z-[45] bg-black/60 backdrop-blur-sm"
+              />
+              <motion.div
+                initial={{ y: "100%", opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: "100%", opacity: 0 }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="fixed lg:relative inset-x-0 bottom-0 z-50 lg:z-0 flex w-full lg:w-[clamp(240px,30%,400px)] shrink-0 flex-col border-t lg:border-t-0 lg:border-l lg:h-full lg:overflow-hidden shadow-[0_-20px_40px_rgba(0,0,0,0.5)] lg:shadow-none backdrop-blur-xl lg:backdrop-blur-0"
+                style={{ 
+                  background: "hsl(220 30% 6% / 0.95)", 
+                  borderColor: "hsl(210 30% 14%)",
+                  minHeight: "70vh"
+                }}
+              >
+                <RolePreview 
+                  role={selectedRole} 
+                  isLocked={PREMIUM_ROLE_IDS.includes(selectedRole.id) && !unlockedRoles.includes(selectedRole.id)}
+                  onUnlock={handleUnlockRole}
+                  userCredits={credits}
+                  isUnlocking={isUnlocking}
+                  isLoggedIn={isLoggedIn}
+                  onShowProfile={() => isLoggedIn ? setShowProfileModal(true) : setShowAuthModal(true)}
+                  onBuyCredits={() => setShowShopModal(true)}
+                  onClose={() => setSelectedRole(null)}
+                />
+              </motion.div>
+            </>
+          )}
+          
+          {/* Desktop Standby State — show when nothing selected on large screens */}
+          {!selectedRole && (
+            <div
+              className="hidden lg:flex relative w-[clamp(240px,30%,400px)] shrink-0 flex-col border-l h-full"
+              style={{ background: "hsl(220 30% 6%)", borderColor: "hsl(210 30% 14%)" }}
+            >
+              <RolePreview 
+                role={null} 
+                isLocked={false}
+                onUnlock={() => {}}
+                userCredits={credits}
+                isUnlocking={false}
+                isLoggedIn={isLoggedIn}
+                onShowProfile={() => {}}
+                onBuyCredits={() => {}}
+              />
+            </div>
+          )}
+        </AnimatePresence>
       </div>
       <ShopModal isOpen={showShopModal} onClose={() => setShowShopModal(false)} />
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}

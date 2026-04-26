@@ -1,9 +1,11 @@
 import type { Server as SocketIOServer, Socket } from "socket.io";
+import { z } from "zod";
 import { 
   validate, 
   requestPlayerTokenSchema, 
   createSessionSchema, 
-  joinSessionSchema 
+  joinSessionSchema,
+  sessionOnlySchema
 } from "../schemas.js";
 import { logger } from "../../lib/logger.js";
 import { 
@@ -253,6 +255,23 @@ export function registerSessionHandlers(
       chatSystemMessage(io, sessionId, `${playerName} joined`);
       ack?.({ success: true, session, playerToken: resolvedToken });
     }
+  });
+
+  socket.on("get_session", async (data: unknown, ack) => {
+    const parsed = validate(sessionOnlySchema, data, ack);
+    if (!parsed) return;
+    const { sessionId } = parsed;
+
+    const session = await getSession(sessionId);
+    if (!session) {
+      ack?.({ success: false, error: "Session not found" });
+      return;
+    }
+    // Join room if not already in it to ensure sync
+    socket.join(sessionId);
+    state.currentSessionId = sessionId;
+    
+    ack?.({ success: true, session });
   });
 
   socket.on("disconnect", async () => {
