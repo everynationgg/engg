@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaUserPlus, FaUserFriends, FaSearch, FaCheck, FaTimes, FaUserSecret, FaCircle, FaArrowLeft, FaSatelliteDish, FaArrowRight } from "react-icons/fa";
+import { FaUserPlus, FaUserFriends, FaSearch, FaCheck, FaTimes, FaUserSecret, FaCircle, FaArrowLeft, FaSatelliteDish, FaArrowRight, FaTrash, FaExclamationCircle } from "react-icons/fa";
 import { useAuth } from "@/hooks/useAuth";
+import { getSocket } from "@/lib/socket";
 
 interface Ally {
   id: string;
@@ -26,23 +27,112 @@ export default function AlliesSidebar() {
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [messageInput, setMessageInput] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  const [lastMessageCount, setLastMessageCount] = useState(0);
+  const [isAllyTyping, setIsAllyTyping] = useState(false);
+  const isTypingRef = useRef(false);
+  const typingTimeoutRef = useRef<any>(null);
 
   useEffect(() => {
     if (isLoggedIn && token) {
       fetchAllies();
       fetchPendingRequests();
+      fetchUnreadCounts();
+      
+      const interval = setInterval(() => {
+        fetchUnreadCounts();
+      }, 5000);
+      return () => clearInterval(interval);
     }
+    return undefined;
   }, [isLoggedIn, token]);
 
-  // Poll for messages if chat is open
+  // Poll for messages if chat is open (Fallback for sockets)
   useEffect(() => {
     let interval: any;
     if (activeChatAlly && isOpen) {
       fetchMessages(activeChatAlly.id);
-      interval = setInterval(() => fetchMessages(activeChatAlly.id), 3000);
+      interval = setInterval(() => fetchMessages(activeChatAlly.id), 10000); // Slower polling when socket is active
     }
     return () => clearInterval(interval);
   }, [activeChatAlly, isOpen]);
+
+  // Real-time Signal Listeners
+  useEffect(() => {
+    if (!isLoggedIn || !token) return undefined;
+
+    const socket = getSocket(token);
+    
+    const onPrivateMessage = (msg: any) => {
+      // If we are viewing this chat, append it
+      if (activeChatAlly && (msg.senderId === activeChatAlly.id || msg.receiverId === activeChatAlly.id)) {
+        setIsAllyTyping(false); // Stop typing when message arrives
+        setChatMessages(prev => {
+          const exists = prev.find(m => m.id === msg.id);
+          if (exists) return prev;
+          
+          // Sound logic for incoming messages
+          if (msg.senderId === activeChatAlly.id) {
+            playNotificationSound();
+          }
+          
+          return [...prev, msg];
+        });
+        
+        // Mark as read immediately if chat is open
+        if (msg.senderId === activeChatAlly.id) {
+          fetchMessages(activeChatAlly.id); // This will mark as read on backend
+        }
+      } else {
+        // Just refresh unread counts
+        fetchUnreadCounts();
+      }
+    };
+
+    const onTypingUpdate = (data: { senderId: string; isTyping: boolean }) => {
+      if (activeChatAlly && data.senderId === activeChatAlly.id) {
+        setIsAllyTyping(data.isTyping);
+      }
+    };
+
+    const onReadReceipt = (data: { receiverId: string; readAt: string }) => {
+      if (activeChatAlly && data.receiverId === activeChatAlly.id) {
+        setChatMessages(prev => prev.map(m => ({ ...m, isRead: true })));
+      }
+    };
+
+    socket.on("private_message", onPrivateMessage);
+    socket.on("pm_typing_update", onTypingUpdate);
+    socket.on("pm_read_receipt", onReadReceipt);
+    return () => {
+      socket.off("private_message", onPrivateMessage);
+      socket.off("pm_typing_update", onTypingUpdate);
+      socket.off("pm_read_receipt", onReadReceipt);
+    };
+  }, [isLoggedIn, token, activeChatAlly]);
+
+  const handleTyping = (text: string) => {
+    setMessageInput(text);
+    if (!activeChatAlly || !token) return;
+
+    const socket = getSocket(token);
+    if (!isTypingRef.current && text.length > 0) {
+      isTypingRef.current = true;
+      socket.emit("pm_typing_update", { receiverId: activeChatAlly.id, isTyping: true });
+    }
+
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    
+    typingTimeoutRef.current = setTimeout(() => {
+      isTypingRef.current = false;
+      socket.emit("pm_typing_update", { receiverId: activeChatAlly.id, isTyping: false });
+    }, 3000);
+
+    if (text.length === 0 && isTypingRef.current) {
+      isTypingRef.current = false;
+      socket.emit("pm_typing_update", { receiverId: activeChatAlly.id, isTyping: false });
+    }
+  };
 
   const fetchMessages = async (otherUserId: string) => {
     try {
@@ -51,10 +141,57 @@ export default function AlliesSidebar() {
       });
       if (!res.ok) return;
       const data = await res.json();
+      
+      // Play sound if new message arrived and it's not from us
+      if (data.length > lastMessageCount) {
+        const latest = data[data.length - 1];
+        if (latest.senderId === otherUserId) {
+          playNotificationSound();
+        }
+      }
+      
       setChatMessages(data);
+      setLastMessageCount(data.length);
+      // Refresh unread counts since we just read these
+      fetchUnreadCounts();
     } catch (err) {
       console.error("Failed to fetch messages", err);
     }
+  };
+
+  const fetchUnreadCounts = async () => {
+    if (!isLoggedIn || !token) return;
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/messages/unread-counts`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const counts: Record<string, number> = {};
+      let totalUnread = 0;
+      data.forEach((item: any) => {
+        counts[item.senderId] = item.count;
+        totalUnread += item.count;
+      });
+
+      // Play sound if total unread increased
+      const prevTotal = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
+      if (totalUnread > prevTotal && !activeChatAlly) {
+        playNotificationSound();
+      }
+
+      setUnreadCounts(counts);
+    } catch (err) {
+      console.error("Failed to fetch unread counts", err);
+    }
+  };
+
+  const playNotificationSound = () => {
+    try {
+      const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3"); // Tactical beep
+      audio.volume = 0.4;
+      audio.play().catch(() => {}); // Ignore autoplay blocks
+    } catch (e) {}
   };
 
   const sendMessage = async () => {
@@ -86,7 +223,7 @@ export default function AlliesSidebar() {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
-      setAllies(data.map((a: any) => ({ ...a, status: "online" }))); // Placeholder status
+      setAllies(data);
     } catch (err) {
       console.error("Failed to fetch allies", err);
     }
@@ -100,7 +237,27 @@ export default function AlliesSidebar() {
       const data = await res.json();
       setPendingRequests(data);
     } catch (err) {
-      console.error("Failed to fetch requests", err);
+      console.error("Failed to fetch pending requests", err);
+    }
+  };
+
+  const removeFriend = async (friendId: string) => {
+    if (!confirm("Are you sure you want to remove this ally? Secure link will be terminated.")) return;
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/remove-friend`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({ friendId })
+      });
+      if (res.ok) {
+        fetchAllies();
+        if (activeChatAlly?.id === friendId) setActiveChatAlly(null);
+      }
+    } catch (err) {
+      console.error("Failed to remove friend", err);
     }
   };
 
@@ -187,9 +344,10 @@ export default function AlliesSidebar() {
           {/* Scanning Line Effect */}
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-400/5 to-transparent h-1/2 w-full -translate-y-full group-hover:animate-scan-vertical pointer-events-none" />
 
-          {pendingRequests.length > 0 && (
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20">
-              {pendingRequests.length}
+          {/* Notifications */}
+          {(pendingRequests.length > 0 || Object.keys(unreadCounts).length > 0) && (
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-[10px] font-bold flex items-center justify-center rounded-full animate-pulse shadow-[0_0_15px_rgba(220,38,38,0.6)] z-20 border border-white/20">
+              {pendingRequests.length + Object.values(unreadCounts).reduce((a, b) => a + b, 0)}
             </span>
           )}
         </motion.button>
@@ -271,15 +429,32 @@ export default function AlliesSidebar() {
                           }`}>
                             {msg.message}
                           </div>
-                          <span className="font-mono text-[7px] uppercase text-white/10 mt-1">
-                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="font-mono text-[7px] uppercase text-white/10">
+                              {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            {msg.senderId !== activeChatAlly.id && (
+                              <span className={`font-mono text-[6px] uppercase ${msg.isRead ? 'text-cyan-400/60' : 'text-white/5'}`}>
+                                {msg.isRead ? 'Confirmed' : 'Sent'}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       ))
                     ) : (
                       <div className="h-full flex flex-col items-center justify-center gap-4 opacity-10">
                         <FaSatelliteDish size={30} />
                         <span className="font-mono text-[9px] uppercase tracking-[0.3em]">No Signal History</span>
+                      </div>
+                    )}
+                    {isAllyTyping && (
+                      <div className="flex items-center gap-2 py-2">
+                        <div className="flex gap-1">
+                          <div className="w-1 h-1 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                          <div className="w-1 h-1 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                          <div className="w-1 h-1 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        </div>
+                        <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-cyan-400/60 animate-pulse">Decrypting Incoming Signal...</span>
                       </div>
                     )}
                   </div>
@@ -290,7 +465,7 @@ export default function AlliesSidebar() {
                         type="text"
                         placeholder="Transmit message..."
                         value={messageInput}
-                        onChange={(e) => setMessageInput(e.target.value)}
+                        onChange={(e) => handleTyping(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                         className="w-full bg-white/5 border border-white/10 p-4 font-mono text-[10px] uppercase tracking-widest outline-none focus:border-cyan-500/50 transition-all pr-12"
                       />
@@ -438,7 +613,12 @@ export default function AlliesSidebar() {
                                         }`} />
                                       </div>
                                       <div className="flex flex-col gap-0.5">
-                                        <span className="font-orbitron text-sm uppercase text-white tracking-widest group-hover:text-cyan-400 transition-colors">{ally.username}</span>
+                                        <div className="flex items-center gap-2">
+                                          <span className="font-orbitron text-sm uppercase text-white tracking-widest group-hover:text-cyan-400 transition-colors">{ally.username}</span>
+                                          {unreadCounts[ally.id] && (
+                                            <FaExclamationCircle className="text-red-500 text-xs animate-pulse" />
+                                          )}
+                                        </div>
                                         <div className="flex items-center gap-2">
                                           <span className="font-mono text-[7px] uppercase tracking-[0.2em] text-white/30">
                                             {ally.status === 'online' ? 'Uplink_Established' : 'Signal_Lost'}
@@ -447,9 +627,21 @@ export default function AlliesSidebar() {
                                         </div>
                                       </div>
                                     </div>
-                                    <div className="opacity-0 group-hover:opacity-100 transition-all flex items-center gap-4">
-                                      <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-cyan-400/40">Open_Channel</span>
-                                      <FaCircle className="text-[6px] text-cyan-400 animate-ping" />
+                                    <div className="flex items-center gap-4">
+                                      <div className="opacity-0 group-hover:opacity-100 transition-all flex items-center gap-4">
+                                        <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-cyan-400/40">Open_Channel</span>
+                                        <FaCircle className="text-[6px] text-cyan-400 animate-ping" />
+                                      </div>
+                                      <button 
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          removeFriend(ally.id);
+                                        }}
+                                        className="p-2 text-white/10 hover:text-red-500 transition-colors relative z-20"
+                                        title="Terminate Link"
+                                      >
+                                        <FaTrash size={12} />
+                                      </button>
                                     </div>
                                   </div>
                                 </motion.div>

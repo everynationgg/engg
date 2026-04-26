@@ -56,6 +56,18 @@ messagesRouter.get(
           .update(privateMessagesTable)
           .set({ isRead: true })
           .where(sql`${privateMessagesTable.id} IN ${unreadIds}`);
+        // Emit read receipt to the original senders
+        const io = req.app.get("io");
+        if (io) {
+          // Find unique senders of these unread messages
+          const uniqueSenders = new Set(messages.filter(m => unreadIds.includes(m.id)).map(m => m.senderId));
+          uniqueSenders.forEach(senderId => {
+            io.to(`user:${senderId}`).emit("pm_read_receipt", {
+              receiverId: userId,
+              readAt: new Date().toISOString()
+            });
+          });
+        }
       }
 
       res.json(messages.map(m => ({ ...m, id: m.id.toString() })).reverse());
@@ -94,12 +106,49 @@ messagesRouter.post(
         })
         .returning();
 
-      // TODO: Emit socket event for real-time delivery
+      // Emit socket event for real-time delivery
+      const io = req.app.get("io");
+      if (io) {
+        const serialized = { ...newMessage, id: newMessage.id.toString() };
+        io.to(`user:${receiverId}`).emit("private_message", serialized);
+        // Also emit to sender's other tabs
+        io.to(`user:${senderId}`).emit("private_message", serialized);
+      }
       
       res.json({ ...newMessage, id: newMessage.id.toString() });
     } catch (error) {
       logger.error({ err: error }, "Error sending private message");
       res.status(500).json({ error: "Failed to send message" });
+    }
+  }
+);
+
+// GET /api/messages/unread-counts - Get unread message counts per sender
+messagesRouter.get(
+  "/messages/unread-counts",
+  authMiddleware,
+  async (req: AuthRequest, res): Promise<void> => {
+    try {
+      const userId = req.userId!;
+      
+      const counts = await db
+        .select({
+          senderId: privateMessagesTable.senderId,
+          count: sql<number>`count(*)`
+        })
+        .from(privateMessagesTable)
+        .where(
+          and(
+            eq(privateMessagesTable.receiverId, userId),
+            eq(privateMessagesTable.isRead, false)
+          )
+        )
+        .groupBy(privateMessagesTable.senderId);
+      
+      res.json(counts);
+    } catch (error) {
+      logger.error({ err: error }, "Error fetching unread counts");
+      res.status(500).json({ error: "Failed to fetch unread counts" });
     }
   }
 );

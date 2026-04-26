@@ -80,6 +80,11 @@ export const kickPlayerSchema = z.object({
   targetPlayerId: z.string().uuid(),
 });
 
+export const privateMessageTypingSchema = z.object({
+  receiverId: z.string().uuid(),
+  isTyping: z.boolean(),
+});
+
 /**
  * Validates socket event data with a Zod schema.
  * Returns the parsed (coerced) data on success, or sends a failure ack and

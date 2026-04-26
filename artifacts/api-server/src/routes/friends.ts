@@ -47,7 +47,16 @@ friendsRouter.get("/user/friends", authMiddleware, async (req: AuthRequest, res)
       .from(usersTable)
       .where(inArray(usersTable.id, friendIds));
 
-    res.json(friends);
+    const io = req.app.get("io");
+    const friendsWithStatus = friends.map(f => {
+      const isOnline = io?.sockets.adapter.rooms.get(`user:${f.id}`)?.size ?? 0;
+      return {
+        ...f,
+        status: isOnline > 0 ? "online" : "offline"
+      };
+    });
+
+    res.json(friendsWithStatus);
   } catch (error) {
     logger.error({ err: error }, "Error fetching friends");
     res.status(500).json({ error: "Failed to fetch friends" });

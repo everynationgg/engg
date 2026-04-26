@@ -36,7 +36,8 @@ process.on('unhandledRejection', (reason, promise) => {
 
 
 const httpServer = http.createServer(app);
-attachSocketIO(httpServer);
+const io = attachSocketIO(httpServer);
+app.set("io", io);
 
 // Start listening IMMEDIATELY so Fly.io/health-checks pass.
 httpServer.listen(port, "0.0.0.0", () => {
