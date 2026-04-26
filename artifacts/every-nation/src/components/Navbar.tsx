@@ -131,7 +131,6 @@ export default function Navbar() {
               <button
                 onClick={() => {
                   logout();
-                  navigate("/?login=true");
                 }}
                 className="p-2 text-white/40 hover:text-red-400"
               >
@@ -144,23 +143,28 @@ export default function Navbar() {
                 <span className="font-mono text-[7px] tracking-[0.3em] uppercase">Auth_Gate_01</span>
                 <span className="font-mono text-[7px] tracking-[0.3em] uppercase text-cyan-500/60">Level_Alpha</span>
               </div>
-              <SciFiButton 
-                variant="outline" 
-                size="sm" 
-                justify="start"
+              <button 
                 onClick={() => navigate("/login")}
-                className="border-white/10 bg-white/5"
+                className="group relative px-8 py-2.5 overflow-hidden border border-cyan-500/30 bg-cyan-500/5 hover:bg-cyan-500/15 transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.1)] hover:shadow-[0_0_25px_rgba(6,182,212,0.25)] hover:border-cyan-400/50"
+                style={{ clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)" }}
               >
-                <div className="flex items-center gap-4 pl-12">
-                  <div className="relative">
-                    <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
-                    <div className="absolute inset-0 blur-[3px] bg-cyan-400 animate-pulse" />
+                {/* Scanning line effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
+                
+                {/* Glowing corner bracket */}
+                <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-cyan-400" />
+                <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-cyan-400" />
+                
+                <div className="flex items-center justify-center gap-4 relative z-10">
+                  <div className="relative flex items-center justify-center w-3 h-3">
+                    <div className="w-1.5 h-1.5 bg-cyan-400 shadow-[0_0_10px_#22d3ee] animate-pulse" />
+                    <div className="absolute inset-0 w-4 h-4 border border-cyan-400/40 rounded-full animate-[spin_3s_linear_infinite]" />
                   </div>
-                  <span className="font-orbitron font-black text-[10px] tracking-[0.2em] text-white/90 group-hover:text-white transition-colors">
+                  <span className="font-orbitron font-black text-[11px] tracking-[0.3em] text-cyan-50 uppercase drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">
                     Initialize
                   </span>
                 </div>
-              </SciFiButton>
+              </button>
             </div>
           )}
         </div>

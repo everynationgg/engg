@@ -300,7 +300,7 @@ export default function Shop() {
                     </div>
 
                     {/* Pack Visual (Real 3D) */}
-                    <div className="relative w-32 h-32 mb-6 mt-2 flex items-center justify-center">
+                    <div className="relative w-32 h-32 mb-8 mt-2 flex items-center justify-center">
                        <div className="absolute inset-0 blur-[40px] opacity-20 scale-125 transition-all duration-1000"
                             style={{ backgroundColor: (RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color, opacity: selectedPack?.id === pack.id ? 0.4 : 0.1 }} />
                        
@@ -313,7 +313,7 @@ export default function Shop() {
                           <motion.div
                             animate={{ scale: [1, 1.05, 1], y: [0, -3, 0] }}
                             transition={{ repeat: Infinity, duration: 3 }}
-                            className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-red-600 to-red-500 text-white font-orbitron text-[10px] md:text-xs font-black px-4 py-1.5 shadow-[0_0_25px_rgba(220,38,38,0.8)] z-20 skew-x-[-10deg] border border-red-400/60 whitespace-nowrap"
+                            className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-gradient-to-r from-red-600 to-red-500 text-white font-orbitron text-[10px] md:text-xs font-black px-4 py-1.5 shadow-[0_0_25px_rgba(220,38,38,0.8)] z-20 skew-x-[-10deg] border border-red-400/60 whitespace-nowrap"
                           >
                             <span className="block skew-x-[10deg]">2X FIRST-TIME BONUS</span>
                           </motion.div>
