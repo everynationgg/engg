@@ -1600,10 +1600,15 @@ export function processRevealActions(state: GameState): void {
   for (const [actorId, action] of Object.entries(state.revealActions)) {
     const role = state.rolesAssigned[actorId];
     if (role === "virus") {
-      state.jammedPlayerId = action.targets[0] || null;
+      const targetId = action.targets[0];
+      const targetRole = state.rolesAssigned[targetId];
+      if (targetRole !== "router") {
+        state.jammedPlayerId = targetId || null;
+      }
     } else if (role === "router") {
       const [sourceId, destId] = action.targets;
-      if (sourceId && destId) {
+      const sourceRole = state.rolesAssigned[sourceId];
+      if (sourceId && destId && sourceRole !== "virus") {
         state.hijackedTargets[sourceId] = destId;
       }
     } else if (role === "chaotic") {

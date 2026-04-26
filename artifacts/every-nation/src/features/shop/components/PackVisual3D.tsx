@@ -23,9 +23,13 @@ const PackShape = ({ rarity, color, isSelected }: PackVisual3DProps) => {
     }
   });
 
+  // Three.js does not natively support CSS Level 4 space-separated HSL. 
+  // Convert "hsl(185 100% 50%)" to "hsl(185, 100%, 50%)"
+  const threeColor = color.replace(/hsl\(([\d.]+)\s+([\d.]+%)\s+([\d.]+%)\)/, "hsl($1, $2, $3)");
+
   const materialProps = {
-    color: color,
-    emissive: color,
+    color: threeColor,
+    emissive: threeColor,
     emissiveIntensity: isSelected ? 0.8 : 0.4,
     metalness: 0.9,
     roughness: 0.1,

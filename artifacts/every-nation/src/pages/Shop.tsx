@@ -267,8 +267,13 @@ export default function Shop() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1, duration: 0.6 }}
                 onClick={() => handlePackSelect(pack)}
-                className="relative"
+                className="relative mt-4"
               >
+                {pack.rarity === "legendary" && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-600 text-black font-orbitron font-black text-[10px] md:text-xs tracking-[0.2em] uppercase px-6 py-1 z-30 shadow-[0_0_20px_rgba(234,179,8,0.6)] border border-yellow-300 rounded-sm whitespace-nowrap">
+                    BEST VALUE
+                  </div>
+                )}
                 <TacticalSlate 
                   color={selectedPack?.id === pack.id ? (RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color : "#ffffff10"}
                   className={`h-full transition-transform duration-500 overflow-hidden ${selectedPack?.id === pack.id ? "scale-[1.02]" : "hover:scale-[1.01]"}`}
@@ -277,9 +282,9 @@ export default function Shop() {
                      className={`absolute top-0 left-0 right-0 h-48 opacity-20 pointer-events-none transition-opacity duration-700 ${selectedPack?.id === pack.id ? "opacity-30" : "group-hover:opacity-30"}`} 
                      style={{ background: `radial-gradient(ellipse at top, ${(RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color}, transparent 70%)` }} 
                   />
-                  <div className="p-8 flex flex-col items-center h-full min-h-[500px] relative z-10">
+                  <div className="p-8 flex flex-col items-center h-full relative z-10">
                     {/* Rarity & Header */}
-                    <div className="w-full flex justify-between items-start mb-10">
+                    <div className="w-full flex justify-between items-start mb-6">
                       <div className="flex flex-col">
                         <span className="font-mono text-[7px] text-white/20 uppercase tracking-[0.4em]">Protocol_ID</span>
                         <span className="font-orbitron text-[9px] uppercase font-black tracking-widest" style={{ color: (RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color }}>
@@ -295,7 +300,7 @@ export default function Shop() {
                     </div>
 
                     {/* Pack Visual (Real 3D) */}
-                    <div className="relative w-32 h-32 mb-8 mt-4 flex items-center justify-center">
+                    <div className="relative w-32 h-32 mb-6 mt-2 flex items-center justify-center">
                        <div className="absolute inset-0 blur-[40px] opacity-20 scale-125 transition-all duration-1000"
                             style={{ backgroundColor: (RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color, opacity: selectedPack?.id === pack.id ? 0.4 : 0.1 }} />
                        
@@ -306,11 +311,11 @@ export default function Shop() {
                        />
                        {pack.hasBonus && (
                           <motion.div
-                            animate={{ scale: [1, 1.05, 1], rotate: [-2, 2, -2] }}
-                            transition={{ repeat: Infinity, duration: 4 }}
-                            className="absolute -top-6 -right-12 bg-red-600 text-white font-orbitron text-[8px] font-black px-2 py-1 shadow-[0_0_15px_rgba(220,38,38,0.5)] z-20 skew-x-[-10deg] border border-white/20 whitespace-nowrap"
+                            animate={{ scale: [1, 1.05, 1], y: [0, -3, 0] }}
+                            transition={{ repeat: Infinity, duration: 3 }}
+                            className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-red-600 to-red-500 text-white font-orbitron text-[10px] md:text-xs font-black px-4 py-1.5 shadow-[0_0_25px_rgba(220,38,38,0.8)] z-20 skew-x-[-10deg] border border-red-400/60 whitespace-nowrap"
                           >
-                            X2 FIRST_TIME_BONUS
+                            <span className="block skew-x-[10deg]">2X FIRST-TIME BONUS</span>
                           </motion.div>
                         )}
 
@@ -319,7 +324,7 @@ export default function Shop() {
                     </div>
 
                     {/* Value Data */}
-                    <div className="text-center mb-10 flex-1">
+                    <div className="text-center mb-6 flex-1">
                       <h3 className="font-orbitron text-sm tracking-[0.4em] uppercase text-white/60 mb-2">{pack.name}</h3>
                       <div className="flex items-baseline justify-center gap-2">
                         <span className="font-orbitron text-4xl font-black text-white">
