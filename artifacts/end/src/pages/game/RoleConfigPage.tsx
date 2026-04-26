@@ -11,9 +11,9 @@ import HamburgerMenu from "@/components/system/HamburgerMenu";
 import SettingsModal from "@/components/system/SettingsModal";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import ProfileModal from "@/components/profile/ProfileModal";
+import ShopModal from "@/components/shop/ShopModal";
 import { useAuth } from "@/hooks/useAuth";
 import { FaLock, FaBolt, FaCoins, FaTimes } from "react-icons/fa";
-import ShopModal from "@/components/shop/ShopModal";
 import AuthModal from "@/components/auth/AuthModal";
 
 const SPECTATOR_ROLES = ROLES.filter((r) => r.team === "spectator");
@@ -1239,7 +1239,7 @@ export default function RoleConfigPage() {
                 isUnlocking={false}
                 isLoggedIn={isLoggedIn}
                 onShowProfile={() => {}}
-                onBuyCredits={() => {}}
+                onBuyCredits={() => setShowShopModal(true)}
               />
             </div>
           )}

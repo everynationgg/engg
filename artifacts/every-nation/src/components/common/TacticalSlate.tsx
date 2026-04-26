@@ -20,7 +20,9 @@ export default function TacticalSlate({
   color = "#00f3ff",
   showScanner = true 
 }: TacticalSlateProps) {
-  const clipPath = "polygon(0 0, 85% 0, 100% 15%, 100% 100%, 15% 100%, 0 85%)";
+  // Use fixed pixel values (e.g., 30px) for the chamfer to prevent the cut from growing too large on tall/wide boxes,
+  // which was causing the content inside (with normal padding) to touch the edges.
+  const clipPath = "polygon(0 0, calc(100% - 30px) 0, 100% 30px, 100% 100%, 30px 100%, 0 calc(100% - 30px))";
 
   return (
     <div className={`relative group ${className}`}>

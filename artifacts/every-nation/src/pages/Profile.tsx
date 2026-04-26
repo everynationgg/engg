@@ -138,13 +138,6 @@ export default function Profile() {
       <div className="fixed inset-0 pointer-events-none z-10 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" />
 
       <main className="relative z-20 w-full max-w-[1400px] px-6 pt-52 pb-40 flex flex-col items-center">
-        {/* Navigation Action - Non-sticky */}
-        <div className="w-full max-w-[1400px] mb-8">
-           <SciFiButton variant="outline" onClick={handleReturn} className="bg-white/5 border-white/10">
-             <FaArrowLeft className="text-xs group-hover:-translate-x-1 transition-transform mr-2" />
-             Return_Home
-           </SciFiButton>
-        </div>
 
         {loading ? (
           <div className="flex flex-col items-center gap-6 mt-32">
@@ -182,7 +175,7 @@ export default function Profile() {
                                    <FaUser className="text-4xl text-cyan-500/40" />
                                 </div>
                              </div>
-                             <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-4 py-1 bg-cyan-500 text-[#020408] font-orbitron text-[8px] font-black tracking-widest uppercase">
+                             <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-cyan-500 border-2 border-[#020408] text-[#020408] font-orbitron text-[8px] font-black tracking-widest uppercase">
                                 {isVerified ? "Verified_Op" : "Unverified"}
                              </div>
                           </div>

@@ -129,13 +129,6 @@ export default function Hub() {
 
       {/* Main Content Area */}
       <main className="relative z-20 w-full max-w-[1440px] px-8 md:px-16 pt-52 flex flex-col items-center">
-        {/* Navigation Action - Non-sticky */}
-        <div className="w-full mb-8">
-           <SciFiButton variant="outline" onClick={() => window.location.href = "/"} className="bg-white/5 border-white/10">
-             <FaArrowLeft className="text-xs group-hover:-translate-x-1 transition-transform mr-2" />
-             Return_Home
-           </SciFiButton>
-        </div>
 
         {/* Header Overlay */}
         <header className="w-full flex flex-col gap-4 mb-8 md:mb-0">
