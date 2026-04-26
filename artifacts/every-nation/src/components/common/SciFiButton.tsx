@@ -54,14 +54,19 @@ const SciFiButton = forwardRef<HTMLButtonElement, SciFiButtonProps>(
         <div 
           className={cn(
             "absolute inset-0 transition-all duration-500 group-hover:scale-[1.02]",
-            variant === "default" && "bg-cyan-500/20 group-hover:bg-cyan-500/40",
-            variant === "primary" && "bg-cyan-400 group-hover:bg-cyan-300 shadow-[0_0_20px_rgba(6,182,212,0.4)]",
-            variant === "danger" && "bg-red-500/20 group-hover:bg-red-500/40",
-            variant === "outline" && "bg-white/5 border border-white/20 group-hover:border-white/50",
-            variant === "ghost" && "bg-transparent group-hover:bg-cyan-500/10"
+            variant === "default" && "bg-cyan-500/10 group-hover:bg-cyan-500/20",
+            variant === "primary" && "bg-cyan-400 group-hover:bg-cyan-300 shadow-[0_0_30px_rgba(6,182,212,0.5)]",
+            variant === "danger" && "bg-red-500/10 group-hover:bg-red-500/20",
+            variant === "outline" && "bg-white/[0.03] border border-white/10 group-hover:border-white/30",
+            variant === "ghost" && "bg-transparent group-hover:bg-cyan-500/05"
           )}
           style={chamferStyle}
         />
+
+        {/* Tactical Corner Brackets (Bottom-Left) */}
+        <div className="absolute bottom-0 left-0 w-2 h-2 border-l border-b border-cyan-500/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+        {/* Tactical Corner Brackets (Top-Right) */}
+        <div className="absolute top-0 right-0 w-2 h-2 border-r border-t border-cyan-500/40 opacity-0 group-hover:opacity-100 transition-opacity" />
         
         {/* Accent Bar (left) */}
         {variant !== "ghost" && variant !== "outline" && (

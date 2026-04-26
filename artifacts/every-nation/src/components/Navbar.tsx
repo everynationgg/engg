@@ -148,11 +148,16 @@ export default function Navbar() {
                 variant="outline" 
                 size="sm" 
                 onClick={() => navigate("/login")}
-                className="border-white/10 bg-white/5"
+                className="border-white/10 bg-white/5 pl-4 pr-6"
               >
-                <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-pulse" />
-                  Initialize
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
+                    <div className="absolute inset-0 blur-[3px] bg-cyan-400 animate-pulse" />
+                  </div>
+                  <span className="font-orbitron font-black text-[10px] tracking-[0.2em] text-white/90 group-hover:text-white transition-colors">
+                    Initialize
+                  </span>
                 </div>
               </SciFiButton>
             </div>
