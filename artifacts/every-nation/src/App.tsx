@@ -60,7 +60,7 @@ export default function App() {
             {isWarping && <WarpJump />}
           </AnimatePresence>
           {!isHomePage && <Navbar />}
-          <div className={isWarping ? "opacity-0" : "opacity-100 transition-opacity duration-300"}>
+          <div className={`${isWarping ? "opacity-0" : "opacity-100 transition-opacity duration-300"} ${!isHomePage ? "pt-[72px] lg:pt-[88px]" : ""}`}>
             <Router />
           </div>
         </div>

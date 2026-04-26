@@ -2,12 +2,14 @@ import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
-import { FaGem, FaArrowLeft, FaShieldAlt, FaLock, FaCheckCircle, FaBolt, FaCrown, FaDatabase, FaExchangeAlt, FaHdd } from "react-icons/fa";
+import { FaGem, FaArrowLeft, FaShieldAlt, FaLock, FaCheckCircle, FaBolt, FaCrown, FaDatabase, FaExchangeAlt, FaHdd, FaTimes } from "react-icons/fa";
 import { Link, useLocation } from "wouter";
 import WarpJump from "@/components/common/WarpJump";
 import TacticalSlate from "@/components/common/TacticalSlate";
 import { useParallax } from "@/hooks/useParallax";
 import PackVisual3D from "@/features/shop/components/PackVisual3D";
+import CurrencyChip3D from "@/features/shop/components/CurrencyChip3D";
+import CreditInjection3D from "@/features/shop/components/CreditInjection3D";
 import { SciFiButton } from "@/components/common/SciFiButton";
 
 interface Pack {
@@ -39,7 +41,7 @@ const RARITY_CONFIG = {
 
 export default function Shop() {
   const { x, y } = useParallax(25);
-  const { isLoggedIn, credits, token, logout, refreshUser } = useAuth();
+  const { isLoggedIn, credits, token, logout, refreshUser, user } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [successCredits, setSuccessCredits] = useState<number | null>(null);
   const [, setLocation] = useLocation();
@@ -50,6 +52,7 @@ export default function Shop() {
   const [isWarping, setIsWarping] = useState(false);
   const [isInjecting, setIsInjecting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isFirstPurchase, setIsFirstPurchase] = useState(true);
 
   // Animated counter for credits
   const [displayCredits, setDisplayCredits] = useState(credits);
@@ -71,9 +74,15 @@ export default function Shop() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`${import.meta.env.VITE_API_URL}/api/shop/config`)
+    const url = new URL(`${import.meta.env.VITE_API_URL}/api/shop/config`);
+    if (user?.id) url.searchParams.append("userId", user.id);
+
+    fetch(url.toString(), {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
       .then((res) => res.json())
       .then((data) => {
+        setIsFirstPurchase(data.isFirstPurchase !== false);
         if (data.packs && data.packs.length > 0) {
           setPacks(data.packs);
         } else {
@@ -82,7 +91,7 @@ export default function Shop() {
       })
       .catch(() => setPacks(FALLBACK_PACKS))
       .finally(() => setLoading(false));
-  }, []);
+  }, [token, user?.id]);
 
   const handlePackSelect = (pack: Pack) => {
     if (selectedPack?.id === pack.id) return;
@@ -165,11 +174,26 @@ export default function Shop() {
         style={{ x, y }}
       >
         <div className="absolute inset-0 bg-[url('/background.png')] bg-cover bg-center" />
+        
+        {/* 3D Perspective Grid */}
+        <div 
+          className="absolute inset-0 z-0 opacity-30"
+          style={{ 
+            backgroundImage: 'linear-gradient(to right, rgba(6,182,212,0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(6,182,212,0.1) 1px, transparent 1px)',
+            backgroundSize: '80px 80px',
+            transform: 'perspective(1000px) rotateX(60deg) translateY(-200px) scale(2)',
+            transformOrigin: 'top center'
+          }} 
+        />
+
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#020408]/60 to-[#020408]" />
       </motion.div>
 
       {/* Global HUD Scanning Line Overlay */}
       <div className="fixed inset-0 pointer-events-none z-10 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" />
+      
+      {/* Volumetric Fog Overlay */}
+      <div className="fixed inset-0 z-0 opacity-[0.07] bg-[radial-gradient(circle_at_50%_50%,rgba(6,182,212,0.5),transparent_70%)] pointer-events-none" />
 
       <main className="relative z-20 w-full max-w-[1600px] px-6 py-24 md:py-32 flex flex-col items-center">
         {/* Header Section */}
@@ -209,10 +233,10 @@ export default function Shop() {
                    </div>
                    <div className="flex flex-col">
                      <span className="font-mono text-[8px] uppercase tracking-[0.4em] text-white/30">Available_Assets</span>
-                     <div className="flex items-baseline gap-2">
-                       <span className="font-orbitron text-2xl font-black text-white">{displayCredits.toLocaleString()}</span>
-                       <span className="font-orbitron text-[9px] text-cyan-500 font-bold tracking-widest">CC</span>
-                     </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-orbitron text-2xl font-black text-white">{displayCredits.toLocaleString()}</span>
+                        <CurrencyChip3D size={0.5} className="w-6 h-6" />
+                      </div>
                    </div>
                  </div>
                </TacticalSlate>
@@ -268,14 +292,19 @@ export default function Shop() {
               <motion.div
                 key={pack.id}
                 initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
+                animate={{ 
+                  opacity: 1, 
+                  y: 0,
+                  rotateX: selectedPack?.id === pack.id ? 5 : 0 
+                }}
                 transition={{ delay: idx * 0.1, duration: 0.6 }}
                 onClick={() => handlePackSelect(pack)}
                 className="relative"
+                style={{ perspective: 1000 }}
               >
                 <TacticalSlate 
                   color={selectedPack?.id === pack.id ? (RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color : "#ffffff10"}
-                  className={`h-full transition-transform duration-500 overflow-hidden ${selectedPack?.id === pack.id ? "scale-[1.02]" : "hover:scale-[1.01]"}`}
+                  className={`h-full transition-all duration-500 overflow-hidden ${selectedPack?.id === pack.id ? "scale-[1.05] -translate-y-4 shadow-[0_20px_50px_rgba(0,0,0,0.5)]" : "hover:scale-[1.02] hover:-translate-y-2"}`}
                 >
                   <div 
                      className={`absolute top-0 left-0 right-0 h-48 opacity-20 pointer-events-none transition-opacity duration-700 ${selectedPack?.id === pack.id ? "opacity-30" : "group-hover:opacity-30"}`} 
@@ -308,6 +337,15 @@ export default function Shop() {
                           color={(RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color}
                           isSelected={selectedPack?.id === pack.id}
                        />
+                       {isFirstPurchase && (
+                          <motion.div
+                            animate={{ scale: [1, 1.05, 1], rotate: [-2, 2, -2] }}
+                            transition={{ repeat: Infinity, duration: 4 }}
+                            className="absolute -top-6 -right-12 bg-red-600 text-white font-orbitron text-[8px] font-black px-2 py-1 shadow-[0_0_15px_rgba(220,38,38,0.5)] z-20 skew-x-[-10deg] border border-white/20 whitespace-nowrap"
+                          >
+                            X2 FIRST_TIME_BONUS
+                          </motion.div>
+                        )}
 
                        {/* Holographic Base */}
                        <div className="absolute -bottom-2 w-20 h-1 bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
@@ -316,9 +354,11 @@ export default function Shop() {
                     {/* Value Data */}
                     <div className="text-center mb-10 flex-1">
                       <h3 className="font-orbitron text-sm tracking-[0.4em] uppercase text-white/60 mb-2">{pack.name}</h3>
-                      <div className="flex items-baseline justify-center gap-2">
-                        <span className="font-orbitron text-4xl font-black text-white">{pack.amount.toLocaleString()}</span>
-                        <span className="font-orbitron text-[10px] text-cyan-500 font-bold">CC</span>
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="font-orbitron text-4xl font-black text-white">
+                          {isFirstPurchase ? (pack.amount * 2).toLocaleString() : pack.amount.toLocaleString()}
+                        </span>
+                        <CurrencyChip3D size={0.6} className="w-8 h-8" />
                       </div>
                       {pack.bonus && (
                         <div className="mt-3 px-3 py-1 bg-white/5 border border-white/10 rounded-full inline-block">
@@ -368,40 +408,116 @@ export default function Shop() {
                animate={{ scale: 1, y: 0 }}
                exit={{ scale: 0.9, y: 20 }}
                onClick={(e) => e.stopPropagation()}
-               className="w-full max-w-md"
+               className="w-full max-w-2xl overflow-hidden"
             >
-              <TacticalSlate className="p-8 relative">
-                <button onClick={() => setCheckoutMode(false)} className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors p-2 text-xs font-mono uppercase tracking-widest border border-white/10 rounded">Dismiss</button>
-                <div className="flex flex-col gap-1 mb-8">
-                  <h3 className="font-orbitron text-2xl uppercase font-black text-white tracking-widest" style={{ color: (RARITY_CONFIG[selectedPack.rarity] || RARITY_CONFIG.common).color }}>{selectedPack.name}</h3>
-                  <p className="font-mono text-[10px] text-white/40 tracking-[0.2em] uppercase">Asset Acquisition Protocol</p>
-                </div>
-                
-                <div className="flex items-center justify-between mb-8 pb-8 border-b border-white/10">
-                   <div className="flex flex-col">
-                     <span className="font-mono text-[8px] uppercase tracking-widest text-white/30">Total_Amount</span>
-                     <span className="font-orbitron text-2xl font-black">${selectedPack.price}</span>
-                   </div>
-                   <div className="flex flex-col text-right">
-                     <span className="font-mono text-[8px] uppercase tracking-widest text-white/30">Yield</span>
-                     <span className="font-orbitron text-xl font-bold text-cyan-400">+{selectedPack.amount} CC</span>
-                   </div>
-                </div>
-                
-                {isSyncing ? (
-                  <div className="flex flex-col items-center gap-4 py-8">
-                    <div className="w-8 h-8 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
-                    <span className="font-mono text-[10px] uppercase tracking-[0.5em] text-cyan-400/60 animate-pulse">Neural_Sync_Active...</span>
+              <TacticalSlate className="p-0 relative overflow-hidden" showScanner={true}>
+                {/* Close Button */}
+                <button 
+                  onClick={() => setCheckoutMode(false)} 
+                  className="absolute top-6 right-6 z-50 text-white/40 hover:text-white transition-all p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg group"
+                >
+                  <FaTimes className="text-xs group-hover:rotate-90 transition-transform duration-300" />
+                </button>
+
+                <div className="flex flex-col md:flex-row min-h-[450px]">
+                  {/* Left: 3D Asset Preview */}
+                  <div className="w-full md:w-[45%] bg-black/40 border-b md:border-b-0 md:border-r border-white/5 relative flex items-center justify-center p-12 overflow-hidden">
+                    <div className="absolute inset-0 pointer-events-none">
+                       <div className="absolute top-0 left-0 w-full h-full opacity-20 bg-[linear-gradient(to_bottom,transparent_0%,rgba(6,182,212,0.1)_50%,transparent_100%)] animate-scanline" />
+                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.1)_0%,transparent_70%)]" />
+                    </div>
+                    
+                    <div className="relative z-10 w-full aspect-square flex items-center justify-center">
+                      <PackVisual3D 
+                        rarity={selectedPack.rarity} 
+                        color={(RARITY_CONFIG[selectedPack.rarity] || RARITY_CONFIG.common).color}
+                        isSelected={true}
+                      />
+                      
+                      {/* Holographic Labels */}
+                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full text-center">
+                         <div className="font-mono text-[7px] text-cyan-400/40 uppercase tracking-[0.5em] mb-1">Asset_Class_Identification</div>
+                         <div className="h-px w-32 bg-cyan-500/20 mx-auto" />
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <PayPalScriptProvider options={{ "clientId": import.meta.env.VITE_PAYPAL_CLIENT_ID || "sb" }}>
-                     <PayPalButtons
-                       style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay", height: 45 }}
-                       createOrder={handleCreateOrder}
-                       onApprove={handleApprove}
-                     />
-                  </PayPalScriptProvider>
-                )}
+
+                  {/* Right: Checkout Details */}
+                  <div className="flex-1 p-8 md:p-12 flex flex-col justify-between">
+                    <div>
+                      <div className="flex flex-col gap-1 mb-8">
+                        <div className="flex items-center gap-3">
+                          <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_8px_cyan]" />
+                          <span className="font-mono text-[8px] text-cyan-500 uppercase tracking-[0.5em]">Secure_Channel_Active</span>
+                        </div>
+                        <h3 className="font-orbitron text-3xl uppercase font-black text-white tracking-widest leading-none mt-2" style={{ color: (RARITY_CONFIG[selectedPack.rarity] || RARITY_CONFIG.common).color }}>
+                          {selectedPack.name}
+                        </h3>
+                        <p className="font-mono text-[9px] text-white/30 tracking-[0.3em] uppercase mt-1">Asset_Acquisition_Protocol_V2.4</p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-8 mb-10 pb-8 border-b border-white/10">
+                        <div className="flex flex-col">
+                          <span className="font-mono text-[8px] uppercase tracking-widest text-white/30 mb-2">Total_Investment</span>
+                          <span className="font-orbitron text-3xl font-black text-white">${selectedPack.price}</span>
+                          <span className="font-mono text-[8px] text-white/20 uppercase mt-1">USD (SECURE_GATEWAY)</span>
+                        </div>
+                        <div className="flex flex-col items-end text-right relative">
+                          <span className="font-mono text-[8px] uppercase tracking-widest text-white/30 mb-2">Expected_Yield</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-orbitron text-3xl font-black text-cyan-400">
+                              +{isFirstPurchase ? (selectedPack.amount * 2).toLocaleString() : selectedPack.amount.toLocaleString()}
+                            </span>
+                            <CurrencyChip3D size={0.7} className="w-10 h-10" />
+                          </div>
+                          
+                          {isFirstPurchase && (
+                            <motion.div 
+                              animate={{ opacity: [0.4, 1, 0.4] }}
+                              transition={{ repeat: Infinity, duration: 1.5 }}
+                              className="text-red-500 font-orbitron text-[7px] font-black tracking-widest mt-1 bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/20"
+                            >
+                              X2_BONUS_APPLIED
+                            </motion.div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      {isSyncing ? (
+                        <div className="flex flex-col items-center gap-4 py-8">
+                          <div className="w-8 h-8 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
+                          <span className="font-mono text-[10px] uppercase tracking-[0.5em] text-cyan-400/60 animate-pulse">Neural_Sync_Active...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="items-center gap-4 opacity-40 flex">
+                             <div className="h-px flex-1 bg-gradient-to-r from-transparent to-white/20" />
+                             <span className="font-mono text-[8px] uppercase tracking-widest">Select_Gateway</span>
+                             <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/20" />
+                          </div>
+                          
+                          <div className="relative group">
+                            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition duration-1000" />
+                            <PayPalScriptProvider options={{ "clientId": import.meta.env.VITE_PAYPAL_CLIENT_ID || "sb" }}>
+                               <PayPalButtons
+                                 style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay", height: 50 }}
+                                 createOrder={handleCreateOrder}
+                                 onApprove={handleApprove}
+                               />
+                            </PayPalScriptProvider>
+                          </div>
+                        </>
+                      )}
+                      
+                      <div className="flex items-center justify-center gap-6 opacity-20">
+                         <FaShieldAlt className="text-xs" />
+                         <span className="font-mono text-[7px] uppercase tracking-[0.4em]">Encrypted_SSL_Channel_Active</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </TacticalSlate>
             </motion.div>
           </motion.div>
@@ -415,34 +531,20 @@ export default function Shop() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[1100] pointer-events-none flex items-center justify-center"
+            className="fixed inset-0 z-[1100] pointer-events-none"
           >
-            {[...Array(30)].map((_, i) => (
-              <motion.div
-                key={i}
-                initial={{ 
-                  x: (Math.random() - 0.5) * 400, 
-                  y: (Math.random() - 0.5) * 400,
-                  scale: 0,
-                  rotate: 0,
-                  opacity: 1 
-                }}
-                animate={{ 
-                  x: 0, 
-                  y: -500, 
-                  scale: [1, 0.5, 0],
-                  rotate: 360,
-                  opacity: [1, 1, 0]
-                }}
-                transition={{ 
-                  duration: 2.5, 
-                  delay: Math.random() * 0.5,
-                  ease: "circIn"
-                }}
-                className="absolute w-4 h-4 bg-cyan-400 shadow-[0_0_20px_#00f3ff]"
-                style={{ clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)" }}
-              />
-            ))}
+            <CreditInjection3D />
+            
+            <div className="absolute inset-0 flex items-center justify-center bg-cyan-500/5 backdrop-blur-[2px]">
+               <motion.div 
+                 initial={{ scale: 0.8, opacity: 0 }}
+                 animate={{ scale: 1, opacity: 1 }}
+                 className="px-12 py-6 border-2 border-cyan-500/50 bg-[#020408]/80 backdrop-blur-xl text-center"
+               >
+                 <h2 className="font-orbitron text-4xl font-black text-cyan-400 tracking-[0.3em] mb-2">ASSET_SECURED</h2>
+                 <p className="font-mono text-xs text-white/40 uppercase tracking-widest">Neural_Transfer_Complete</p>
+               </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

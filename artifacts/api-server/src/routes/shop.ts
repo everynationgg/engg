@@ -45,8 +45,34 @@ async function getPayPalAccessToken() {
   return data.access_token;
 }
 
-router.get("/shop/config", (req, res) => {
-  res.json({ packs: CREDIT_PACKS });
+router.get("/shop/config", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  let isFirstPurchase = true;
+
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    try {
+      const token = authHeader.split(" ")[1];
+      // Basic token check (middleware would be better but this keeps config simple)
+      const userId = req.query.userId as string; // Frontend can pass this for convenience if token is present
+      
+      if (userId) {
+        const existingPurchases = await db
+          .select()
+          .from(creditTransactionsTable)
+          .where(sql`${creditTransactionsTable.userId} = ${userId} AND ${creditTransactionsTable.type} = 'purchase'`)
+          .limit(1);
+        
+        isFirstPurchase = existingPurchases.length === 0;
+      }
+    } catch (err) {
+      logger.error({ err }, "Error checking first purchase in config");
+    }
+  }
+
+  res.json({ 
+    packs: CREDIT_PACKS,
+    isFirstPurchase 
+  });
 });
 
 router.post("/shop/create-order", authMiddleware, async (req: AuthRequest, res) => {
@@ -137,7 +163,20 @@ router.post("/shop/capture-order", authMiddleware, async (req: AuthRequest, res)
 
       if (userId) {
         try {
+          let isFirstPurchase = true;
+          let finalCreditAmount = pack.amount;
+
           await db.transaction(async (tx) => {
+            // Check if this is the first purchase to apply X2 bonus
+            const previousPurchases = await tx
+              .select()
+              .from(creditTransactionsTable)
+              .where(sql`${creditTransactionsTable.userId} = ${userId} AND ${creditTransactionsTable.type} = 'purchase'`)
+              .limit(1);
+
+            isFirstPurchase = previousPurchases.length === 0;
+            finalCreditAmount = isFirstPurchase ? pack.amount * 2 : pack.amount;
+
             // 2. IDEMPOTENCY CHECK
             const existing = await tx.select().from(creditTransactionsTable).where(eq(creditTransactionsTable.paypalOrderId, orderID)).limit(1);
             if (existing.length > 0) {
@@ -151,7 +190,7 @@ router.post("/shop/capture-order", authMiddleware, async (req: AuthRequest, res)
             // 3. Update user balance
             await tx
               .update(usersTable)
-              .set({ credits: sql`${usersTable.credits} + ${creditAmount}` })
+              .set({ credits: sql`${usersTable.credits} + ${finalCreditAmount}` })
               .where(eq(usersTable.id, userId));
 
             // 4. Record transaction with PayPal ID and User details
@@ -160,15 +199,17 @@ router.post("/shop/capture-order", authMiddleware, async (req: AuthRequest, res)
               userId,
               username: userInfo?.username || "Unknown",
               email: userInfo?.email || "Unknown",
-              amount: creditAmount,
+              amount: finalCreditAmount,
               type: "purchase",
               paypalOrderId: orderID,
-              description: `Purchased ${creditAmount} credits via PayPal`,
+              description: isFirstPurchase 
+                ? `First Time Purchase X2 Bonus: ${finalCreditAmount} credits via PayPal`
+                : `Purchased ${finalCreditAmount} credits via PayPal`,
             });
           });
 
-          logger.info({ userId, creditAmount, orderID }, "Credits successfully added via PayPal");
-          res.json({ success: true, credits: creditAmount });
+          logger.info({ userId, creditAmount: finalCreditAmount, orderID, isFirstPurchase }, "Credits successfully added via PayPal");
+          res.json({ success: true, credits: finalCreditAmount, isFirstPurchase });
         } catch (err: any) {
           if (err.message === "ALREADY_PROCESSED") {
             res.status(400).json({ error: "Order already processed" });

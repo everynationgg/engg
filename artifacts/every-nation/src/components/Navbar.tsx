@@ -27,10 +27,13 @@ export default function Navbar() {
     { name: "Credit Shop", href: "/shop" },
   ];
 
+  const isGamePage = location.startsWith("/end") || location.startsWith("/room");
+  const showSolidBg = scrolled || isOpen || isGamePage;
+
   return (
     <nav 
-      className={`sticky top-0 left-0 right-0 z-[100] transition-all duration-500 border-b ${
-        scrolled || isOpen 
+      className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 border-b ${
+        showSolidBg 
           ? "bg-black/90 backdrop-blur-xl border-white/10 py-4" 
           : "bg-transparent border-transparent py-6"
       }`}

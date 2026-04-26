@@ -12,7 +12,7 @@ import SettingsModal from "@/components/system/SettingsModal";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import ProfileModal from "@/components/profile/ProfileModal";
 import { useAuth } from "@/hooks/useAuth";
-import { FaLock, FaBolt, FaCoins } from "react-icons/fa";
+import { FaLock, FaBolt, FaCoins, FaTimes } from "react-icons/fa";
 import ShopModal from "@/components/shop/ShopModal";
 import AuthModal from "@/components/auth/AuthModal";
 
@@ -80,7 +80,7 @@ export default function RoleConfigPage() {
   const [customGameOpen, setCustomGameOpen] = useState(false);
   const [customRoles, setCustomRoles] = useState<{ [playerId: string]: string }>({});
   const [customDeck, setCustomDeck] = useState<[string, string, string]>(["", "", ""]);
-  const [selectedRole, setSelectedRole] = useState<Role | null>(ROLES[0]);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [roleCounts, setRoleCounts] = useState<RoleCounts>(() => {
     const init: RoleCounts = {};
     ROLES.forEach((r) => { init[r.id] = 0; });
@@ -784,7 +784,12 @@ export default function RoleConfigPage() {
         </div>
 
         {/* CENTER PANEL */}
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 pt-16 sm:pt-14 pb-8 h-full custom-scrollbar">
+        <div 
+          className="flex-1 overflow-y-auto px-4 sm:px-6 pb-8 h-full custom-scrollbar"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedRole(null);
+          }}
+        >
 
           {/* Mobile-only: room code + player list */}
           <div className="lg:hidden mb-5 pb-5 border-b" style={{ borderColor: "hsl(210 30% 14%)" }}>
@@ -1183,8 +1188,8 @@ export default function RoleConfigPage() {
 
         {/* RIGHT PANEL — preview and details */}
         <div
-          className={`flex w-full ${selectedRole ? "min-h-[400px] opacity-100" : "h-0 opacity-0 lg:h-full lg:opacity-100"} lg:w-[clamp(240px,30%,400px)] shrink-0 flex-col border-t lg:border-t-0 lg:border-l lg:h-full lg:overflow-hidden transition-all duration-300 ease-in-out`}
-          style={{ background: "hsl(220 30% 6%)", borderColor: "hsl(210 30% 14%)" }}
+          className={`fixed lg:relative inset-x-0 bottom-0 z-50 lg:z-0 flex w-full ${selectedRole ? "min-h-[70vh] opacity-100 translate-y-0" : "h-0 opacity-0 translate-y-full lg:h-full lg:opacity-100 lg:translate-y-0"} lg:w-[clamp(240px,30%,400px)] shrink-0 flex-col border-t lg:border-t-0 lg:border-l lg:h-full lg:overflow-hidden transition-all duration-500 ease-in-out shadow-[0_-20px_40px_rgba(0,0,0,0.5)] lg:shadow-none backdrop-blur-xl lg:backdrop-blur-0`}
+          style={{ background: typeof window !== 'undefined' && window.innerWidth < 1024 ? "hsl(220 30% 6% / 0.95)" : "hsl(220 30% 6%)", borderColor: "hsl(210 30% 14%)" }}
         >
           <RolePreview 
             role={selectedRole} 
@@ -1195,6 +1200,7 @@ export default function RoleConfigPage() {
             isLoggedIn={isLoggedIn}
             onShowProfile={() => isLoggedIn ? setShowProfileModal(true) : setShowAuthModal(true)}
             onBuyCredits={() => setShowShopModal(true)}
+            onClose={() => setSelectedRole(null)}
           />
         </div>
       </div>
@@ -1397,7 +1403,7 @@ function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRe
         )}
       </div>
 
-      {isHovered && (
+      {isHovered && typeof window !== 'undefined' && window.innerWidth >= 768 && (
         <div
           className="pointer-events-none fixed z-[9999]"
           style={{
@@ -1431,7 +1437,7 @@ const ROLE_PRICES: Record<string, number> = {
   router: 35,
 };
 
-function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLoggedIn, onShowProfile, onBuyCredits }: { 
+function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLoggedIn, onShowProfile, onBuyCredits, onClose }: { 
   role: Role | null; 
   isLocked: boolean; 
   onUnlock: (id: string) => void; 
@@ -1440,6 +1446,7 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
   isLoggedIn: boolean;
   onShowProfile: () => void;
   onBuyCredits: () => void;
+  onClose?: () => void;
 }) {
   if (!role) {
     return (
@@ -1496,18 +1503,29 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
           />
         </div>
         {/* Team badge */}
-        <div
-          className={`absolute top-6 left-6 px-1.5 lg:px-2 py-0.5 rounded font-orbitron text-xs tracking-widest uppercase font-bold team-badge ${role.team}-color`}
-          style={{
-            background: accentColorDim,
-            border: `1px solid ${accentColor}`,
-            color: accentColorLight,
-            backdropFilter: "blur(4px)",
-            fontSize: "0.6rem",
-          }}
-        >
-          {teamLabel}
+        <div className="absolute top-6 left-6 flex items-center gap-2">
+           <div
+             className={`px-1.5 lg:px-2 py-0.5 rounded font-orbitron text-xs tracking-widest uppercase font-bold team-badge ${role.team}-color`}
+             style={{
+               background: accentColorDim,
+               border: `1px solid ${accentColor}`,
+               color: accentColorLight,
+               backdropFilter: "blur(4px)",
+               fontSize: "0.6rem",
+             }}
+           >
+             {teamLabel}
+           </div>
         </div>
+
+        {/* Mobile Close Button */}
+        <button
+          onClick={onClose}
+          className="lg:hidden absolute top-6 right-6 w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-white/60 hover:text-white"
+          style={{ backdropFilter: "blur(4px)" }}
+        >
+          <FaTimes />
+        </button>
       </div>
 
       {/* Right side (mobile) / Bottom section (desktop) */}
