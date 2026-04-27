@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { playSciFiClick } from "@/lib/sound";
 
@@ -10,6 +10,8 @@ interface LandingNavbarProps {
   onShowAuth: () => void;
   musicOn: boolean;
   onToggleMusic: () => void;
+  isHost?: boolean;
+  onRestartRound?: () => void;
 }
 
 export default function LandingNavbar({
@@ -19,6 +21,8 @@ export default function LandingNavbar({
   onShowAuth,
   musicOn,
   onToggleMusic,
+  isHost,
+  onRestartRound,
 }: LandingNavbarProps) {
   const { isLoggedIn, logout } = useAuth();
 
@@ -51,37 +55,22 @@ export default function LandingNavbar({
       {/* Nav Links */}
       <div className="flex items-center gap-8">
         <NavbarLink label="HOW TO PLAY" onClick={onShowHowToPlay} />
-        <NavbarLink label="SETTINGS" onClick={onShowSettings} />
         
         <div className="w-px h-4 bg-white/10 mx-2" />
         
-        {/* Audio Toggle */}
-        <button 
-          onClick={() => { playSciFiClick(); onToggleMusic(); }}
-          className="flex items-center gap-3 text-white/40 hover:text-cyan-400 transition-colors group px-2"
-        >
-          {musicOn ? <SoundOnIcon /> : <SoundOffIcon />}
-          <span className="font-orbitron text-[11px] tracking-widest uppercase font-bold">{musicOn ? "AUDIO_ON" : "AUDIO_OFF"}</span>
-        </button>
+        {/* System Nexus Dropdown */}
+        <SystemNexusDropdown 
+          onShowSettings={onShowSettings}
+          onShowProfile={onShowProfile}
+          musicOn={musicOn}
+          onToggleMusic={onToggleMusic}
+          isLoggedIn={isLoggedIn}
+          onLogout={handleLogout}
+          isHost={isHost}
+          onRestartRound={onRestartRound}
+        />
 
-        {isLoggedIn ? (
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => { playSciFiClick(); onShowProfile(); }}
-              className="flex items-center gap-3 px-6 py-2.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 hover:border-cyan-500/40 transition-all group"
-            >
-              <ProfileIcon />
-              <span className="font-orbitron text-[12px] font-black tracking-widest text-cyan-400">PROFILE</span>
-            </button>
-            <button
-              onClick={handleLogout}
-              className="text-white/20 hover:text-red-500/60 transition-colors"
-              title="Logout"
-            >
-              <LogoutIcon />
-            </button>
-          </div>
-        ) : (
+        {!isLoggedIn && (
           <button
             onClick={() => { playSciFiClick(); onShowAuth(); }}
             className="px-8 py-3 rounded-lg border border-cyan-500/50 text-cyan-400 font-orbitron text-[12px] font-black tracking-[0.3em] hover:bg-cyan-500/15 transition-all shadow-[0_0_20px_rgba(6,182,212,0.15)] uppercase"
@@ -143,5 +132,148 @@ function SoundOffIcon() {
       <line x1="23" y1="9" x2="17" y2="15" />
       <line x1="17" y1="9" x2="23" y2="15" />
     </svg>
+  );
+}
+
+function SettingsIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  );
+}
+
+function RestartIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M23 4v6h-6" />
+      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+    </svg>
+  );
+}
+
+function SystemNexusDropdown({ 
+  onShowSettings, 
+  onShowProfile, 
+  musicOn, 
+  onToggleMusic, 
+  isLoggedIn, 
+  onLogout,
+  isHost,
+  onRestartRound
+}: { 
+  onShowSettings: () => void;
+  onShowProfile: () => void;
+  musicOn: boolean;
+  onToggleMusic: () => void;
+  isLoggedIn: boolean;
+  onLogout: () => void;
+  isHost?: boolean;
+  onRestartRound?: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="relative" onMouseLeave={() => setOpen(false)}>
+      <button 
+        onMouseEnter={() => setOpen(true)}
+        onClick={() => setOpen(!open)}
+        className={`flex items-center gap-3 px-5 py-2.5 rounded-lg border transition-all duration-300 group ${open ? 'bg-cyan-500/20 border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.2)]' : 'bg-white/5 border-white/10 hover:border-cyan-500/30'}`}
+      >
+        <SettingsIcon />
+        <span className="font-orbitron text-[11px] font-black tracking-[0.2em] text-white/70 group-hover:text-cyan-400">SYSTEM_NEXUS</span>
+        <svg 
+          width="10" height="6" viewBox="0 0 10 6" fill="none" 
+          className={`transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
+        >
+          <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            className="absolute top-full right-0 mt-2 w-64 bg-black/90 backdrop-blur-xl border border-cyan-500/30 rounded-xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.8)] z-[100]"
+          >
+            <div className="p-2 flex flex-col gap-1">
+              {isLoggedIn && (
+                <DropdownItem 
+                  icon={<ProfileIcon />} 
+                  label="Profile_Records" 
+                  onClick={() => { setOpen(false); onShowProfile(); }} 
+                />
+              )}
+              
+              <DropdownItem 
+                icon={<SettingsIcon />} 
+                label="Core_Settings" 
+                onClick={() => { setOpen(false); onShowSettings(); }} 
+              />
+              
+              <DropdownItem 
+                icon={musicOn ? <SoundOnIcon /> : <SoundOffIcon />} 
+                label={musicOn ? "Audio_Link: ACTIVE" : "Audio_Link: OFFLINE"} 
+                onClick={() => onToggleMusic()} 
+                active={musicOn}
+              />
+
+              <div className="h-px bg-white/10 my-1 mx-2" />
+
+              {isHost && onRestartRound && (
+                <DropdownItem 
+                  icon={<RestartIcon />} 
+                  label="INITIATE_RESTART" 
+                  onClick={() => { setOpen(false); onRestartRound(); }} 
+                  variant="warning"
+                />
+              )}
+
+              {isLoggedIn && (
+                <DropdownItem 
+                  icon={<LogoutIcon />} 
+                  label="TERMINATE_SESSION" 
+                  onClick={() => { setOpen(false); onLogout(); }} 
+                  variant="danger"
+                />
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function DropdownItem({ 
+  icon, 
+  label, 
+  onClick, 
+  active = false, 
+  variant = 'default' 
+}: { 
+  icon: React.ReactNode; 
+  label: string; 
+  onClick: () => void; 
+  active?: boolean;
+  variant?: 'default' | 'warning' | 'danger';
+}) {
+  const colors = {
+    default: active ? 'text-cyan-400 bg-cyan-500/10' : 'text-white/60 hover:text-white hover:bg-white/5',
+    warning: 'text-amber-500/80 hover:text-amber-400 hover:bg-amber-500/10',
+    danger: 'text-red-500/80 hover:text-red-400 hover:bg-red-500/10'
+  };
+
+  return (
+    <button
+      onClick={(e) => { playSciFiClick(); onClick(); }}
+      className={`w-full flex items-center gap-4 px-4 py-3 rounded-lg font-orbitron text-[10px] tracking-widest uppercase transition-all duration-200 ${colors[variant]}`}
+    >
+      <span className="shrink-0">{icon}</span>
+      <span className="font-bold">{label}</span>
+    </button>
   );
 }

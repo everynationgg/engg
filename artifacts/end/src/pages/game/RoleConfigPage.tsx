@@ -16,7 +16,7 @@ import ProfileModal from "@/components/profile/ProfileModal";
 const SPECTATOR_ROLES = ROLES.filter((r) => r.team === "spectator");
 const NON_SPECTATOR_ROLES = ROLES.filter((r) => r.team !== "spectator");
 const SPECTATOR_ROLE = ROLES.find((r) => r.team === "spectator");
-const PREMIUM_ROLE_IDS = ["virus", "router"];
+const PREMIUM_ROLE_IDS = ["virus", "router", "doctor"];
 
 type SessionPayload = {
   phase: string;
@@ -597,7 +597,7 @@ export default function RoleConfigPage() {
 
       {/* Top bar */}
       <div
-        className="w-full px-8 py-6 flex items-center gap-6 border-b shrink-0 h-[var(--nav-height)]"
+        className="hidden lg:hidden w-full px-8 py-6 flex items-center gap-6 border-b shrink-0 h-[var(--nav-height)]"
         style={{
           background: "hsl(220 28% 7%)",
           borderColor: "hsl(185 100% 50% / 0.15)",
@@ -655,11 +655,11 @@ export default function RoleConfigPage() {
         <div className="hidden lg:flex w-72 shrink-0 flex-col border-r h-full overflow-hidden" style={{ background: "hsl(220 30% 6%)", borderColor: "hsl(210 30% 14%)" }}>
            <div className="p-6 border-b" style={{ borderColor: "hsl(210 30% 14%)" }}>
               <div className="text-[11px] tracking-[0.5em] uppercase font-mono mb-2 opacity-30 font-bold">Secure_Lobby_Node</div>
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-col gap-3">
                  <div className="font-orbitron font-black text-3xl tracking-[0.3em] text-white shadow-cyan-500/20">{roomCode}</div>
                  <button
                    onClick={handleCopyLink}
-                   className="px-3 py-1.5 font-orbitron text-[10px] tracking-[0.1em] uppercase rounded border transition-all duration-150 cursor-pointer shrink-0"
+                   className="w-full py-1.5 font-orbitron text-[10px] tracking-[0.1em] uppercase rounded border transition-all duration-150 cursor-pointer"
                    style={{
                      background: copyFeedback ? "hsl(140 60% 15% / 0.6)" : "hsl(220 28% 10%)",
                      borderColor: copyFeedback ? "hsl(140 60% 45%)" : "hsl(185 100% 50% / 0.35)",
@@ -758,14 +758,16 @@ export default function RoleConfigPage() {
 
           {/* Mobile-only: room code + player list */}
           <div className="lg:hidden mb-5 pb-5 border-b" style={{ borderColor: "hsl(210 30% 14%)" }}>
-            <div className="flex items-center justify-between gap-3 mb-3">
-              <div>
-                <div className="text-xs tracking-widest uppercase mb-0.5" style={{ color: "hsl(210 30% 45%)" }}>Room Code</div>
-                <div className="font-orbitron font-black text-2xl tracking-[0.25em]" style={{ color: "hsl(185 100% 60%)", textShadow: "0 0 8px hsl(185 100% 50% / 0.5)" }}>
-                  {roomCode}
+            <div className="flex flex-col gap-4 mb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-xs tracking-widest uppercase mb-0.5" style={{ color: "hsl(210 30% 45%)" }}>Room Code</div>
+                  <div className="font-orbitron font-black text-2xl tracking-[0.25em]" style={{ color: "hsl(185 100% 60%)", textShadow: "0 0 8px hsl(185 100% 50% / 0.5)" }}>
+                    {roomCode}
+                  </div>
                 </div>
                 <div
-                  className="mt-1 px-2 py-1 rounded text-xs inline-block"
+                  className="px-2 py-1 rounded text-xs"
                   style={{
                     background: "hsl(220 28% 10%)",
                     border: "1px solid hsl(185 100% 50% / 0.25)",
@@ -778,7 +780,7 @@ export default function RoleConfigPage() {
               </div>
               <button
                 onClick={handleCopyLink}
-                className="px-3 py-1.5 font-orbitron text-xs tracking-[0.15em] uppercase rounded border transition-all duration-150 cursor-pointer shrink-0"
+                className="w-full py-2 font-orbitron text-xs tracking-[0.15em] uppercase rounded border transition-all duration-150 cursor-pointer"
                 style={{
                   background: copyFeedback ? "hsl(140 60% 15% / 0.6)" : "hsl(220 28% 10%)",
                   borderColor: copyFeedback ? "hsl(140 60% 45%)" : "hsl(185 100% 50% / 0.35)",

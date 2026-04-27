@@ -26,6 +26,7 @@ import { playSciFiClick } from "@/lib/sound";
 import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
 import { usePreferences } from "@/hooks/usePreferences";
 import LandingNavbar from "@/components/system/LandingNavbar";
+import LandingSidebar from "@/components/system/LandingSidebar";
 
 // Phases that warrant a dramatic countdown overlay before switching
 const DRAMATIC_PHASES = new Set(["voting", "result", "discussion"]);
@@ -462,14 +463,29 @@ export default function GameShell() {
     <div className="relative min-h-screen w-full flex flex-col overflow-hidden" style={{ background: "hsl(220 30% 2%)" }}>
       <GlobalHUD isWarping={!!transition} />
       
-      {/* Top Navbar Area (Desktop Only) */}
+      {/* Top Navbar — primary control system on desktop */}
       <LandingNavbar
         onShowSettings={() => setShowSettings(true)}
         onShowProfile={() => setShowProfile(true)}
         onShowHowToPlay={() => setShowHowToPlay(true)}
-        onShowAuth={() => {}}
+        onShowAuth={() => {}} // Auth not needed mid-game
         musicOn={musicOn}
         onToggleMusic={handleToggleMusic}
+        isHost={isHost}
+        onRestartRound={() => {
+          getSocket().emit("restart_game", { sessionId: roomCode });
+          setIsPaused(false);
+        }}
+      />
+
+      {/* Mobile Sidebar Menu */}
+      <LandingSidebar
+        onShowSettings={() => setShowSettings(true)}
+        onShowProfile={() => setShowProfile(true)}
+        onShowHowToPlay={() => setShowHowToPlay(true)}
+        musicOn={musicOn}
+        onToggleMusic={handleToggleMusic}
+        playSound={playSciFiClick}
       />
 
       <div className="h-[var(--nav-height)] shrink-0 hidden lg:block" />
@@ -545,75 +561,20 @@ export default function GameShell() {
                   onClick={() => setIsPaused(false)}
                   className="w-full py-4 border border-cyan-500/30 bg-cyan-500/5 hover:bg-cyan-500/10 transition-all font-orbitron text-[10px] uppercase tracking-[0.4em] text-cyan-400"
                 >
-                  RESUME
+                  RESUME MISSION
                 </button>
 
-                <button 
-                  onClick={() => {
-                    playSciFiClick();
-                    setShowHowToPlay(true);
-                  }}
-                  className="w-full py-4 border border-white/5 hover:border-white/20 transition-all font-orbitron text-[10px] uppercase tracking-[0.4em] text-white/40 hover:text-white"
-                >
-                  HOW TO PLAY
-                </button>
-
-                <button 
-                  onClick={() => {
-                    playSciFiClick();
-                    setShowProfile(true);
-                  }}
-                  className="w-full py-5 border border-white/5 hover:border-white/20 transition-all font-orbitron text-[12px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white"
-                >
-                  PROFILE
-                </button>
-
-                <div className="flex gap-2 w-full">
+                {isHost && (
                   <button 
                     onClick={() => {
-                      playSciFiClick();
-                      setShowSettings(true);
-                    }}
-                    className="flex-1 py-5 border border-white/5 hover:border-white/20 transition-all font-orbitron text-[12px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white"
-                  >
-                    SETTINGS
-                  </button>
-
-                  <button 
-                    onClick={() => {
-                      playSciFiClick();
-                      const next = !musicOn;
-                      const nextVolume = next ? 100 : 0;
-                      updateMusicVolume(nextVolume);
-                      setSoundEnabled(next);
-                      if (next && displayedPhase === "role_config") {
-                        startLobbyMusic();
-                      } else {
-                        stopLobbyMusic();
-                      }
-                    }}
-                    className="flex-1 py-5 border border-white/5 hover:border-white/20 transition-all font-orbitron text-[12px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white"
-                  >
-                    AUDIO: {musicOn ? "ON" : "OFF"}
-                  </button>
-                </div>
-
-                <div className="h-[1px] bg-white/5 my-2 w-full" />
-                
-                <button 
-                  onClick={() => {
-                    const isHost = sessionStorage.getItem("lp_isCreating") === "true";
-                    if (isHost) {
                       getSocket().emit("restart_game", { sessionId: roomCode });
                       setIsPaused(false);
-                    } else {
-                      window.location.reload();
-                    }
-                  }}
-                  className="w-full py-5 border border-white/5 hover:border-white/20 transition-all font-orbitron text-[12px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white"
-                >
-                  RESTART GAME
-                </button>
+                    }}
+                    className="w-full py-4 border border-white/5 hover:border-white/20 transition-all font-orbitron text-[10px] uppercase tracking-[0.4em] text-white/40 hover:text-white"
+                  >
+                    RESTART_ROUND
+                  </button>
+                )}
 
                 <div className="h-[1px] bg-white/5 my-2 w-full" />
 
@@ -622,9 +583,9 @@ export default function GameShell() {
                     playSciFiClick();
                     openConfirm();
                   }}
-                  className="w-full py-5 border border-red-500/20 hover:bg-red-500/10 hover:border-red-500/60 transition-all font-orbitron text-[12px] font-black uppercase tracking-[0.4em] text-red-500"
+                  className="w-full py-4 border border-red-500/20 hover:bg-red-500/10 hover:border-red-500/60 transition-all font-orbitron text-[10px] uppercase tracking-[0.4em] text-red-500"
                 >
-                  QUIT GAME
+                  TERMINATE_SESSION
                 </button>
               </div>
 

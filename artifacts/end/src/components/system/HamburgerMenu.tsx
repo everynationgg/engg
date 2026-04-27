@@ -159,9 +159,28 @@ export default function HamburgerMenu({
     });
   }
 
+  // --- DESKTOP VS MOBILE FILTERING ---
+  const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+  const filteredItems = isDesktop 
+    ? menuItems.filter(item => ["restart", "logout"].includes(item.id)) 
+    : menuItems;
+
+  // Global ESC listener for desktop (opens the menu)
+  useEffect(() => {
+    if (!isDesktop) return;
+    const handleGlobalEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !menuOpen) {
+        e.preventDefault();
+        toggleMenu();
+      }
+    };
+    window.addEventListener("keydown", handleGlobalEsc);
+    return () => window.removeEventListener("keydown", handleGlobalEsc);
+  }, [isDesktop, menuOpen]);
+
   return (
     <div
-      className="fixed z-50 right-4 bottom-12 sm:right-12 sm:bottom-12 lg:hidden"
+      className="fixed z-50 right-4 bottom-12 sm:right-12 sm:bottom-12"
     >
       {/* Backdrop overlay */}
       {menuOpen && (
@@ -179,10 +198,10 @@ export default function HamburgerMenu({
             <div className="absolute inset-4 border border-white/5 rounded-full" />
           </div>
 
-          {menuItems.map((item, index) => {
-            const arcAngle = 90; // Standard 90-degree quadrant
-            const startAngle = 180; // Start left and fan towards up (180-270)
-            const angleOffset = menuItems.length > 1 ? arcAngle / (menuItems.length - 1) : 0;
+          {filteredItems.map((item, index) => {
+            const arcAngle = isDesktop ? 60 : 90; // Tighter arc for desktop interrupt panel
+            const startAngle = isDesktop ? 210 : 180; 
+            const angleOffset = filteredItems.length > 1 ? arcAngle / (filteredItems.length - 1) : 0;
             const angle = startAngle + (index * angleOffset);
             const radius = typeof window !== 'undefined' && window.innerWidth < 640 ? 140 : 200;
             const rad = angle * (Math.PI / 180);
@@ -240,7 +259,7 @@ export default function HamburgerMenu({
       {/* Main Hamburger Trigger */}
       <button
         onClick={toggleMenu}
-        className="flex items-center justify-center w-16 h-16 rounded-full border border-white/10 relative group z-10 overflow-hidden transition-all duration-300"
+        className="flex items-center justify-center w-16 h-16 rounded-full border border-white/10 relative group z-10 overflow-hidden transition-all duration-300 lg:hidden"
         style={{
           background: menuOpen ? "rgba(0, 243, 255, 0.1)" : "rgba(12, 16, 22, 0.8)",
           borderColor: menuOpen ? "#00f3ff" : "rgba(255,255,255,0.1)",
