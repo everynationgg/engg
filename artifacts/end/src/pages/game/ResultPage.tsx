@@ -5,11 +5,7 @@ import { playGameOutcome, playSciFiClick, playBassDrop, playMechanicalChunk } fr
 import { useAuth } from "@/hooks/useAuth";
 import { useGameChat } from "@/hooks/useGameChat";
 import { useRecordGameResult, determinePlayerWon, generateGameId } from "@/hooks/useRecordGameResult";
-import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
-import HamburgerMenu from "@/components/system/HamburgerMenu";
-import SettingsModal from "@/components/system/SettingsModal";
 import StatsDisplay from "@/components/profile/StatsDisplay";
-import ProfileModal from "@/components/profile/ProfileModal";
 import { motion, AnimatePresence } from "framer-motion";
 import { TeamIcon } from "@/components/common/TeamIcon";
 
@@ -188,9 +184,6 @@ export default function ResultPage() {
   const [result, setResult] = useState<VoteResult | null>(null);
   const [summary, setSummary] = useState<RoundSummary | null>(null);
   const [gameId] = useState(() => generateGameId());
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [showProfileModal, setShowProfileModal] = useState(false);
-  const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
   const { messages } = useGameChat(roomCode);
   const [revealedVoteRows, setRevealedVoteRows] = useState(0);
   const [revealedCountRows, setRevealedCountRows] = useState(0);
@@ -342,25 +335,7 @@ export default function ResultPage() {
     };
   }, [fetchLeaderboard, maybeRecordMyResult, roomCode]);
 
-  const handleRestartRound = useCallback(() => {
-    const socket = getSocket();
-    socket.emit("restart_game", { sessionId: roomCode }, (resp: { success: boolean; error?: string }) => {
-      if (!resp.success) {
-        console.error("Restart failed:", resp.error);
-      }
-    });
-  }, [roomCode]);
 
-  const handleToggleMusic = () => {
-    const next = !musicOn;
-    setMusicOn(next);
-    setSoundEnabled(next);
-    if (next) {
-      startLobbyMusic();
-    } else {
-      stopLobbyMusic();
-    }
-  };
 
   const winTeam = result?.winTeam ?? "tie";
   const crewWon = winTeam === "crew";
@@ -457,25 +432,6 @@ export default function ResultPage() {
       )}
       
       <div className="relative z-10 flex flex-col flex-1 h-full">
-      {/* Hamburger Menu */}
-      <HamburgerMenu
-        onShowSettings={() => setShowSettingsModal(true)}
-        onShowProfile={() => setShowProfileModal(true)}
-        onShowHowToPlay={() => {}} // No how to play in result
-        musicOn={musicOn}
-        onToggleMusic={handleToggleMusic}
-        playSound={playSciFiClick}
-        showQuitButton
-        isHost={isHost}
-        onRestartRound={handleRestartRound}
-      />
-
-      {/* Settings Modal */}
-      <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
-
-      {/* Profile Modal */}
-      <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
-
       {/* Top bar */}
       <div
         className="w-full px-6 py-3 flex items-center justify-between border-b shrink-0"

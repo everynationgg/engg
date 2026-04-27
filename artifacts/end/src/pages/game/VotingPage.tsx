@@ -2,11 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { getSocket } from "@/lib/socket";
 import { ROLES } from "@/data/roles";
 import { playSciFiClick, playMechanicalChunk } from "@/lib/sound";
-import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
 import { isPlayerConnected } from "@/lib/utils";
-import HamburgerMenu from "@/components/system/HamburgerMenu";
-import SettingsModal from "@/components/system/SettingsModal";
-import ProfileModal from "@/components/profile/ProfileModal";
 import HolographicCard from "@/components/common/HolographicCard";
 
 interface LivePlayer {
@@ -48,9 +44,6 @@ export default function VotingPage() {
   const [voterIds, setVoterIds] = useState<Set<string>>(new Set());
   const [votes, setVotes] = useState<Record<string, string>>({});
   const [myId, setMyId] = useState<string>("");
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [showProfileModal, setShowProfileModal] = useState(false);
-  const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
   const [roomCopyFeedback, setRoomCopyFeedback] = useState(false);
   const [isHost, setIsHost] = useState(() => sessionStorage.getItem("lp_isHost") === "true");
   const [isSpectator, setIsSpectator] = useState(() => {
@@ -211,25 +204,7 @@ export default function VotingPage() {
     handleVote("abstain");
   };
 
-  const handleToggleMusic = () => {
-    const next = !musicOn;
-    setMusicOn(next);
-    setSoundEnabled(next);
-    if (next) {
-      startLobbyMusic();
-    } else {
-      stopLobbyMusic();
-    }
-  };
 
-  const handleRestartRound = useCallback(() => {
-    const socket = getSocket();
-    socket.emit("restart_game", { sessionId: roomCode }, (resp: { success: boolean; error?: string }) => {
-      if (!resp.success) {
-        console.error("Restart failed:", resp.error);
-      }
-    });
-  }, [roomCode]);
 
   const activePlayers = sessionPlayers.filter(p => isPlayerConnected(p) && !p.isSpectator);
   const totalPlayers = activePlayers.length;
@@ -284,19 +259,6 @@ export default function VotingPage() {
   if (isSpectator) {
     return (
       <div className="flex flex-col min-h-screen w-full relative overflow-hidden" style={{ background: "hsl(210 30% 6%)", color: "hsl(185 100% 70%)" }}>
-        <HamburgerMenu
-          onShowSettings={() => setShowSettingsModal(true)}
-          onShowProfile={() => setShowProfileModal(true)}
-          onShowHowToPlay={() => {}}
-          musicOn={musicOn}
-          onToggleMusic={handleToggleMusic}
-          playSound={playSciFiClick}
-          showQuitButton
-          isHost={isHost}
-          onRestartRound={handleRestartRound}
-        />
-        <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
-        <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
         
         {/* Tactical HUD — Sidebars */}
         <div className="absolute inset-0 pointer-events-none flex items-center justify-between px-2 sm:px-6 z-20">
@@ -385,25 +347,6 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
       )}
       
       <div className="relative z-10 flex flex-col flex-1 h-full">
-      {/* Hamburger Menu */}
-      <HamburgerMenu
-        onShowSettings={() => setShowSettingsModal(true)}
-        onShowProfile={() => setShowProfileModal(true)}
-        onShowHowToPlay={() => {}} // No how to play in voting
-        musicOn={musicOn}
-        onToggleMusic={handleToggleMusic}
-        playSound={playSciFiClick}
-        showQuitButton
-        isHost={isHost}
-        onRestartRound={handleRestartRound}
-      />
-
-      {/* Settings Modal */}
-      <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
-
-      {/* Profile Modal */}
-      <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
-
       {/* Top bar */}
       <div
         className="w-full px-6 py-3 flex items-center justify-between border-b shrink-0"

@@ -57,7 +57,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[110] flex items-center justify-center p-4 backdrop-blur-sm transition-all duration-300"
+      className="fixed inset-0 z-[10001] flex items-center justify-center p-4 backdrop-blur-sm transition-all duration-300"
       style={{ background: "hsl(220 30% 2% / 0.85)" }}
       onClick={() => { playSciFiClick(); onClose(); }}
     >

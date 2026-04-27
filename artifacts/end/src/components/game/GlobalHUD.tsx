@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function GlobalHUD({ isWarping = false, onOpenPause }: { isWarping?: boolean, onOpenPause?: () => void }) {
+export default function GlobalHUD({ isWarping = false }: { isWarping?: boolean }) {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -12,17 +12,9 @@ export default function GlobalHUD({ isWarping = false, onOpenPause }: { isWarpin
       });
     };
     
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onOpenPause?.();
-      }
-    };
-
     window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
 
@@ -140,36 +132,6 @@ export default function GlobalHUD({ isWarping = false, onOpenPause }: { isWarpin
            style={{ background: "linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))", backgroundSize: "100% 2px, 3px 100%" }} />
     </div>
 
-    {/* EXIT INTERFACE (Active Layer) */}
-    <div className="fixed top-6 left-6 z-[9999] pointer-events-auto">
-      <motion.button
-        onClick={() => onOpenPause?.()}
-        className="group flex flex-col items-start gap-1 p-2"
-        initial={{ opacity: 0.3 }}
-        whileHover={{ opacity: 1 }}
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-4 h-4 border border-cyan-500/40 flex items-center justify-center relative group-hover:border-cyan-400 transition-colors">
-            <div className="w-1 h-1 bg-cyan-400/40 group-hover:bg-cyan-400" />
-            {/* Tactical Corners */}
-            <div className="absolute -top-[1px] -left-[1px] w-[2px] h-[2px] bg-cyan-400" />
-            <div className="absolute -bottom-[1px] -right-[1px] w-[2px] h-[2px] bg-cyan-400" />
-          </div>
-          <span className="font-orbitron text-[10px] font-black uppercase tracking-[0.4em] text-white/40 group-hover:text-white transition-colors">
-            Nexus_Uplink
-          </span>
-        </div>
-        <div className="flex items-center gap-2 ml-7">
-           <span className="font-mono text-[7px] uppercase tracking-[0.3em] text-white/10 group-hover:text-cyan-400/40 transition-colors">
-              Return_to_Hub
-           </span>
-           <div className="w-8 h-[1px] bg-white/5 group-hover:bg-cyan-500/20 transition-all" />
-           <span className="font-mono text-[6px] text-white/5 group-hover:text-white/20 transition-colors">
-             [ESC]
-           </span>
-        </div>
-      </motion.button>
-    </div>
     </>
   );
 }

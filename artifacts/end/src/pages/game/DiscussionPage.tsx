@@ -3,10 +3,6 @@ import { getSocket } from "@/lib/socket";
 import { ROLES } from "@/data/roles";
 import { getRoomCode, getCallsign, getInitialRoleId, getOrbitResult } from "@/lib/gameHelpers";
 import { playSciFiClick, playEmergencyVoteCalled } from "@/lib/sound";
-import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
-import HamburgerMenu from "@/components/system/HamburgerMenu";
-import SettingsModal from "@/components/system/SettingsModal";
-import ProfileModal from "@/components/profile/ProfileModal";
 import { FaComments, FaExclamationTriangle } from "react-icons/fa";
 
 interface LivePlayer {
@@ -44,9 +40,6 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
   const [rolesAssigned, setRolesAssigned] = useState<Record<string, string>>({});
   const [initialRoles, setInitialRoles] = useState<Record<string, string>>({});
   const [roundSummary, setRoundSummary] = useState<{ abilityLog: { actorName: string; event: string }[] } | null>(null);
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [showProfileModal, setShowProfileModal] = useState(false);
-  const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
   const [isHost, setIsHost] = useState(() => sessionStorage.getItem("lp_isHost") === "true");
 
   const [evPopup, setEvPopup] = useState<{ callerName: string } | null>(null);
@@ -271,43 +264,12 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
     socket.emit("cast_emergency_vote", { sessionId: roomCode, vote });
   }, [roomCode]);
 
-  const handleRestartRound = useCallback(() => {
-    const socket = getSocket();
-    socket.emit("restart_game", { sessionId: roomCode }, (resp: { success: boolean; error?: string }) => {
-      if (!resp.success) {
-        console.error("Restart failed:", resp.error);
-      }
-    });
-  }, [roomCode]);
 
-  const handleToggleMusic = () => {
-    const next = !musicOn;
-    setMusicOn(next);
-    setSoundEnabled(next);
-    if (next) {
-      startLobbyMusic();
-    } else {
-      stopLobbyMusic();
-    }
-  };
 
   // ── Render ────────────────────────────────────────────────────────────────
   if (isSpectator) {
     return (
-      <div className="relative min-h-screen w-full flex flex-col ix-page-enter" style={{ background: "hsl(210 30% 6%)", color: "hsl(190 80% 90%)", overflow: "hidden" }}>
-        <HamburgerMenu
-          onShowSettings={() => setShowSettingsModal(true)}
-          onShowProfile={() => setShowProfileModal(true)}
-          onShowHowToPlay={() => {}}
-          musicOn={musicOn}
-          onToggleMusic={handleToggleMusic}
-          playSound={playSciFiClick}
-          showQuitButton
-          isHost={isHost}
-          onRestartRound={handleRestartRound}
-        />
-        <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
-        <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
+        <div className="relative min-h-screen w-full flex flex-col ix-page-enter" style={{ background: "hsl(210 30% 6%)", color: "hsl(190 80% 90%)", overflow: "hidden" }}>
 
         {/* Header Bar */}
         <div className="w-full px-4 sm:px-6 py-4 flex items-center justify-between border-b shrink-0" style={{ background: "hsl(220 28% 5%)", borderColor: "hsl(185 100% 50% / 0.2)", boxShadow: "0 4px 20px rgba(0,0,0,0.4)" }}>
@@ -474,24 +436,6 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
       )}
       
       <div className="relative z-10 flex flex-col flex-1 h-full">
-      {/* Hamburger Menu */}
-      <HamburgerMenu
-        onShowSettings={() => setShowSettingsModal(true)}
-        onShowProfile={() => setShowProfileModal(true)}
-        onShowHowToPlay={() => {}} // No how to play in discussion
-        musicOn={musicOn}
-        onToggleMusic={handleToggleMusic}
-        playSound={playSciFiClick}
-        showQuitButton
-        isHost={isHost}
-        onRestartRound={handleRestartRound}
-      />
-
-      {/* Settings Modal */}
-      <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
-
-      {/* Profile Modal */}
-      <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
       {/* Top bar */}
       <div
         className="w-full px-6 py-3 flex items-center justify-between border-b shrink-0"

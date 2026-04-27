@@ -5,16 +5,13 @@ import { useLocation } from "wouter";
 import { ROLES, ALIEN_ROLES, CHAOTIC_ROLES, CREW_ROLES, type Role } from "@/data/roles";
 import { playSciFiClick, playLobbyJoin } from "@/lib/sound";
 import { getSocket } from "@/lib/socket";
-import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
 import { systemToast } from "@/components/common/SystemToast";
-import HamburgerMenu from "@/components/system/HamburgerMenu";
-import SettingsModal from "@/components/system/SettingsModal";
 import ConfirmModal from "@/components/common/ConfirmModal";
-import ProfileModal from "@/components/profile/ProfileModal";
-import ShopModal from "@/components/shop/ShopModal";
 import { useAuth } from "@/hooks/useAuth";
 import { FaLock, FaBolt, FaCoins, FaTimes } from "react-icons/fa";
+import ShopModal from "@/components/shop/ShopModal";
 import AuthModal from "@/components/auth/AuthModal";
+import ProfileModal from "@/components/profile/ProfileModal";
 
 const SPECTATOR_ROLES = ROLES.filter((r) => r.team === "spectator");
 const NON_SPECTATOR_ROLES = ROLES.filter((r) => r.team !== "spectator");
@@ -93,14 +90,12 @@ export default function RoleConfigPage() {
   const [kickedNotice, setKickedNotice] = useState<string | null>(null);
   const [nameTakenNotice, setNameTakenNotice] = useState<string | null>(null);
   const [livePlayers, setLivePlayers] = useState<LivePlayer[]>([]);
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showShopModal, setShowShopModal] = useState(false);
-  const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
   const { credits, isLoggedIn } = useAuth();
   const [unlockedRoles, setUnlockedRoles] = useState<string[]>([]);
   const [isUnlocking, setIsUnlocking] = useState(false);
+  const [showShopModal, setShowShopModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   // isCreating is a one-shot flag: read from sessionStorage ONCE on mount (then
   // immediately deleted so reconnects never re-trigger create_session).
@@ -117,25 +112,7 @@ export default function RoleConfigPage() {
   const kickedOutRef = useRef(false);
   const previousPlayerCountRef = useRef(0);
 
-  const handleToggleMusic = () => {
-    const next = !musicOn;
-    setMusicOn(next);
-    setSoundEnabled(next);
-    if (next) {
-      startLobbyMusic();
-    } else {
-      stopLobbyMusic();
-    }
-  };
 
-  const handleRestartRound = useCallback(() => {
-    const socket = getSocket();
-    socket.emit("restart_game", { sessionId: roomCode }, (resp: { success: boolean; error?: string }) => {
-      if (!resp.success) {
-        console.error("Restart failed:", resp.error);
-      }
-    });
-  }, [roomCode]);
 
   // Socket connection — server is the single source of truth for phase
   useEffect(() => {
@@ -558,7 +535,6 @@ export default function RoleConfigPage() {
   const handleUnlockRole = useCallback((roleId: string) => {
     if (!isLoggedIn) {
       systemToast("Authentication required to spend credits", "warning");
-      setShowProfileModal(true);
       return;
     }
     if (isUnlocking) return;
@@ -585,25 +561,6 @@ export default function RoleConfigPage() {
       className="relative h-screen w-full flex flex-col overflow-hidden"
       style={{ background: "hsl(220 30% 5%)", color: "hsl(190 80% 90%)" }}
     >
-      {/* Hamburger Menu */}
-      <HamburgerMenu
-        onShowSettings={() => setShowSettingsModal(true)}
-        onShowProfile={() => setShowProfileModal(true)}
-        onShowAuth={() => setShowAuthModal(true)}
-        onShowHowToPlay={() => { }} // No how to play in role config
-        musicOn={musicOn}
-        onToggleMusic={handleToggleMusic}
-        playSound={playSciFiClick}
-        showQuitButton
-        isHost={amIHost}
-        onRestartRound={handleRestartRound}
-      />
-
-      {/* Settings Modal */}
-      <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
-
-      {/* Profile Modal */}
-      <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
 
       <ConfirmModal
         isOpen={Boolean(kickConfirmTarget)}
@@ -1247,6 +1204,7 @@ export default function RoleConfigPage() {
       </div>
       <ShopModal isOpen={showShopModal} onClose={() => setShowShopModal(false)} />
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
+      <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
     </div>
   );
 }

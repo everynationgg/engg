@@ -3,10 +3,6 @@ import { motion } from "framer-motion";
 import { ROLES, type Role } from "@/data/roles";
 import { playSciFiClick, playBassDrop } from "@/lib/sound";
 import { getSocket } from "@/lib/socket";
-import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
-import HamburgerMenu from "@/components/system/HamburgerMenu";
-import SettingsModal from "@/components/system/SettingsModal";
-import ProfileModal from "@/components/profile/ProfileModal";
 import { TeamIcon } from "@/components/common/TeamIcon";
 function getAssignedRole(): Role {
   const roleId = sessionStorage.getItem("lp_assignedRole");
@@ -27,11 +23,8 @@ export default function RoleRevealPage() {
   const [acknowledged, setAcknowledged] = useState(false);
   const [revealState, setRevealState] = useState<"black" | "flash" | "ready">("black");
   const [readyCount, setReadyCount] = useState(0);
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [showProfileModal, setShowProfileModal] = useState(false);
   const [sessionPlayers, setSessionPlayers] = useState<any[]>([]);
   const [isHost, setIsHost] = useState(false);
-  const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
   const [rolesAssigned, setRolesAssigned] = useState<Record<string, string>>({});
   const [initialRoles, setInitialRoles] = useState<Record<string, string>>({});
   const [livePlayers, setLivePlayers] = useState<any[]>([]);
@@ -196,25 +189,7 @@ export default function RoleRevealPage() {
     );
   }, [acknowledged, roomCode, role.id, role.team, selectedTargetId, selectedRouterDestId, chaoticChoice]);
 
-  const handleRestartRound = useCallback(() => {
-    const socket = getSocket();
-    socket.emit("restart_game", { sessionId: roomCode }, (resp: { success: boolean; error?: string }) => {
-      if (!resp.success) {
-        console.error("Restart failed:", resp.error);
-      }
-    });
-  }, [roomCode]);
 
-  const handleToggleMusic = () => {
-    const next = !musicOn;
-    setMusicOn(next);
-    setSoundEnabled(next);
-    if (next) {
-      startLobbyMusic();
-    } else {
-      stopLobbyMusic();
-    }
-  };
 
   if (revealState === "black") {
     return (
@@ -231,19 +206,6 @@ export default function RoleRevealPage() {
     // Spectator UI: Hide all role info, show only spectator message
     return (
       <div className="relative min-h-screen w-full flex flex-col items-center justify-center ix-page-enter" style={{ background: "hsl(210 30% 8%)", color: "hsl(190 80% 90%)" }}>
-        <HamburgerMenu
-          onShowSettings={() => setShowSettingsModal(true)}
-          onShowProfile={() => setShowProfileModal(true)}
-          onShowHowToPlay={() => { }}
-          musicOn={musicOn}
-          onToggleMusic={handleToggleMusic}
-          playSound={playSciFiClick}
-          showQuitButton
-          isHost={isHost}
-          onRestartRound={handleRestartRound}
-        />
-        <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
-        <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
         <div className="flex flex-col items-center justify-center flex-1 w-full">
           <div className="font-orbitron text-4xl lg:text-6xl font-black tracking-widest uppercase mb-6" style={{ color: "hsl(185 100% 70%)", textShadow: "0 0 24px hsl(185 100% 50% / 0.4)" }}>
             Spectator
@@ -303,25 +265,6 @@ export default function RoleRevealPage() {
       className="relative min-h-screen w-full flex flex-col ix-page-enter"
       style={{ background: bgTint, color: "hsl(190 80% 90%)" }}
     >
-      {/* Hamburger Menu */}
-      <HamburgerMenu
-        onShowSettings={() => setShowSettingsModal(true)}
-        onShowProfile={() => setShowProfileModal(true)}
-        onShowHowToPlay={() => { }} // No how to play in role reveal
-        musicOn={musicOn}
-        onToggleMusic={handleToggleMusic}
-        playSound={playSciFiClick}
-        showQuitButton
-        isHost={isHost}
-        onRestartRound={handleRestartRound}
-      />
-
-      {/* Settings Modal */}
-      <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
-
-      {/* Profile Modal */}
-      <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
-
       {/* Top bar */}
       <div
         className="w-full px-6 py-3 flex items-center justify-between border-b shrink-0"

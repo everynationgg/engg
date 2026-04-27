@@ -1,11 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getSocket } from "@/lib/socket";
 import { playSciFiClick } from "@/lib/sound";
-import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
 import { isPlayerConnected, isPlayerReconnecting, isPlayerDisconnected } from "@/lib/utils";
-import HamburgerMenu from "@/components/system/HamburgerMenu";
-import SettingsModal from "@/components/system/SettingsModal";
-import ProfileModal from "@/components/profile/ProfileModal";
 
 interface LivePlayer {
   id: string;
@@ -32,9 +28,6 @@ export default function InterruptedPage() {
   const [restartLoading, setRestartLoading] = useState(false);
   const [endLoading, setEndLoading] = useState(false);
   const [continueLoading, setContinueLoading] = useState(false);
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [showProfileModal, setShowProfileModal] = useState(false);
-  const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
 
   const accentColor = "hsl(50 100% 50%)";
   const accentGlow = "hsl(50 100% 50% / 0.4)";
@@ -134,13 +127,6 @@ export default function InterruptedPage() {
     );
   }, [roomCode]);
 
-  const toggleMusic = useCallback(() => {
-    const next = !musicOn;
-    setMusicOn(next);
-    setSoundEnabled(next);
-    if (next) startLobbyMusic();
-    else stopLobbyMusic();
-  }, [musicOn]);
 
   // Exclude quit players from all lists
   const activePlayers = sessionPlayers.filter(p => !p.didQuit);
@@ -456,28 +442,6 @@ export default function InterruptedPage() {
         </div>
       </div>
 
-      {/* Hamburger menu */}
-      <HamburgerMenu
-        onShowSettings={() => setShowSettingsModal(true)}
-        onShowProfile={() => setShowProfileModal(true)}
-        musicOn={musicOn}
-        onToggleMusic={toggleMusic}
-        playSound={playSciFiClick}
-        showQuitButton
-        isHost={isHost}
-      />
-
-      <SettingsModal
-        isOpen={showSettingsModal}
-        onClose={() => setShowSettingsModal(false)}
-      />
-
-      {showProfileModal && (
-        <ProfileModal
-          isOpen={showProfileModal}
-          onClose={() => setShowProfileModal(false)}
-        />
-      )}
     </div>
   );
 }

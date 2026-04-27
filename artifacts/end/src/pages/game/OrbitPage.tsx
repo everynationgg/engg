@@ -4,10 +4,6 @@ import { ROLES, type Role } from "@/data/roles";
 import { getAssignedRole, getRoomCode, getMySocketId } from "@/lib/gameHelpers";
 import { playSciFiClick, playActionConfirm } from "@/lib/sound";
 import { getSocket } from "@/lib/socket";
-import HamburgerMenu from "@/components/system/HamburgerMenu";
-import SettingsModal from "@/components/system/SettingsModal";
-import ProfileModal from "@/components/profile/ProfileModal";
-import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -111,21 +107,6 @@ export default function OrbitPage() {
   const autoSubmittedRef = useRef(false);
   const [isHost, setIsHost] = useState(false);
 
-  // Hamburger menu states
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showHowToPlay, setShowHowToPlay] = useState(false);
-  const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
-  const handleToggleMusic = useCallback(() => {
-    const next = !musicOn;
-    setMusicOn(next);
-    setSoundEnabled(next);
-    if (next) {
-      startLobbyMusic();
-    } else {
-      stopLobbyMusic();
-    }
-  }, [musicOn]);
 
   // Accent colors — consistent with role reveal
   const isAlien = role.team === "alien";
@@ -153,14 +134,6 @@ export default function OrbitPage() {
     setPageState("waiting");
   }, [roomCode]);
 
-  const handleRestartRound = useCallback(() => {
-    const socket = getSocket();
-    socket.emit("restart_game", { sessionId: roomCode }, (resp: { success: boolean; error?: string }) => {
-      if (!resp.success) {
-        console.error("Restart failed:", resp.error);
-      }
-    });
-  }, [roomCode]);
 
   // ── Socket setup ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -328,20 +301,7 @@ export default function OrbitPage() {
     const completedCount = sessionPlayers.filter(p => !p.isSpectator && p.hasActed).length;
     return (
       <div className="relative min-h-screen w-full flex flex-col ix-page-enter" style={{ background: "hsl(220 30% 4%)", color: "hsl(190 80% 90%)", overflow: "hidden" }}>
-        <HamburgerMenu
-          onShowSettings={() => setShowSettingsModal(true)}
-          onShowProfile={() => setShowProfileModal(true)}
-          onShowHowToPlay={() => {}}
-          musicOn={musicOn}
-          onToggleMusic={handleToggleMusic}
-          playSound={playSciFiClick}
-          showQuitButton
-          isHost={isHost}
-          onRestartRound={handleRestartRound}
-        />
-        <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
-        <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
-
+        
         {/* Tactical HUD — Sidebars */}
         <div className="absolute inset-0 pointer-events-none flex items-center justify-between px-2 sm:px-6 z-20">
           {/* Left Sidebar Tabs */}
@@ -458,25 +418,6 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
         color: "hsl(190 80% 90%)",
       }}
     >
-      {/* Hamburger Menu */}
-      <HamburgerMenu
-        onShowSettings={() => setShowSettingsModal(true)}
-        onShowProfile={() => setShowProfileModal(true)}
-        onShowHowToPlay={() => setShowHowToPlay(true)}
-        musicOn={musicOn}
-        onToggleMusic={handleToggleMusic}
-        playSound={playSciFiClick}
-        showQuitButton
-        isHost={isHost}
-        onRestartRound={handleRestartRound}
-      />
-
-      {/* Settings Modal */}
-      <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
-
-      {/* Profile Modal */}
-      <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
-
       {/* Top bar */}
       <div
         className="w-full px-6 py-3 flex items-center justify-between border-b shrink-0"

@@ -18,6 +18,10 @@ import HostGameControls from "@/components/game/HostGameControls";
 import ChatModal from "@/components/game/ChatModal";
 import FloatingChatButton from "@/components/game/FloatingChatButton";
 import GlobalHUD from "@/components/game/GlobalHUD";
+import { useQuitGame } from "@/components/system/QuitGameButton";
+import ConfirmModal from "@/components/common/ConfirmModal";
+import SettingsModal from "@/components/system/SettingsModal";
+import { playSciFiClick } from "@/lib/sound";
 
 // Phases that warrant a dramatic countdown overlay before switching
 const DRAMATIC_PHASES = new Set(["voting", "result", "discussion"]);
@@ -104,7 +108,11 @@ export default function GameShell() {
   const [chatTypingActive, setChatTypingActive] = useState(false);
   const [isGlitching, setIsGlitching] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const touchStartX = useRef<number | null>(null);
+
+  const isHost = sessionStorage.getItem("lp_isCreating") === "true";
+  const { midGame, showConfirm, openConfirm, closeConfirm, handleConfirmQuit } = useQuitGame(isHost);
 
   const toggleChat = useCallback(() => setChatOpen((o) => !o), []);
 
@@ -130,7 +138,6 @@ export default function GameShell() {
   const transitionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const transitionTickRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Global Key Listeners
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -141,8 +148,8 @@ export default function GameShell() {
         }
       }
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, [chatOpen]);
 
   // Redirect if no room code
@@ -437,7 +444,6 @@ export default function GameShell() {
     >
       <GlobalHUD 
         isWarping={!!transition} 
-        onOpenPause={() => setIsPaused(true)}
       />
       
       <AnimatePresence>
@@ -456,15 +462,26 @@ export default function GameShell() {
       </AnimatePresence>
 
       {/* TOP-RIGHT CONTROLS (Pause/Menu) */}
-      <div className="fixed top-3 right-6 z-[101] flex items-center gap-3">
+      <div className="fixed top-4 right-4 z-[101] flex items-center gap-3 pointer-events-auto">
         <button 
           onClick={() => setIsPaused(true)}
-          className="w-8 h-8 border border-white/5 bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-cyan-500/10 hover:border-cyan-500/30 transition-all group"
+          className="h-10 px-3 border border-white/5 bg-black/40 backdrop-blur-md flex items-center gap-3 hover:bg-cyan-500/10 hover:border-cyan-500/30 transition-all group relative overflow-hidden"
         >
-          <div className="flex gap-1">
-            <div className="w-[2px] h-3 bg-cyan-400/40 group-hover:bg-cyan-400" />
-            <div className="w-[2px] h-3 bg-cyan-400/40 group-hover:bg-cyan-400" />
+          {/* Animated Background Pulse */}
+          <div className="absolute inset-0 bg-cyan-500/5 animate-pulse" />
+          
+          <span className="font-orbitron text-[9px] uppercase tracking-[0.3em] text-white/40 group-hover:text-cyan-400 transition-colors hidden sm:inline">
+            Menu
+          </span>
+
+          <div className="flex gap-1.5">
+            <div className="w-[2px] h-3 bg-cyan-400/40 group-hover:bg-cyan-400 transition-colors shadow-[0_0_8px_rgba(34,211,238,0.4)]" />
+            <div className="w-[2px] h-3 bg-cyan-400/40 group-hover:bg-cyan-400 transition-colors shadow-[0_0_8px_rgba(34,211,238,0.4)]" />
           </div>
+
+          <span className="font-orbitron text-[9px] uppercase tracking-[0.3em] text-white/40 group-hover:text-cyan-400 transition-colors sm:hidden">
+            Menu
+          </span>
         </button>
       </div>
 
@@ -474,13 +491,17 @@ export default function GameShell() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-md px-6"
+            className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-md px-6 pointer-events-auto"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setIsPaused(false);
+            }}
           >
             <motion.div 
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="w-full max-w-[320px] bg-[#020408] border border-cyan-500/20 p-8 flex flex-col items-center gap-6 relative shadow-[0_0_50px_rgba(0,0,0,0.5)]"
+              className="w-full max-w-[320px] bg-[#020408] border border-cyan-500/20 p-8 flex flex-col items-center gap-6 relative shadow-[0_0_50px_rgba(0,0,0,0.5)] pointer-events-auto"
+              onClick={(e) => e.stopPropagation()}
             >
               {/* Tactical Brackets */}
               <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-cyan-500/40" />
@@ -503,7 +524,7 @@ export default function GameShell() {
                   onClick={() => {
                     const isHost = sessionStorage.getItem("lp_isCreating") === "true";
                     if (isHost) {
-                      getSocket().emit("reset_session", { sessionId: roomCode });
+                      getSocket().emit("restart_game", { sessionId: roomCode });
                       setIsPaused(false);
                     } else {
                       window.location.reload();
@@ -515,7 +536,11 @@ export default function GameShell() {
                 </button>
 
                 <button 
-                  className="w-full py-4 border border-white/5 hover:border-white/20 transition-all font-orbitron text-[10px] uppercase tracking-[0.4em] text-white/40 hover:text-white opacity-50 cursor-not-allowed"
+                  onClick={() => {
+                    playSciFiClick();
+                    setShowSettings(true);
+                  }}
+                  className="w-full py-4 border border-white/5 hover:border-white/20 transition-all font-orbitron text-[10px] uppercase tracking-[0.4em] text-white/40 hover:text-white"
                 >
                   Settings_Module
                 </button>
@@ -523,12 +548,32 @@ export default function GameShell() {
                 <div className="h-[1px] bg-white/5 my-2 w-full" />
 
                 <button 
-                  onClick={() => window.location.href = "/hub"}
+                  onClick={() => {
+                    playSciFiClick();
+                    openConfirm();
+                  }}
                   className="w-full py-4 border border-red-500/10 hover:bg-red-500/5 hover:border-red-500/40 transition-all font-orbitron text-[10px] uppercase tracking-[0.4em] text-red-500/40 hover:text-red-500"
                 >
                   Terminate_Mission
                 </button>
               </div>
+
+              <ConfirmModal
+                isOpen={showConfirm}
+                title="TERMINATE SESSION"
+                message="Confirm intentional disconnect from current operation?"
+                warning={
+                  isHost
+                    ? "WARNING: HOST_STATUS ACTIVE. SESSION WILL TERMINATE FOR ALL OPERATORS."
+                    : midGame
+                      ? "WARNING: MID_ENGAGEMENT. DISCONNECT WILL IMPACT UNIT COHESION."
+                      : undefined
+                }
+                confirmLabel="TERMINATE"
+                cancelLabel="RESUME"
+                onConfirm={handleConfirmQuit}
+                onCancel={closeConfirm}
+              />
 
               <div className="flex flex-col items-center opacity-20 mt-4">
                 <span className="font-mono text-[6px] uppercase tracking-widest">Operator: {sessionStorage.getItem("lp_callsign") || "UNKNOWN"}</span>
@@ -598,6 +643,10 @@ export default function GameShell() {
           </div>
         </div>
       )}
+      <SettingsModal 
+        isOpen={showSettings} 
+        onClose={() => setShowSettings(false)} 
+      />
     </div>
   );
 }

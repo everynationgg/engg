@@ -161,7 +161,7 @@ export default function HamburgerMenu({
 
   return (
     <div
-      className="fixed z-50 right-4 bottom-12 sm:right-12 sm:bottom-12"
+      className="fixed z-50 right-4 bottom-12 sm:right-12 sm:bottom-12 lg:hidden"
     >
       {/* Backdrop overlay */}
       {menuOpen && (

@@ -8,10 +8,8 @@ import GameHistoryDisplay from "@/components/profile/GameHistoryDisplay";
 import AggregateStats from "@/components/profile/AggregateStats";
 import { AchievementsDisplay } from "@/components/profile/AchievementsDisplay";
 import { FriendsDisplay } from "@/components/profile/FriendsDisplay";
-import HamburgerMenu from "@/components/system/HamburgerMenu";
 import SettingsModal from "@/components/system/SettingsModal";
 import { playSciFiClick } from "@/lib/sound";
-import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
 import { FaCoins } from "react-icons/fa";
 import ShopModal from "@/components/shop/ShopModal";
 import { useEffect, useState, useMemo } from "react";
@@ -27,18 +25,6 @@ export default function ProfilePage() {
   const [resendSuccess, setResendSuccess] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showShopModal, setShowShopModal] = useState(false);
-  const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
-
-  const handleToggleMusic = () => {
-    const next = !musicOn;
-    setMusicOn(next);
-    setSoundEnabled(next);
-    if (next) {
-      startLobbyMusic();
-    } else {
-      stopLobbyMusic();
-    }
-  };
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -80,14 +66,6 @@ export default function ProfilePage() {
       />
       <div className="fixed inset-0 pointer-events-none bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent animate-pulse" />
 
-      <HamburgerMenu
-        onShowSettings={() => setShowSettingsModal(true)}
-        onShowProfile={() => {}}
-        onShowHowToPlay={() => {}}
-        musicOn={musicOn}
-        onToggleMusic={handleToggleMusic}
-        playSound={playSciFiClick}
-      />
 
       <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
 
@@ -131,11 +109,10 @@ export default function ProfilePage() {
 
           <div className="flex flex-wrap gap-4 w-full lg:w-auto">
             <button
-              onClick={() => { playSciFiClick(); setLocation("/"); }}
-              className="flex-1 lg:flex-none px-10 py-4 bg-white/5 border border-white/10 text-white/60 font-orbitron text-[10px] tracking-[0.4em] uppercase hover:bg-cyan-500/10 hover:border-cyan-500/40 hover:text-cyan-400 transition-all group relative overflow-hidden"
+              onClick={() => { playSciFiClick(); setShowSettingsModal(true); }}
+              className="flex-1 lg:flex-none px-10 py-4 bg-white/5 border border-white/10 text-white/60 font-orbitron text-[10px] tracking-[0.4em] uppercase hover:bg-cyan-500/10 hover:border-cyan-500/40 hover:text-cyan-400 transition-all"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-              HQ_Terminal
+              Settings
             </button>
             <button
               onClick={handleLogout}
