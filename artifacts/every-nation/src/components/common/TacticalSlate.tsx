@@ -28,13 +28,13 @@ export default function TacticalSlate({
     <div className={`relative group ${className}`}>
       {/* Outer Border Layer */}
       <div 
-        className="absolute inset-0 bg-white/5 border border-white/10 transition-all duration-500 group-hover:border-white/20"
+        className="absolute inset-0 bg-white/[0.02] border border-white/10 transition-all duration-500 group-hover:border-cyan-400/40"
         style={{ clipPath }}
       />
       
       {/* Main Glass Content */}
       <div 
-        className="relative z-10 h-full w-full bg-[#0a0f16]/40 backdrop-blur-md overflow-hidden transition-all duration-500 group-hover:bg-cyan-500/[0.03]"
+        className="relative z-10 h-full w-full bg-[#0a0f16]/60 overflow-hidden transition-all duration-500 group-hover:bg-cyan-500/[0.02]"
         style={{ clipPath }}
       >
         {showScanner && <HolographicScanner color={color} />}
@@ -45,15 +45,16 @@ export default function TacticalSlate({
         </div>
 
         {/* Decorative HUD Accents */}
-        <div className="absolute top-2 left-8 w-12 h-[1px] bg-white/10" />
-        <div className="absolute bottom-8 right-2 w-[1px] h-12 bg-white/10" />
-        <div className="absolute top-4 right-4 w-1.5 h-1.5 bg-white/20 rounded-full group-hover:bg-cyan-500 transition-colors" />
+        <div className="absolute top-0 left-8 w-12 h-[1px] bg-cyan-400/20" />
+        <div className="absolute bottom-8 right-0 w-[1px] h-12 bg-cyan-400/20" />
+        <div className="absolute top-4 right-4 w-1 h-1 bg-white/20 group-hover:bg-cyan-400 transition-colors" />
       </div>
 
-      {/* Atmospheric Glow */}
+      {/* Atmospheric Glow (Reduced blur for sharpness) */}
       <div 
-        className="absolute inset-0 -z-10 bg-cyan-500/0 group-hover:bg-cyan-500/5 blur-[40px] transition-all duration-700 scale-90 group-hover:scale-100"
+        className="absolute inset-0 -z-10 bg-cyan-500/0 group-hover:bg-cyan-500/5 blur-[20px] transition-all duration-700 scale-95 group-hover:scale-100"
       />
     </div>
+
   );
 }

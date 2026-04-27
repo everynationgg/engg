@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaUser, FaSignOutAlt, FaBars, FaTimes, FaArrowRight } from "react-icons/fa";
+import { FaUser, FaSignOutAlt, FaBars, FaTimes, FaHome, FaGamepad, FaStore, FaBook } from "react-icons/fa";
 import { SciFiButton } from "@/components/common/SciFiButton";
 
 export default function Navbar() {
@@ -27,68 +27,51 @@ export default function Navbar() {
     { name: "Credit Shop", href: "/shop" },
   ];
 
-  const isGamePage = location.startsWith("/end") || location.startsWith("/room");
-  const isShopPage = location.startsWith("/shop");
-  const showSolidBg = scrolled || isOpen || isGamePage;
-  const isHidden = false; // Always show navbar as per user request
+  const showSolidBg = scrolled || isOpen;
 
   return (
     <>
     <nav
-      className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 border-b ${isHidden
-          ? "-translate-y-full opacity-0 pointer-events-none"
-          : "translate-y-0 opacity-100"
-        } ${showSolidBg
-          ? "bg-black/90 backdrop-blur-xl border-white/10 py-4"
-          : "bg-transparent border-transparent py-6"
-        }`}
+      className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 border-b ${
+        showSolidBg ? "bg-black/95 backdrop-blur-md border-white/5 py-3" : "bg-transparent border-transparent py-5"
+      }`}
     >
-      <div className="w-full max-w-[1800px] mx-auto px-6 md:px-16 flex items-center justify-between min-w-0 gap-4">
+      <div className="w-full max-w-[1800px] mx-auto px-6 md:px-12 flex items-center justify-between gap-4">
 
         {/* LEFT: LOGO */}
-        <Link href="/" className="group flex items-center gap-4 min-w-0 shrink-0">
+        <Link href="/" className="group flex items-center gap-4 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 border-2 border-white/20 bg-white/5 flex items-center justify-center relative overflow-hidden">
-              <div className="w-5 h-5 bg-white" />
+            <div className="w-8 h-8 border border-white/10 bg-white/5 flex items-center justify-center relative">
+              <div className="w-4 h-4 bg-white/80" />
             </div>
-            <div className="flex flex-col min-w-0">
-              <span className="font-orbitron font-black text-xl tracking-[0.2em] uppercase text-white truncate">
+            <div className="flex flex-col">
+              <span className="font-orbitron font-black text-lg tracking-[0.2em] uppercase text-white">
                 ENGG
               </span>
-              <span className="font-mono text-[7px] tracking-[0.4em] uppercase text-white/30 truncate">
-                Operational_Unit
+              <span className="font-mono text-[6px] tracking-[0.4em] uppercase text-white/20">
+                Operational_Nexus
               </span>
             </div>
           </div>
 
           {/* TELEMETRY */}
-          <div className="hidden 2xl:flex items-center gap-4 ml-6 pl-6 border-l border-white/5 opacity-30">
+          <div className="hidden xl:flex items-center gap-4 ml-4 pl-4 border-l border-white/5 opacity-20">
             <div className="flex flex-col">
-              <span className="font-mono text-[7px] uppercase">Protocol</span>
-              <span className="font-mono text-[7px] text-cyan-400 font-bold">
-                WSS_SECURE
-              </span>
-            </div>
-            <div className="w-[1px] h-4 bg-white/20" />
-            <div className="flex flex-col">
-              <span className="font-mono text-[7px] uppercase">Signal</span>
-              <span className="font-mono text-[7px] text-cyan-400 font-bold">
-                12ms_LAT
-              </span>
+              <span className="font-mono text-[6px] uppercase">Signal</span>
+              <span className="font-mono text-[7px] text-cyan-400">12ms_LAT</span>
             </div>
           </div>
         </Link>
 
         {/* CENTER: NAV */}
-        <div className="hidden lg:flex items-center gap-6 xl:gap-10 min-w-0">
+        <div className="hidden lg:flex items-center gap-8 xl:gap-12">
           {navLinks.map((link) => (
             <Link
               key={link.name}
               href={link.href}
-              className={`font-orbitron text-[10px] uppercase tracking-[0.25em] whitespace-nowrap ${location === link.href
-                  ? "text-cyan-400"
-                  : "text-white/60 hover:text-white"
-                }`}
+              className={`font-orbitron text-[9px] uppercase tracking-[0.3em] transition-all ${
+                location === link.href ? "text-cyan-400" : "text-white/40 hover:text-white"
+              }`}
             >
               {link.name}
             </Link>
@@ -96,183 +79,113 @@ export default function Navbar() {
         </div>
 
         {/* RIGHT: USER */}
-        <div className="hidden lg:flex items-center gap-4 xl:gap-6 pl-6 border-l border-white/10 min-w-0 shrink-0">
+        <div className="hidden lg:flex items-center gap-4 xl:gap-6 pl-6 border-l border-white/5 shrink-0">
           {isLoggedIn ? (
-            <div className="flex items-center gap-4 xl:gap-6">
-
+            <div className="flex items-center gap-5">
               {/* CREDITS */}
               <div className="flex flex-col items-end">
-                <span className="font-mono text-[9px] text-white/30 uppercase">
-                  Balance
-                </span>
+                <span className="font-mono text-[7px] text-white/20 uppercase tracking-widest">Assets</span>
                 <div className="flex items-center gap-1">
-                  <span className="font-orbitron text-sm text-cyan-400 font-bold">
-                    {credits.toLocaleString()}
-                  </span>
-                  <span className="text-[9px] text-cyan-400/50">CC</span>
+                  <span className="font-orbitron text-xs text-cyan-400 font-bold">{credits.toLocaleString()}</span>
+                  <span className="text-[8px] text-cyan-400/40">CC</span>
                 </div>
               </div>
 
               {/* USER */}
-              <Link href="/profile" className="flex items-center gap-2 min-w-0">
-                <div className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center">
-                  <FaUser className="text-white/50" />
+              <Link href="/profile" className="flex items-center gap-2 group/user">
+                <div className="w-8 h-8 rounded-full border border-white/5 flex items-center justify-center bg-white/[0.02] group-hover/user:border-cyan-500/30 transition-all">
+                  <FaUser className="text-white/20 text-xs group-hover/user:text-cyan-400/40" />
                 </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] text-white/60 truncate max-w-[120px]">
-                    {username}
-                  </span>
-                  <span className="text-[8px] text-cyan-400/60 uppercase">
-                    Verified
-                  </span>
+                <div className="flex flex-col">
+                  <span className="text-[9px] text-white/60 uppercase tracking-widest">{username}</span>
+                  <span className="text-[6px] text-cyan-400/40 uppercase font-mono">Uplink_Secure</span>
                 </div>
               </Link>
 
               {/* LOGOUT */}
-              <button
-                onClick={() => {
-                  logout();
-                }}
-                className="p-2 text-white/40 hover:text-red-400"
-              >
-                <FaSignOutAlt />
+              <button onClick={logout} className="text-white/10 hover:text-red-500/60 transition-colors p-1">
+                <FaSignOutAlt size={12} />
               </button>
             </div>
           ) : (
             <div className="flex items-center gap-4">
-              <div className="hidden xl:flex flex-col items-end opacity-30 group-hover:opacity-60 transition-opacity">
-                <span className="font-mono text-[7px] tracking-[0.3em] uppercase">Auth_Gate_01</span>
-                <span className="font-mono text-[7px] tracking-[0.3em] uppercase text-cyan-500/60">Level_Alpha</span>
+              <div className="hidden xl:flex flex-col items-end opacity-10">
+                <span className="font-mono text-[6px] tracking-[0.3em] uppercase">Auth_Gate</span>
+                <span className="font-mono text-[6px] tracking-[0.3em] uppercase text-cyan-500">Alpha</span>
               </div>
-              <button 
+              <SciFiButton 
+                variant="primary" 
+                size="sm" 
                 onClick={() => navigate("/login")}
-                className="group relative px-8 py-2.5 overflow-hidden border border-cyan-500/30 bg-cyan-500/5 hover:bg-cyan-500/15 transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.1)] hover:shadow-[0_0_25px_rgba(6,182,212,0.25)] hover:border-cyan-400/50"
-                style={{ clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)" }}
               >
-                {/* Scanning line effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
-                
-                {/* Glowing corner bracket */}
-                <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-cyan-400" />
-                <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-cyan-400" />
-                
-                <div className="flex items-center justify-center gap-4 relative z-10">
-                  <div className="relative flex items-center justify-center w-3 h-3">
-                    <div className="w-1.5 h-1.5 bg-cyan-400 shadow-[0_0_10px_#22d3ee] animate-pulse" />
-                    <div className="absolute inset-0 w-4 h-4 border border-cyan-400/40 rounded-full animate-[spin_3s_linear_infinite]" />
-                  </div>
-                  <span className="font-orbitron font-black text-[11px] tracking-[0.3em] text-cyan-50 uppercase drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">
-                    Initialize
-                  </span>
-                </div>
-              </button>
+                Initialize
+              </SciFiButton>
             </div>
           )}
         </div>
 
         {/* MOBILE TOGGLE */}
-        <button
-          className="lg:hidden p-4 text-cyan-400/60 hover:text-cyan-400 transition-colors"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          {isOpen ? <FaTimes className="text-xl" /> : <FaBars className="text-xl" />}
+        <button className="lg:hidden text-cyan-400/40 hover:text-cyan-400 transition-colors" onClick={() => setIsOpen(!isOpen)}>
+          {isOpen ? <FaTimes size={18} /> : <FaBars size={18} />}
         </button>
       </div>
-
     </nav>
+
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Mobile Backdrop */}
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsOpen(false)}
-            className="fixed inset-0 z-[999] bg-black/60 lg:hidden"
-          />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsOpen(false)} className="fixed inset-0 z-[999] bg-black/90 lg:hidden" />
           <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed top-0 bottom-0 right-0 w-[300px] lg:hidden z-[1000] bg-[#020408] border-l border-white/10 flex flex-col shadow-[-20px_0_40px_rgba(0,0,0,0.8)]"
-            style={{ isolation: "isolate" }}
+            initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
+            transition={{ type: "tween", duration: 0.3 }}
+            className="fixed top-0 bottom-0 left-0 w-[300px] lg:hidden z-[1000] bg-[#020408] border-r border-white/5 flex flex-col"
           >
-          <div className="p-10 flex flex-col h-full gap-12">
-             {/* Header in sidebar */}
-             <div className="flex items-center justify-between">
+            <div className="p-8 flex flex-col h-full">
+              <div className="flex items-start justify-between mb-12">
                 <div className="flex flex-col">
-                   <span className="font-orbitron font-black text-xl tracking-widest text-white">MENU</span>
-                   <span className="font-mono text-[7px] text-cyan-400/60 uppercase tracking-[0.4em]">Nexus_Control</span>
+                  <span className="font-orbitron font-black text-sm tracking-[0.3em] text-white">ENGG.</span>
+                  <span className="font-mono text-[7px] text-cyan-400/20 uppercase tracking-[0.4em] mt-1">Operational_Unit</span>
                 </div>
-                <button onClick={() => setIsOpen(false)} className="p-2 text-white/40 hover:text-white">
-                   <FaTimes className="text-xl" />
-                </button>
-             </div>
+                <button onClick={() => setIsOpen(false)} className="text-white/10 hover:text-white"><FaTimes size={16} /></button>
+              </div>
 
-             {/* Nav Links */}
-             <div className="flex flex-col gap-8">
-                <span className="font-mono text-[9px] uppercase tracking-[0.6em] text-white/20">Navigation_Nodes</span>
-                {navLinks.map((link) => (
+              <div className="flex flex-col gap-1">
+                <span className="font-mono text-[7px] uppercase tracking-[0.6em] text-white/10 mb-4 px-3">System_Nodes</span>
+                {[
+                  { name: "Home", href: "/", icon: <FaHome /> },
+                  { name: "Gaming Hub", href: "/hub", icon: <FaGamepad /> },
+                  { name: "Credit Shop", href: "/shop", icon: <FaStore /> },
+                ].map((link) => (
                   <Link
-                    key={link.name}
-                    href={link.href}
-                    onClick={() => setIsOpen(false)}
-                    className="group flex items-center justify-between py-2"
+                    key={link.name} href={link.href} onClick={() => setIsOpen(false)}
+                    className={`flex items-center gap-4 py-3.5 px-3 transition-all ${
+                      location === link.href ? "bg-cyan-500/5 text-cyan-400 border-l border-cyan-400" : "text-white/30 hover:text-white"
+                    }`}
                   >
-                    <span className="font-orbitron text-2xl font-black uppercase tracking-[0.1em] text-white/60 group-hover:text-cyan-400 transition-colors">
-                      {link.name}
-                    </span>
-                    <FaArrowRight className="text-white/10 group-hover:text-cyan-400/40 group-hover:translate-x-2 transition-all" />
+                    <span className="text-[10px]">{link.icon}</span>
+                    <span className="font-orbitron text-[10px] uppercase tracking-widest">{link.name}</span>
                   </Link>
                 ))}
-             </div>
+              </div>
 
-             {/* Auth Section */}
-             <div className="mt-auto border-t border-white/5 pt-12 flex flex-col gap-8">
+              <div className="mt-auto">
                 {isLoggedIn ? (
-                  <div className="flex flex-col gap-8">
-                     <div className="flex items-center gap-6">
-                        <div className="w-12 h-12 rounded-full border border-cyan-500/20 bg-cyan-500/5 flex items-center justify-center">
-                           <FaUser className="text-cyan-400/40" />
-                        </div>
-                        <div className="flex flex-col">
-                           <span className="font-mono text-[9px] uppercase tracking-widest text-white/20">Authenticated_Op</span>
-                           <span className="font-orbitron font-black text-white text-lg">{username}</span>
-                        </div>
-                     </div>
-                     <SciFiButton 
-                        onClick={() => { navigate("/profile"); setIsOpen(false); }}
-                        variant="primary" className="w-full"
-                     >
-                        Open_Command_Nexus
-                     </SciFiButton>
+                  <div className="p-4 bg-white/[0.01] border border-white/5">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-7 h-7 bg-cyan-500/5 border border-cyan-500/10 flex items-center justify-center">
+                        <FaUser className="text-cyan-400/20 text-[10px]" />
+                      </div>
+                      <span className="font-orbitron font-bold text-white/80 text-[10px] uppercase truncate">{username}</span>
+                    </div>
+                    <SciFiButton variant="outline" size="sm" className="w-full" onClick={() => { navigate("/profile"); setIsOpen(false); }}>Profile</SciFiButton>
                   </div>
                 ) : (
-                  <div className="flex flex-col gap-6">
-                     <span className="font-mono text-[9px] uppercase tracking-[0.6em] text-white/20 text-center">Identity_Required</span>
-                     <SciFiButton 
-                        onClick={() => { navigate("/login"); setIsOpen(false); }}
-                        variant="primary" className="w-full"
-                     >
-                        Initialize_Identity
-                     </SciFiButton>
-                  </div>
+                  <SciFiButton variant="primary" size="default" className="w-full" onClick={() => { navigate("/login"); setIsOpen(false); }}>Initialize_ID</SciFiButton>
                 )}
-             </div>
-
-             {/* Footer Decoration */}
-             <div className="flex items-center justify-between mt-8">
-                <div className="flex flex-col gap-1">
-                   <span className="font-mono text-[7px] uppercase tracking-widest text-white/10">System_Clock</span>
-                   <span className="font-mono text-[8px] text-white/30">{new Date().toLocaleTimeString()}</span>
-                </div>
-                <div className="w-32 h-px bg-gradient-to-r from-transparent to-white/5" />
-             </div>
-          </div>
-        </motion.div>
-      </>
+              </div>
+            </div>
+          </motion.div>
+        </>
       )}
     </AnimatePresence>
   </>

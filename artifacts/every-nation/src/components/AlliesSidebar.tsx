@@ -47,52 +47,36 @@ export default function AlliesSidebar() {
     return undefined;
   }, [isLoggedIn, token]);
 
-  // Poll for messages if chat is open (Fallback for sockets)
   useEffect(() => {
     let interval: any;
     if (activeChatAlly && isOpen) {
       fetchMessages(activeChatAlly.id);
-      interval = setInterval(() => fetchMessages(activeChatAlly.id), 10000); // Slower polling when socket is active
+      interval = setInterval(() => fetchMessages(activeChatAlly.id), 10000);
     }
     return () => clearInterval(interval);
   }, [activeChatAlly, isOpen]);
 
-  // Real-time Signal Listeners
   useEffect(() => {
     if (!isLoggedIn || !token) return undefined;
-
     const socket = getSocket(token);
     
     const onPrivateMessage = (msg: any) => {
-      // If we are viewing this chat, append it
       if (activeChatAlly && (msg.senderId === activeChatAlly.id || msg.receiverId === activeChatAlly.id)) {
-        setIsAllyTyping(false); // Stop typing when message arrives
+        setIsAllyTyping(false);
         setChatMessages(prev => {
           const exists = prev.find(m => m.id === msg.id);
           if (exists) return prev;
-          
-          // Sound logic for incoming messages
-          if (msg.senderId === activeChatAlly.id) {
-            playNotificationSound();
-          }
-          
+          if (msg.senderId === activeChatAlly.id) playNotificationSound();
           return [...prev, msg];
         });
-        
-        // Mark as read immediately if chat is open
-        if (msg.senderId === activeChatAlly.id) {
-          fetchMessages(activeChatAlly.id); // This will mark as read on backend
-        }
+        if (msg.senderId === activeChatAlly.id) fetchMessages(activeChatAlly.id);
       } else {
-        // Just refresh unread counts
         fetchUnreadCounts();
       }
     };
 
     const onTypingUpdate = (data: { senderId: string; isTyping: boolean }) => {
-      if (activeChatAlly && data.senderId === activeChatAlly.id) {
-        setIsAllyTyping(data.isTyping);
-      }
+      if (activeChatAlly && data.senderId === activeChatAlly.id) setIsAllyTyping(data.isTyping);
     };
 
     const onReadReceipt = (data: { receiverId: string; readAt: string }) => {
@@ -122,16 +106,10 @@ export default function AlliesSidebar() {
     }
 
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    
     typingTimeoutRef.current = setTimeout(() => {
       isTypingRef.current = false;
       socket.emit("pm_typing_update", { receiverId: activeChatAlly.id, isTyping: false });
     }, 3000);
-
-    if (text.length === 0 && isTypingRef.current) {
-      isTypingRef.current = false;
-      socket.emit("pm_typing_update", { receiverId: activeChatAlly.id, isTyping: false });
-    }
   };
 
   const fetchMessages = async (otherUserId: string) => {
@@ -141,22 +119,14 @@ export default function AlliesSidebar() {
       });
       if (!res.ok) return;
       const data = await res.json();
-      
-      // Play sound if new message arrived and it's not from us
       if (data.length > lastMessageCount) {
         const latest = data[data.length - 1];
-        if (latest.senderId === otherUserId) {
-          playNotificationSound();
-        }
+        if (latest.senderId === otherUserId) playNotificationSound();
       }
-      
       setChatMessages(data);
       setLastMessageCount(data.length);
-      // Refresh unread counts since we just read these
       fetchUnreadCounts();
-    } catch (err) {
-      console.error("Failed to fetch messages", err);
-    }
+    } catch (err) { console.error(err); }
   };
 
   const fetchUnreadCounts = async () => {
@@ -173,24 +143,17 @@ export default function AlliesSidebar() {
         counts[item.senderId] = item.count;
         totalUnread += item.count;
       });
-
-      // Play sound if total unread increased
       const prevTotal = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
-      if (totalUnread > prevTotal && !activeChatAlly) {
-        playNotificationSound();
-      }
-
+      if (totalUnread > prevTotal && !activeChatAlly) playNotificationSound();
       setUnreadCounts(counts);
-    } catch (err) {
-      console.error("Failed to fetch unread counts", err);
-    }
+    } catch (err) { console.error(err); }
   };
 
   const playNotificationSound = () => {
     try {
-      const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3"); // Tactical beep
-      audio.volume = 0.4;
-      audio.play().catch(() => {}); // Ignore autoplay blocks
+      const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3");
+      audio.volume = 0.2;
+      audio.play().catch(() => {});
     } catch (e) {}
   };
 
@@ -200,21 +163,14 @@ export default function AlliesSidebar() {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/messages/send`, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}` 
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ receiverId: activeChatAlly.id, message: messageInput })
       });
       if (res.ok) {
         setMessageInput("");
         fetchMessages(activeChatAlly.id);
       }
-    } catch (err) {
-      console.error("Failed to send message", err);
-    } finally {
-      setIsSending(false);
-    }
+    } catch (err) { console.error(err); } finally { setIsSending(false); }
   };
 
   const fetchAllies = async () => {
@@ -224,9 +180,7 @@ export default function AlliesSidebar() {
       });
       const data = await res.json();
       setAllies(data);
-    } catch (err) {
-      console.error("Failed to fetch allies", err);
-    }
+    } catch (err) { console.error(err); }
   };
 
   const fetchPendingRequests = async () => {
@@ -236,29 +190,22 @@ export default function AlliesSidebar() {
       });
       const data = await res.json();
       setPendingRequests(data);
-    } catch (err) {
-      console.error("Failed to fetch pending requests", err);
-    }
+    } catch (err) { console.error(err); }
   };
 
   const removeFriend = async (friendId: string) => {
-    if (!confirm("Are you sure you want to remove this ally? Secure link will be terminated.")) return;
+    if (!confirm("Terminate secure link?")) return;
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/remove-friend`, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}` 
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ friendId })
       });
       if (res.ok) {
         fetchAllies();
         if (activeChatAlly?.id === friendId) setActiveChatAlly(null);
       }
-    } catch (err) {
-      console.error("Failed to remove friend", err);
-    }
+    } catch (err) { console.error(err); }
   };
 
   const handleSearch = async () => {
@@ -270,33 +217,18 @@ export default function AlliesSidebar() {
       });
       const data = await res.json();
       setSearchResults(data);
-    } catch (err) {
-      console.error("Search failed", err);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
   const sendRequest = async (friendId: string) => {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/send-friend-request`, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}` 
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ friendId })
       });
-      
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Request failed");
-      }
-      
-      handleSearch(); // Refresh search to show pending status
-    } catch (err) {
-      console.error("Failed to send request", err);
-    }
+      if (res.ok) handleSearch();
+    } catch (err) { console.error(err); }
   };
 
   const acceptRequest = async (friendId: string) => {
@@ -304,431 +236,167 @@ export default function AlliesSidebar() {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/accept-friend-request`, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}` 
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ friendId })
       });
-      if (res.ok) {
-        await Promise.all([fetchAllies(), fetchPendingRequests()]);
-      }
-    } catch (err) {
-      console.error("Failed to accept", err);
-    } finally {
-      setIsAccepting(null);
-    }
+      if (res.ok) await Promise.all([fetchAllies(), fetchPendingRequests()]);
+    } catch (err) { console.error(err); } finally { setIsAccepting(null); }
   };
 
   if (!isLoggedIn) return null;
 
   return (
     <>
-      {/* Toggle Button */}
       {!isOpen && (
         <motion.button
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-8 right-8 z-[100] w-14 h-14 md:w-16 md:h-16 bg-[#0a0b1e] border border-cyan-500/20 hover:bg-cyan-500/10 hover:border-cyan-400/50 transition-all shadow-[0_0_30px_rgba(6,182,212,0.1)] group flex items-center justify-center overflow-hidden"
+          className="fixed bottom-6 right-6 z-[100] w-12 h-12 bg-[#0a0b1e]/80 border border-cyan-500/20 hover:bg-cyan-500/10 hover:border-cyan-400/50 transition-all flex items-center justify-center group overflow-hidden"
         >
-          {/* HUD Corner Accents */}
-          <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-cyan-500/40 group-hover:border-cyan-400" />
-          <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-cyan-500/40 group-hover:border-cyan-400" />
-          
-          <div className="flex flex-col items-center gap-1 relative z-10">
-            <FaUserFriends className="text-cyan-400 text-xl md:text-2xl group-hover:scale-110 transition-transform" />
-            <span className="font-mono text-[7px] uppercase tracking-[0.2em] text-cyan-400/40 group-hover:text-cyan-400/80 transition-colors">Allies</span>
-          </div>
-          
-          {/* Scanning Line Effect */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-400/5 to-transparent h-1/2 w-full -translate-y-full group-hover:animate-scan-vertical pointer-events-none" />
-
-          {/* Notifications */}
+          <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-cyan-500/40" />
+          <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-cyan-500/40" />
+          <FaUserFriends className="text-cyan-400/60 text-lg group-hover:text-cyan-400 transition-colors" />
           {(pendingRequests.length > 0 || Object.keys(unreadCounts).length > 0) && (
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-[10px] font-bold flex items-center justify-center rounded-full animate-pulse shadow-[0_0_15px_rgba(220,38,38,0.6)] z-20 border border-white/20">
-              {pendingRequests.length + Object.values(unreadCounts).reduce((a, b) => a + b, 0)}
-            </span>
+            <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full animate-pulse border border-white/20" />
           )}
         </motion.button>
       )}
 
-      {/* Sidebar Panel */}
       <AnimatePresence>
         {isOpen && (
             <motion.div
-              initial={{ x: "100%", opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: "100%", opacity: 0 }}
-              transition={{ type: "spring", damping: 30, stiffness: 150 }}
-              className="fixed top-[72px] lg:top-[88px] right-0 bottom-0 w-full sm:w-[350px] md:w-[420px] z-[1000] flex flex-col shadow-[-30px_0_100px_rgba(0,0,0,0.9)] overflow-hidden"
-              style={{ 
-                backgroundColor: "#020408",
-                background: "#020408",
-                isolation: "isolate",
-                borderLeft: "1px solid rgba(6,182,212,0.2)"
-              }}
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "tween", duration: 0.3 }}
+              className="fixed top-0 right-0 bottom-0 w-full sm:w-[320px] z-[1000] flex flex-col bg-[#020408] border-l border-white/5"
             >
-              {/* Premium Background FX */}
-              <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] blend-overlay" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(6,182,212,0.15)_0%,transparent_50%)]" />
-              
-              {/* Tactical Hex Grid Overlay */}
-              <div className="absolute inset-0 opacity-[0.05] pointer-events-none" 
-                style={{ backgroundImage: `radial-gradient(cyan 1px, transparent 0)`, backgroundSize: '24px 24px' }} 
-              />
-
-              {/* Top Scanning Header */}
-              <div className="relative pt-16 px-8 pb-6 border-b border-white/5">
-                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent animate-pulse" />
-                
+              {/* Scanline Header */}
+              <div className="relative pt-12 px-6 pb-4 border-b border-white/5">
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-cyan-500/20" />
                 <div className="flex items-center justify-between mb-2">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-ping" />
-                      <span className="font-mono text-[10px] tracking-[0.6em] uppercase text-cyan-400/60">Subsystem_Active</span>
-                    </div>
-                    <h2 className="font-orbitron text-2xl font-black tracking-[0.2em] uppercase text-white drop-shadow-[0_0_10px_rgba(6,182,212,0.3)]">
+                  <div className="flex flex-col">
+                    <h2 className="font-orbitron text-lg font-black tracking-[0.2em] uppercase text-white">
                       Allies_<span className="text-cyan-400">Net</span>
                     </h2>
+                    <span className="font-mono text-[7px] tracking-[0.4em] uppercase text-cyan-400/40 mt-1">Status: Active</span>
                   </div>
-                  <button 
-                    onClick={() => {
-                      if (activeChatAlly) setActiveChatAlly(null);
-                      else setIsOpen(false);
-                    }}
-                    className="w-10 h-10 flex items-center justify-center bg-white/5 border border-white/10 hover:border-red-500/50 hover:bg-red-500/10 transition-all group"
-                  >
-                    {activeChatAlly ? <FaArrowLeft className="text-white/20 group-hover:text-cyan-400 transition-colors" /> : <FaTimes className="text-white/20 group-hover:text-red-400 transition-colors" />}
+                  <button onClick={() => activeChatAlly ? setActiveChatAlly(null) : setIsOpen(false)} className="w-8 h-8 flex items-center justify-center hover:bg-white/5 transition-colors">
+                    {activeChatAlly ? <FaArrowLeft className="text-xs text-white/20" /> : <FaTimes className="text-xs text-white/20" />}
                   </button>
                 </div>
-                <div className="font-mono text-[8px] uppercase tracking-[0.4em] text-white/20">Encryption: AES-4096_QUANTUM</div>
               </div>
 
               {activeChatAlly ? (
                 /* Chat View */
                 <div className="flex-1 flex flex-col overflow-hidden">
-                  <div className="p-6 border-b border-white/5 flex items-center gap-4 bg-cyan-500/5">
-                    <div className="w-8 h-8 rounded-full border border-cyan-500/30 flex items-center justify-center">
-                      <FaUserSecret className="text-cyan-400/60" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-orbitron text-[10px] uppercase text-white tracking-widest">{activeChatAlly.username}</span>
-                      <span className="font-mono text-[7px] uppercase text-cyan-400/40">Secure_Channel_Established</span>
-                    </div>
+                  <div className="px-6 py-3 border-b border-white/5 flex items-center gap-3 bg-cyan-500/[0.02]">
+                    <FaUserSecret className="text-cyan-400/40 text-xs" />
+                    <span className="font-orbitron text-[9px] uppercase text-white tracking-widest">{activeChatAlly.username}</span>
                   </div>
-                  
-                  <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-                    {chatMessages.length > 0 ? (
-                      chatMessages.map((msg, i) => (
-                        <div key={msg.id} className={`flex flex-col ${msg.senderId === activeChatAlly.id ? 'items-start' : 'items-end'}`}>
-                          <div className={`max-w-[80%] p-3 rounded-sm font-mono text-[11px] leading-relaxed ${
-                            msg.senderId === activeChatAlly.id 
-                              ? 'bg-white/5 border border-white/10 text-white/80' 
-                              : 'bg-cyan-500/10 border border-cyan-500/20 text-cyan-100'
-                          }`}>
-                            {msg.message}
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="font-mono text-[7px] uppercase text-white/10">
-                              {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                            {msg.senderId !== activeChatAlly.id && (
-                              <span className={`font-mono text-[6px] uppercase ${msg.isRead ? 'text-cyan-400/60' : 'text-white/5'}`}>
-                                {msg.isRead ? 'Confirmed' : 'Sent'}
-                              </span>
-                            )}
-                          </div>
+                  <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+                    {chatMessages.map((msg) => (
+                      <div key={msg.id} className={`flex flex-col ${msg.senderId === activeChatAlly.id ? 'items-start' : 'items-end'}`}>
+                        <div className={`max-w-[90%] p-2.5 font-mono text-[10px] leading-relaxed border ${
+                          msg.senderId === activeChatAlly.id ? 'bg-white/5 border-white/5 text-white/70' : 'bg-cyan-500/5 border-cyan-500/10 text-cyan-100/80'
+                        }`}>
+                          {msg.message}
                         </div>
-                      ))
-                    ) : (
-                      <div className="h-full flex flex-col items-center justify-center gap-4 opacity-10">
-                        <FaSatelliteDish size={30} />
-                        <span className="font-mono text-[9px] uppercase tracking-[0.3em]">No Signal History</span>
+                        <span className="font-mono text-[6px] uppercase text-white/10 mt-1">
+                          {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
                       </div>
-                    )}
-                    {isAllyTyping && (
-                      <div className="flex items-center gap-2 py-2">
-                        <div className="flex gap-1">
-                          <div className="w-1 h-1 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                          <div className="w-1 h-1 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                          <div className="w-1 h-1 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                        </div>
-                        <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-cyan-400/60 animate-pulse">Decrypting Incoming Signal...</span>
-                      </div>
-                    )}
+                    ))}
+                    {isAllyTyping && <span className="font-mono text-[7px] uppercase text-cyan-400/40 animate-pulse">Receiving...</span>}
                   </div>
-
-                  <div className="p-6 bg-black/40 border-t border-white/5">
+                  <div className="p-4 border-t border-white/5">
                     <div className="relative">
                       <input 
                         type="text"
-                        placeholder="Transmit message..."
+                        placeholder="TRANSMIT..."
                         value={messageInput}
                         onChange={(e) => handleTyping(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                        className="w-full bg-white/5 border border-white/10 p-4 font-mono text-[10px] uppercase tracking-widest outline-none focus:border-cyan-500/50 transition-all pr-12"
+                        className="w-full bg-white/[0.02] border border-white/10 p-3 font-mono text-[9px] uppercase tracking-widest outline-none focus:border-cyan-500/30 transition-all pr-10"
                       />
-                      <button 
-                        onClick={sendMessage}
-                        disabled={isSending || !messageInput.trim()}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-cyan-400/40 hover:text-cyan-400 disabled:opacity-20 transition-all"
-                      >
-                        <FaArrowRight />
-                      </button>
+                      <button onClick={sendMessage} className="absolute right-3 top-1/2 -translate-y-1/2 text-cyan-400/40"><FaArrowRight size={10} /></button>
                     </div>
                   </div>
                 </div>
               ) : (
-                /* Tabs & List View */
+                /* List View */
                 <>
-                  {/* Tactical Tabs */}
-                  <div className="flex p-6 gap-2">
-                    {[
-                      { id: "allies", label: "Roster", icon: <FaUserFriends /> },
-                      { id: "search", label: "Scan_Grid", icon: <FaSearch /> }
-                    ].map((tab) => (
+                  <div className="flex p-4 gap-2">
+                    {['allies', 'search'].map(t => (
                       <button 
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id as any)}
-                        className={`flex-1 flex items-center justify-center gap-3 py-4 font-orbitron text-[10px] uppercase tracking-[0.3em] transition-all relative overflow-hidden group ${
-                          activeTab === tab.id 
-                            ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/30" 
-                            : "bg-white/[0.02] text-white/30 border border-white/5 hover:bg-white/[0.05] hover:text-white/60"
+                        key={t}
+                        onClick={() => setActiveTab(t as any)}
+                        className={`flex-1 py-2 font-orbitron text-[8px] uppercase tracking-widest transition-all border ${
+                          activeTab === t ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" : "bg-white/[0.01] text-white/20 border-white/5"
                         }`}
                       >
-                        <span className={`text-xs ${activeTab === tab.id ? "text-cyan-400" : "text-white/20"}`}>
-                          {tab.icon}
-                        </span>
-                        {tab.label}
-                        {activeTab === tab.id && (
-                          <motion.div 
-                            layoutId="activeTab"
-                            className="absolute bottom-0 left-0 w-full h-[2px] bg-cyan-400 shadow-[0_0_10px_#00f3ff]" 
-                          />
-                        )}
+                        {t === 'allies' ? 'Roster' : 'Scan'}
                       </button>
                     ))}
                   </div>
 
-                  {/* Main Content Area */}
-                  <div className="flex-1 overflow-y-auto px-6 space-y-6 custom-scrollbar pb-12">
-                    
-                    {activeTab === "search" && (
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="relative"
-                      >
+                  <div className="flex-1 overflow-y-auto px-4 space-y-4 custom-scrollbar pb-8">
+                    {activeTab === 'search' && (
+                      <div className="relative">
                         <input
                           type="text"
-                          placeholder="Enter Operator ID..."
+                          placeholder="OPERATOR_ID..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                          className="w-full bg-[#0a0b1e]/60 border border-cyan-500/20 p-5 font-mono text-xs uppercase tracking-[0.3em] text-white focus:border-cyan-400/50 focus:outline-none transition-all pr-12 placeholder:text-white/10"
+                          className="w-full bg-white/[0.02] border border-white/10 p-3 font-mono text-[9px] uppercase tracking-widest text-white outline-none"
                         />
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                          {loading ? (
-                            <div className="w-4 h-4 border border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
-                          ) : (
-                            <button onClick={handleSearch} className="text-cyan-400/40 hover:text-cyan-400 transition-colors">
-                              <FaSearch />
-                            </button>
-                          )}
-                        </div>
-                      </motion.div>
+                      </div>
                     )}
 
-                    <AnimatePresence mode="wait">
-                      {activeTab === "allies" ? (
-                        <motion.div 
-                          key="allies-list"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="space-y-6"
-                        >
-                          {/* Inbound Section */}
-                          {pendingRequests.length > 0 && (
-                            <div className="space-y-4">
-                              <div className="flex items-center gap-3">
-                                <div className="w-1 h-3 bg-yellow-500/50" />
-                                <span className="font-mono text-[9px] uppercase tracking-[0.5em] text-yellow-500/60">Inbound_Signals ({pendingRequests.length})</span>
-                              </div>
-                              {pendingRequests.map((req) => (
-                                <div key={req.id} className="p-5 bg-yellow-500/5 border border-yellow-500/20 rounded-sm flex items-center justify-between group hover:bg-yellow-500/10 transition-all">
-                                  <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 border border-yellow-500/30 bg-yellow-500/10 flex items-center justify-center rounded-full">
-                                      <FaUserPlus className="text-yellow-500/60" />
-                                    </div>
-                                    <div className="flex flex-col">
-                                      <span className="font-orbitron text-xs uppercase text-white tracking-widest">{req.username}</span>
-                                      <span className="font-mono text-[7px] uppercase text-yellow-500/40">
-                                        {isAccepting === req.id ? 'Synchronizing...' : 'Handshake_Pending'}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <div className="flex gap-2">
-                                    <button 
-                                      onClick={() => acceptRequest(req.id)}
-                                      disabled={isAccepting === req.id}
-                                      className="w-9 h-9 flex items-center justify-center bg-yellow-500/20 border border-yellow-500/40 text-yellow-500 hover:bg-yellow-500 hover:text-black transition-all disabled:opacity-50"
-                                    >
-                                      {isAccepting === req.id ? <div className="w-4 h-4 border border-yellow-500/40 border-t-yellow-500 rounded-full animate-spin" /> : <FaCheck />}
-                                    </button>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-
-                          {/* Active Roster */}
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-1 h-3 bg-cyan-500" />
-                              <span className="font-mono text-[9px] uppercase tracking-[0.5em] text-cyan-400/60">Tactical_Roster</span>
-                            </div>
-                            {allies.length > 0 ? (
-                              allies.map((ally) => (
-                                <motion.div 
-                                  key={ally.id}
-                                  whileHover={{ x: 5 }}
-                                  onClick={() => setActiveChatAlly(ally)}
-                                  className="relative p-5 bg-white/[0.03] border border-white/5 hover:border-cyan-500/30 transition-all group overflow-hidden cursor-pointer"
-                                >
-                                  {/* Corner Accents */}
-                                  <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-cyan-500/0 group-hover:border-cyan-500/60 transition-all" />
-                                  <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-cyan-500/0 group-hover:border-cyan-500/60 transition-all" />
-
-                                  <div className="flex items-center justify-between relative z-10">
-                                    <div className="flex items-center gap-5">
-                                      <div className="relative">
-                                        <div className="w-12 h-12 bg-[#0a0b1e] border border-white/10 rounded-full flex items-center justify-center overflow-hidden">
-                                          <div className="absolute inset-0 bg-cyan-500/5 animate-pulse" />
-                                          <FaUserSecret className="text-white/20 text-xl relative z-10 group-hover:text-cyan-400/40 transition-colors" />
-                                        </div>
-                                        <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-4 border-[#020408] ${
-                                          ally.status === 'online' ? 'bg-cyan-500 shadow-[0_0_10px_#00f3ff]' : 'bg-white/10'
-                                        }`} />
-                                      </div>
-                                      <div className="flex flex-col gap-0.5">
-                                        <div className="flex items-center gap-2">
-                                          <span className="font-orbitron text-sm uppercase text-white tracking-widest group-hover:text-cyan-400 transition-colors">{ally.username}</span>
-                                          {unreadCounts[ally.id] && (
-                                            <FaExclamationCircle className="text-red-500 text-xs animate-pulse" />
-                                          )}
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                          <span className="font-mono text-[7px] uppercase tracking-[0.2em] text-white/30">
-                                            {ally.status === 'online' ? 'Uplink_Established' : 'Signal_Lost'}
-                                          </span>
-                                          {ally.status === 'online' && <div className="w-1 h-1 bg-cyan-500 rounded-full animate-pulse" />}
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                      <div className="opacity-0 group-hover:opacity-100 transition-all flex items-center gap-4">
-                                        <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-cyan-400/40">Open_Channel</span>
-                                        <FaCircle className="text-[6px] text-cyan-400 animate-ping" />
-                                      </div>
-                                      <button 
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          removeFriend(ally.id);
-                                        }}
-                                        className="p-2 text-white/10 hover:text-red-500 transition-colors relative z-20"
-                                        title="Terminate Link"
-                                      >
-                                        <FaTrash size={12} />
-                                      </button>
-                                    </div>
-                                  </div>
-                                </motion.div>
-                              ))
-                            ) : (
-                              <div className="py-20 text-center border border-white/5 bg-white/[0.01]">
-                                <div className="mb-4 opacity-10 flex justify-center"><FaUserFriends size={40} /></div>
-                                <span className="font-mono text-[10px] uppercase tracking-[0.5em] text-white/20">Grid_Empty: No Allies Linked</span>
-                              </div>
-                            )}
+                    {activeTab === 'allies' ? (
+                      <div className="space-y-4">
+                        {pendingRequests.map(req => (
+                          <div key={req.id} className="p-3 bg-yellow-500/5 border border-yellow-500/10 flex items-center justify-between">
+                            <span className="font-orbitron text-[9px] uppercase text-white">{req.username}</span>
+                            <button onClick={() => acceptRequest(req.id)} className="w-6 h-6 flex items-center justify-center bg-yellow-500/20 text-yellow-500"><FaCheck size={8} /></button>
                           </div>
-                        </motion.div>
-                      ) : (
-                        <motion.div 
-                          key="search-results"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="space-y-4"
-                        >
-                          {searchResults.length > 0 ? (
-                            searchResults.map((user) => (
-                              <div key={user.id} className="p-5 bg-white/[0.03] border border-white/5 flex items-center justify-between group hover:border-cyan-500/30 transition-all relative overflow-hidden">
-                                <div className="flex flex-col gap-1">
-                                  <span className="font-orbitron text-xs uppercase text-white tracking-widest">{user.username}</span>
-                                  <span className="font-mono text-[7px] uppercase text-white/20 tracking-[0.4em]">Node_ID: {user.id.slice(0, 8)}</span>
-                                </div>
-                                
-                                <div className="relative z-10">
-                                  {user.friendshipStatus === 'accepted' ? (
-                                    <div className="flex items-center gap-2 text-cyan-400/40">
-                                      <FaCheck className="text-[10px]" />
-                                      <span className="font-mono text-[8px] uppercase tracking-widest">Linked</span>
-                                    </div>
-                                  ) : user.friendshipStatus === 'pending' ? (
-                                    <div className="flex items-center gap-2 text-yellow-500/40">
-                                      <div className="w-1 h-1 bg-yellow-500 rounded-full animate-pulse" />
-                                      <span className="font-mono text-[8px] uppercase tracking-widest">Transmitting</span>
-                                    </div>
-                                  ) : (
-                                    <button 
-                                      onClick={() => sendRequest(user.id)}
-                                      className="px-6 py-2.5 bg-cyan-500/10 border border-cyan-500/40 text-cyan-400 font-orbitron text-[9px] uppercase tracking-widest hover:bg-cyan-500 hover:text-black transition-all relative group/btn"
-                                    >
-                                      Add_Ally
-                                      <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform" />
-                                    </button>
-                                  )}
-                                </div>
+                        ))}
+                        {allies.map(ally => (
+                          <div 
+                            key={ally.id}
+                            onClick={() => setActiveChatAlly(ally)}
+                            className="p-3 bg-white/[0.02] border border-white/5 hover:border-cyan-500/20 transition-all cursor-pointer group"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-1 h-1 rounded-full ${ally.status === 'online' ? 'bg-cyan-500' : 'bg-white/10'}`} />
+                                <span className="font-orbitron text-[10px] uppercase text-white/60 group-hover:text-white transition-colors">{ally.username}</span>
                               </div>
-                            ))
-                          ) : searchQuery.length >= 2 ? (
-                            <div className="py-20 text-center">
-                              <span className="font-mono text-[10px] uppercase tracking-[0.5em] text-white/20">Scan_Complete: No Matches</span>
+                              {unreadCounts[ally.id] && <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}
                             </div>
-                          ) : (
-                            <div className="py-20 text-center flex flex-col items-center gap-4 opacity-20">
-                              <FaSearch size={30} />
-                              <span className="font-mono text-[10px] uppercase tracking-[0.4em]">Awaiting_Input...</span>
-                            </div>
-                          )}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {searchResults.map(u => (
+                          <div key={u.id} className="p-3 bg-white/[0.02] border border-white/5 flex items-center justify-between">
+                            <span className="font-orbitron text-[9px] uppercase text-white">{u.username}</span>
+                            <button onClick={() => sendRequest(u.id)} className="px-3 py-1 bg-cyan-500/10 text-cyan-400 font-orbitron text-[7px] uppercase border border-cyan-500/30">Add</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </>
               )}
 
-              {/* Bottom System Status */}
-              <div className="mt-auto p-8 border-t border-white/5 bg-black/40 backdrop-blur-md">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex flex-col gap-1">
-                    <span className="font-mono text-[8px] uppercase text-white/20 tracking-widest">Neural_Link</span>
-                    <span className="font-mono text-[9px] uppercase text-cyan-500 tracking-[0.2em]">Established</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-mono text-[8px] uppercase text-white/20 tracking-widest">Latency</span>
-                    <span className="font-mono text-[9px] uppercase text-cyan-500 tracking-[0.2em]">14.2ms</span>
-                  </div>
-                </div>
-                <div className="w-full h-1 bg-white/5 relative overflow-hidden">
-                  <motion.div 
-                    initial={{ width: "0%" }}
-                    animate={{ width: "100%" }}
-                    transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                    className="absolute top-0 left-0 h-full bg-cyan-500/40" 
-                  />
+              <div className="mt-auto p-6 border-t border-white/5 bg-black/20">
+                <div className="flex justify-between items-center opacity-20">
+                  <span className="font-mono text-[7px] uppercase tracking-widest">Link_Latency</span>
+                  <span className="font-mono text-[7px] uppercase tracking-widest">14ms</span>
                 </div>
               </div>
             </motion.div>
@@ -736,22 +404,9 @@ export default function AlliesSidebar() {
       </AnimatePresence>
 
       <style dangerouslySetInnerHTML={{ __html: `
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 2px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(255, 255, 255, 0.02);
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(6, 182, 212, 0.3);
-        }
-        @keyframes scan-vertical {
-          0% { transform: translateY(-100%); }
-          100% { transform: translateY(200%); }
-        }
-        .animate-scan-vertical {
-          animation: scan-vertical 2s linear infinite;
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 1px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(6, 182, 212, 0.2); }
       `}} />
     </>
   );

@@ -124,7 +124,7 @@ function useToastStore() {
       listeners.add(cb);
       return () => listeners.delete(cb);
     },
-    () => toasts,
+    ( ) => toasts,
   );
 }
 
@@ -134,25 +134,26 @@ export default function SystemToastContainer() {
   if (items.length === 0) return null;
 
   return (
-    <div className="fixed top-24 right-6 z-[100] flex flex-col gap-3 pointer-events-none" role="status" aria-live="polite">
+    <div className="fixed top-20 right-6 z-[100] flex flex-col gap-2 pointer-events-none" role="status" aria-live="polite">
       {items.map((t) => (
         <div
           key={t.id}
-          className={`px-4 py-3 rounded border bg-[#0c1016]/95 backdrop-blur-md font-mono text-[10px] tracking-widest uppercase transition-all duration-300 ${
+          className={`px-3 py-2 border bg-black/90 backdrop-blur-md font-mono text-[9px] tracking-widest uppercase transition-all duration-300 ${
             t.exiting ? "opacity-0 translate-x-10" : "opacity-100 translate-x-0"
           }`}
           style={{
-            borderColor: t.variant === "error" ? "#ff4e4e40" : t.variant === "warning" ? "#ffaa0040" : t.variant === "success" ? "#10b98140" : "#00f3ff40",
+            borderColor: t.variant === "error" ? "#ff4e4e30" : t.variant === "warning" ? "#ffaa0030" : t.variant === "success" ? "#10b98130" : "#00f3ff30",
             color: t.variant === "error" ? "#ff4e4e" : t.variant === "warning" ? "#ffaa00" : t.variant === "success" ? "#10b981" : "#00f3ff",
-            boxShadow: `0 0 20px ${t.variant === "error" ? "#ff4e4e15" : t.variant === "warning" ? "#ffaa0015" : t.variant === "success" ? "#10b98115" : "#00f3ff15"}`
           }}
         >
-          <div className="flex items-center gap-3">
-             <div className={`w-1 h-3 ${
+          <div className="flex items-center gap-2">
+             <div className={`w-[1px] h-2 ${
                t.variant === "error" ? "bg-red-500" : t.variant === "warning" ? "bg-amber-500" : t.variant === "success" ? "bg-emerald-500" : "bg-cyan-500"
              }`} />
-             {t.message}
+             <span>{t.message}</span>
           </div>
+          {/* Subtle corner accent */}
+          <div className="absolute top-0 right-0 w-1 h-1 border-t border-r border-white/5" />
         </div>
       ))}
     </div>

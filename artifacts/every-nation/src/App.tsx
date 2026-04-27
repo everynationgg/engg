@@ -8,6 +8,8 @@ import Register from "@/pages/Register";
 import Profile from "@/pages/Profile";
 import Hub from "@/pages/Hub";
 import Verify from "@/pages/Verify";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "@/pages/not-found";
 import { AuthProvider } from "@/hooks/useAuth";
 
@@ -25,6 +27,8 @@ function Router() {
       <Route path="/profile" component={Profile} />
       <Route path="/hub" component={Hub} />
       <Route path="/verify" component={Verify} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route component={NotFound} />
     </Switch>
   );
