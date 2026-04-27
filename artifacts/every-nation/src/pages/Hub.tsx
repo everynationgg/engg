@@ -1,9 +1,12 @@
-import { motion } from "framer-motion";
-import { FaExternalLinkAlt, FaLock, FaTerminal, FaShieldAlt, FaCubes } from "react-icons/fa";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { FaExternalLinkAlt, FaLock, FaTerminal, FaShieldAlt, FaCubes, FaHistory, FaCheckCircle, FaClock } from "react-icons/fa";
 import AlliesSidebar from "@/components/AlliesSidebar";
 import TacticalSlate from "@/components/common/TacticalSlate";
 import { useParallax } from "@/hooks/useParallax";
 import { HUDOverlay } from "@/components/common/HUDOverlay";
+import { SciFiButton } from "@/components/common/SciFiButton";
+import { useAuth } from "@/hooks/useAuth";
 
 interface GameCardProps {
   title: string;
@@ -87,6 +90,45 @@ function GameCard({ title, description, image, href, status, subtitle, index }: 
 
 export default function Hub() {
   const { x, y } = useParallax(20);
+  const { token, refreshUser } = useAuth();
+  const [claiming, setClaiming] = useState(false);
+  const [claimed, setClaimed] = useState(false);
+  const [activities, setActivities] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (token) {
+      fetch(`${import.meta.env.VITE_API_URL}/api/user/profile`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(res => res.json())
+      .then(data => {
+        setActivities(data.activities || []);
+        // Check if daily claimed recently
+        const lastDaily = data.activities?.find((a: any) => a.description.includes("Daily Tactical Briefing"));
+        if (lastDaily) {
+          const hoursSince = (Date.now() - new Date(lastDaily.timestamp).getTime()) / (1000 * 60 * 60);
+          if (hoursSince < 24) setClaimed(true);
+        }
+      });
+    }
+  }, [token]);
+
+  const handleClaim = async () => {
+    if (claimed || claiming || !token) return;
+    setClaiming(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/claim-daily`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setClaimed(true);
+        refreshUser();
+      }
+    } finally {
+      setClaiming(false);
+    }
+  };
 
   const games = [
     {
@@ -126,41 +168,95 @@ export default function Hub() {
         <div className="fixed inset-0 z-1 bg-gradient-to-b from-[#020408]/90 via-[#020408]/60 to-[#020408]/95" />
         
         {/* Main Content Area */}
-        <main className="relative z-20 w-full max-w-[1440px] px-8 md:px-16 pt-40 flex flex-col items-center">
+        <main className="relative z-20 w-full max-w-[1440px] px-8 md:px-16 pt-40 flex flex-col lg:flex-row gap-12 items-start">
+          
+          <div className="flex-1 flex flex-col">
+            {/* Header Overlay */}
+            <header className="w-full flex flex-col gap-3 mb-12">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-[1px] bg-cyan-500/40" />
+                <span className="font-mono text-[9px] uppercase tracking-[0.6em] text-cyan-400/60">Node_Selection</span>
+              </div>
+              <h1 className="font-orbitron font-black text-2xl md:text-3xl tracking-[0.4em] uppercase text-white">
+                Gaming <span className="text-cyan-400">Hub</span>
+              </h1>
+            </header>
 
-          {/* Header Overlay */}
-          <header className="w-full flex flex-col gap-3 mb-16">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-[1px] bg-cyan-500/40" />
-              <span className="font-mono text-[9px] uppercase tracking-[0.6em] text-cyan-400/60">Node_Selection</span>
-            </div>
-            <h1 className="font-orbitron font-black text-2xl md:text-3xl tracking-[0.4em] uppercase text-white">
-              Gaming <span className="text-cyan-400">Hub</span>
-            </h1>
-            <div className="flex items-center gap-6 mt-2 opacity-20">
-              <div className="flex items-center gap-2">
-                <FaTerminal className="text-[9px]" />
-                <span className="font-mono text-[8px] uppercase tracking-widest">Sys: Ready</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FaShieldAlt className="text-[9px]" />
-                <span className="font-mono text-[8px] uppercase tracking-widest">Net: Secure</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FaCubes className="text-[9px]" />
-                <span className="font-mono text-[8px] uppercase tracking-widest">Ops: Active</span>
-              </div>
-            </div>
-          </header>
+            {/* Daily Tactical Briefing */}
+            <TacticalSlate className="mb-12">
+               <div className="p-8 flex flex-col md:flex-row items-center justify-between gap-8">
+                  <div className="flex items-center gap-6">
+                    <div className="w-12 h-12 border border-cyan-500/20 flex items-center justify-center relative">
+                       <div className="absolute inset-0 bg-cyan-400/5 animate-pulse" />
+                       <FaTerminal className="text-cyan-400 text-xl" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                       <h3 className="font-orbitron text-[11px] font-black uppercase tracking-[0.3em] text-white">Daily_Tactical_Briefing</h3>
+                       <span className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/30">Status: {claimed ? "IDENTITY_SYNCED" : "SYNC_REQUIRED"}</span>
+                    </div>
+                  </div>
+                  
+                  <SciFiButton 
+                    variant={claimed ? "ghost" : "primary"}
+                    disabled={claimed || claiming}
+                    onClick={handleClaim}
+                    className="min-w-[200px]"
+                  >
+                    {claiming ? "Syncing..." : claimed ? "Protocol_Complete" : "Synchronize_Identity"}
+                  </SciFiButton>
+               </div>
+            </TacticalSlate>
 
-          {/* Main Mission Deck */}
-          <div className="relative z-10 w-full max-w-[1440px] pb-32">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12 justify-items-center">
-              {games.map((game, i) => (
-                <GameCard key={game.title} {...game} index={i} />
-              ))}
+            {/* Main Mission Deck */}
+            <div className="relative z-10 w-full pb-32">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 justify-items-center">
+                {games.map((game, i) => (
+                  <GameCard key={game.title} {...game} index={i} />
+                ))}
+              </div>
             </div>
           </div>
+
+          {/* Operation History Sidebar */}
+          <aside className="w-full lg:w-[320px] sticky top-40 flex flex-col gap-6">
+             <div className="flex items-center gap-3 mb-2">
+                <FaHistory className="text-cyan-400/40 text-xs" />
+                <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-white/40">Recent_Operations</span>
+             </div>
+             
+             <div className="flex flex-col gap-3">
+                {activities.length === 0 ? (
+                   <div className="p-6 border border-white/5 bg-white/[0.02] flex flex-col items-center gap-4">
+                      <FaClock className="text-white/5 text-xl" />
+                      <span className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/10 text-center">No_Operational_History_Detected</span>
+                   </div>
+                ) : (
+                  activities.map((act, i) => (
+                    <motion.div
+                      key={act.id}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="p-4 border border-white/5 bg-white/[0.02] group hover:bg-white/[0.05] transition-colors"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-mono text-[6px] uppercase tracking-widest text-cyan-400/60">{act.type}</span>
+                        <span className="font-mono text-[6px] text-white/10">{new Date(act.timestamp).toLocaleDateString()}</span>
+                      </div>
+                      <p className="font-mono text-[8px] uppercase tracking-wider text-white/40 group-hover:text-white/80 transition-colors">
+                        {act.description}
+                      </p>
+                      {act.amount && (
+                        <div className="mt-2 flex items-center gap-1">
+                          <span className="font-orbitron text-[8px] font-bold text-cyan-400">+{act.amount}</span>
+                          <span className="font-mono text-[6px] text-cyan-400/40 uppercase">Credits</span>
+                        </div>
+                      )}
+                    </motion.div>
+                  ))
+                )}
+             </div>
+          </aside>
         </main>
       </div>
     </HUDOverlay>

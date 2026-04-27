@@ -6,10 +6,13 @@ import { FaUser, FaSignOutAlt, FaBars, FaTimes, FaHome, FaGamepad, FaStore, FaBo
 import { SciFiButton } from "@/components/common/SciFiButton";
 
 export default function Navbar() {
-  const { isLoggedIn, username, credits, logout } = useAuth();
+  const { isLoggedIn, username, credits, xp, level, logout } = useAuth();
   const [location, navigate] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  // Calculate XP progress (500 XP per level)
+  const xpProgress = (xp % 500) / 500;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -32,7 +35,7 @@ export default function Navbar() {
   return (
     <>
     <nav
-      className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 border-b ${
+      className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 border-b ${
         showSolidBg ? "bg-black/95 backdrop-blur-md border-white/5 py-3" : "bg-transparent border-transparent py-5"
       }`}
     >
@@ -96,9 +99,22 @@ export default function Navbar() {
                 <div className="w-8 h-8 rounded-full border border-white/5 flex items-center justify-center bg-white/[0.02] group-hover/user:border-cyan-500/30 transition-all">
                   <FaUser className="text-white/20 text-xs group-hover/user:text-cyan-400/40" />
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-[9px] text-white/60 uppercase tracking-widest">{username}</span>
-                  <span className="text-[6px] text-cyan-400/40 uppercase font-mono">Uplink_Secure</span>
+                <div className="flex flex-col gap-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] text-white font-bold uppercase tracking-widest">{username}</span>
+                    <div className="px-1.5 py-0.5 bg-cyan-500/10 border border-cyan-500/30 rounded-sm">
+                      <span className="font-orbitron text-[7px] font-black text-cyan-400">LVL_{level}</span>
+                    </div>
+                  </div>
+                  <div className="w-20 h-1 bg-white/5 relative overflow-hidden">
+                    <motion.div 
+                      className="absolute inset-y-0 left-0 bg-cyan-500"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${xpProgress * 100}%` }}
+                      transition={{ duration: 1 }}
+                    />
+                  </div>
+                  <span className="text-[5px] text-cyan-400/40 uppercase font-mono tracking-tighter">Uplink_Syncing... {Math.floor(xpProgress * 100)}%</span>
                 </div>
               </Link>
 
@@ -129,6 +145,20 @@ export default function Navbar() {
           {isOpen ? <FaTimes size={18} /> : <FaBars size={18} />}
         </button>
       </div>
+
+      {/* TACTICAL BREADCRUMBS */}
+      <div className="w-full border-t border-white/5 bg-black/40 backdrop-blur-sm h-6 flex items-center px-6 md:px-12 overflow-hidden">
+        <div className="flex items-center gap-3 opacity-30">
+          <span className="font-mono text-[7px] uppercase tracking-[0.2em] text-cyan-400">Path:</span>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[7px] uppercase tracking-widest text-white">Root</span>
+            <span className="text-[6px] text-white/40">&gt;</span>
+            <span className="font-mono text-[7px] uppercase tracking-widest text-cyan-400">
+              {location === "/" ? "Home" : location.slice(1).replace("-", "_").toUpperCase()}
+            </span>
+          </div>
+        </div>
+      </div>
     </nav>
 
     <AnimatePresence>
@@ -152,18 +182,21 @@ export default function Navbar() {
               <div className="flex flex-col gap-1">
                 <span className="font-mono text-[7px] uppercase tracking-[0.6em] text-white/10 mb-4 px-3">System_Nodes</span>
                 {[
-                  { name: "Home", href: "/", icon: <FaHome /> },
-                  { name: "Gaming Hub", href: "/hub", icon: <FaGamepad /> },
-                  { name: "Credit Shop", href: "/shop", icon: <FaStore /> },
+                  { name: "Home", href: "/", icon: <FaHome />, desc: "Root_Initialize" },
+                  { name: "Gaming Hub", href: "/hub", icon: <FaGamepad />, desc: "Deploy_Unit" },
+                  { name: "Credit Shop", href: "/shop", icon: <FaStore />, desc: "Asset_Market" },
                 ].map((link) => (
                   <Link
                     key={link.name} href={link.href} onClick={() => setIsOpen(false)}
-                    className={`flex items-center gap-4 py-3.5 px-3 transition-all ${
-                      location === link.href ? "bg-cyan-500/5 text-cyan-400 border-l border-cyan-400" : "text-white/30 hover:text-white"
+                    className={`flex items-center gap-4 py-4 px-4 transition-all border-b border-white/[0.02] ${
+                      location === link.href ? "bg-cyan-500/5 text-cyan-400 border-l-2 border-l-cyan-400" : "text-white/30 hover:text-white"
                     }`}
                   >
                     <span className="text-[10px]">{link.icon}</span>
-                    <span className="font-orbitron text-[10px] uppercase tracking-widest">{link.name}</span>
+                    <div className="flex flex-col">
+                      <span className="font-orbitron text-[10px] uppercase tracking-widest leading-none">{link.name}</span>
+                      <span className="font-mono text-[6px] uppercase tracking-[0.2em] opacity-40 mt-1">{link.desc}</span>
+                    </div>
                   </Link>
                 ))}
               </div>
@@ -175,7 +208,13 @@ export default function Navbar() {
                       <div className="w-7 h-7 bg-cyan-500/5 border border-cyan-500/10 flex items-center justify-center">
                         <FaUser className="text-cyan-400/20 text-[10px]" />
                       </div>
+                    <div className="flex flex-col gap-1">
                       <span className="font-orbitron font-bold text-white/80 text-[10px] uppercase truncate">{username}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-[7px] text-cyan-400/40 uppercase">Operator_Rank:</span>
+                        <span className="font-orbitron text-[8px] font-black text-cyan-400">LVL_{level}</span>
+                      </div>
+                    </div>
                     </div>
                     <SciFiButton variant="outline" size="sm" className="w-full" onClick={() => { navigate("/profile"); setIsOpen(false); }}>Profile</SciFiButton>
                   </div>

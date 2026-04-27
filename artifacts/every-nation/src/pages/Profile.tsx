@@ -167,70 +167,104 @@ export default function Profile() {
                                </div>
                             </div>
                             <div className="w-full h-[1px] bg-white/5" />
-                            <div className="flex items-center gap-6">
+                            <div className="w-full flex items-center justify-between gap-6">
                                <div className="flex flex-col">
                                   <span className="font-mono text-[7px] uppercase tracking-[0.3em] text-white/10">Uptime</span>
                                   <span className="font-orbitron text-[10px] text-white/40">
                                      {new Date(createdAt).toLocaleDateString()}
                                   </span>
                                </div>
-                               <div className="flex flex-col">
-                                  <span className="font-mono text-[7px] uppercase tracking-[0.3em] text-white/10">Sector</span>
-                                  <span className="font-orbitron text-[10px] text-white/40">ALPHA_01</span>
+                               <div className="flex flex-col items-end">
+                                  <span className="font-mono text-[7px] uppercase tracking-[0.3em] text-purple-400/20">Authorized_Assets</span>
+                                  <div className="flex items-center gap-1">
+                                     <span className="font-orbitron text-lg font-black text-white">{credits?.toLocaleString()}</span>
+                                     <span className="font-orbitron text-[8px] text-purple-500 font-bold">CC</span>
+                                  </div>
                                </div>
-                            </div>
-                         </div>
-                      </TacticalSlate>
-                   </div>
-
-                   <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <TacticalSlate color="#a855f7" showScanner={false} className="h-full">
-                         <div className="p-10 pt-16 flex flex-col gap-4">
-                            <div className="flex items-center justify-between">
-                               <span className="font-mono text-[8px] uppercase tracking-[0.4em] text-purple-400/40">Assets_CC</span>
-                               <FaWallet className="text-purple-400/20" />
-                            </div>
-                            <div className="flex items-baseline gap-2">
-                               <span className="font-orbitron text-4xl font-black text-white">{credits?.toLocaleString()}</span>
-                               <span className="font-orbitron text-[10px] text-purple-500 font-bold tracking-widest">CC</span>
                             </div>
                             <SciFiButton 
                                onClick={() => window.location.href = "/shop"}
-                               className="mt-2 border border-purple-500/20 text-purple-400 text-[10px]"
+                               className="w-full py-4 border border-purple-500/20 text-purple-400/60 hover:text-purple-400 text-[8px]"
                             >
-                               Initialize_Exchange
+                               Initialize_Exchange_Link
                             </SciFiButton>
                          </div>
                       </TacticalSlate>
-
-                      <TacticalSlate color="#eab308" showScanner={false} className="h-full">
-                         <div className="p-10 pt-16 flex flex-col gap-4">
-                            <div className="flex items-center justify-between">
-                               <span className="font-mono text-[8px] uppercase tracking-[0.4em] text-yellow-500/40">Telemetry</span>
-                               <FaTrophy className="text-yellow-500/20" />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                               <div className="flex flex-col gap-1">
-                                  <span className="font-orbitron text-2xl font-black text-white">{stats?.totalGames || 0}</span>
-                                  <span className="font-mono text-[7px] uppercase tracking-widest text-white/10">Sorties</span>
-                               </div>
-                               <div className="flex flex-col gap-1">
-                                  <span className="font-orbitron text-2xl font-black text-white">{stats?.wins || 0}</span>
-                                  <span className="font-mono text-[7px] uppercase tracking-widest text-white/10">Success</span>
-                               </div>
-                            </div>
-                            <div className="w-full flex gap-[2px] h-1.5 mt-2">
-                               {[...Array(12)].map((_, i) => {
-                                 const ratio = stats?.totalGames > 0 ? stats.wins / stats.totalGames : 0;
-                                 const isActive = i < Math.floor(ratio * 12);
-                                 return (
-                                   <div key={i} className={`flex-1 h-full transition-all duration-500 ${isActive ? "bg-yellow-500/60" : "bg-white/5"}`} />
-                                 );
-                               })}
-                            </div>
-                         </div>
-                      </TacticalSlate>
                    </div>
+
+                    <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-6">
+                       {/* Operator Rank & Progression */}
+                       <TacticalSlate color="#00f3ff" showScanner={true} className="h-full">
+                          <div className="p-10 pt-16 flex flex-col gap-6">
+                             <div className="flex items-center justify-between">
+                                <span className="font-mono text-[8px] uppercase tracking-[0.4em] text-cyan-400/40">Operator_Rank</span>
+                                <div className="px-2 py-0.5 border border-cyan-500/20 bg-cyan-500/5">
+                                   <span className="font-mono text-[7px] text-cyan-400 uppercase tracking-widest">
+                                      {user?.level < 6 ? "INITIATE" : 
+                                       user?.level < 11 ? "OPERATIVE" :
+                                       user?.level < 21 ? "ELITE" :
+                                       user?.level < 51 ? "COMMANDER" : "LEGEND"}
+                                   </span>
+                                </div>
+                             </div>
+                             
+                             <div className="flex items-center gap-6">
+                                <div className="relative">
+                                   <span className="font-orbitron text-5xl font-black text-white">{user?.level}</span>
+                                   <span className="absolute -top-1 -right-4 font-mono text-[8px] text-cyan-400">LVL</span>
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                   <div className="flex items-end gap-2">
+                                      <span className="font-orbitron text-xl font-bold text-white/80">{user?.xp?.toLocaleString()}</span>
+                                      <span className="font-mono text-[8px] text-white/20 uppercase pb-1">/ {user?.xpForNextLevel?.toLocaleString()} XP</span>
+                                   </div>
+                                   <div className="w-full w-[160px] h-2 bg-white/5 relative overflow-hidden">
+                                      <motion.div 
+                                         className="absolute inset-y-0 left-0 bg-cyan-500 shadow-[0_0_10px_#00f3ff]"
+                                         initial={{ width: 0 }}
+                                         animate={{ width: `${(user?.levelProgress || 0) * 100}%` }}
+                                         transition={{ duration: 1.5, ease: "easeOut" }}
+                                      />
+                                   </div>
+                                </div>
+                             </div>
+                             
+                             <div className="flex justify-between items-center mt-2 pt-4 border-t border-white/5">
+                                <span className="font-mono text-[7px] uppercase tracking-widest text-white/10">Sync_Progress</span>
+                                <span className="font-orbitron text-[9px] text-cyan-400/60 font-bold">{Math.floor((user?.levelProgress || 0) * 100)}%</span>
+                             </div>
+                          </div>
+                       </TacticalSlate>
+
+                       {/* Telemetry (Sorties/Wins) */}
+                       <TacticalSlate color="#eab308" showScanner={false} className="h-full">
+                          <div className="p-10 pt-16 flex flex-col gap-4">
+                             <div className="flex items-center justify-between">
+                                <span className="font-mono text-[8px] uppercase tracking-[0.4em] text-yellow-500/40">Sortie_Telemetry</span>
+                                <FaTrophy className="text-yellow-500/20" />
+                             </div>
+                             <div className="grid grid-cols-2 gap-4">
+                                <div className="flex flex-col gap-1">
+                                   <span className="font-orbitron text-2xl font-black text-white">{stats?.totalGames || 0}</span>
+                                   <span className="font-mono text-[7px] uppercase tracking-widest text-white/10">Sorties</span>
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                   <span className="font-orbitron text-2xl font-black text-white">{stats?.wins || 0}</span>
+                                   <span className="font-mono text-[7px] uppercase tracking-widest text-white/10">Success</span>
+                                </div>
+                             </div>
+                             <div className="w-full flex gap-[2px] h-1.5 mt-2">
+                                {[...Array(12)].map((_, i) => {
+                                  const ratio = stats?.totalGames > 0 ? stats.wins / stats.totalGames : 0;
+                                  const isActive = i < Math.floor(ratio * 12);
+                                  return (
+                                    <div key={i} className={`flex-1 h-full transition-all duration-500 ${isActive ? "bg-yellow-500/60" : "bg-white/5"}`} />
+                                  );
+                                })}
+                             </div>
+                          </div>
+                       </TacticalSlate>
+                    </div>
                 </section>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

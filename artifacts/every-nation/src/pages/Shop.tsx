@@ -60,19 +60,27 @@ export default function Shop() {
       .then((data) => {
         if (data.packs && data.packs.length > 0) {
           setPacks(data.packs);
+          // DYNAMIC HERO LOGIC:
+          // If first purchase, highlight Elite Core ($15.99).
+          // If returning, highlight Sovereign Core ($34.99) for better value.
+          const defaultPackId = data.isFirstPurchase ? "pack_1000" : "pack_2500";
+          const defaultPack = data.packs.find((p: Pack) => p.id === defaultPackId) || data.packs[1];
+          setSelectedPack(defaultPack);
         } else {
           setPacks(FALLBACK_PACKS);
+          setSelectedPack(FALLBACK_PACKS[1]);
         }
       })
-      .catch(() => setPacks(FALLBACK_PACKS))
+      .catch(() => {
+        setPacks(FALLBACK_PACKS);
+        setSelectedPack(FALLBACK_PACKS[1]);
+      })
       .finally(() => setLoading(false));
   }, [token, user?.id]);
 
   const handlePackSelect = (pack: Pack) => {
     if (selectedPack?.id === pack.id) return;
     setSelectedPack(pack);
-    setIsSyncing(true);
-    setTimeout(() => setIsSyncing(false), 800);
   };
 
   const handleCreateOrder = async () => {
@@ -191,154 +199,225 @@ export default function Shop() {
             )}
           </AnimatePresence>
 
-          {/* Packs Grid */}
+          {/* Packs Deck */}
           {loading ? (
             <div className="flex flex-col items-center gap-4 mt-20">
               <div className="w-6 h-6 border-2 border-cyan-500/10 border-t-cyan-400 rounded-full animate-spin" />
               <span className="font-mono text-[8px] uppercase tracking-[0.4em] text-white/20 animate-pulse">Syncing_Nodes...</span>
             </div>
           ) : !isLoggedIn ? (
-            <div className="flex items-center justify-center min-h-[300px] w-full">
-               <TacticalSlate className="w-full max-w-lg">
-                  <div className="p-12 flex flex-col items-center text-center">
-                    <FaLock className="text-3xl text-cyan-500/20 mb-6" />
-                    <h2 className="font-orbitron text-lg tracking-[0.4em] uppercase mb-4 text-white">Identity_Required</h2>
-                    <p className="font-mono text-[9px] uppercase tracking-[0.3em] text-white/20 mb-10 leading-relaxed">
+            <div className="flex items-center justify-center min-h-[400px] w-full">
+               <TacticalSlate className="w-full max-w-md">
+                  <div className="p-10 flex flex-col items-center text-center">
+                    <FaLock className="text-2xl text-cyan-500/10 mb-6" />
+                    <h2 className="font-orbitron text-[12px] font-black tracking-[0.4em] uppercase mb-3 text-white">Identity_Required</h2>
+                    <p className="font-mono text-[8px] uppercase tracking-[0.3em] text-white/20 mb-8 leading-relaxed max-w-[240px]">
                       Secure connection required for asset acquisition.
                     </p>
-                    <SciFiButton onClick={() => setLocation("/login")} variant="ghost" className="border border-cyan-500/20 px-8">
+                    <SciFiButton onClick={() => setLocation("/login")} variant="outline" size="sm" className="px-10">
                        Authorize_Now
                     </SciFiButton>
                   </div>
                </TacticalSlate>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
-              {packs.map((pack, idx) => (
-                <motion.div
-                  key={pack.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05, duration: 0.5 }}
-                  onClick={() => handlePackSelect(pack)}
-                  className="relative group cursor-pointer"
-                >
-                  <TacticalSlate 
-                    color={selectedPack?.id === pack.id ? (RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color : "#ffffff05"}
-                    className={`h-full transition-all duration-300 ${selectedPack?.id === pack.id ? "scale-[1.02]" : "hover:translate-y-[-4px]"}`}
-                  >
-                    <div className="p-6 flex flex-col items-center h-full relative z-10">
-                      <div className="w-full flex justify-between items-start mb-4">
-                        <div className="flex flex-col">
-                          <span className="font-mono text-[7px] text-white/10 uppercase tracking-[0.4em]">Class_ID</span>
-                          <span className="font-orbitron text-[10px] uppercase font-black tracking-widest" style={{ color: (RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color }}>
-                            {(RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).label}
-                          </span>
+            <div className="flex flex-col lg:flex-row gap-8 w-full items-start">
+              {/* LEFT: Selection Deck (35%) */}
+              <div className="w-full lg:w-[35%] flex flex-col gap-3">
+                <div className="flex items-center gap-3 mb-2 px-2">
+                   <span className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20">Select_Node</span>
+                   <div className="flex-1 h-[1px] bg-white/5" />
+                </div>
+                {packs.map((pack) => {
+                  const isSelected = selectedPack?.id === pack.id;
+                  const config = RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common;
+                  return (
+                    <motion.div
+                      key={pack.id}
+                      onClick={() => handlePackSelect(pack)}
+                      className={`relative cursor-pointer transition-all duration-200 border border-white/5 ${
+                        isSelected ? "bg-cyan-500/10 border-cyan-500/40" : "bg-white/[0.02] hover:bg-white/[0.05]"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between p-4">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-1 h-10 ${isSelected ? "bg-cyan-400" : "bg-white/5"}`} />
+                          <div className="flex flex-col">
+                            <span className="font-orbitron text-[10px] font-black uppercase tracking-widest text-white">
+                              {pack.name}
+                            </span>
+                            <div className="flex items-center gap-2">
+                               <span className="font-mono text-[8px] font-bold text-cyan-400">
+                                 {pack.hasBonus ? pack.amount * 2 : pack.amount} CC
+                               </span>
+                               <span className="font-mono text-[6px] uppercase tracking-widest opacity-20">| {config.label}</span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="w-6 h-6 border border-white/5 flex items-center justify-center">
-                          {pack.rarity === "legendary" ? <FaCrown className="text-red-500 text-xs" /> :
-                            pack.rarity === "epic" ? <FaBolt className="text-yellow-400 text-xs" /> :
-                            pack.rarity === "rare" ? <FaGem className="text-purple-400 text-xs" /> :
-                            <FaDatabase className="text-cyan-400/20 text-xs" />}
-                        </div>
-                      </div>
-
-                      <div className="relative w-28 h-28 mb-6 flex items-center justify-center">
-                         <div className="absolute inset-0 blur-[20px] opacity-10 transition-all duration-500"
-                              style={{ backgroundColor: (RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color, opacity: selectedPack?.id === pack.id ? 0.3 : 0.05 }} />
-                         
-                         <PackVisual3D 
-                            rarity={pack.rarity} 
-                            color={(RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common).color}
-                            isSelected={selectedPack?.id === pack.id}
-                         />
-                      </div>
-
-                      <div className="text-center mb-6 flex-1">
-                        <h3 className="font-orbitron text-[11px] tracking-[0.3em] uppercase text-white/40 mb-1">{pack.name}</h3>
-                        <div className="flex items-baseline justify-center gap-1">
-                          <span className="font-orbitron text-2xl font-black text-white">
-                            {pack.hasBonus ? (pack.amount * 2).toLocaleString() : pack.amount.toLocaleString()}
-                          </span>
-                          <span className="font-orbitron text-[9px] text-cyan-500 font-bold">CC</span>
+                        <div className="text-right">
+                          <span className="font-orbitron text-[11px] font-black text-white/80">${pack.price}</span>
                         </div>
                       </div>
+                      {pack.hasBonus && !isSelected && (
+                         <div className="absolute top-0 right-0 px-2 py-0.5 bg-cyan-500/20">
+                            <span className="font-orbitron text-[6px] font-bold text-cyan-400">2X_BONUS</span>
+                         </div>
+                      )}
+                    </motion.div>
+                  );
+                })}
+              </div>
 
-                      <div className="w-full mt-auto">
-                        <button 
-                          className={`w-full py-2.5 font-orbitron text-[10px] font-black uppercase tracking-[0.2em] transition-all border ${
-                            selectedPack?.id === pack.id 
-                              ? "bg-cyan-400 text-[#010204] border-cyan-400" 
-                              : "bg-white/[0.02] text-white/40 border-white/10 group-hover:border-white/20"
-                          }`}
-                          onClick={(e) => { e.stopPropagation(); if (selectedPack?.id === pack.id) setCheckoutMode(true); else setSelectedPack(pack); }}
-                        >
-                          {selectedPack?.id === pack.id ? `Deploy_${pack.price}` : `$${pack.price}`}
-                        </button>
-                      </div>
-                    </div>
-                  </TacticalSlate>
-                </motion.div>
-              ))}
+              {/* RIGHT: Tactical Detail Panel (65%) */}
+              <div className="w-full lg:w-[65%] sticky top-32">
+                <AnimatePresence mode="wait">
+                  {selectedPack && (
+                    <motion.div
+                      key={checkoutMode ? 'checkout' : selectedPack.id}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <TacticalSlate color={RARITY_CONFIG[selectedPack.rarity]?.color || "#00f3ff"} className="min-h-[520px]">
+                        {checkoutMode ? (
+                          /* CHECKOUT MODE */
+                          <div className="p-8 md:p-12 flex flex-col h-full">
+                            <div className="flex flex-col gap-1 mb-10">
+                               <div className="flex items-center gap-2">
+                                  <div className="w-1.5 h-1.5 bg-cyan-400 animate-pulse" />
+                                  <h3 className="font-orbitron text-[12px] uppercase font-black text-white tracking-[0.4em]">Secure_Checkout_Terminal</h3>
+                               </div>
+                               <span className="font-mono text-[7px] text-cyan-400/40 tracking-[0.4em] uppercase">Protocol: ASSET_TRANSFER_FINALIZATION</span>
+                            </div>
+                            
+                            <div className="flex flex-col gap-6 mb-12 pb-8 border-b border-white/5">
+                               <div className="flex justify-between items-center">
+                                 <span className="font-mono text-[8px] uppercase tracking-widest text-white/20">Charge_Amount</span>
+                                 <span className="font-orbitron text-lg font-black text-white">${selectedPack.price}</span>
+                               </div>
+                               <div className="flex justify-between items-center">
+                                 <span className="font-mono text-[8px] uppercase tracking-widest text-white/20">Yield_Expectation</span>
+                                 <div className="flex flex-col items-end">
+                                   <span className="font-orbitron text-lg font-bold text-cyan-400">
+                                     +{selectedPack.hasBonus ? selectedPack.amount * 2 : selectedPack.amount} CC
+                                   </span>
+                                   {selectedPack.hasBonus && <span className="font-mono text-[6px] text-cyan-400/40 uppercase tracking-widest mt-0.5">X2_Sync_Applied</span>}
+                                 </div>
+                               </div>
+                            </div>
+
+                            <div className="max-w-sm mx-auto w-full">
+                              {isSyncing ? (
+                                <div className="flex flex-col items-center gap-3 py-10">
+                                  <div className="w-4 h-4 border border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
+                                  <span className="font-mono text-[7px] uppercase tracking-[0.4em] text-cyan-400/40 animate-pulse">Neural_Sync...</span>
+                                </div>
+                              ) : (
+                                <PayPalScriptProvider options={{ "clientId": import.meta.env.VITE_PAYPAL_CLIENT_ID || "sb" }}>
+                                   <PayPalButtons
+                                     style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay", height: 40 }}
+                                     createOrder={handleCreateOrder}
+                                     onApprove={handleApprove}
+                                   />
+                                </PayPalScriptProvider>
+                              )}
+                            </div>
+
+                            <button 
+                              onClick={() => setCheckoutMode(false)}
+                              className="mt-auto pt-8 flex justify-center"
+                            >
+                               <span className="font-mono text-[7px] uppercase tracking-[0.6em] text-white/10 hover:text-white/40 transition-colors">Abort_Transfer</span>
+                            </button>
+                          </div>
+                        ) : (
+                          /* DETAIL MODE */
+                          <div className="p-8 md:p-12 flex flex-col md:flex-row gap-10">
+                            {/* Visual Column */}
+                            <div className="flex-1 flex flex-col items-center justify-center relative">
+                              <div className="absolute inset-0 blur-[60px] opacity-[0.03] pointer-events-none" 
+                                   style={{ backgroundColor: RARITY_CONFIG[selectedPack.rarity]?.color || "#00f3ff" }} />
+                              <div className="w-40 h-40 opacity-80">
+                                <PackVisual3D 
+                                  rarity={selectedPack.rarity} 
+                                  color={RARITY_CONFIG[selectedPack.rarity]?.color || "#00f3ff"}
+                                  isSelected={true}
+                                />
+                              </div>
+                              <div className="mt-8 flex flex-col items-center gap-2">
+                                 <div className="px-3 py-1 bg-white/5 border border-white/10">
+                                    <span className="font-orbitron text-[8px] uppercase tracking-[0.3em] text-white/40">
+                                       Rarity: {selectedPack.rarity.toUpperCase()}
+                                    </span>
+                                 </div>
+                              </div>
+                            </div>
+
+                            {/* Data Column */}
+                            <div className="flex-1 flex flex-col">
+                              <div className="flex flex-col gap-1 mb-8">
+                                 <div className="flex items-center gap-3">
+                                   <span className="font-mono text-[7px] uppercase tracking-[0.4em] text-cyan-400/40">Path: ROOT &gt; SHOP &gt; DETAIL</span>
+                                   {/* HERO Recommendation Hint */}
+                                   {(selectedPack.id === "pack_1000" || selectedPack.id === "pack_2500") && (
+                                     <span className="font-mono text-[6px] px-2 py-0.5 bg-cyan-500/10 text-cyan-400 uppercase tracking-widest border border-cyan-500/20">
+                                        {selectedPack.id === "pack_1000" ? "Optimize: NEW_IDENTITY" : "Optimize: MAX_VALUE"}
+                                     </span>
+                                   )}
+                                 </div>
+                                 <h2 className="font-orbitron text-2xl font-black uppercase text-white tracking-widest">{selectedPack.name}</h2>
+                              </div>
+
+                              <div className="flex flex-col gap-4 mb-10 pb-6 border-b border-white/5">
+                                 <div className="flex justify-between items-center">
+                                   <span className="font-mono text-[8px] uppercase tracking-widest text-white/20">Base_Yield</span>
+                                   <span className="font-orbitron text-sm font-bold text-white">{selectedPack.amount.toLocaleString()} CC</span>
+                                 </div>
+                                 
+                                 {selectedPack.hasBonus && (
+                                   <div className="flex justify-between items-center text-cyan-400">
+                                     <span className="font-mono text-[8px] uppercase tracking-widest opacity-60">Bonus_Protocol</span>
+                                     <span className="font-orbitron text-sm font-bold">+{selectedPack.amount.toLocaleString()} CC</span>
+                                   </div>
+                                 )}
+
+                                 <div className="flex justify-between items-center pt-4 border-t border-white/5">
+                                   <span className="font-mono text-[8px] uppercase tracking-widest text-white/20">Total_Transferred</span>
+                                   <div className="flex items-baseline gap-1">
+                                     <span className="font-orbitron text-2xl font-black text-white">
+                                       {selectedPack.hasBonus ? (selectedPack.amount * 2).toLocaleString() : selectedPack.amount.toLocaleString()}
+                                     </span>
+                                     <span className="font-orbitron text-[9px] text-cyan-500 font-bold">CC</span>
+                                   </div>
+                                 </div>
+                              </div>
+
+                              <div className="mt-auto">
+                                 <SciFiButton 
+                                   variant="primary" 
+                                   className="w-full py-6"
+                                   onClick={() => setCheckoutMode(true)}
+                                 >
+                                    <span className="text-[12px]">Deploy ${selectedPack.price}</span>
+                                 </SciFiButton>
+                                 <div className="flex justify-center mt-4">
+                                    <span className="font-mono text-[6px] uppercase tracking-[0.4em] text-white/10">Authorized_Transaction_Ready</span>
+                                 </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </TacticalSlate>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           )}
         </main>
 
-        {/* Checkout Modal */}
-        <AnimatePresence>
-          {checkoutMode && selectedPack && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[100] flex items-center justify-center bg-[#020408]/95 p-4"
-              onClick={() => setCheckoutMode(false)}
-            >
-              <motion.div
-                 initial={{ scale: 0.95, y: 10 }}
-                 animate={{ scale: 1, y: 0 }}
-                 exit={{ scale: 0.95, y: 10 }}
-                 onClick={(e) => e.stopPropagation()}
-                 className="w-full max-w-sm"
-              >
-                <TacticalSlate className="p-8">
-                  <div className="flex flex-col gap-1 mb-8">
-                    <h3 className="font-orbitron text-lg uppercase font-black text-white tracking-widest">Secure_Uplink</h3>
-                    <p className="font-mono text-[8px] text-white/20 tracking-[0.4em] uppercase">Pack: {selectedPack.name}</p>
-                  </div>
-                  
-                  <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
-                     <div className="flex flex-col">
-                       <span className="font-mono text-[7px] uppercase tracking-widest text-white/20">Charge</span>
-                       <span className="font-orbitron text-xl font-black">${selectedPack.price}</span>
-                     </div>
-                     <div className="flex flex-col text-right">
-                       <span className="font-mono text-[7px] uppercase tracking-widest text-white/20">Yield</span>
-                       <span className="font-orbitron text-lg font-bold text-cyan-400">
-                         +{selectedPack.hasBonus ? selectedPack.amount * 2 : selectedPack.amount} CC
-                       </span>
-                     </div>
-                  </div>
-                  
-                  {isSyncing ? (
-                    <div className="flex flex-col items-center gap-3 py-6">
-                      <div className="w-5 h-5 border border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
-                      <span className="font-mono text-[8px] uppercase tracking-[0.4em] text-cyan-400/40 animate-pulse">Neural_Sync...</span>
-                    </div>
-                  ) : (
-                    <PayPalScriptProvider options={{ "clientId": import.meta.env.VITE_PAYPAL_CLIENT_ID || "sb" }}>
-                       <PayPalButtons
-                         style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay", height: 40 }}
-                         createOrder={handleCreateOrder}
-                         onApprove={handleApprove}
-                       />
-                    </PayPalScriptProvider>
-                  )}
-                </TacticalSlate>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Injection Animation */}
 
         {/* Injection Animation */}
         <AnimatePresence>

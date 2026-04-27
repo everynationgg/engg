@@ -9,6 +9,8 @@ export const usersTable = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   isVerified: boolean("is_verified").default(false),
   credits: integer("credits").default(0).notNull(),
+  xp: integer("xp").default(0).notNull(),
+  level: integer("level").default(1).notNull(),
   isAdmin: boolean("is_admin").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
