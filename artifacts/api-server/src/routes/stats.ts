@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { Router, type IRouter } from "express";
 import { z } from "zod";
-import { db, playerStatsTable, gameResultsTable, usersTable } from "@workspace/db";
+import { db, playerStatsTable, gameResultsTable, usersTable, creditTransactionsTable, operationHistoryTable, missionsTable, userMissionsTable } from "@workspace/db";
+import { ensureUserMissions } from "../lib/missions.js";
 import { eq, desc, sql } from "drizzle-orm";
 import {
   RecordGameResultBody,
@@ -43,9 +44,11 @@ router.post("/stats/record-game", authMiddleware, async (req: AuthRequest, res) 
     const winIncrement = isWin ? 1 : 0;
     const lossIncrement = isWin ? 0 : 1;
 
+    // XP and Credit Reward Calculation
+    const xpReward = isWin ? 100 : 40;
+    const creditReward = isWin ? 50 : 10;
+
     // Single atomic upsert: insert the stats row, or increment in-place on conflict.
-    // Because playerStatsTable.userId has a UNIQUE constraint, there is no
-    // window where two concurrent requests can both INSERT a new row.
     const gameResult = await db.transaction(async (tx) => {
       // 0. Check for existing record to prevent double-counting
       const existing = await tx
@@ -70,6 +73,7 @@ router.post("/stats/record-game", authMiddleware, async (req: AuthRequest, res) 
         })
         .returning();
 
+      // Update Player Stats
       await tx
         .insert(playerStatsTable)
         .values({
@@ -89,6 +93,118 @@ router.post("/stats/record-game", authMiddleware, async (req: AuthRequest, res) 
           },
         });
 
+      // Update User XP, Credits and Level
+      const [user] = await tx
+        .select()
+        .from(usersTable)
+        .where(eq(usersTable.id, req.userId!))
+        .limit(1);
+
+      if (user) {
+        const newXp = user.xp + xpReward;
+        const newLevel = Math.floor(newXp / 500) + 1;
+        
+        await tx.update(usersTable)
+          .set({ 
+            xp: newXp, 
+            credits: sql`${usersTable.credits} + ${creditReward}`,
+            level: newLevel 
+          })
+          .where(eq(usersTable.id, req.userId!));
+
+        // Record Credit Transaction for History
+        await tx.insert(creditTransactionsTable)
+          .values({
+            id: randomUUID(),
+            userId: req.userId!,
+            username: user.username,
+            amount: creditReward,
+            type: "REWARD",
+            description: `Combat_Service_Reward: ${body.role.toUpperCase()}_Deployment (${body.won.toUpperCase()})`,
+            createdAt: new Date()
+          });
+
+        // Record Operation History (Unified Log)
+        await tx.insert(operationHistoryTable)
+          .values({
+            id: randomUUID(),
+            userId: req.userId!,
+            gameId: body.gameId,
+            type: "MATCH_REWARD",
+            xpGained: xpReward,
+            creditsGained: creditReward,
+            description: `Operation_${body.gameId.substring(0, 8)}: ${body.role.toUpperCase()}_DEPLOYMENT`,
+            metadata: { role: body.role, won: body.won, alignment: body.alignment },
+            createdAt: new Date()
+          });
+
+        // 5. Update Mission Progress
+        const activeMissions = await tx
+          .select({
+            userId: userMissionsTable.userId,
+            missionId: userMissionsTable.missionId,
+            progress: userMissionsTable.progress,
+            isCompleted: userMissionsTable.isCompleted,
+            slug: missionsTable.slug,
+            reqType: missionsTable.requirementType,
+            reqValue: missionsTable.requirementValue,
+            xpReward: missionsTable.xpReward,
+            creditReward: missionsTable.creditReward,
+          })
+          .from(userMissionsTable)
+          .innerJoin(missionsTable, eq(userMissionsTable.missionId, missionsTable.id))
+          .where(sql`${userMissionsTable.userId} = ${req.userId!} AND ${userMissionsTable.isCompleted} = false`);
+
+        for (const mission of activeMissions) {
+          let progressIncrement = 0;
+          if (mission.reqType === "GAMES_PLAYED") progressIncrement = 1;
+          if (mission.reqType === "GAMES_WON" && isWin) progressIncrement = 1;
+
+          if (progressIncrement > 0) {
+            const newProgress = mission.progress + progressIncrement;
+            const isNowCompleted = newProgress >= mission.reqValue;
+
+            await tx.update(userMissionsTable)
+              .set({ 
+                progress: newProgress, 
+                isCompleted: isNowCompleted,
+                completedAt: isNowCompleted ? new Date() : null,
+                updatedAt: new Date()
+              })
+              .where(sql`${userMissionsTable.userId} = ${req.userId!} AND ${userMissionsTable.missionId} = ${mission.missionId}`);
+
+            if (isNowCompleted) {
+              // Grant Mission Rewards
+              await tx.update(usersTable)
+                .set({ 
+                  xp: sql`${usersTable.xp} + ${mission.xpReward}`,
+                  credits: sql`${usersTable.credits} + ${mission.creditReward}`
+                })
+                .where(eq(usersTable.id, req.userId!));
+
+              // Log Mission Completion
+              await tx.insert(operationHistoryTable).values({
+                id: randomUUID(),
+                userId: req.userId!,
+                type: "MISSION_COMPLETED",
+                xpGained: mission.xpReward,
+                creditsGained: mission.creditReward,
+                description: `Mission_Success: ${mission.slug.toUpperCase()}`,
+                metadata: { missionId: mission.missionId, slug: mission.slug },
+                createdAt: new Date()
+              });
+            }
+          }
+        }
+
+        // 6. Replenish missions if all completed (Runtime Trigger)
+        try {
+          await ensureUserMissions(req.userId!);
+        } catch (err) {
+          logger.error({ err, userId: req.userId }, "Failed to replenish missions during gameplay");
+        }
+      }
+
       return inserted;
     });
 
@@ -104,6 +220,7 @@ router.post("/stats/record-game", authMiddleware, async (req: AuthRequest, res) 
       role: gameResult.role,
       won: gameResult.won,
       completedAt: gameResult.completedAt,
+      rewards: { xp: xpReward, credits: creditReward }
     });
   } catch (error) {
     logger.error({ err: error }, "Record game error");

@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaUser, FaSignOutAlt, FaBars, FaTimes, FaHome, FaGamepad, FaStore, FaBook } from "react-icons/fa";
+import { FaUser, FaSignOutAlt, FaBars, FaTimes, FaHome, FaGamepad, FaStore, FaBook, FaCog, FaVolumeUp, FaTerminal, FaUserFriends, FaHeadset } from "react-icons/fa";
 import { SciFiButton } from "@/components/common/SciFiButton";
 
 export default function Navbar() {
   const { isLoggedIn, username, credits, xp, level, logout } = useAuth();
   const [location, navigate] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   // Calculate XP progress (500 XP per level)
@@ -118,10 +119,76 @@ export default function Navbar() {
                 </div>
               </Link>
 
-              {/* LOGOUT */}
-              <button onClick={logout} className="text-white/10 hover:text-red-500/60 transition-colors p-1">
-                <FaSignOutAlt size={12} />
+              {/* ALLIES LINK */}
+              <button 
+                onClick={() => {
+                  // Find the AlliesSidebar button and click it, or we could use a custom event
+                  const alliesBtn = document.querySelector('[data-allies-trigger]') as HTMLButtonElement;
+                  if (alliesBtn) alliesBtn.click();
+                }}
+                className="p-2 bg-white/5 border border-white/5 text-white/40 hover:text-cyan-400 hover:border-cyan-500/30 transition-all group"
+                title="Allies_Network"
+              >
+                <FaUserFriends size={12} />
               </button>
+
+              {/* SYSTEM CONTROLS CLUSTER */}
+              <div className="relative">
+                <button 
+                  onClick={() => setShowSettings(!showSettings)}
+                  className={`p-2 border transition-all ${
+                    showSettings 
+                      ? "bg-cyan-500/20 border-cyan-500 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.3)]" 
+                      : "bg-white/5 border-white/5 text-white/40 hover:text-white hover:border-white/10"
+                  }`}
+                >
+                  <FaCog size={12} className={showSettings ? "animate-[spin_4s_linear_infinite]" : ""} />
+                </button>
+
+                <AnimatePresence>
+                  {showSettings && (
+                    <>
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[-1]"
+                        onClick={() => setShowSettings(false)}
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute top-full right-0 mt-4 w-48 bg-[#020408] border border-white/10 p-4 shadow-2xl backdrop-blur-xl"
+                      >
+                        <div className="flex flex-col gap-1">
+                          <span className="font-mono text-[6px] uppercase tracking-[0.4em] text-white/20 mb-2">System_Directives</span>
+                          
+                          <button className="flex items-center gap-3 w-full p-2 text-left hover:bg-white/5 group transition-colors">
+                            <FaVolumeUp size={10} className="text-white/20 group-hover:text-cyan-400" />
+                            <span className="font-orbitron text-[8px] uppercase tracking-widest text-white/60 group-hover:text-white">Audio_Engine</span>
+                          </button>
+                          
+                          <button className="flex items-center gap-3 w-full p-2 text-left hover:bg-white/5 group transition-colors">
+                            <FaTerminal size={10} className="text-white/20 group-hover:text-cyan-400" />
+                            <span className="font-orbitron text-[8px] uppercase tracking-widest text-white/60 group-hover:text-white">Preferences</span>
+                          </button>
+
+                          <div className="h-[1px] bg-white/5 my-2" />
+
+                          <button 
+                            onClick={logout}
+                            className="flex items-center gap-3 w-full p-2 text-left hover:bg-red-500/10 group transition-colors"
+                          >
+                            <FaSignOutAlt size={10} className="text-white/20 group-hover:text-red-500" />
+                            <span className="font-orbitron text-[8px] uppercase tracking-widest text-white/60 group-hover:text-red-500">Terminate_Session</span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           ) : (
             <div className="flex items-center gap-4">
@@ -199,6 +266,34 @@ export default function Navbar() {
                     </div>
                   </Link>
                 ))}
+                
+                <div className="h-[1px] bg-white/5 my-4 mx-3" />
+                
+                <button
+                  onClick={() => { setShowSettings(true); setIsOpen(false); }}
+                  className="flex items-center gap-4 py-4 px-4 text-white/30 hover:text-white transition-all border-b border-white/[0.02]"
+                >
+                  <FaCog className="text-[10px]" />
+                  <div className="flex flex-col">
+                    <span className="font-orbitron text-[10px] uppercase tracking-widest leading-none">System_Settings</span>
+                    <span className="font-mono text-[6px] uppercase tracking-[0.2em] opacity-40 mt-1">Configure_Interface</span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    const alliesBtn = document.querySelector('[data-allies-trigger]') as HTMLButtonElement;
+                    if (alliesBtn) alliesBtn.click();
+                  }}
+                  className="flex items-center gap-4 py-4 px-4 text-white/30 hover:text-white transition-all border-b border-white/[0.02]"
+                >
+                  <FaUserFriends className="text-[10px]" />
+                  <div className="flex flex-col">
+                    <span className="font-orbitron text-[10px] uppercase tracking-widest leading-none">Allies_Net</span>
+                    <span className="font-mono text-[6px] uppercase tracking-[0.2em] opacity-40 mt-1">Secure_Comms</span>
+                  </div>
+                </button>
               </div>
 
               <div className="mt-auto">

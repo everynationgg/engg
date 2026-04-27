@@ -10,6 +10,7 @@ import HamburgerMenu from "@/components/system/HamburgerMenu";
 import SettingsModal from "@/components/system/SettingsModal";
 import StatsDisplay from "@/components/profile/StatsDisplay";
 import ProfileModal from "@/components/profile/ProfileModal";
+import { motion, AnimatePresence } from "framer-motion";
 import { TeamIcon } from "@/components/common/TeamIcon";
 
 interface VoteResult {
@@ -83,10 +84,101 @@ function PlayAgainButton({ roomCode, bannerColor, bannerGlow }: { roomCode: stri
   );
 }
 
+function RewardSummary({ rewards, onClose }: { rewards: { xp: number; credits: number }, onClose: () => void }) {
+  const [count, setCount] = useState(0);
+  const { xp, level } = useAuth();
+  
+  useEffect(() => {
+    let start = 0;
+    const end = rewards.credits;
+    if (start === end) return;
+    let timer = setInterval(() => {
+      start += 1;
+      setCount(start);
+      if (start >= end) clearInterval(timer);
+    }, 30);
+    return () => clearInterval(timer);
+  }, [rewards.credits]);
+
+  const progress = (xp % 500) / 500;
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-6"
+    >
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="w-full max-w-[400px] bg-[#020408] border border-cyan-500/30 p-8 flex flex-col items-center gap-8 relative overflow-hidden"
+      >
+        <div className="absolute top-0 left-0 w-full h-1 bg-cyan-500/20" />
+        <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-cyan-500/40" />
+        <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-cyan-500/40" />
+        
+        <div className="flex flex-col items-center gap-2">
+          <span className="font-mono text-[8px] uppercase tracking-[0.6em] text-cyan-400/40">Mission_Debrief</span>
+          <h2 className="font-orbitron font-black text-2xl tracking-[0.3em] uppercase text-white text-center leading-tight">Operation_Results</h2>
+        </div>
+
+        <div className="w-full flex flex-col gap-6">
+          {/* XP PROGRESS */}
+          <div className="flex flex-col gap-2">
+            <div className="flex justify-between items-end">
+              <span className="font-mono text-[8px] uppercase text-white/30">Neural_XP</span>
+              <span className="font-orbitron text-[10px] text-cyan-400 font-bold">LVL_{level}</span>
+            </div>
+            <div className="w-full h-2 bg-white/5 relative">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${progress * 100}%` }}
+                className="absolute inset-y-0 left-0 bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]"
+                transition={{ duration: 1, delay: 0.5 }}
+              />
+            </div>
+            <div className="flex justify-between">
+               <span className="font-mono text-[7px] text-cyan-400/60">+{rewards.xp} XP</span>
+               <span className="font-mono text-[7px] text-white/20 uppercase tracking-tighter">Syncing...</span>
+            </div>
+          </div>
+
+          {/* CREDITS DEPOSIT */}
+          <div className="p-4 bg-white/[0.02] border border-white/5 flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="font-mono text-[7px] uppercase tracking-widest text-white/20">Assets_Recovered</span>
+              <span className="font-orbitron text-xl font-black text-white">+{count} <span className="text-[10px] text-cyan-400">CC</span></span>
+            </div>
+            <div className="w-10 h-10 border border-cyan-500/20 flex items-center justify-center">
+              <div className="w-4 h-4 bg-cyan-500/40 animate-pulse" />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col w-full gap-3 mt-4">
+           <button 
+             onClick={onClose}
+             className="w-full py-4 bg-cyan-500/10 border border-cyan-500/40 hover:bg-cyan-500/20 transition-all font-orbitron text-[10px] uppercase tracking-[0.4em] text-cyan-400 font-bold"
+           >
+             Continue_Sequence
+           </button>
+           <button 
+             onClick={() => window.location.href = "/hub"}
+             className="w-full py-4 border border-white/5 hover:border-white/10 transition-all font-orbitron text-[10px] uppercase tracking-[0.4em] text-white/20 hover:text-white"
+           >
+             Return_to_Nexus
+           </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 export default function ResultPage() {
   const roomCode = getRoomCode();
   const { isLoggedIn, userId, isInitialized } = useAuth();
-  const { recordResult, personalStats, leaderboard, hasRecorded, fetchLeaderboard } = useRecordGameResult();
+  const { recordResult, personalStats, leaderboard, hasRecorded, fetchLeaderboard, lastRewards } = useRecordGameResult();
+  const [showRewards, setShowRewards] = useState(false);
 
   // Host status is derived from the server's session player list — not from
   // sessionStorage — so it is always accurate regardless of page reloads.
@@ -135,7 +227,10 @@ export default function ResultPage() {
 
     recordedResultRef.current = true;
     const won = determinePlayerWon(playerData.role, voteResult.winTeam, playerData.alignment) ? "yes" : "no";
-    recordResult({ gameId, role: playerData.role, won, alignment: playerData.alignment });
+    recordResult({ gameId, role: playerData.role, won, alignment: playerData.alignment })
+      .then(() => {
+        setTimeout(() => setShowRewards(true), 1500);
+      });
     setPendingVoteResult(null);
   }, [gameId, hasRecorded, isInitialized, isLoggedIn, recordResult, userId]);
 
@@ -767,6 +862,10 @@ export default function ResultPage() {
             return last?.type === 'player' ? last.message : undefined;
           })()}
         />
+      )}
+
+      {showRewards && lastRewards && (
+        <RewardSummary rewards={lastRewards} onClose={() => setShowRewards(false)} />
       )}
     </div>
   );

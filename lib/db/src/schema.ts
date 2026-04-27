@@ -12,6 +12,8 @@ export const usersTable = pgTable("users", {
   xp: integer("xp").default(0).notNull(),
   level: integer("level").default(1).notNull(),
   isAdmin: boolean("is_admin").default(false).notNull(),
+  currentStreak: integer("current_streak").default(0).notNull(),
+  lastClaimedAt: timestamp("last_claimed_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -141,6 +143,42 @@ export const systemAuditLogsTable = pgTable("system_audit_logs", {
   description: text("description"),
   metadata: jsonb("metadata"),
   ipAddress: text("ip_address"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const missionsTable = pgTable("missions", {
+  id: text("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  xpReward: integer("xp_reward").default(0).notNull(),
+  creditReward: integer("credit_reward").default(0).notNull(),
+  tier: text("tier").default("DAILY").notNull(), // 'DAILY', 'WEEKLY', 'SPECIAL'
+  requirementType: text("requirement_type").notNull(), // 'GAMES_PLAYED', 'GAMES_WON', 'ROLE_SPECIFIC'
+  requirementValue: integer("requirement_value").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const userMissionsTable = pgTable("user_missions", {
+  userId: text("user_id").notNull(),
+  missionId: text("mission_id").notNull(),
+  progress: integer("progress").default(0).notNull(),
+  isCompleted: boolean("is_completed").default(false).notNull(),
+  completedAt: timestamp("completed_at"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  pk: { columns: [table.userId, table.missionId] },
+}));
+
+export const operationHistoryTable = pgTable("operation_history", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  gameId: text("game_id"),
+  type: text("type").notNull(), // 'MATCH_REWARD', 'DAILY_BONUS', 'ACHIEVEMENT'
+  xpGained: integer("xp_gained").default(0).notNull(),
+  creditsGained: integer("credits_gained").default(0).notNull(),
+  description: text("description"),
+  metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

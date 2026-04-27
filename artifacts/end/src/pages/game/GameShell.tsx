@@ -103,6 +103,7 @@ export default function GameShell() {
   const [chatUnread, setChatUnread] = useState(0);
   const [chatTypingActive, setChatTypingActive] = useState(false);
   const [isGlitching, setIsGlitching] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const touchStartX = useRef<number | null>(null);
 
   const toggleChat = useCallback(() => setChatOpen((o) => !o), []);
@@ -128,6 +129,21 @@ export default function GameShell() {
   const displayedPhaseRef = useRef<string>(displayedPhase);
   const transitionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const transitionTickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Global Key Listeners
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (chatOpen) {
+          setChatOpen(false);
+        } else {
+          setIsPaused(prev => !prev);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [chatOpen]);
 
   // Redirect if no room code
   useEffect(() => {
@@ -419,7 +435,10 @@ export default function GameShell() {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      <GlobalHUD isWarping={!!transition} />
+      <GlobalHUD 
+        isWarping={!!transition} 
+        onOpenPause={() => setIsPaused(true)}
+      />
       
       <AnimatePresence>
         {isGlitching && (
@@ -433,6 +452,90 @@ export default function GameShell() {
               backgroundSize: '100% 4px'
             }}
           />
+        )}
+      </AnimatePresence>
+
+      {/* TOP-RIGHT CONTROLS (Pause/Menu) */}
+      <div className="fixed top-3 right-6 z-[101] flex items-center gap-3">
+        <button 
+          onClick={() => setIsPaused(true)}
+          className="w-8 h-8 border border-white/5 bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-cyan-500/10 hover:border-cyan-500/30 transition-all group"
+        >
+          <div className="flex gap-1">
+            <div className="w-[2px] h-3 bg-cyan-400/40 group-hover:bg-cyan-400" />
+            <div className="w-[2px] h-3 bg-cyan-400/40 group-hover:bg-cyan-400" />
+          </div>
+        </button>
+      </div>
+
+      <AnimatePresence>
+        {isPaused && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-md px-6"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="w-full max-w-[320px] bg-[#020408] border border-cyan-500/20 p-8 flex flex-col items-center gap-6 relative shadow-[0_0_50px_rgba(0,0,0,0.5)]"
+            >
+              {/* Tactical Brackets */}
+              <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-cyan-500/40" />
+              <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-cyan-500/40" />
+              
+              <div className="flex flex-col items-center gap-1 mb-4">
+                <span className="font-mono text-[7px] uppercase tracking-[0.6em] text-cyan-400/40">Operation_Suspended</span>
+                <h2 className="font-orbitron font-black text-xl tracking-[0.3em] uppercase text-white">Pause</h2>
+              </div>
+
+              <div className="flex flex-col w-full gap-2">
+                <button 
+                  onClick={() => setIsPaused(false)}
+                  className="w-full py-4 border border-cyan-500/30 bg-cyan-500/5 hover:bg-cyan-500/10 transition-all font-orbitron text-[10px] uppercase tracking-[0.4em] text-cyan-400"
+                >
+                  Resume_Link
+                </button>
+                
+                <button 
+                  onClick={() => {
+                    const isHost = sessionStorage.getItem("lp_isCreating") === "true";
+                    if (isHost) {
+                      getSocket().emit("reset_session", { sessionId: roomCode });
+                      setIsPaused(false);
+                    } else {
+                      window.location.reload();
+                    }
+                  }}
+                  className="w-full py-4 border border-white/5 hover:border-white/20 transition-all font-orbitron text-[10px] uppercase tracking-[0.4em] text-white/40 hover:text-white"
+                >
+                  Restart_Sequence
+                </button>
+
+                <button 
+                  className="w-full py-4 border border-white/5 hover:border-white/20 transition-all font-orbitron text-[10px] uppercase tracking-[0.4em] text-white/40 hover:text-white opacity-50 cursor-not-allowed"
+                >
+                  Settings_Module
+                </button>
+
+                <div className="h-[1px] bg-white/5 my-2 w-full" />
+
+                <button 
+                  onClick={() => window.location.href = "/hub"}
+                  className="w-full py-4 border border-red-500/10 hover:bg-red-500/5 hover:border-red-500/40 transition-all font-orbitron text-[10px] uppercase tracking-[0.4em] text-red-500/40 hover:text-red-500"
+                >
+                  Terminate_Mission
+                </button>
+              </div>
+
+              <div className="flex flex-col items-center opacity-20 mt-4">
+                <span className="font-mono text-[6px] uppercase tracking-widest">Operator: {sessionStorage.getItem("lp_callsign") || "UNKNOWN"}</span>
+                <span className="font-mono text-[6px] uppercase tracking-widest mt-1">Session: {roomCode}</span>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 

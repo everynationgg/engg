@@ -54,6 +54,7 @@ export function useRecordGameResult() {
   const [isRecording, setIsRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasRecorded, setHasRecorded] = useState(false);
+  const [lastRewards, setLastRewards] = useState<{ xp: number; credits: number } | null>(null);
 
   /**
    * Record a game result and fetch updated stats + leaderboard
@@ -79,8 +80,9 @@ export function useRecordGameResult() {
         body: JSON.stringify(gameResultData),
 });
 
-        if (!recordResponse.ok) {
-          throw new Error("Failed to record game result");
+        if (recordResponse.ok) {
+          const data = await recordResponse.json();
+          if (data.rewards) setLastRewards(data.rewards);
         }
 
         // Fetch updated personal stats
@@ -222,6 +224,7 @@ export function useRecordGameResult() {
     isRecording,
     error,
     hasRecorded,
+    lastRewards,
   };
 }
 

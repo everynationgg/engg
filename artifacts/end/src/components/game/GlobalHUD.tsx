@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function GlobalHUD({ isWarping = false }) {
+export default function GlobalHUD({ isWarping = false, onOpenPause }: { isWarping?: boolean, onOpenPause?: () => void }) {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -14,7 +14,7 @@ export default function GlobalHUD({ isWarping = false }) {
     
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        window.location.href = "/hub";
+        onOpenPause?.();
       }
     };
 
@@ -143,7 +143,7 @@ export default function GlobalHUD({ isWarping = false }) {
     {/* EXIT INTERFACE (Active Layer) */}
     <div className="fixed top-6 left-6 z-[9999] pointer-events-auto">
       <motion.button
-        onClick={() => window.location.href = "/hub"}
+        onClick={() => onOpenPause?.()}
         className="group flex flex-col items-start gap-1 p-2"
         initial={{ opacity: 0.3 }}
         whileHover={{ opacity: 1 }}

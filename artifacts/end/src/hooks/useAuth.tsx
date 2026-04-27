@@ -10,6 +10,8 @@ interface AuthContextType {
   isVerified: boolean;
   isAdmin: boolean;
   credits: number;
+  xp: number;
+  level: number;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, username: string, password: string) => Promise<void>;
   logout: () => void;
@@ -30,6 +32,8 @@ const STORAGE_KEY_EMAIL = "lp_email";
 const STORAGE_KEY_IS_VERIFIED = "lp_is_verified";
 const STORAGE_KEY_IS_ADMIN = "lp_is_admin";
 const STORAGE_KEY_CREDITS = "lp_credits";
+const STORAGE_KEY_XP = "lp_xp";
+const STORAGE_KEY_LEVEL = "lp_level";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -40,6 +44,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isVerified, setIsVerified] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [credits, setCredits] = useState(0);
+  const [xp, setXp] = useState(0);
+  const [level, setLevel] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -72,6 +78,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (data.credits !== undefined) {
           setCredits(data.credits);
           localStorage.setItem(STORAGE_KEY_CREDITS, String(data.credits));
+        }
+
+        if (data.xp !== undefined) {
+          setXp(data.xp);
+          localStorage.setItem(STORAGE_KEY_XP, String(data.xp));
+        }
+
+        if (data.level !== undefined) {
+          setLevel(data.level);
+          localStorage.setItem(STORAGE_KEY_LEVEL, String(data.level));
         }
         
         if (data.username) {
@@ -134,6 +150,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const savedIsVerified = localStorage.getItem(STORAGE_KEY_IS_VERIFIED) === "true";
     const savedIsAdmin = localStorage.getItem(STORAGE_KEY_IS_ADMIN) === "true";
     const savedCredits = parseInt(localStorage.getItem(STORAGE_KEY_CREDITS) || "0", 10);
+    const savedXp = parseInt(localStorage.getItem(STORAGE_KEY_XP) || "0", 10);
+    const savedLevel = parseInt(localStorage.getItem(STORAGE_KEY_LEVEL) || "1", 10);
     
     if (savedToken && savedUserId) {
       setToken(savedToken);
@@ -143,6 +161,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsVerified(savedIsVerified);
       setIsAdmin(savedIsAdmin);
       setCredits(savedCredits);
+      setXp(savedXp);
+      setLevel(savedLevel);
       setIsLoggedIn(true);
       
       // Refresh user data from server to sync verification status
@@ -183,6 +203,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(STORAGE_KEY_EMAIL, email);
       localStorage.setItem(STORAGE_KEY_IS_VERIFIED, String(newIsVerified));
       localStorage.setItem(STORAGE_KEY_IS_ADMIN, String(newIsAdmin));
+      localStorage.setItem(STORAGE_KEY_CREDITS, String(data.credits || 0));
+      localStorage.setItem(STORAGE_KEY_XP, String(data.xp || 0));
+      localStorage.setItem(STORAGE_KEY_LEVEL, String(data.level || 1));
 
       // Update state
       setToken(newToken);
@@ -191,6 +214,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setEmail(email);
       setIsVerified(newIsVerified);
       setIsAdmin(newIsAdmin);
+      setCredits(data.credits || 0);
+      setXp(data.xp || 0);
+      setLevel(data.level || 1);
       setIsLoggedIn(true);
       
     } catch (err) {
@@ -234,6 +260,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(STORAGE_KEY_EMAIL, email);
       localStorage.setItem(STORAGE_KEY_IS_VERIFIED, String(newIsVerified));
       localStorage.setItem(STORAGE_KEY_IS_ADMIN, String(newIsAdmin));
+      localStorage.setItem(STORAGE_KEY_CREDITS, String(data.credits || 0));
+      localStorage.setItem(STORAGE_KEY_XP, String(data.xp || 0));
+      localStorage.setItem(STORAGE_KEY_LEVEL, String(data.level || 1));
 
       // Update state
       setToken(newToken);
@@ -242,6 +271,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setEmail(email);
       setIsVerified(newIsVerified);
       setIsAdmin(newIsAdmin);
+      setCredits(data.credits || 0);
+      setXp(data.xp || 0);
+      setLevel(data.level || 1);
       setIsLoggedIn(true);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Registration failed";
@@ -270,6 +302,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(STORAGE_KEY_IS_VERIFIED);
     localStorage.removeItem(STORAGE_KEY_IS_ADMIN);
     localStorage.removeItem(STORAGE_KEY_CREDITS);
+    localStorage.removeItem(STORAGE_KEY_XP);
+    localStorage.removeItem(STORAGE_KEY_LEVEL);
 
     setToken(null);
     setUserId(null);
@@ -278,6 +312,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsVerified(false);
     setIsAdmin(false);
     setCredits(0);
+    setXp(0);
+    setLevel(1);
     setIsLoggedIn(false);
     setError(null);
   }, []);
@@ -321,6 +357,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isVerified,
         isAdmin,
         credits,
+        xp,
+        level,
         login,
         register,
         logout,

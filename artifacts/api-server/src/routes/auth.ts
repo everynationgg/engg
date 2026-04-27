@@ -17,6 +17,7 @@ import xss from "xss";
 import { Filter } from "bad-words";
 import { logger } from "../lib/logger.js";
 import { logAudit } from "../lib/audit.js";
+import { ensureUserMissions } from "../lib/missions.js";
 
 import { rateLimit } from "express-rate-limit";
 
@@ -157,6 +158,13 @@ router.post("/auth/register", authLimit, async (req, res) => {
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
     });
 
+    // Ensure missions are assigned
+    try {
+      await ensureUserMissions(userId);
+    } catch (err) {
+      logger.error({ err, userId }, "Failed to assign starter missions on registration");
+    }
+
     const response: z.infer<typeof LoginUserResponse> = {
       id: user[0].id,
       email: user[0].email,
@@ -235,6 +243,13 @@ router.post("/auth/login", authLimit, async (req, res) => {
       token: refreshToken,
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
     });
+
+    // Ensure missions are assigned/rotated
+    try {
+      await ensureUserMissions(user.id);
+    } catch (err) {
+      logger.error({ err, userId: user.id }, "Failed to ensure missions on login");
+    }
 
     const response: z.infer<typeof LoginUserResponse> = {
       id: user.id,

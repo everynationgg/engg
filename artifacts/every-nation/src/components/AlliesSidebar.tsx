@@ -252,7 +252,8 @@ export default function AlliesSidebar() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-[100] w-12 h-12 bg-[#0a0b1e]/80 border border-cyan-500/20 hover:bg-cyan-500/10 hover:border-cyan-400/50 transition-all flex items-center justify-center group overflow-hidden"
+          data-allies-trigger
+          className="fixed bottom-6 right-6 z-[100] w-12 h-12 bg-[#0a0b1e]/80 border border-cyan-500/20 hover:bg-cyan-500/10 hover:border-cyan-400/50 transition-all flex lg:hidden items-center justify-center group overflow-hidden shadow-[0_0_20px_rgba(6,182,212,0.15)]"
         >
           <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-cyan-500/40" />
           <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-cyan-500/40" />
