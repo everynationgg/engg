@@ -208,6 +208,7 @@
   --font-sans: var(--app-font-sans);
   --font-serif: var(--app-font-serif);
   --font-mono: var(--app-font-mono);
+  --font-orbitron: 'Orbitron', monospace;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -422,9 +423,6 @@
   text-shadow: 0 0 10px hsl(270 80% 55% / 0.8), 0 0 30px hsl(270 80% 55% / 0.5);
 }
 
-.font-orbitron {
-  font-family: 'Orbitron', monospace;
-}
 
 /* Role card glow on selected */
 .role-card-selected-cyan {
