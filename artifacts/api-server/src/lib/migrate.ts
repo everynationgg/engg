@@ -92,6 +92,49 @@ export async function migrateDb(): Promise<void> {
       )
     `);
 
+    // Missions System
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS missions (
+        id                TEXT         PRIMARY KEY,
+        slug              TEXT         NOT NULL UNIQUE,
+        name              TEXT         NOT NULL,
+        description       TEXT         NOT NULL,
+        xp_reward         INTEGER      NOT NULL DEFAULT 0,
+        credit_reward     INTEGER      NOT NULL DEFAULT 0,
+        tier              TEXT         NOT NULL DEFAULT 'DAILY',
+        requirement_type  TEXT         NOT NULL,
+        requirement_value INTEGER      NOT NULL,
+        created_at        TIMESTAMP    NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_missions (
+        user_id         TEXT         NOT NULL,
+        mission_id      TEXT         NOT NULL,
+        progress        INTEGER      NOT NULL DEFAULT 0,
+        is_completed    BOOLEAN      NOT NULL DEFAULT false,
+        completed_at    TIMESTAMP,
+        updated_at      TIMESTAMP    NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (user_id, mission_id)
+      )
+    `);
+
+    // Operation History (Activity Log)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS operation_history (
+        id              TEXT         PRIMARY KEY,
+        user_id         TEXT         NOT NULL,
+        game_id         TEXT,
+        type            TEXT         NOT NULL,
+        xp_gained       INTEGER      NOT NULL DEFAULT 0,
+        credits_gained  INTEGER      NOT NULL DEFAULT 0,
+        description     TEXT,
+        metadata        JSONB,
+        created_at      TIMESTAMP    NOT NULL DEFAULT NOW()
+      )
+    `);
+
     // Backfill columns for achievements if they already exist
     await client.query(`
       DO $$
