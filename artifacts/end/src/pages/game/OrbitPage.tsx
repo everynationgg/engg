@@ -418,50 +418,24 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
         color: "hsl(190 80% 90%)",
       }}
     >
-      {/* Top bar */}
-      <div
-        className="w-full px-6 py-3 flex items-center justify-between border-b shrink-0"
-        style={{
-          background: "hsl(220 28% 7%)",
-          borderColor: accentColor.replace(")", " / 0.25)"),
-          boxShadow: `0 1px 12px ${accentGlow.replace("0.4", "0.1")}`,
-        }}
-      >
-        <div>
-          <div className="font-orbitron font-black text-lg tracking-widest uppercase leading-none" style={{ color: accentLight, textShadow: `0 0 12px ${accentGlow}` }}>
-            ERRANT NIGHT
-          </div>
-          <div className="font-orbitron font-bold text-xs tracking-[0.3em] uppercase" style={{ color: "hsl(270 80% 65%)" }}>
-            DETECTED
-          </div>
-        </div>
-        <div className="text-right">
-          <div className="text-xs tracking-widest uppercase mb-1" style={{ color: "hsl(210 30% 50%)" }}>Orbit Phase</div>
-          <div className="font-orbitron font-bold text-sm tracking-[0.2em]" style={{ color: accentLight }}>
-            ACTION PHASE
-          </div>
-        </div>
-      </div>
-
       {/* Main content */}
-      <div className="flex-1 flex flex-col px-6 py-6 gap-5 overflow-y-auto pb-32 lg:pb-8 max-w-2xl mx-auto w-full">
-
+      <div className="flex-1 flex flex-col px-6 py-10 gap-8 overflow-y-auto pb-32 lg:pb-8 max-w-2xl mx-auto w-full">
         {/* Role header */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-6 p-6 bg-white/[0.02] border border-white/5 rounded-sm">
           <img
             src={role.image}
             alt={role.name}
-            className="w-16 h-16 rounded-md object-cover shrink-0"
+            className="w-24 h-24 rounded-lg object-cover shrink-0 shadow-[0_0_20px_rgba(0,0,0,0.5)]"
             loading="lazy"
-            style={{ border: `1px solid ${accentColor.replace(")", " / 0.4)")}` }}
+            style={{ border: `2px solid ${accentColor.replace(")", " / 0.6)")}` }}
           />
           <div>
-            <div className="text-xs tracking-widest uppercase mb-0.5" style={{ color: "hsl(210 30% 45%)" }}>
-              YOUR ABILITY AS
+            <div className="text-[10px] tracking-[0.4em] uppercase mb-2 opacity-40 font-bold">
+              AUTHORIZED_OPERATIVE_ROLE
             </div>
             <div
-              className="font-orbitron font-black text-2xl tracking-widest uppercase"
-              style={{ color: accentLight, textShadow: `0 0 12px ${accentGlow}` }}
+              className="font-orbitron font-black text-4xl tracking-widest uppercase italic"
+              style={{ color: accentLight, textShadow: `0 0 15px ${accentGlow}` }}
             >
               {role.name}
             </div>
@@ -470,13 +444,13 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
 
         {/* Ability text */}
         <div
-          className="rounded-md p-4"
+          className="rounded-sm p-6"
           style={{ background: accentDim, border: `1px solid ${accentColor.replace(")", " / 0.3)")}` }}
         >
-          <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-2 font-bold" style={{ color: accentLight }}>
-            ABILITY
+          <div className="font-orbitron text-[11px] tracking-[0.3em] uppercase mb-4 font-black" style={{ color: accentLight }}>
+            PRIMARY_Neural_Link_Protocol
           </div>
-          <p className="text-sm leading-relaxed" style={{ color: "hsl(190 60% 78%)", fontFamily: "'Exo 2', sans-serif", whiteSpace: "pre-line" }}>
+          <p className="text-base leading-relaxed" style={{ color: "hsl(190 60% 85%)", fontFamily: "'Exo 2', sans-serif", whiteSpace: "pre-line" }}>
             {role.ability}
           </p>
         </div>

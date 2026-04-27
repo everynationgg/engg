@@ -10,6 +10,7 @@ import shifterImg from "@assets/role-shifter_1776003488682.webp";
 import warperImg from "@assets/role-warper_1776003488682.webp";
 import virusImg from "@assets/role-virus.webp";
 import routerImg from "@assets/role-router.webp";
+import doctorImg from "@assets/role-doctor.webp";
 import spectatorImg from "@assets/role-spectator.webp";
 
 import alienVid from "@assets/role-alien.webm";
@@ -24,6 +25,7 @@ import shifterVid from "@assets/role-shifter.webm";
 import warperVid from "@assets/role-warper.webm";
 import virusVid from "@assets/role-virus.webm";
 import routerVid from "@assets/role-router.webm";
+import doctorVid from "@assets/role-doctor.webm";
 import spectatorVid from "@assets/role-spectator.webm";
 
 
@@ -39,6 +41,7 @@ import shifterEvictionVid from "@assets/role-shifter-eviction.webm";
 import warperEvictionVid from "@assets/role-warper-eviction.webm";
 import virusEvictionVid from "@assets/role-virus-eviction.webm";
 import routerEvictionVid from "@assets/role-router-eviction.webm";
+import doctorEvictionVid from "@assets/role-doctor-eviction.webm";
 import spectatorEvictionVid from "@assets/role-spectator.webm";
 
 export type RoleTeam = "alien" | "crew" | "chaotic" | "spectator";
@@ -285,6 +288,25 @@ export const ROLES: Role[] = [
     notes: "Acts during Role Reveal. Immune to Virus.",
     salutation: "Traffic intercepted. Where shall we send them, {username}?",
     lore: "Information is traffic, and you own the hub.\nDuring the reveal, build a bridge between two players.\n\nOne will reach out, the other will receive.\nThey will never know the path was altered until it's too late.",
+    canAct: false,
+    isLocked: true,
+    price: "$2.99",
+  },
+  {
+    id: "doctor",
+    name: "Doctor",
+    team: "crew",
+    alignment: "Crew Team",
+    image: doctorImg,
+    video: doctorVid,
+    evictionVideo: doctorEvictionVid,
+    winCondition: "Crew wins.",
+    abilityName: "Anesthetize",
+    abilityDescription: "Acts during Role Reveal. Target one player to prevent them from casting a vote during the next Voting Phase.",
+    ability: "Acts during Role Reveal. Target one player to prevent them from casting a vote during the next Voting Phase.",
+    notes: "Acts during Role Reveal. Cannot be blocked by Disruptor. The target knows they are anesthetized, but others do not. Nullifies Commander's bonus vote.",
+    salutation: "Doctor {username}, your medical expertise is vital.",
+    lore: "You are the guardian of health and order aboard this station.\nYour skills go beyond simple medicine — you can temporarily disconnect a player's cognitive functions, ensuring they cannot interfere with critical decisions.\n\nAct during the role reveal.\nChoose carefully, for your choice is blind, and its impact is absolute.",
     canAct: false,
     isLocked: true,
     price: "$2.99",

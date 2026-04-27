@@ -41,6 +41,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
   const [initialRoles, setInitialRoles] = useState<Record<string, string>>({});
   const [roundSummary, setRoundSummary] = useState<{ abilityLog: { actorName: string; event: string }[] } | null>(null);
   const [isHost, setIsHost] = useState(() => sessionStorage.getItem("lp_isHost") === "true");
+  const [isAnesthetized, setIsAnesthetized] = useState(false);
 
   const [evPopup, setEvPopup] = useState<{ callerName: string } | null>(null);
   const [evCast, setEvCast] = useState<"yes" | "no" | null>(null);
@@ -156,6 +157,11 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
       if (session.rolesAssigned) setRolesAssigned(session.rolesAssigned);
       if (session.initialRoles) setInitialRoles(session.initialRoles);
       if (session.roundSummary) setRoundSummary(session.roundSummary);
+      if (session.anesthetizedPlayers) {
+        const myPlayerId = sessionStorage.getItem("lp_playerId");
+        const me = players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === socket.id);
+        if (me) setIsAnesthetized(session.anesthetizedPlayers.includes(me.id));
+      }
       
       // Handle Emergency Vote state sync (for late-joins or refreshes)
       if (session.emergencyVote?.active) {
@@ -200,7 +206,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
 
     // Shared sync function: fetches latest session and updates local state
     const syncSession = () => {
-      socket.emit("get_session", { sessionId: roomCode }, (resp: { success: boolean; session?: { phase: string; players: LivePlayer[]; orbitFeedback?: Record<string, unknown>; roleCounts?: Record<string, number>; rolesAssigned?: Record<string, string>; initialRoles?: Record<string, string>; roundSummary?: any } }) => {
+      socket.emit("get_session", { sessionId: roomCode }, (resp: { success: boolean; session?: { phase: string; players: LivePlayer[]; orbitFeedback?: Record<string, unknown>; roleCounts?: Record<string, number>; rolesAssigned?: Record<string, string>; initialRoles?: Record<string, string>; roundSummary?: any; anesthetizedPlayers?: string[] } }) => {
         if (resp.success && resp.session) {
           const myPlayerId = sessionStorage.getItem("lp_playerId");
           const myId = socket.id;
@@ -214,7 +220,12 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
           if (resp.session.roleCounts) setRoleCounts(resp.session.roleCounts);
           if (resp.session.rolesAssigned) setRolesAssigned(resp.session.rolesAssigned);
           if (resp.session.initialRoles) setInitialRoles(resp.session.initialRoles);
-        if (resp.session.roundSummary) setRoundSummary(resp.session.roundSummary);
+          if (resp.session.roundSummary) setRoundSummary(resp.session.roundSummary);
+          if (resp.session.anesthetizedPlayers) {
+            const myPlayerId = sessionStorage.getItem("lp_playerId");
+            const me = resp.session.players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === myId);
+            if (me) setIsAnesthetized(resp.session.anesthetizedPlayers.includes(me.id));
+          }
 
           // Fallback: if orbit result wasn't received via socket, read from session
           if (!orbitResultState && myId && resp.session.orbitFeedback?.[myId]) {
@@ -436,71 +447,50 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
       )}
       
       <div className="relative z-10 flex flex-col flex-1 h-full">
-      {/* Top bar */}
-      <div
-        className="w-full px-6 py-3 flex items-center justify-between border-b shrink-0"
-        style={{ background: "hsl(220 28% 7%)", borderColor: accentColor.replace(")", " / 0.25)"), boxShadow: `0 1px 12px ${accentGlow.replace("0.4", "0.1")}` }}
-      >
-        <div>
-          <div className="font-orbitron font-black text-lg tracking-widest uppercase leading-none" style={{ color: accentLight, textShadow: `0 0 12px ${accentGlow}` }}>
-            ERRANT NIGHT
-          </div>
-          <div className="font-orbitron font-bold text-xs tracking-[0.3em] uppercase" style={{ color: "hsl(270 80% 65%)" }}>
-            DETECTED
-          </div>
-          <button
-            onClick={handleCopyRoomCode}
-            className="mt-1 text-[10px] tracking-[0.22em] uppercase rounded border px-2 py-0.5 lg:hidden"
-            style={{
-              color: roomCopyFeedback ? "hsl(140 70% 62%)" : "hsl(185 100% 66%)",
-              borderColor: roomCopyFeedback ? "hsl(140 60% 45% / 0.45)" : "hsl(185 100% 50% / 0.35)",
-              background: "hsl(220 28% 9%)",
-            }}
-          >
-            {roomCopyFeedback ? "CODE COPIED" : `ROOM ${roomCode}`}
-          </button>
-        </div>
-        <div className="text-right">
-          <div className="text-xs tracking-widest uppercase mb-1 flex items-center justify-end gap-2" style={{ color: "hsl(210 30% 50%)" }}>
-            Phase
-            <span className={`font-mono ${secondsLeft <= 10 && secondsLeft > 0 ? 'animate-heartbeat text-red-500 font-bold' : secondsLeft === 0 ? 'text-red-500 font-bold' : 'text-[hsl(210,30%,70%)]'}`}>
-              {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, '0')}
-            </span>
-          </div>
-          <div className="font-orbitron font-bold text-sm tracking-[0.2em]" style={{ color: accentLight }}>
-            DELIBERATION
-          </div>
-        </div>
-      </div>
-
       {/* Main content */}
-      <div className="flex-1 flex flex-col px-6 py-6 gap-5 overflow-y-auto pb-32 lg:pb-8 max-w-2xl mx-auto w-full">
-
+      <div className="flex-1 flex flex-col px-6 py-10 gap-10 overflow-y-auto pb-32 lg:pb-8 max-w-2xl mx-auto w-full">
         {/* Phase title + role */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-6 p-6 bg-white/[0.02] border border-white/5 rounded-sm shadow-xl">
           <div className="relative shrink-0">
             <img
               src={role.image}
               alt={role.name}
-              className="w-16 h-16 rounded-md object-cover"
+              className="w-20 h-20 rounded-lg object-cover shadow-[0_0_20px_rgba(0,0,0,0.5)]"
               loading="lazy"
-              style={{ border: `1px solid ${accentColor.replace(")", " / 0.4)")}` }}
+              style={{ border: `2px solid ${accentColor.replace(")", " / 0.6)")}` }}
             />
             {/* Wing icon with silver shine */}
             <WingIcon accentColor={accentColor} />
           </div>
           <div>
-            <div className="font-orbitron font-black text-2xl tracking-widest uppercase" style={{ color: accentLight, textShadow: `0 0 12px ${accentGlow}` }}>
+            <div className="font-orbitron font-black text-4xl tracking-[0.2em] uppercase italic" style={{ color: accentLight, textShadow: `0 0 15px ${accentGlow}` }}>
               DELIBERATION
             </div>
-            <div className="text-xs tracking-widest uppercase mt-0.5" style={{ color: "hsl(210 30% 50%)" }}>
-              YOUR INITIAL ROLE: <span className="font-orbitron font-bold" style={{ color: accentLight }}>{role.name.toUpperCase()}</span>
-            </div>
-            <div className="text-xs tracking-widest uppercase mt-0.5" style={{ color: "hsl(210 30% 40%)" }}>
-              CALLSIGN: {callsign}
+            <div className="flex flex-col gap-1 mt-2">
+              <div className="text-[10px] tracking-[0.4em] uppercase opacity-40 font-bold">
+                Identity: <span className="text-white opacity-100">{callsign}</span>
+              </div>
+              <div className="text-[10px] tracking-[0.4em] uppercase opacity-40 font-bold">
+                Authorized_Role: <span className="font-orbitron font-bold opacity-100" style={{ color: accentLight }}>{role.name.toUpperCase()}</span>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Anesthetized Warning */}
+        {isAnesthetized && (
+          <div className="rounded-md p-4 border-2 border-red-500/50 bg-red-500/10 shadow-[0_0_20px_rgba(239,68,68,0.2)] animate-pulse">
+            <div className="flex items-center gap-3">
+              <FaExclamationTriangle className="text-red-500" />
+              <div className="font-orbitron text-xs font-bold tracking-widest text-red-400 uppercase">
+                CRITICAL ALERT: NEURAL LINK INHIBITED
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-red-200/70 leading-relaxed font-mono">
+              The Doctor has anesthetized your interface. You are unable to cast a vote in the upcoming phase.
+            </p>
+          </div>
+        )}
 
         {/* Private ability result */}
         <div className="rounded-md p-4" style={{ background: accentDim, border: `1px solid ${accentColor.replace(")", " / 0.3)")}` }}>
@@ -759,6 +749,16 @@ function renderOrbitResultSummary(
       return <p className="text-sm" style={muted}>You chose not to use <strong>Gateway Hijack</strong> this round.</p>;
     }
     return <p className="text-sm" style={info}>You used <strong>Gateway Hijack</strong> during the Role Reveal phase.</p>;
+  }
+  if (roleId === "doctor") {
+    if (result?.type === "doctor_result") {
+      const d = result.data as Record<string, unknown>;
+      return <p className="text-sm" style={info}>You used <strong>Anesthetize</strong> on {String(d?.targetName ?? "a player")}. They cannot vote this round.</p>;
+    }
+    if (result?.type === "skipped") {
+      return <p className="text-sm" style={muted}>You chose not to use <strong>Anesthetize</strong> this round.</p>;
+    }
+    return <p className="text-sm" style={info}>You used <strong>Anesthetize</strong> during the Role Reveal phase.</p>;
   }
 
   if (!result || result.type === "no_ability") {

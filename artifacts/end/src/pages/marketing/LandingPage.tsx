@@ -4,8 +4,10 @@ import wallpaperImg from "@assets/wallpaper-landing-page.webp";
 import { playSciFiClick } from "@/lib/sound";
 import { startLobbyMusic, stopLobbyMusic, getSoundEnabled, setSoundEnabled } from "@/lib/music";
 import { useAuth } from "@/hooks/useAuth";
+import { usePreferences } from "@/hooks/usePreferences";
 import AuthModal from "@/components/auth/AuthModal";
 import LandingSidebar from "@/components/system/LandingSidebar";
+import LandingNavbar from "@/components/system/LandingNavbar";
 import SettingsModal from "@/components/system/SettingsModal";
 import ProfileModal from "@/components/profile/ProfileModal";
 import HowToPlayModal from "@/components/game/HowToPlayModal";
@@ -28,7 +30,8 @@ export default function LandingPage() {
   const [roomCodeInput, setRoomCodeInput] = useState("");
   const [isCreatingLobby, setIsCreatingLobby] = useState(false);
   const [, setLocation] = useLocation();
-  const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
+  const { preferences, updateMusicVolume } = usePreferences();
+  const musicOn = (preferences?.musicVolume ?? 0) > 0;
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -49,14 +52,15 @@ export default function LandingPage() {
 
   const handleToggleMusic = useCallback(() => {
     const next = !musicOn;
-    setMusicOn(next);
+    const nextVolume = next ? 100 : 0;
+    updateMusicVolume(nextVolume);
     setSoundEnabled(next);
     if (next) {
       startLobbyMusic();
     } else {
       stopLobbyMusic();
     }
-  }, [musicOn]);
+  }, [musicOn, updateMusicVolume]);
 
   const handleCreateLobby = useCallback(() => {
     playSciFiClick();
@@ -135,7 +139,16 @@ export default function LandingPage() {
         }}
       />
 
-{/* Mobile Sidebar Menu */}
+      <LandingNavbar
+        onShowSettings={() => setShowSettingsModal(true)}
+        onShowProfile={() => setShowProfileModal(true)}
+        onShowHowToPlay={() => setShowHowToPlay(true)}
+        onShowAuth={() => setShowAuthModal(true)}
+        musicOn={musicOn}
+        onToggleMusic={handleToggleMusic}
+      />
+
+      {/* Mobile Sidebar Menu */}
       <LandingSidebar
         onShowSettings={() => setShowSettingsModal(true)}
         onShowProfile={() => setShowProfileModal(true)}

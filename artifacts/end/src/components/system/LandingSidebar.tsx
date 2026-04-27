@@ -107,7 +107,7 @@ export default function LandingSidebar({
   menuItems.push({
     id: "howtoplay",
     icon: <ManualIcon />,
-    label: "MANUAL",
+    label: "HOW TO PLAY",
     onClick: () => {
       playSound();
       closeMenu();
@@ -135,7 +135,7 @@ export default function LandingSidebar({
           left: "24px",
           zIndex: 60,
         }}
-        className="sm:hidden"
+        className="lg:hidden"
       >
         <button
           onClick={toggleMenu}

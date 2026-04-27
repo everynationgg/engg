@@ -13,6 +13,8 @@ import { playSciFiClick } from "@/lib/sound";
 import { FaCoins } from "react-icons/fa";
 import ShopModal from "@/components/shop/ShopModal";
 import { useEffect, useState, useMemo } from "react";
+import LandingNavbar from "@/components/system/LandingNavbar";
+import { usePreferences } from "@/hooks/usePreferences";
 
 export default function ProfilePage() {
   const [, setLocation] = useLocation();
@@ -25,6 +27,31 @@ export default function ProfilePage() {
   const [resendSuccess, setResendSuccess] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showShopModal, setShowShopModal] = useState(false);
+  const { preferences, updateMusicVolume } = usePreferences();
+  const musicOn = (preferences?.musicVolume ?? 0) > 0;
+  
+  const handleToggleMusic = () => {
+    updateMusicVolume(musicOn ? 0 : 100);
+  };
+
+  // --- PROGRESSION LOGIC ---
+  const currentXP = useMemo(() => (personalStats?.gamesPlayed ?? 0) * 125, [personalStats]);
+  const nextLevelXP = 1000;
+  const currentLevel = Math.floor(currentXP / nextLevelXP) + 1;
+  const progressPercent = (currentXP % nextLevelXP) / nextLevelXP * 100;
+  
+  // Reward for next level milestone
+  const nextMilestone = useMemo(() => {
+    if (currentLevel < 5) return { level: 5, reward: "Prototype_Neural_Link", type: "Role" };
+    if (currentLevel < 10) return { level: 10, reward: "+500 CC Operational_Bonus", type: "Currency" };
+    return { level: 20, reward: "Vanguard_Elite_Casing", type: "Skin" };
+  }, [currentLevel]);
+
+  // Mock Missions
+  const missions = [
+    { id: 1, title: "Orbital_Success", desc: "Win a match as any role", reward: "50 CC", progress: 0, total: 1 },
+    { id: 2, title: "Stealth_Protocol", desc: "Win a match without being detected", reward: "120 CC", progress: 0, total: 1 },
+  ];
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -44,202 +71,137 @@ export default function ProfilePage() {
     window.location.href = "/?login=true";
   };
 
-  const handleResendVerificationEmail = async () => {
-    setResendError(null);
-    setResendSuccess(false);
-    try {
-      await resendVerificationEmail();
-      setResendSuccess(true);
-      setTimeout(() => setResendSuccess(false), 5000);
-    } catch (err) {
-      setResendError(err instanceof Error ? err.message : "Failed to resend email");
-    }
-  };
-
-  if (!isLoggedIn) return null;
-
   return (
-    <div className="min-h-screen text-white p-4 md:p-8 relative overflow-x-hidden" style={{ background: "hsl(220 28% 2%)" }}>
+    <div className="min-h-screen text-white relative flex flex-col" style={{ background: "hsl(220 30% 2%)" }}>
       {/* Cinematic Overlays */}
-      <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-0" 
-        style={{ backgroundImage: "linear-gradient(#00f3ff 1px, transparent 1px), linear-gradient(90deg, #00f3ff 1px, transparent 1px)", backgroundSize: "60px 60px" }} 
+      <div className="fixed inset-0 pointer-events-none opacity-[0.02] z-0" 
+        style={{ backgroundImage: "linear-gradient(#00f3ff 1px, transparent 1px), linear-gradient(90deg, #00f3ff 1px, transparent 1px)", backgroundSize: "120px 120px" }} 
       />
-      <div className="fixed inset-0 pointer-events-none bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent animate-pulse" />
+      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_50%_0%,rgba(6,182,212,0.05),transparent)]" />
 
+      <LandingNavbar
+        onShowSettings={() => setShowSettingsModal(true)}
+        onShowProfile={() => refreshUser()}
+        onShowHowToPlay={() => {}}
+        onShowAuth={() => {}}
+        musicOn={musicOn}
+        onToggleMusic={handleToggleMusic}
+      />
 
-      <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
+      <div className="h-[var(--nav-height)] shrink-0" />
 
-      {/* --- HUD HEADER --- */}
-      <div className="max-w-6xl mx-auto mb-16 relative z-10">
-        <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-10 pb-10 border-b border-white/5 relative">
-          {/* Decorative HUD line */}
-          <div className="absolute bottom-0 left-0 w-1/3 h-[2px] bg-cyan-500/50 shadow-[0_0_15px_rgba(0,243,255,0.3)]" />
-          
-          <div className="relative group">
-            <div className="flex items-center gap-6 mb-4">
-               <div className="w-1.5 h-12 bg-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.6)]" />
-               <div>
-                  <h1 className="font-orbitron font-black text-5xl md:text-7xl tracking-[0.3em] uppercase leading-none drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                    Operator
-                  </h1>
-                  <p className="font-mono text-[10px] tracking-[0.5em] uppercase opacity-30 mt-2">Authenticated_Session_Active</p>
-               </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-6">
-              <span className="font-mono text-cyan-400 text-2xl tracking-[0.4em] uppercase border-b border-cyan-500/20 pb-1">
-                {username}
-              </span>
-              
-              {/* Premium Verification Stamp */}
-              <div className={`relative px-6 py-2 flex items-center gap-3 overflow-hidden transition-all duration-500 ${isVerified ? "bg-cyan-500/10 border border-cyan-500/30" : "bg-amber-500/10 border border-amber-500/30"}`}>
-                 {/* Stamp HUD Brackets */}
-                 <div className={`absolute top-0 left-0 w-2 h-2 border-t border-l ${isVerified ? "border-cyan-400" : "border-amber-400"}`} />
-                 <div className={`absolute top-0 right-0 w-2 h-2 border-t border-r ${isVerified ? "border-cyan-400" : "border-amber-400"}`} />
-                 <div className={`absolute bottom-0 left-0 w-2 h-2 border-b border-l ${isVerified ? "border-cyan-400" : "border-amber-400"}`} />
-                 <div className={`absolute bottom-0 right-0 w-2 h-2 border-b border-r ${isVerified ? "border-cyan-400" : "border-amber-400"}`} />
-                 
-                 <div className={`w-2 h-2 rounded-full ${isVerified ? "bg-cyan-400 shadow-[0_0_10px_#00f3ff] animate-pulse" : "bg-amber-400 shadow-[0_0_10px_#ffaa00]"}`} />
-                 <span className={`font-orbitron text-[9px] font-bold tracking-[0.3em] uppercase ${isVerified ? "text-cyan-400" : "text-amber-400"}`}>
-                   {isVerified ? "Identity_Certified" : "Identity_Unverified"}
-                 </span>
-              </div>
-            </div>
+      {/* --- ATTENTION-DRIVEN HERO HUB --- */}
+      <div className="max-w-4xl mx-auto w-full px-6 pt-16 pb-24 relative z-10 flex flex-col items-center text-center">
+        
+        {/* 1. Identity & Resource Cluster (Anchors) */}
+        <div className="w-full flex items-center justify-between mb-12">
+          <div className="flex items-center gap-6">
+             <div className="relative">
+                <div className="w-20 h-20 border border-white/10 bg-white/[0.02] p-1 overflow-hidden">
+                   <img 
+                    src={`https://api.dicebear.com/7.x/bottts/svg?seed=${username ?? 'operator'}&backgroundColor=transparent`} 
+                    alt={username ?? 'Operator'}
+                    className="w-full h-full object-cover opacity-60 hover:opacity-100 transition-opacity"
+                   />
+                </div>
+                <div className="absolute -bottom-1 -right-1 bg-white text-black font-orbitron font-black text-[9px] px-2 py-0.5">
+                   LVL {currentLevel}
+                </div>
+             </div>
+             <div className="text-left">
+                <h1 className="font-orbitron font-bold text-2xl tracking-[0.2em] uppercase text-white/90">{username}</h1>
+                <p className="font-mono text-[9px] tracking-[0.4em] uppercase text-cyan-500/60 font-bold">
+                  {currentLevel < 5 ? "Novice_Operator" : "Neural_Specialist"}
+                </p>
+             </div>
           </div>
 
-          <div className="flex flex-wrap gap-4 w-full lg:w-auto">
-            <button
-              onClick={() => { playSciFiClick(); setShowSettingsModal(true); }}
-              className="flex-1 lg:flex-none px-10 py-4 bg-white/5 border border-white/10 text-white/60 font-orbitron text-[10px] tracking-[0.4em] uppercase hover:bg-cyan-500/10 hover:border-cyan-500/40 hover:text-cyan-400 transition-all"
-            >
-              Settings
-            </button>
-            <button
-              onClick={handleLogout}
-              className="flex-1 lg:flex-none px-10 py-4 bg-red-500/5 border border-red-500/20 text-red-400/60 font-orbitron text-[10px] tracking-[0.4em] uppercase hover:bg-red-500/10 hover:border-red-500/40 hover:text-red-400 transition-all"
-            >
-              Terminate_Session
-            </button>
+          <div className="text-right flex flex-col items-end gap-2">
+             <p className="font-mono text-[8px] tracking-[0.4em] uppercase opacity-20">Operational_Resource</p>
+             <div className="flex items-center gap-3 px-4 py-2 bg-white/[0.03] border border-white/10 rounded-sm group hover:border-cyan-500/40 transition-colors">
+                <FaCoins className="text-cyan-500/40 text-xs" />
+                <span className="font-orbitron text-lg font-black text-white/90 tracking-tighter">{credits?.toLocaleString()} <span className="text-cyan-500/40 font-bold">CC</span></span>
+                <button onClick={() => setShowShopModal(true)} className="ml-2 w-5 h-5 flex items-center justify-center bg-white/5 hover:bg-cyan-500 hover:text-black transition-all text-[10px]">+</button>
+             </div>
           </div>
         </div>
 
-        {/* Verification Warning HUD */}
-        {!isVerified && (
-          <div className="mt-8 p-8 bg-amber-500/5 border border-amber-500/10 relative overflow-hidden group animate-in fade-in slide-in-from-top-4">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,170,0,0.05),transparent)] opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
-              <div className="flex items-center gap-6">
-                <div className="w-12 h-12 flex items-center justify-center border border-amber-500/30 bg-amber-500/10 rounded-full animate-pulse text-amber-500">
-                   ⚠️
-                </div>
-                <div>
-                  <h3 className="font-orbitron text-sm tracking-[0.3em] uppercase text-amber-500 mb-2">Critical: Identity Desync Detected</h3>
-                  <p className="font-mono text-[10px] opacity-40 uppercase tracking-widest leading-relaxed max-w-xl">
-                    Secure your connection via encrypted email handshake to unlock full operator privileges and global classification data.
-                  </p>
-                  {resendError && <p className="text-[10px] text-red-500 mt-3 font-mono border-l-2 border-red-500 pl-3 uppercase tracking-tighter">Handshake_Error: {resendError}</p>}
-                  {resendSuccess && <p className="text-[10px] text-cyan-400 mt-3 font-mono border-l-2 border-cyan-500 pl-3 uppercase tracking-tighter">Link_Transmitted. Check_Terminal.</p>}
-                </div>
-              </div>
-              <button
-                onClick={handleResendVerificationEmail}
-                disabled={authLoading}
-                className="w-full md:w-auto px-10 py-4 bg-amber-500/10 border border-amber-500/40 text-amber-500 font-orbitron text-[10px] tracking-[0.4em] uppercase hover:bg-amber-500/20 transition-all disabled:opacity-20 relative overflow-hidden"
-              >
-                {authLoading ? "Synchronizing..." : "Re-Initialize_Link"}
-              </button>
-            </div>
+        {/* 2. PROGRESSION (Primary Focal Point) */}
+        <div className="w-full space-y-4 mb-16 relative">
+          <div className="flex justify-between items-end px-1">
+             <div className="text-left">
+                <span className="font-orbitron text-[10px] tracking-[0.4em] uppercase text-white/40">Progress_Track</span>
+             </div>
+             
+             {/* Milestone Unified with Text */}
+             <div className="flex items-center gap-3">
+                <span className="font-mono text-[9px] tracking-[0.4em] uppercase text-amber-500/60 font-bold animate-pulse">Next_Unlock:</span>
+                <span className="font-orbitron text-[11px] font-black tracking-[0.2em] text-amber-400 uppercase border-b border-amber-500/20">{nextMilestone.reward}</span>
+             </div>
           </div>
-        )}
+
+          {/* High-Impact XP Bar */}
+          <div className="relative h-16 bg-white/[0.02] border border-white/10 p-1.5 group">
+             <div 
+              className="h-full bg-cyan-500/90 transition-all duration-1000 ease-out relative shadow-[0_0_40px_rgba(6,182,212,0.2)]"
+              style={{ width: `${progressPercent}%` }}
+             >
+                <div className="absolute top-0 right-0 h-full w-[3px] bg-white shadow-[0_0_20px_#fff] animate-[leading-pulse_2s_infinite]" />
+             </div>
+             
+             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <span className="font-orbitron text-[13px] font-black tracking-[0.8em] text-white mix-blend-difference opacity-80 uppercase">
+                  {currentXP % nextLevelXP} / {nextLevelXP} XP
+                </span>
+             </div>
+          </div>
+
+          <div className="flex justify-between font-mono text-[8px] tracking-[0.5em] uppercase opacity-20">
+             <span>RANK_{currentLevel}</span>
+             <span>TARGET_RANK_{currentLevel + 1}</span>
+          </div>
+        </div>
+
+        {/* 3. MISSIONS PREVIEW (The Fuel) */}
+        <div className="w-full grid grid-cols-2 gap-4 mb-16">
+          {missions.map(mission => (
+             <div key={mission.id} className="p-4 bg-white/[0.01] border border-white/5 flex flex-col items-center gap-2 group hover:bg-white/[0.03] transition-all cursor-pointer">
+                <span className="font-orbitron text-[9px] font-bold tracking-widest text-white/40 uppercase group-hover:text-cyan-500/60 transition-colors">{mission.title}</span>
+                <div className="w-full h-1 bg-white/5 relative overflow-hidden">
+                   <div className="absolute inset-y-0 left-0 bg-cyan-500/40" style={{ width: `${(mission.progress/mission.total)*100}%` }} />
+                </div>
+                <span className="font-mono text-[8px] text-white/20 uppercase">Reward: {mission.reward}</span>
+             </div>
+          ))}
+        </div>
+
+        {/* 4. DEPLOY (The Destination) */}
+        <div className="w-full">
+           <button
+            onClick={() => setLocation("/orbit")}
+            className="w-full relative group overflow-hidden bg-white text-black font-orbitron font-black text-xl tracking-[1em] py-8 uppercase transition-all shadow-[0_0_50px_rgba(255,255,255,0.15)] hover:shadow-[0_0_80px_rgba(255,255,255,0.3)] active:scale-[0.97]"
+           >
+              <div className="absolute inset-0 bg-cyan-400 translate-x-[-101%] group-hover:translate-x-0 transition-transform duration-[400ms] ease-out" />
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-20 bg-[linear-gradient(45deg,transparent,white,transparent)] translate-x-[-100%] group-hover:translate-x-[100%] transition-all duration-[600ms]" />
+              <span className="relative z-10 flex items-center justify-center gap-4">
+                 <span className="opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0 transition-transform">❯</span>
+                 Deploy_To_Orbit
+                 <span className="opacity-0 group-hover:opacity-100 transition-opacity translate-x-[-8px] group-hover:translate-x-0 transition-transform">❮</span>
+              </span>
+           </button>
+           <p className="mt-4 font-mono text-[9px] tracking-[0.5em] text-white/10 uppercase italic">Awaiting Operator Confirmation...</p>
+        </div>
       </div>
 
-      {/* --- MAIN GRID --- */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
-        
-        {/* LEFT COLUMN: PRIMARY STATS */}
-        <div className="lg:col-span-4 space-y-8">
-          {/* Identity HUD Card */}
-          <div className="p-8 relative bg-white/5 border border-white/10 backdrop-blur-md overflow-hidden">
-            <div className="absolute top-0 right-0 w-16 h-16 border-t border-r border-cyan-500/30" />
-            <h2 className="font-orbitron text-xs tracking-[0.4em] uppercase opacity-40 mb-8 border-b border-white/5 pb-2">Status Readout</h2>
-            
-            <div className="space-y-6">
-              <div>
-                <p className="font-mono text-[9px] text-white/30 uppercase mb-2">Operational Win Rate</p>
-                <div className="flex items-end gap-3">
-                  <span className="font-orbitron text-4xl text-cyan-400 drop-shadow-[0_0_10px_rgba(6,182,212,0.3)]">
-                    {(personalStats?.winRate ?? 0).toFixed(1)}%
-                  </span>
-                  <div className="flex-1 h-1 bg-white/10 mb-2 relative overflow-hidden">
-                    <div 
-                      className="absolute inset-y-0 left-0 bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)] transition-all duration-1000"
-                      style={{ width: `${personalStats?.winRate ?? 0}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
-                <div>
-                  <p className="font-mono text-[9px] text-white/30 uppercase mb-1">Engagements</p>
-                  <p className="font-orbitron text-xl">{personalStats?.gamesPlayed ?? 0}</p>
-                </div>
-                <div>
-                  <p className="font-mono text-[9px] text-white/30 uppercase mb-1">Successes</p>
-                  <p className="font-orbitron text-xl text-cyan-400">{personalStats?.gamesWon ?? 0}</p>
-                </div>
-              </div>
-
-              <div className="pt-6 border-t border-white/5">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="font-mono text-[9px] text-white/30 uppercase mb-1">Available Credits</p>
-                    <p className="font-orbitron text-2xl text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.3)]">{credits} CC</p>
-                  </div>
-                  <button
-                    onClick={() => { playSciFiClick(); setShowShopModal(true); }}
-                    className="px-4 py-2 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-orbitron text-[10px] tracking-widest uppercase hover:bg-cyan-500/20 transition-all flex items-center gap-2"
-                  >
-                    <FaCoins />
-                    Procure
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Leaderboard Panel */}
-          <div className="bg-black/20 border border-white/5 p-6">
-            <h2 className="font-orbitron text-[10px] tracking-[0.4em] uppercase opacity-40 mb-6 flex justify-between items-center">
-              Global Standings
-              <span className="animate-pulse text-cyan-500">Live</span>
-            </h2>
-            <div className="space-y-2">
-              {leaderboard?.slice(0, 5).map((entry) => (
-                <div key={entry.userId} className={`p-3 border flex items-center justify-between transition-all ${entry.userId === userId ? "border-cyan-500/50 bg-cyan-500/5" : "border-white/5 bg-white/5"}`}>
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-[10px] w-4 opacity-40">#{entry.rank}</span>
-                    <span className="font-mono text-xs tracking-tight">{entry.username}</span>
-                  </div>
-                  <span className="font-mono text-[10px] text-cyan-400">{entry.winRate.toFixed(1)}%</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN: DETAILED DATA */}
-        <div className="lg:col-span-8 space-y-8">
-          
-          {/* Aggregate Stats Section */}
-          <div className="bg-white/5 border border-white/10 p-1">
+      {/* --- FOOTER ANALYTICS (Background) --- */}
+      <div className="max-w-4xl mx-auto w-full px-6 grid grid-cols-2 gap-12 border-t border-white/5 pt-12 pb-24 relative z-10 opacity-40 hover:opacity-100 transition-opacity">
+         <div className="space-y-6">
+            <h3 className="font-orbitron text-[10px] tracking-[0.4em] uppercase text-white/30 border-l-2 border-white/10 pl-4">Performance_Metrics</h3>
             <AggregateStats personalStats={personalStats} roleStats={roleStats} />
-          </div>
-
-          {/* Network (Friends) Node */}
-          <div className="p-8 bg-white/5 border border-white/10 relative">
-             <div className="absolute top-0 right-0 p-2 font-mono text-[8px] opacity-20">REL_ADDR: 0x21A</div>
-             <FriendsDisplay
+         </div>
+         <div className="space-y-6">
+            <h3 className="font-orbitron text-[10px] tracking-[0.4em] uppercase text-white/30 border-l-2 border-white/10 pl-4">Network_Topology</h3>
+            <FriendsDisplay
                 friends={friends}
                 friendRequests={friendRequests}
                 isLoading={friendsLoading}
@@ -251,37 +213,20 @@ export default function ProfilePage() {
                 searchResults={searchResults}
                 isSearching={isSearching}
               />
-          </div>
-
-          {/* Achievement Vault */}
-          <div className="bg-white/5 border border-white/10">
-            {achievements && (
-              <AchievementsDisplay
-                totalAchievements={achievements.totalAchievements}
-                unlockedCount={achievements.unlockedCount}
-                achievements={achievements.achievements}
-                isLoading={achievementsLoading}
-              />
-            )}
-          </div>
-
-          {/* Historical Logs */}
-          <div className="bg-white/5 border border-white/10">
-             <GameHistoryDisplay
-              games={gameHistory}
-              canLoadMore={(historyPage + 1) * 20 < gameHistoryTotal}
-              onLoadMore={() => {
-                const nextPage = historyPage + 1;
-                setHistoryPage(nextPage);
-                fetchGameHistory(20, nextPage * 20);
-              }}
-            />
-          </div>
-        </div>
+         </div>
       </div>
 
-      <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
       <ShopModal isOpen={showShopModal} onClose={() => setShowShopModal(false)} />
+      <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
+
+      {/* Global CSS for XP leading pulse */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes leading-pulse {
+          0% { opacity: 0.4; }
+          50% { opacity: 1; box-shadow: 0 0 25px #fff; }
+          100% { opacity: 0.4; }
+        }
+      `}} />
 
       {/* Scanline Effect Overlay */}
       <div className="fixed inset-0 pointer-events-none z-50 opacity-[0.05] overflow-hidden">

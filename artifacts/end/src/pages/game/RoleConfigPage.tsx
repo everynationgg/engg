@@ -597,43 +597,51 @@ export default function RoleConfigPage() {
 
       {/* Top bar */}
       <div
-        className="w-full px-4 py-3 flex items-center gap-3 border-b shrink-0"
+        className="w-full px-8 py-6 flex items-center gap-6 border-b shrink-0 h-[var(--nav-height)]"
         style={{
           background: "hsl(220 28% 7%)",
-          borderColor: "hsl(185 100% 50% / 0.2)",
-          boxShadow: "0 1px 12px hsl(185 100% 50% / 0.1)",
+          borderColor: "hsl(185 100% 50% / 0.15)",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+          zIndex: 60
         }}
       >
         <div className="flex-1 min-w-0">
           <div
-            className="font-orbitron font-black text-base sm:text-lg tracking-widest uppercase leading-none"
-            style={{ color: "hsl(185 100% 55%)", textShadow: "0 0 12px hsl(185 100% 50% / 0.7)" }}
+            className="font-orbitron font-black text-xl sm:text-2xl tracking-[0.3em] uppercase leading-none italic"
+            style={{ color: "hsl(185 100% 55%)", textShadow: "0 0 15px hsl(185 100% 50% / 0.8)" }}
           >
             Tactical_Unit_Hub
           </div>
           <div
-            className="font-orbitron font-bold text-xs tracking-[0.3em] uppercase"
+            className="font-orbitron font-bold text-[10px] tracking-[0.5em] uppercase opacity-40 mt-1"
             style={{ color: "hsl(270 80% 65%)" }}
           >
-            Configuration_Mode
+            Lobby_Configuration_Protocol
           </div>
         </div>
 
-        <div className="text-right shrink-0 flex items-center">
+        <div className="flex items-center gap-8 shrink-0">
           {isLoggedIn ? (
-            <div className="flex flex-col items-end">
-              <div className="text-[10px] tracking-widest uppercase mb-1" style={{ color: "hsl(185 100% 50% / 0.5)" }}>Your Balance</div>
-              <div
-                className="font-orbitron font-black text-lg tracking-[0.1em]"
-                style={{ color: "hsl(185 100% 65%)", textShadow: "0 0 10px hsl(185 100% 50% / 0.4)" }}
-              >
-                {credits} <span className="text-[10px] opacity-40">CC</span>
+            <div className="flex items-center gap-6 bg-white/[0.03] px-6 py-2 border border-white/5 rounded-sm">
+              <div className="flex flex-col items-end">
+                <div className="text-[9px] tracking-[0.3em] uppercase opacity-40 font-bold">Authenticated_Operator</div>
+                <div className="font-orbitron text-xs text-white/80">{sessionStorage.getItem("lp_callsign")}</div>
+              </div>
+              <div className="w-px h-6 bg-white/10" />
+              <div className="flex flex-col items-end">
+                <div className="text-[9px] tracking-[0.3em] uppercase opacity-40 font-bold">Procurement_Balance</div>
+                <div
+                  className="font-orbitron font-black text-xl tracking-[0.1em] text-glow-cyan"
+                  style={{ color: "hsl(185 100% 65%)" }}
+                >
+                  {credits} <span className="text-[10px] opacity-40 italic">CC</span>
+                </div>
               </div>
             </div>
           ) : (
              <div className="text-right">
-              <div className="text-xs tracking-widest uppercase mb-1" style={{ color: "hsl(210 30% 50%)" }}>Role Configuration</div>
-              <div className="font-orbitron font-bold text-sm tracking-[0.2em]" style={{ color: "hsl(185 100% 70%)" }}>PRE-GAME SETUP</div>
+              <div className="text-[10px] tracking-[0.4em] uppercase mb-1 opacity-40 font-bold">Unauthenticated_Session</div>
+              <div className="font-orbitron font-black text-sm tracking-[0.3em] text-white/60">GUEST_ACCESS</div>
             </div>
           )}
         </div>
@@ -644,14 +652,14 @@ export default function RoleConfigPage() {
       {/* Role Deck Area */}
       <div className="flex flex-col lg:flex-row flex-1 relative overflow-hidden">
         {/* LEFT SIDEBAR — players (desktop only, hidden on mobile) */}
-        <div className="hidden lg:flex w-64 shrink-0 flex-col border-r h-full overflow-hidden" style={{ background: "hsl(220 30% 6%)", borderColor: "hsl(210 30% 14%)" }}>
-           <div className="p-5 border-b" style={{ borderColor: "hsl(210 30% 14%)" }}>
-              <div className="text-[10px] tracking-[0.4em] uppercase font-mono mb-1.5" style={{ color: "hsl(210 30% 45%)" }}>Operational_Session</div>
-              <div className="flex items-center justify-between gap-2">
-                 <div className="font-orbitron font-black text-2xl tracking-[0.2em]" style={{ color: "hsl(185 100% 60%)" }}>{roomCode}</div>
+        <div className="hidden lg:flex w-72 shrink-0 flex-col border-r h-full overflow-hidden" style={{ background: "hsl(220 30% 6%)", borderColor: "hsl(210 30% 14%)" }}>
+           <div className="p-6 border-b" style={{ borderColor: "hsl(210 30% 14%)" }}>
+              <div className="text-[11px] tracking-[0.5em] uppercase font-mono mb-2 opacity-30 font-bold">Secure_Lobby_Node</div>
+              <div className="flex items-center justify-between gap-4">
+                 <div className="font-orbitron font-black text-3xl tracking-[0.3em] text-white shadow-cyan-500/20">{roomCode}</div>
                  <button
                    onClick={handleCopyLink}
-                   className="px-2 py-1 font-orbitron text-[8px] tracking-[0.1em] uppercase rounded border transition-all duration-150 cursor-pointer shrink-0"
+                   className="px-3 py-1.5 font-orbitron text-[10px] tracking-[0.1em] uppercase rounded border transition-all duration-150 cursor-pointer shrink-0"
                    style={{
                      background: copyFeedback ? "hsl(140 60% 15% / 0.6)" : "hsl(220 28% 10%)",
                      borderColor: copyFeedback ? "hsl(140 60% 45%)" : "hsl(185 100% 50% / 0.35)",
@@ -715,14 +723,14 @@ export default function RoleConfigPage() {
                         border: player.isYou ? "1px solid hsl(185 100% 50% / 0.15)" : "1px solid transparent"
                       }}
                     >
-                       <div className="flex items-center gap-3 min-w-0">
-                          <div className={`w-1.5 h-1.5 rounded-full ${player.isYou ? "bg-cyan-500 animate-pulse" : "bg-cyan-950"}`} />
-                          <span className={`font-orbitron text-[11px] tracking-widest uppercase truncate ${player.isYou ? "text-white" : "text-white/40"}`}>
+                       <div className="flex items-center gap-4 min-w-0">
+                          <div className={`w-2 h-2 rounded-full ${player.isYou ? "bg-cyan-500 shadow-[0_0_10px_#00f3ff] animate-pulse" : "bg-white/10"}`} />
+                          <span className={`font-orbitron text-[12px] font-bold tracking-widest uppercase truncate ${player.isYou ? "text-white" : "text-white/30"}`}>
                             {player.name}
                           </span>
                        </div>
                        {player.isHost && (
-                          <div className="px-1.5 py-0.5 rounded-[2px] bg-cyan-500/10 border border-cyan-500/20 text-[7px] font-orbitron tracking-widest text-cyan-400">
+                          <div className="px-2 py-0.5 rounded-[1px] bg-cyan-500/15 border border-cyan-500/30 text-[8px] font-orbitron font-black tracking-[0.2em] text-cyan-400 italic">
                              HOST
                           </div>
                        )}

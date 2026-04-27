@@ -163,6 +163,10 @@ export default function RoleRevealPage() {
       alert("Please select both Source and Destination.");
       return;
     }
+    if (role.id === "doctor" && !selectedTargetId) {
+      alert("Please select a subject to anesthetize.");
+      return;
+    }
 
     playSciFiClick();
     setAcknowledged(true);
@@ -173,6 +177,8 @@ export default function RoleRevealPage() {
       action = { type: "packet_loss", targets: [selectedTargetId] };
     } else if (role.id === "router") {
       action = { type: "gateway_hijack", targets: [selectedTargetId, selectedRouterDestId], alignment: chaoticChoice };
+    } else if (role.id === "doctor") {
+      action = { type: "anesthetize", targets: [selectedTargetId] };
     } else if (role.team === "chaotic") {
       action = { type: "alignment_choice", targets: [], alignment: chaoticChoice };
     }
@@ -502,8 +508,8 @@ export default function RoleRevealPage() {
               </div>
             )}
 
-            {/* Target Selection for Virus/Router + Skip Button */}
-            {!acknowledged && revealState === "ready" && (role.id === "virus" || role.id === "router") && (() => {
+            {/* Target Selection for Virus/Router/Doctor + Skip Button */}
+            {!acknowledged && revealState === "ready" && (role.id === "virus" || role.id === "router" || role.id === "doctor") && (() => {
               const myPlayerId = sessionStorage.getItem("lp_playerId");
               const mySocketId = getSocket().id;
               const isSelf = (p: any) =>
@@ -511,7 +517,11 @@ export default function RoleRevealPage() {
               return (
                 <div className="flex flex-col gap-4 mb-4">
                   <TargetSelector
-                    label={role.id === "virus" ? "JAM INTERFACE" : "GATEWAY SOURCE"}
+                    label={
+                      role.id === "virus" ? "JAM INTERFACE" : 
+                      role.id === "doctor" ? "ANESTHETIZE SUBJECT" : 
+                      "GATEWAY SOURCE"
+                    }
                     players={livePlayers.filter(p => {
                       if (isSelf(p) || p.isSpectator) return false;
                       if (role.id === "virus") {

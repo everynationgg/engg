@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useParams } from "wouter";
 import { getSocket, disconnectSocket } from "@/lib/socket";
 import { playPhaseTransition } from "@/lib/sound";
-import { stopLobbyMusic } from "@/lib/music";
 import { systemToast } from "@/components/common/SystemToast";
 import RoleConfigPage from "@/pages/game/RoleConfigPage";
 import RoleRevealPage from "@/pages/game/RoleRevealPage";
@@ -21,7 +20,12 @@ import GlobalHUD from "@/components/game/GlobalHUD";
 import { useQuitGame } from "@/components/system/QuitGameButton";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import SettingsModal from "@/components/system/SettingsModal";
+import ProfileModal from "@/components/profile/ProfileModal";
+import HowToPlayModal from "@/components/game/HowToPlayModal";
 import { playSciFiClick } from "@/lib/sound";
+import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } from "@/lib/music";
+import { usePreferences } from "@/hooks/usePreferences";
+import LandingNavbar from "@/components/system/LandingNavbar";
 
 // Phases that warrant a dramatic countdown overlay before switching
 const DRAMATIC_PHASES = new Set(["voting", "result", "discussion"]);
@@ -52,23 +56,23 @@ function PhaseTimeline({ currentPhase }: { currentPhase: string }) {
   if (currentIndex === -1) return null;
 
   return (
-    <div className="flex items-center justify-center gap-1 py-1 px-4 z-50 bg-black/40 border-b border-white/5 backdrop-blur-sm shrink-0">
+    <div className="flex items-center justify-center gap-2 py-3 px-6 z-50 bg-black/60 border-b border-white/5 backdrop-blur-md shrink-0 h-[var(--context-height)]">
       {TIMELINE_PHASES.map((phase, idx) => {
         const isActive = idx === currentIndex;
         const isPast = idx < currentIndex;
         return (
           <div key={phase.id} className="flex items-center">
             <div 
-              className={`text-[0.6rem] tracking-widest uppercase font-orbitron font-bold px-2 py-0.5 rounded transition-all duration-300 ${
-                isActive ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/50 shadow-[0_0_10px_rgba(6,182,212,0.3)]" 
-                : isPast ? "text-cyan-800" 
-                : "text-gray-600/50"
+              className={`text-[11px] tracking-[0.2em] uppercase font-orbitron font-bold px-4 py-1 rounded-sm transition-all duration-300 ${
+                isActive ? "bg-cyan-500/25 text-white border border-cyan-500/60 shadow-[0_0_15px_rgba(6,182,212,0.4)]" 
+                : isPast ? "text-cyan-700 font-medium" 
+                : "text-white/10"
               }`}
             >
               {phase.label}
             </div>
             {idx < TIMELINE_PHASES.length - 1 && (
-              <div className={`w-3 h-[1px] mx-1 ${isPast ? "bg-cyan-800" : "bg-gray-600/30"}`} />
+              <div className={`w-6 h-[1px] mx-2 ${isPast ? "bg-cyan-900" : "bg-white/5"}`} />
             )}
           </div>
         );
@@ -109,10 +113,18 @@ export default function GameShell() {
   const [isGlitching, setIsGlitching] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const { preferences, updateMusicVolume } = usePreferences();
+  const musicOn = (preferences?.musicVolume ?? 0) > 0;
   const touchStartX = useRef<number | null>(null);
 
   const isHost = sessionStorage.getItem("lp_isCreating") === "true";
   const { midGame, showConfirm, openConfirm, closeConfirm, handleConfirmQuit } = useQuitGame(isHost);
+
+  const handleToggleMusic = () => {
+    updateMusicVolume(musicOn ? 0 : 100);
+  };
 
   const toggleChat = useCallback(() => setChatOpen((o) => !o), []);
 
@@ -141,16 +153,26 @@ export default function GameShell() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        // If chat is open, close it and stop
         if (chatOpen) {
           setChatOpen(false);
-        } else {
-          setIsPaused(prev => !prev);
+          return;
         }
+
+        // If any sub-modal is open, let it handle the ESC key (it will call onClose)
+        // We don't want to toggle the pause menu background state while a modal is closing.
+        if (showSettings || showProfile || showHowToPlay) {
+          // No-op here, the modal components have their own ESC listeners.
+          return;
+        }
+
+        // Otherwise, toggle pause menu
+        setIsPaused(prev => !prev);
       }
     };
     window.addEventListener("keydown", handleKeyDown, true);
     return () => window.removeEventListener("keydown", handleKeyDown, true);
-  }, [chatOpen]);
+  }, [chatOpen, showSettings, showProfile, showHowToPlay]);
 
   // Redirect if no room code
   useEffect(() => {
@@ -437,15 +459,21 @@ export default function GameShell() {
   };
 
   return (
-    <div 
-      className="relative min-h-screen flex flex-col"
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-    >
-      <GlobalHUD 
-        isWarping={!!transition} 
-      />
+    <div className="relative min-h-screen w-full flex flex-col overflow-hidden" style={{ background: "hsl(220 30% 2%)" }}>
+      <GlobalHUD isWarping={!!transition} />
       
+      {/* Top Navbar Area (Desktop Only) */}
+      <LandingNavbar
+        onShowSettings={() => setShowSettings(true)}
+        onShowProfile={() => setShowProfile(true)}
+        onShowHowToPlay={() => setShowHowToPlay(true)}
+        onShowAuth={() => {}}
+        musicOn={musicOn}
+        onToggleMusic={handleToggleMusic}
+      />
+
+      <div className="h-[var(--nav-height)] shrink-0 hidden lg:block" />
+
       <AnimatePresence>
         {isGlitching && (
           <motion.div 
@@ -517,8 +545,60 @@ export default function GameShell() {
                   onClick={() => setIsPaused(false)}
                   className="w-full py-4 border border-cyan-500/30 bg-cyan-500/5 hover:bg-cyan-500/10 transition-all font-orbitron text-[10px] uppercase tracking-[0.4em] text-cyan-400"
                 >
-                  Resume_Link
+                  RESUME
                 </button>
+
+                <button 
+                  onClick={() => {
+                    playSciFiClick();
+                    setShowHowToPlay(true);
+                  }}
+                  className="w-full py-4 border border-white/5 hover:border-white/20 transition-all font-orbitron text-[10px] uppercase tracking-[0.4em] text-white/40 hover:text-white"
+                >
+                  HOW TO PLAY
+                </button>
+
+                <button 
+                  onClick={() => {
+                    playSciFiClick();
+                    setShowProfile(true);
+                  }}
+                  className="w-full py-5 border border-white/5 hover:border-white/20 transition-all font-orbitron text-[12px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white"
+                >
+                  PROFILE
+                </button>
+
+                <div className="flex gap-2 w-full">
+                  <button 
+                    onClick={() => {
+                      playSciFiClick();
+                      setShowSettings(true);
+                    }}
+                    className="flex-1 py-5 border border-white/5 hover:border-white/20 transition-all font-orbitron text-[12px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white"
+                  >
+                    SETTINGS
+                  </button>
+
+                  <button 
+                    onClick={() => {
+                      playSciFiClick();
+                      const next = !musicOn;
+                      const nextVolume = next ? 100 : 0;
+                      updateMusicVolume(nextVolume);
+                      setSoundEnabled(next);
+                      if (next && displayedPhase === "role_config") {
+                        startLobbyMusic();
+                      } else {
+                        stopLobbyMusic();
+                      }
+                    }}
+                    className="flex-1 py-5 border border-white/5 hover:border-white/20 transition-all font-orbitron text-[12px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white"
+                  >
+                    AUDIO: {musicOn ? "ON" : "OFF"}
+                  </button>
+                </div>
+
+                <div className="h-[1px] bg-white/5 my-2 w-full" />
                 
                 <button 
                   onClick={() => {
@@ -530,19 +610,9 @@ export default function GameShell() {
                       window.location.reload();
                     }
                   }}
-                  className="w-full py-4 border border-white/5 hover:border-white/20 transition-all font-orbitron text-[10px] uppercase tracking-[0.4em] text-white/40 hover:text-white"
+                  className="w-full py-5 border border-white/5 hover:border-white/20 transition-all font-orbitron text-[12px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white"
                 >
-                  Restart_Sequence
-                </button>
-
-                <button 
-                  onClick={() => {
-                    playSciFiClick();
-                    setShowSettings(true);
-                  }}
-                  className="w-full py-4 border border-white/5 hover:border-white/20 transition-all font-orbitron text-[10px] uppercase tracking-[0.4em] text-white/40 hover:text-white"
-                >
-                  Settings_Module
+                  RESTART GAME
                 </button>
 
                 <div className="h-[1px] bg-white/5 my-2 w-full" />
@@ -552,9 +622,9 @@ export default function GameShell() {
                     playSciFiClick();
                     openConfirm();
                   }}
-                  className="w-full py-4 border border-red-500/10 hover:bg-red-500/5 hover:border-red-500/40 transition-all font-orbitron text-[10px] uppercase tracking-[0.4em] text-red-500/40 hover:text-red-500"
+                  className="w-full py-5 border border-red-500/20 hover:bg-red-500/10 hover:border-red-500/60 transition-all font-orbitron text-[12px] font-black uppercase tracking-[0.4em] text-red-500"
                 >
-                  Terminate_Mission
+                  QUIT GAME
                 </button>
               </div>
 
@@ -575,9 +645,9 @@ export default function GameShell() {
                 onCancel={closeConfirm}
               />
 
-              <div className="flex flex-col items-center opacity-20 mt-4">
-                <span className="font-mono text-[6px] uppercase tracking-widest">Operator: {sessionStorage.getItem("lp_callsign") || "UNKNOWN"}</span>
-                <span className="font-mono text-[6px] uppercase tracking-widest mt-1">Session: {roomCode}</span>
+              <div className="flex flex-col items-center opacity-40 mt-8 space-y-2">
+                <span className="font-mono text-[9px] uppercase tracking-[0.3em] font-bold">Operator: {sessionStorage.getItem("lp_callsign") || "UNKNOWN"}</span>
+                <span className="font-mono text-[9px] uppercase tracking-[0.3em] opacity-50">Session_Token: {roomCode}</span>
               </div>
             </motion.div>
           </motion.div>
@@ -647,6 +717,13 @@ export default function GameShell() {
         isOpen={showSettings} 
         onClose={() => setShowSettings(false)} 
       />
+      <ProfileModal
+        isOpen={showProfile}
+        onClose={() => setShowProfile(false)}
+      />
+      {showHowToPlay && (
+        <HowToPlayModal onClose={() => setShowHowToPlay(false)} />
+      )}
     </div>
   );
 }

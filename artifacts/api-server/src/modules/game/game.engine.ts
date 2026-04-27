@@ -115,6 +115,7 @@ export interface PrivateFeedback {
     | "shifter_exchange"
     | "virus_result"
     | "router_result"
+    | "doctor_result"
     | "skipped"
     | "no_action"
     | "passive"
@@ -151,6 +152,7 @@ export interface GameState {
   votes: Record<string, string>;
   chaoticAlignments: Record<string, "Good" | "Bad">;
   voteResult: VoteResult | null;
+  anesthetizedPlayers: string[];
   roundSummary: RoundSummary;
   createdAt: number;
   /** Stable playerIds (UUIDs) that have been kicked — these players cannot rejoin. */
@@ -237,6 +239,7 @@ const PASSIVE_ROLE_IDS = new Set(["crew", "parasite"]);
 
 /** Strict resolution order for ability processing. */
 const ROLE_ORDER = [
+  "doctor",
   "virus",
   "router",
   "sentinel",
@@ -332,6 +335,7 @@ export function createGame(sessionId: string, hostPlayer: Player): GameState {
     emergencyVote: freshEmergencyVote(),
     votes: {},
     chaoticAlignments: {},
+    anesthetizedPlayers: [],
     voteResult: null,
     roundSummary: freshRoundSummary(),
     createdAt: Date.now(),
@@ -406,6 +410,7 @@ export function startGame(
   state.votingStartedAt = null;
   state.emergencyVote = freshEmergencyVote();
   state.votes = {};
+  state.anesthetizedPlayers = [];
   state.voteResult = null;
   state.roundSummary = freshRoundSummary();
   state.orbitFeedback = {};
@@ -442,13 +447,16 @@ export function acknowledgeRole(
     const roleId = state.rolesAssigned[playerId];
     
     // ROLE AUTHORITY VALIDATION (Reveal Phase)
+    if (roleId === "doctor" && revealAction.type !== "anesthetize") {
+       return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "invalid doctor action" };
+    }
     if (roleId === "virus" && revealAction.type !== "packet_loss") {
        return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "invalid virus action" };
     }
     if (roleId === "router" && revealAction.type !== "gateway_hijack") {
        return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "invalid router action" };
     }
-    if (roleId !== "virus" && roleId !== "router" && roleId !== "chaotic") {
+    if (roleId !== "doctor" && roleId !== "virus" && roleId !== "router" && roleId !== "chaotic") {
        return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "unauthorized reveal action" };
     }
 
@@ -668,7 +676,19 @@ export function resolveRound(state: GameState): ResolutionResult {
     for (const actor of actors) {
       const action = state.orbitActions[actor.id];
 
-      // Virus and Router act during Role Reveal — log their reveal action in the summary
+      // Roles that act during Role Reveal
+      if (roleId === "doctor") {
+        const revealAction = state.revealActions[actor.id];
+        if (revealAction && revealAction.targets[0]) {
+          const target = state.players.find(p => p.id === revealAction.targets[0]);
+          feedback[actor.id] = { type: "doctor_result", data: { targetName: target?.name ?? "a player" } };
+          logActor(actor.name, actor.id, `anesthetized ${target?.name ?? "a player"}`);
+        } else {
+          feedback[actor.id] = { type: "skipped" };
+          logActor(actor.name, actor.id, "skipped their ability");
+        }
+        continue;
+      }
       if (roleId === "virus") {
         const revealAction = state.revealActions[actor.id];
         if (revealAction && revealAction.targets[0]) {
@@ -1132,6 +1152,11 @@ export function castVote(
     return { accepted: false, votingComplete: false, error: "Vote already synchronized and locked" };
   }
 
+  // ── ANESTHESIA ENFORCEMENT ──
+  if (voter?.playerId && state.anesthetizedPlayers?.includes(voter.playerId)) {
+    return { accepted: false, votingComplete: false, error: "Neural link inhibited: you cannot cast a vote this round" };
+  }
+
   // Validate target
   if (targetId !== "abstain") {
     if (targetId === voterId) {
@@ -1160,7 +1185,11 @@ export function castVote(
 
   // Check if all *active* (connected) players have voted
   const activeCount = getActivePlayers(state).length;
-  if (Object.keys(state.votes).length < activeCount) {
+  const activeAnesthetizedCount = (state.anesthetizedPlayers || []).filter(pId => 
+    state.players.find(p => p.playerId === pId)?.connectionStatus === "connected"
+  ).length;
+  
+  if (Object.keys(state.votes).length < (activeCount - activeAnesthetizedCount)) {
     return { accepted: true, votingComplete: false };
   }
 
@@ -1244,7 +1273,11 @@ export function recheckVotingCompletion(state: GameState): VoteCastResult {
   }
 
   const activeCount = getActivePlayers(state).length;
-  if (Object.keys(state.votes).length < activeCount) {
+  const activeAnesthetizedCount = (state.anesthetizedPlayers || []).filter(pId => 
+    state.players.find(p => p.playerId === pId)?.connectionStatus === "connected"
+  ).length;
+
+  if (Object.keys(state.votes).length < (activeCount - activeAnesthetizedCount)) {
     return { accepted: true, votingComplete: false };
   }
 
@@ -1422,6 +1455,7 @@ export function restartGame(state: GameState): GameState {
   state.votingStartedAt = null;
   state.emergencyVote = freshEmergencyVote();
   state.votes = {};
+  state.anesthetizedPlayers = [];
   state.chaoticAlignments = {};
   state.voteResult = null;
   state.roundSummary = freshRoundSummary();
@@ -1503,6 +1537,7 @@ export function reconnectPlayer(state: GameState, oldId: string, newId: string):
   state.orbitCompleted = remapArray(state.orbitCompleted);
   state.roleAcknowledgements = remapArray(state.roleAcknowledgements);
   state.resolutionAcknowledgements = remapArray(state.resolutionAcknowledgements);
+  // anesthetizedPlayers uses stable playerId — no remapping required
 
   // Remap emergency vote state (yesVoters, noVoters, callerId all use socket IDs)
   if (state.emergencyVote) {
@@ -1637,10 +1672,18 @@ export function kickPlayer(
 export function processRevealActions(state: GameState): void {
   state.jammedPlayerId = null;
   state.hijackedTargets = {};
+  state.anesthetizedPlayers = [];
 
   for (const [actorId, action] of Object.entries(state.revealActions)) {
     const role = state.rolesAssigned[actorId];
-    if (role === "virus") {
+    if (role === "doctor") {
+      const targetSocketId = action.targets[0];
+      const target = state.players.find(p => p.id === targetSocketId);
+      const actor = state.players.find(p => p.id === actorId);
+      if (target?.playerId && actor?.playerId && target.playerId !== actor.playerId) {
+        state.anesthetizedPlayers.push(target.playerId);
+      }
+    } else if (role === "virus") {
       const targetId = action.targets[0];
       const targetRole = state.rolesAssigned[targetId];
       // REFINEMENT: Router is immune to Packet Loss (Jamming)
