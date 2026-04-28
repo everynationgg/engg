@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { HUDOverlay } from "@/components/common/HUDOverlay";
-import { SciFiButton } from "@/components/common/SciFiButton";
+import { TacticalButton } from "@/components/common/TacticalButton";
 
 export default function Home() {
   const [uiVisible, setUiVisible] = useState(false);
@@ -28,59 +28,50 @@ export default function Home() {
           <AnimatePresence>
             {uiVisible && (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
                 className="w-full flex flex-col items-center gap-12"
               >
-                <div className="flex flex-wrap justify-center gap-3 w-full max-w-[1200px]">
-                  <div className="w-[240px]">
-                    <SciFiButton
-                      variant="outline"
+                <div className="flex flex-wrap justify-center gap-8 w-full max-w-[1200px]">
+                  {/* DISCORD */}
+                  <div className="w-[300px]">
+                    <TacticalButton
                       className="w-full"
                       onClick={() => window.open("https://discord.gg/everynation", "_blank")}
                     >
-                      <div className="flex flex-col items-center gap-1 py-1">
-                        <span className="text-[10px]">Community</span>
-                        <span className="font-mono text-[7px] text-white/20 tracking-widest">Link_Discord</span>
+                      <div className="flex flex-col items-start leading-tight">
+                        <span className="text-[12px] font-black tracking-[0.2em]">DISCORD</span>
+                        <span className="font-mono text-[7px] text-white/30 tracking-[0.2em]">Link_Discord</span>
                       </div>
-                    </SciFiButton>
+                    </TacticalButton>
                   </div>
-                  <div className="w-[240px]">
-                    <SciFiButton
-                      variant="primary"
+
+                  {/* ENTER (PRIMARY) */}
+                  <div className="w-[300px]">
+                    <TacticalButton
+                      active
                       className="w-full"
                       onClick={() => window.location.href = "/hub"}
                     >
-                      <div className="flex flex-col items-center gap-1 py-1">
-                        <span className="text-[10px]">Gaming Hub</span>
-                        <span className="font-mono text-[7px] text-[#020408]/40 tracking-widest uppercase">Deploy_Unit</span>
+                      <div className="flex flex-col items-start leading-tight">
+                        <span className="text-[12px] font-black text-cyan-400 group-hover:text-white tracking-[0.2em]">ENTER</span>
+                        <span className="font-mono text-[7px] text-cyan-400/30 group-hover:text-white/30 tracking-[0.2em]">Deploy_Unit</span>
                       </div>
-                    </SciFiButton>
+                    </TacticalButton>
                   </div>
-                  <div className="w-[240px]">
-                    <SciFiButton
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => window.location.href = "/shop"}
-                    >
-                      <div className="flex flex-col items-center gap-1 py-1">
-                        <span className="text-[10px]">Credit Shop</span>
-                        <span className="font-mono text-[7px] text-white/20 tracking-widest">Asset_Market</span>
-                      </div>
-                    </SciFiButton>
-                  </div>
-                  <div className="w-[240px]">
-                    <SciFiButton
-                      variant="outline"
+
+                  {/* SOCIALS */}
+                  <div className="w-[300px]">
+                    <TacticalButton
                       className="w-full"
                       onClick={() => window.open("https://linktr.ee/everynationgg", "_blank")}
                     >
-                      <div className="flex flex-col items-center gap-1 py-1">
-                        <span className="text-[10px]">Socials</span>
-                        <span className="font-mono text-[7px] text-white/20 tracking-widest">Link_Nexus</span>
+                      <div className="flex flex-col items-start leading-tight">
+                        <span className="text-[12px] font-black tracking-[0.2em]">SOCIALS</span>
+                        <span className="font-mono text-[7px] text-white/30 tracking-[0.2em]">Link_Nexus</span>
                       </div>
-                    </SciFiButton>
+                    </TacticalButton>
                   </div>
                 </div>
 

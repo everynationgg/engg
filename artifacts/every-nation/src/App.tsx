@@ -67,8 +67,8 @@ export default function App() {
             <AnimatePresence>
               {isWarping && <WarpJump />}
             </AnimatePresence>
-            <Navbar />
-            <AlliesSidebar />
+            {!isHomePage && <Navbar />}
+            {!isHomePage && <AlliesSidebar />}
             <div className={`${isWarping ? "opacity-0" : "opacity-100 transition-opacity duration-300"} ${!isHomePage ? "pt-[100px] lg:pt-[120px]" : ""}`}>
               <Router />
             </div>
