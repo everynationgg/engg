@@ -46,8 +46,17 @@ export default function Navbar() {
         <div className="w-full max-w-[1800px] mx-auto px-6 h-12 flex items-center justify-between pointer-events-auto">
           
           {/* LEFT: BRAND */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <span className="font-orbitron font-black text-2xl tracking-tighter text-white group-hover:text-cyan-400 transition-colors">EN</span>
+          <Link href="/" className="flex items-center gap-3 group h-12">
+            <div className="w-10 h-10 flex items-center justify-center overflow-hidden">
+              <video
+                src="/en_page_logo.webm"
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-auto scale-150"
+              />
+            </div>
             <div className="hidden sm:flex flex-col border-l border-white/10 pl-3">
               <span className="font-orbitron font-black text-sm tracking-[0.2em] text-white/90">EVERY_NATION</span>
               <span className="font-mono text-[8px] text-white/20 uppercase tracking-[0.4em]">Unit_01</span>
