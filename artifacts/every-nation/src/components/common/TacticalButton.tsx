@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { FaChevronUp } from "react-icons/fa";
 
@@ -16,51 +17,57 @@ export const TacticalButton: React.FC<TacticalButtonProps> = ({
   return (
     <button
       className={cn(
-        "relative group flex items-center h-12 transition-all duration-300 active:scale-95 select-none",
+        "relative group flex items-center transition-all duration-300 active:scale-95 select-none",
         className
       )}
       {...props}
     >
-      {/* THE WHITE TAB (LEFT ACCENT) */}
-      <div 
-        className={cn(
-          "absolute left-0 top-1 h-[28px] w-[50px] z-20 flex items-center justify-center transition-colors duration-300",
-          active ? "bg-white" : "bg-white/90 group-hover:bg-white"
-        )}
-        style={{
-          clipPath: "polygon(0 0, 85% 0, 100% 100%, 0 100%)"
-        }}
-      >
-        <FaChevronUp className="text-[#020408] text-[8px] mt-0.5" />
-      </div>
-
-      {/* THE MAIN BODY */}
-      <div className="relative ml-10 flex-grow h-[34px] flex items-center">
-        {/* Background Layer (Matte Dark) */}
+      {/* LEFT ACCENT TAB */}
+      <div className="relative z-20 h-10 w-10 shrink-0 overflow-hidden">
         <div 
           className={cn(
-            "absolute inset-0 bg-[#2d2a33] border-r border-white/10 transition-all duration-300",
-            active ? "bg-[#3d3a43]" : "group-hover:bg-[#35323b]"
+            "absolute inset-0 bg-white transition-all duration-300 group-hover:bg-cyan-400",
+            active ? "bg-cyan-400" : "bg-white/90"
           )}
           style={{
-            clipPath: "polygon(14px 0, 100% 0, 100% 100%, 0 100%)"
+            clipPath: "polygon(25% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 25%)"
+          }}
+        />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <FaChevronUp className={cn(
+            "text-[#020408] text-xs transition-transform duration-300 group-hover:scale-110",
+            active && "scale-110"
+          )} />
+        </div>
+      </div>
+
+      {/* MAIN BODY CONTAINER */}
+      <div className="relative -ml-3 flex-grow h-10 flex items-center">
+        {/* Background Layer */}
+        <div 
+          className={cn(
+            "absolute inset-0 bg-[#020408]/60 backdrop-blur-md border-y border-r border-white/10 transition-all duration-300 group-hover:bg-cyan-500/10 group-hover:border-cyan-500/30",
+            active && "bg-cyan-500/20 border-cyan-500/40"
+          )}
+          style={{
+            clipPath: "polygon(10px 0%, 100% 0%, 100% 100%, 0% 100%)"
           }}
         />
 
         {/* Top Highlight Stripe */}
-        <div className="absolute top-0 left-[14px] right-0 h-[1px] bg-white/20" />
-        
-        {/* Content Area */}
-        <div className="relative z-10 w-full pl-6 pr-8 flex items-center justify-center font-orbitron font-bold text-[14px] uppercase tracking-[0.1em] text-white/90 group-hover:text-white transition-colors">
+        <div className="absolute top-0 left-2.5 right-0 h-[1px] bg-white/20 group-hover:bg-cyan-400/40" />
+
+        {/* Inner Content Area */}
+        <div className="relative z-10 w-full pl-6 pr-8 flex items-center justify-center font-orbitron text-[10px] uppercase tracking-[0.3em] text-white/80 group-hover:text-white transition-colors">
           {children}
         </div>
 
-        {/* Right Detail (Thin edge) */}
-        <div className="absolute right-0 top-1 bottom-1 w-[1px] bg-white/10" />
+        {/* Right Edge Detail */}
+        <div className="absolute right-0 top-0 bottom-0 w-[2px] bg-white/5 group-hover:bg-cyan-400/20" />
       </div>
 
-      {/* Subtle Drop Shadow for depth */}
-      <div className="absolute inset-0 bg-black/40 blur-[8px] -z-10 translate-y-1 scale-95 opacity-50" />
+      {/* Subtle Hover Glow (Bottom) */}
+      <div className="absolute -bottom-1 left-10 right-2 h-[2px] bg-cyan-400/0 group-hover:bg-cyan-400/20 blur-[2px] transition-all duration-500" />
     </button>
   );
 };
