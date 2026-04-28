@@ -69,7 +69,7 @@ export default function Verify() {
     <HUDOverlay pageLabel="AUTH_VERIFICATION">
       <div className="min-h-screen flex flex-col items-center pb-12 px-4 md:px-8 relative overflow-x-hidden bg-[#020408] selection:bg-cyan-500/30">
         {/* Header Clearance Spacer */}
-        <div className="h-[120px] lg:h-[140px] w-full shrink-0 pointer-events-none" />
+        <div className="h-[104px] w-full shrink-0 pointer-events-none" />
 
         {/* Cinematic Background Layer */}
         <motion.div 
@@ -123,13 +123,15 @@ export default function Verify() {
                 <div className="flex flex-col gap-4">
                   <div className="flex flex-col gap-2 text-center">
                     <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20">Cipher_Code</label>
-                    <div className="relative group">
-                      <FaKey className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-yellow-500 text-[10px] transition-colors z-20 pointer-events-none" />
+                    <div className="flex items-center bg-white/[0.02] border border-white/5 focus-within:border-yellow-500/20 focus-within:bg-yellow-500/[0.01] transition-all group">
+                      <div className="pl-4 pr-3 text-white/10 group-focus-within:text-yellow-500 transition-colors pointer-events-none shrink-0">
+                        <FaKey size={10} />
+                      </div>
                       <input
                         type="text"
                         value={code}
                         onChange={(e) => setCode(e.target.value)}
-                        className="w-full bg-white/[0.02] border border-white/5 py-3 pr-4 pl-12 font-mono text-lg tracking-[0.8em] text-white outline-none focus:border-yellow-500/20 focus:bg-yellow-500/[0.01] transition-all uppercase text-center"
+                        className="flex-1 py-3 pr-4 bg-transparent font-mono text-lg tracking-[0.8em] text-white outline-none uppercase text-center"
                         placeholder="XXXXXX"
                         maxLength={6}
                         required

@@ -125,7 +125,7 @@ export default function Profile() {
 
         <main className="relative z-20 w-full max-w-[1400px] px-4 md:px-8 xl:px-12 pb-40 flex flex-col items-center">
           {/* Header Clearance Spacer */}
-          <div className="h-[120px] lg:h-[140px] w-full shrink-0 pointer-events-none" />
+          <div className="h-[104px] w-full shrink-0 pointer-events-none" />
 
           {loading ? (
             <div className="flex flex-col items-center gap-4 mt-32">

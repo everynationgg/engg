@@ -40,10 +40,10 @@ function GameCard({ title, description, image, href, status, subtitle, index }: 
       <TacticalSlate color={isOffline ? "#ffffff20" : "#00f3ff"} className="h-full">
         {/* Title Header */}
         <div className="relative z-20 mb-4 px-6 pt-6">
-           <h2 className="font-orbitron font-black text-[12px] tracking-[0.3em] uppercase text-white/80 group-hover:text-cyan-400 transition-colors">
-              {title}
-           </h2>
-           <div className="w-full h-px bg-gradient-to-r from-cyan-500/20 via-cyan-500/5 to-transparent mt-2" />
+          <h2 className="font-orbitron font-black text-[12px] tracking-[0.3em] uppercase text-white/80 group-hover:text-cyan-400 transition-colors">
+            {title}
+          </h2>
+          <div className="w-full h-px bg-gradient-to-r from-cyan-500/20 via-cyan-500/5 to-transparent mt-2" />
         </div>
 
         {/* Image Container */}
@@ -100,25 +100,25 @@ export default function Hub() {
       fetch(`${import.meta.env.VITE_API_URL}/api/user/profile`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      .then(res => res.json())
-      .then(data => {
-        setActivities(data.activities || []);
-        // Source of Truth 1: Explicit field from DB
-        if (data.lastClaimedAt) {
-          const hoursSince = (Date.now() - new Date(data.lastClaimedAt).getTime()) / (1000 * 60 * 60);
-          if (hoursSince < 24) setClaimed(true);
-        } else {
-          // Source of Truth 2: Activity logs (Fallback/Redundancy)
-          const lastDaily = data.activities?.find((a: any) => 
-            a.description.includes("Daily_Tactical_Sync") || 
-            a.description.includes("Daily_Sync_Success")
-          );
-          if (lastDaily) {
-            const hoursSince = (Date.now() - new Date(lastDaily.timestamp).getTime()) / (1000 * 60 * 60);
+        .then(res => res.json())
+        .then(data => {
+          setActivities(data.activities || []);
+          // Source of Truth 1: Explicit field from DB
+          if (data.lastClaimedAt) {
+            const hoursSince = (Date.now() - new Date(data.lastClaimedAt).getTime()) / (1000 * 60 * 60);
             if (hoursSince < 24) setClaimed(true);
+          } else {
+            // Source of Truth 2: Activity logs (Fallback/Redundancy)
+            const lastDaily = data.activities?.find((a: any) =>
+              a.description.includes("Daily_Tactical_Sync") ||
+              a.description.includes("Daily_Sync_Success")
+            );
+            if (lastDaily) {
+              const hoursSince = (Date.now() - new Date(lastDaily.timestamp).getTime()) / (1000 * 60 * 60);
+              if (hoursSince < 24) setClaimed(true);
+            }
           }
-        }
-      });
+        });
     }
   }, [token]);
 
@@ -168,20 +168,20 @@ export default function Hub() {
     <HUDOverlay pageLabel="MISSION_HUB">
       <div className="min-h-screen relative flex flex-col items-center overflow-x-hidden selection:bg-cyan-500/30">
         <AlliesSidebar />
-        
+
         {/* Cinematic Background Layer */}
         <motion.div
           className="fixed inset-0 z-0 bg-cover bg-center opacity-40 grayscale"
           style={{ backgroundImage: "url('/hub_bg.png')", x, y }}
         />
         <div className="fixed inset-0 z-1 bg-gradient-to-b from-[#020408]/90 via-[#020408]/60 to-[#020408]/95" />
-        
+
         {/* Main Content Area */}
         <main className="relative z-20 w-full max-w-[1600px] px-6 md:px-12 xl:px-16 pb-32 flex flex-col lg:flex-row gap-16 items-start">
-          
+
           <div className="flex-1 flex flex-col w-full">
             {/* Header Clearance Spacer */}
-            <div className="h-[120px] lg:h-[140px] w-full shrink-0 pointer-events-none" />
+            <div className="h-[104px] w-full shrink-0 pointer-events-none" />
 
             {/* Header Overlay */}
             <header className="w-full flex flex-col items-center lg:items-start gap-4 mb-12 text-center lg:text-left px-4 md:px-8">
@@ -197,19 +197,19 @@ export default function Hub() {
             {/* Daily Tactical Briefing */}
             <div className="relative z-30">
               <TacticalSlate>
-               <div className="p-8 flex flex-col md:flex-row items-center justify-between gap-8">
+                <div className="p-8 flex flex-col md:flex-row items-center justify-between gap-8">
                   <div className="flex items-center gap-6">
                     <div className="w-12 h-12 border border-cyan-500/20 flex items-center justify-center relative">
-                       <div className="absolute inset-0 bg-cyan-400/5 animate-pulse" />
-                       <FaTerminal className="text-cyan-400 text-xl" />
+                      <div className="absolute inset-0 bg-cyan-400/5 animate-pulse" />
+                      <FaTerminal className="text-cyan-400 text-xl" />
                     </div>
                     <div className="flex flex-col gap-1">
-                       <h3 className="font-orbitron text-[14px] font-black uppercase tracking-[0.3em] text-white">Daily Tactical Briefing</h3>
-                       <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/30">Status: {claimed ? "IDENTITY SYNCED" : "SYNC REQUIRED"}</span>
+                      <h3 className="font-orbitron text-[14px] font-black uppercase tracking-[0.3em] text-white">Daily Tactical Briefing</h3>
+                      <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/30">Status: {claimed ? "IDENTITY SYNCED" : "SYNC REQUIRED"}</span>
                     </div>
                   </div>
-                  
-                  <SciFiButton 
+
+                  <SciFiButton
                     variant={claimed ? "ghost" : "primary"}
                     disabled={claimed || claiming}
                     onClick={handleClaim}
@@ -217,7 +217,7 @@ export default function Hub() {
                   >
                     {claiming ? "SYNCING..." : claimed ? "PROTOCOL COMPLETE" : "CLAIM DAILY"}
                   </SciFiButton>
-               </div>
+                </div>
               </TacticalSlate>
             </div>
 
@@ -233,43 +233,43 @@ export default function Hub() {
 
           {/* Operation History Sidebar */}
           <aside className="w-full lg:w-[320px] sticky top-40 flex flex-col gap-6">
-             <div className="flex items-center gap-3 mb-2">
-                <FaHistory className="text-cyan-400/40 text-xs" />
-                <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-white/40">Recent_Operations</span>
-             </div>
-             
-             <div className="flex flex-col gap-3">
-                {activities.length === 0 ? (
-                   <div className="p-6 border border-white/5 bg-white/[0.02] flex flex-col items-center gap-4">
-                      <FaClock className="text-white/5 text-xl" />
-                      <span className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/10 text-center">No_Operational_History_Detected</span>
-                   </div>
-                ) : (
-                  activities.map((act, i) => (
-                    <motion.div
-                      key={act.id}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                      className="p-4 border border-white/5 bg-white/[0.02] group hover:bg-white/[0.05] transition-colors"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-mono text-[6px] uppercase tracking-widest text-cyan-400/60">{act.type}</span>
-                        <span className="font-mono text-[6px] text-white/10">{new Date(act.timestamp).toLocaleDateString()}</span>
+            <div className="flex items-center gap-3 mb-2">
+              <FaHistory className="text-cyan-400/40 text-xs" />
+              <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-white/40">Recent_Operations</span>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              {activities.length === 0 ? (
+                <div className="p-6 border border-white/5 bg-white/[0.02] flex flex-col items-center gap-4">
+                  <FaClock className="text-white/5 text-xl" />
+                  <span className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/10 text-center">No_Operational_History_Detected</span>
+                </div>
+              ) : (
+                activities.map((act, i) => (
+                  <motion.div
+                    key={act.id}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="p-4 border border-white/5 bg-white/[0.02] group hover:bg-white/[0.05] transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-mono text-[6px] uppercase tracking-widest text-cyan-400/60">{act.type}</span>
+                      <span className="font-mono text-[6px] text-white/10">{new Date(act.timestamp).toLocaleDateString()}</span>
+                    </div>
+                    <p className="font-mono text-[8px] uppercase tracking-wider text-white/40 group-hover:text-white/80 transition-colors">
+                      {act.description}
+                    </p>
+                    {act.amount && (
+                      <div className="mt-2 flex items-center gap-1">
+                        <span className="font-orbitron text-[8px] font-bold text-cyan-400">+{act.amount}</span>
+                        <span className="font-mono text-[6px] text-cyan-400/40 uppercase">Credits</span>
                       </div>
-                      <p className="font-mono text-[8px] uppercase tracking-wider text-white/40 group-hover:text-white/80 transition-colors">
-                        {act.description}
-                      </p>
-                      {act.amount && (
-                        <div className="mt-2 flex items-center gap-1">
-                          <span className="font-orbitron text-[8px] font-bold text-cyan-400">+{act.amount}</span>
-                          <span className="font-mono text-[6px] text-cyan-400/40 uppercase">Credits</span>
-                        </div>
-                      )}
-                    </motion.div>
-                  ))
-                )}
-             </div>
+                    )}
+                  </motion.div>
+                ))
+              )}
+            </div>
           </aside>
         </main>
       </div>

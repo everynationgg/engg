@@ -46,7 +46,7 @@ export default function Register() {
     <HUDOverlay pageLabel="AUTH_REGISTRATION">
       <div className="min-h-screen flex flex-col items-center pb-12 px-4 md:px-8 relative overflow-x-hidden bg-[#020408] selection:bg-cyan-500/30">
         {/* Header Clearance Spacer */}
-        <div className="h-[120px] lg:h-[140px] w-full shrink-0 pointer-events-none" />
+        <div className="h-[104px] w-full shrink-0 pointer-events-none" />
 
         <motion.div 
           className="fixed inset-0 z-0 opacity-10 pointer-events-none grayscale"
@@ -99,13 +99,15 @@ export default function Register() {
                 <div className="flex flex-col gap-4">
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20 ml-1">Codename</label>
-                    <div className="relative group">
-                      <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-purple-400 text-[10px] transition-colors z-20 pointer-events-none" />
+                    <div className="flex items-center bg-white/[0.02] border border-white/5 focus-within:border-purple-500/20 focus-within:bg-purple-500/[0.01] transition-all group">
+                      <div className="pl-4 pr-3 text-white/10 group-focus-within:text-purple-400 transition-colors pointer-events-none shrink-0">
+                        <FaUser size={10} />
+                      </div>
                       <input
                         type="text"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        className="w-full bg-white/[0.02] border border-white/5 py-2.5 pr-4 pl-12 font-mono text-[11px] tracking-wider text-white outline-none focus:border-purple-500/20 focus:bg-purple-500/[0.01] transition-all"
+                        className="flex-1 py-2.5 pr-4 bg-transparent font-mono text-[11px] tracking-wider text-white outline-none"
                         placeholder="CALLSIGN"
                         required
                       />
@@ -114,13 +116,15 @@ export default function Register() {
 
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20 ml-1">Uplink</label>
-                    <div className="relative group">
-                      <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-purple-400 text-[10px] transition-colors z-20 pointer-events-none" />
+                    <div className="flex items-center bg-white/[0.02] border border-white/5 focus-within:border-purple-500/20 focus-within:bg-purple-500/[0.01] transition-all group">
+                      <div className="pl-4 pr-3 text-white/10 group-focus-within:text-purple-400 transition-colors pointer-events-none shrink-0">
+                        <FaEnvelope size={10} />
+                      </div>
                       <input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full bg-white/[0.02] border border-white/5 py-2.5 pr-4 pl-12 font-mono text-[11px] tracking-wider text-white outline-none focus:border-purple-500/20 focus:bg-purple-500/[0.01] transition-all"
+                        className="flex-1 py-2.5 pr-4 bg-transparent font-mono text-[11px] tracking-wider text-white outline-none"
                         placeholder="EMAIL_ADDR"
                         required
                       />
@@ -129,13 +133,15 @@ export default function Register() {
 
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20 ml-1">Cipher</label>
-                    <div className="relative group">
-                      <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-purple-400 text-[10px] transition-colors z-20 pointer-events-none" />
+                    <div className="flex items-center bg-white/[0.02] border border-white/5 focus-within:border-purple-500/20 focus-within:bg-purple-500/[0.01] transition-all group">
+                      <div className="pl-4 pr-3 text-white/10 group-focus-within:text-purple-400 transition-colors pointer-events-none shrink-0">
+                        <FaLock size={10} />
+                      </div>
                       <input
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full bg-white/[0.02] border border-white/5 py-2.5 pr-4 pl-12 font-mono text-[11px] tracking-[0.4em] text-white outline-none focus:border-purple-500/20 focus:bg-purple-500/[0.01] transition-all"
+                        className="flex-1 py-2.5 pr-4 bg-transparent font-mono text-[11px] tracking-[0.4em] text-white outline-none"
                         placeholder="••••••••"
                         required
                         minLength={8}

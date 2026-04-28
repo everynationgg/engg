@@ -80,7 +80,7 @@ export default function Navbar() {
                 <div className="hidden sm:flex items-center gap-4 px-5 py-2 bg-white/[0.02] border border-white/10 rounded-sm group/credits hover:border-cyan-500/40 hover:bg-cyan-500/[0.04] transition-all duration-200 ease-out cursor-default relative overflow-hidden backdrop-blur-md">
                   {/* Holographic Scanline - Ultra Subtle Hover Only */}
                   <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-cyan-400/[0.03] to-transparent -translate-y-full group-hover/credits:animate-[scanline_1.5s_ease-in-out_infinite] opacity-0 group-hover/credits:opacity-100 transition-opacity duration-500" />
-                  
+
                   <div className="flex flex-col items-start leading-none relative z-10">
                     <span className="font-mono text-[7px] text-white/20 uppercase tracking-[0.4em] mb-1 group-hover/credits:text-cyan-400/50 transition-colors duration-200">Asset_Uplink</span>
                     <div className="flex items-baseline gap-2">
@@ -106,7 +106,7 @@ export default function Navbar() {
                       {/* Avatar Container - Controlled Glow */}
                       <div className="w-11 h-11 rounded-full border border-white/10 p-[1px] flex items-center justify-center bg-white/[0.02] group-hover/user:border-cyan-500/40 group-hover/user:bg-cyan-500/[0.06] transition-all duration-200 ease-out relative overflow-hidden">
                         <div className="w-full h-full rounded-full bg-[#020408] flex items-center justify-center overflow-hidden relative">
-                           <FaUser className="text-white/20 text-[16px] group-hover/user:text-cyan-400 transition-all duration-200" />
+                          <FaUser className="text-white/20 text-[16px] group-hover/user:text-cyan-400 transition-all duration-200" />
                         </div>
                       </div>
 
@@ -125,18 +125,18 @@ export default function Navbar() {
                           <span className="font-orbitron text-[9px] font-black text-white/40 group-hover/user:text-cyan-400">LV_{level}</span>
                         </div>
                       </div>
-                      
+
                       {/* Integrated Tactical XP Bar */}
                       <div className="hidden xl:flex items-center gap-2 w-full opacity-30 group-hover/user:opacity-100 transition-all duration-300">
-                         <div className="flex-1 h-[2px] bg-white/5 relative overflow-hidden rounded-full">
-                           <motion.div
-                             className="absolute inset-y-0 left-0 bg-cyan-500"
-                             initial={{ width: 0 }}
-                             animate={{ width: `${xpProgress * 100}%` }}
-                             transition={{ duration: 2, ease: "easeOut" }}
-                           />
-                         </div>
-                         <span className="font-mono text-[6px] text-white/20 uppercase tracking-tighter">{Math.round(xpProgress * 100)}%</span>
+                        <div className="flex-1 h-[2px] bg-white/5 relative overflow-hidden rounded-full">
+                          <motion.div
+                            className="absolute inset-y-0 left-0 bg-cyan-500"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${xpProgress * 100}%` }}
+                            transition={{ duration: 2, ease: "easeOut" }}
+                          />
+                        </div>
+                        <span className="font-mono text-[6px] text-white/20 uppercase tracking-tighter">{Math.round(xpProgress * 100)}%</span>
                       </div>
                     </div>
                   </Link>
@@ -189,22 +189,22 @@ export default function Navbar() {
                           >
                             <div className="flex flex-col gap-1">
                               <div className="flex items-center gap-2 mb-3">
-                                 <div className="w-1 h-1 bg-cyan-500 shadow-[0_0_5px_#00f3ff]" />
-                                 <span className="font-mono text-[7px] uppercase tracking-[0.5em] text-white/20">System_Directives</span>
+                                <div className="w-1 h-1 bg-cyan-500 shadow-[0_0_5px_#00f3ff]" />
+                                <span className="font-mono text-[7px] uppercase tracking-[0.5em] text-white/20">System_Directives</span>
                               </div>
 
                               <button className="flex items-center justify-between w-full p-3 text-left hover:bg-white/5 group transition-all duration-150 border border-transparent hover:border-white/5">
                                 <div className="flex items-center gap-3">
-                                   <FaVolumeUp size={10} className="text-white/20 group-hover:text-cyan-400 transition-colors" />
-                                   <span className="font-orbitron text-[9px] uppercase tracking-widest text-white/60 group-hover:text-white transition-colors">Audio_Engine</span>
+                                  <FaVolumeUp size={10} className="text-white/20 group-hover:text-cyan-400 transition-colors" />
+                                  <span className="font-orbitron text-[9px] uppercase tracking-widest text-white/60 group-hover:text-white transition-colors">Audio_Engine</span>
                                 </div>
                                 <div className="w-1 h-1 bg-white/10 rounded-full group-hover:bg-cyan-500/40 transition-colors" />
                               </button>
 
                               <button className="flex items-center justify-between w-full p-3 text-left hover:bg-white/5 group transition-all duration-150 border border-transparent hover:border-white/5">
                                 <div className="flex items-center gap-3">
-                                   <FaTerminal size={10} className="text-white/20 group-hover:text-cyan-400 transition-colors" />
-                                   <span className="font-orbitron text-[9px] uppercase tracking-widest text-white/60 group-hover:text-white transition-colors">Preferences</span>
+                                  <FaTerminal size={10} className="text-white/20 group-hover:text-cyan-400 transition-colors" />
+                                  <span className="font-orbitron text-[9px] uppercase tracking-widest text-white/60 group-hover:text-white transition-colors">Preferences</span>
                                 </div>
                                 <div className="w-1 h-1 bg-white/10 rounded-full group-hover:bg-cyan-500/40 transition-colors" />
                               </button>
@@ -228,19 +228,19 @@ export default function Navbar() {
               </div>
             ) : (
               <div className="flex items-center gap-4">
-                 <div className="h-8 w-[1px] bg-white/5" />
-                 <SciFiButton
-                   variant="primary"
-                   size="sm"
-                   onClick={() => navigate("/login")}
-                   className="relative group/login overflow-hidden"
-                 >
-                   <div className="absolute inset-0 bg-white/5 translate-x-[-100%] group-hover/login:translate-x-[100%] transition-transform duration-700 ease-in-out" />
-                   <span className="relative z-10 flex items-center gap-2">
-                      <FaFingerprint className="text-[10px]" />
-                      AUTHORIZE_ACCESS
-                   </span>
-                 </SciFiButton>
+                <div className="h-8 w-[1px] bg-white/5" />
+                <SciFiButton
+                  variant="primary"
+                  size="sm"
+                  onClick={() => navigate("/login")}
+                  className="relative group/login overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-white/5 translate-x-[-100%] group-hover/login:translate-x-[100%] transition-transform duration-700 ease-in-out" />
+                  <span className="relative z-10 flex items-center gap-2">
+                    <FaFingerprint className="text-[10px]" />
+                    AUTHORIZE_ACCESS
+                  </span>
+                </SciFiButton>
               </div>
             )}
           </div>
