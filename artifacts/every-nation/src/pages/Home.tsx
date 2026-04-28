@@ -35,7 +35,7 @@ export default function Home() {
                 <div className="w-full max-w-[600px] flex justify-center">
                   <video
                     className="w-full h-auto"
-                    src="/_asset/en_page_logo.webm"
+                    src="/attached_assets/en_page_logo.webm"
                     autoPlay
                     muted
                     loop
