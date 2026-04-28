@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaUser, FaWallet, FaHistory, FaShieldAlt, FaTrophy, FaEnvelope, FaLock, FaSkull, FaKey, FaSatelliteDish, FaTerminal, FaSignOutAlt } from "react-icons/fa";
-import AlliesSidebar from "@/components/AlliesSidebar";
 import { systemToast } from "../components/common/SystemToast";
 import { useParallax } from "@/hooks/useParallax";
 import TacticalSlate from "@/components/common/TacticalSlate";
@@ -112,7 +111,6 @@ export default function Profile() {
   return (
     <HUDOverlay pageLabel="COMMAND_PROFILE">
       <div className="min-h-screen relative flex flex-col items-center overflow-x-hidden selection:bg-cyan-500/30">
-        <AlliesSidebar />
 
         {/* Cinematic Background Layer */}
         <motion.div 
@@ -481,4 +479,3 @@ export default function Profile() {
     </HUDOverlay>
   );
 }
-

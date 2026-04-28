@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaExternalLinkAlt, FaLock, FaTerminal, FaShieldAlt, FaCubes, FaHistory, FaCheckCircle, FaClock } from "react-icons/fa";
-import AlliesSidebar from "@/components/AlliesSidebar";
 import TacticalSlate from "@/components/common/TacticalSlate";
 import { useParallax } from "@/hooks/useParallax";
 import { HUDOverlay } from "@/components/common/HUDOverlay";
@@ -167,7 +166,6 @@ export default function Hub() {
   return (
     <HUDOverlay pageLabel="MISSION_HUB">
       <div className="min-h-screen relative flex flex-col items-center overflow-x-hidden selection:bg-cyan-500/30">
-        <AlliesSidebar />
 
         {/* Cinematic Background Layer */}
         <motion.div

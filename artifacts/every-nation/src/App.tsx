@@ -14,6 +14,7 @@ import NotFound from "@/pages/not-found";
 import { AuthProvider } from "@/hooks/useAuth";
 
 import Navbar from "@/components/Navbar";
+import AlliesSidebar from "@/components/AlliesSidebar";
 import WarpJump from "@/components/common/WarpJump";
 import SystemToastContainer from "@/components/common/SystemToast";
 
@@ -67,6 +68,7 @@ export default function App() {
               {isWarping && <WarpJump />}
             </AnimatePresence>
             <Navbar />
+            <AlliesSidebar />
             <div className={`${isWarping ? "opacity-0" : "opacity-100 transition-opacity duration-300"} ${!isHomePage ? "pt-[100px] lg:pt-[120px]" : ""}`}>
               <Router />
             </div>
