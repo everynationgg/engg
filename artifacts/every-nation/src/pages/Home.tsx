@@ -39,38 +39,40 @@ export default function Home() {
                 className="flex flex-wrap justify-center gap-4 md:gap-8 w-full max-w-[1600px] mx-auto"
               >
                 {/* DISCORD */}
-                <TacticalButton
-                  className="w-[280px] md:w-[400px]"
+                <SciFiButton
+                  variant="outline"
+                  className="w-[280px] md:w-[400px] h-20"
                   onClick={() => window.open("https://discord.gg/everynation", "_blank")}
                 >
                   <div className="flex flex-col items-center leading-tight">
                     <span className="text-[10px] md:text-[14px] font-black tracking-[0.25em]">DISCORD</span>
                     <span className="font-mono text-[7px] md:text-[9px] text-white/30 tracking-[0.2em]">Link_Discord</span>
                   </div>
-                </TacticalButton>
+                </SciFiButton>
 
                 {/* ENTER (PRIMARY) */}
-                <TacticalButton
-                  active
-                  className="w-[280px] md:w-[400px]"
+                <SciFiButton
+                  variant="primary"
+                  className="w-[280px] md:w-[400px] h-20"
                   onClick={() => navigate("/hub")}
                 >
-                  <div className="flex flex-col items-center leading-tight">
-                    <span className="text-[10px] md:text-[14px] font-black text-cyan-400 group-hover:text-white tracking-[0.25em]">ENTER</span>
-                    <span className="font-mono text-[7px] md:text-[9px] text-cyan-400/30 group-hover:text-white/30 tracking-[0.2em]">Deploy_Unit</span>
+                  <div className="flex flex-col items-center leading-tight text-[#020408]">
+                    <span className="text-[10px] md:text-[14px] font-black tracking-[0.25em]">ENTER</span>
+                    <span className="font-mono text-[7px] md:text-[9px] opacity-40 tracking-[0.2em]">Deploy_Unit</span>
                   </div>
-                </TacticalButton>
+                </SciFiButton>
 
                 {/* SOCIALS */}
-                <TacticalButton
-                  className="w-[280px] md:w-[400px]"
+                <SciFiButton
+                  variant="outline"
+                  className="w-[280px] md:w-[400px] h-20"
                   onClick={() => window.open("https://linktr.ee/everynationgg", "_blank")}
                 >
                   <div className="flex flex-col items-center leading-tight">
                     <span className="text-[10px] md:text-[14px] font-black tracking-[0.25em]">SOCIALS</span>
                     <span className="font-mono text-[7px] md:text-[9px] text-white/30 tracking-[0.2em]">Link_Nexus</span>
                   </div>
-                </TacticalButton>
+                </SciFiButton>
               </motion.div>
             )}
           </AnimatePresence>
