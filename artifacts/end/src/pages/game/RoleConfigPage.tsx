@@ -160,6 +160,9 @@ export default function RoleConfigPage() {
           }
         }
         sessionStorage.setItem("lp_totalPlayers", String(session.players.length));
+      } else {
+        // Entering lobby phase: clear the assigned role from previous round
+        sessionStorage.removeItem("lp_assignedRole");
       }
     };
 

@@ -8,11 +8,18 @@
     ".": "./src/index.ts",
     "./schema": "./src/schema.ts"
   },
+  "scripts": {
+    "push": "drizzle-kit push",
+    "generate": "drizzle-kit generate",
+    "migrate": "drizzle-kit migrate",
+    "build": "tsc"
+  },
   "dependencies": {
     "drizzle-orm": "catalog:",
     "pg": "catalog:"
   },
   "devDependencies": {
+    "drizzle-kit": "^0.30.5",
     "@types/pg": "catalog:"
   }
 }

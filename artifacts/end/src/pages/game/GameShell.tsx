@@ -212,6 +212,10 @@ export default function GameShell() {
     const applyPhase = (newPhase: string) => {
       if (!newPhase || newPhase === prevPhaseRef.current) return;
 
+      if (newPhase === "role_config") {
+        sessionStorage.removeItem("lp_assignedRole");
+      }
+
       const prevPhase = prevPhaseRef.current;
       prevPhaseRef.current = newPhase;
 

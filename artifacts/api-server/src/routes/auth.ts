@@ -20,6 +20,8 @@ import { logAudit } from "../lib/audit.js";
 import { ensureUserMissions } from "../lib/missions.js";
 
 import { rateLimit } from "express-rate-limit";
+import { RedisStore } from "rate-limit-redis";
+import { redisClient } from "../config/redis.js";
 
 const filter = new Filter();
 const router: IRouter = Router();
@@ -30,9 +32,17 @@ const router: IRouter = Router();
 const authLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 10, // Limit each IP to 10 attempts
+  store: new RedisStore({
+    sendCommand: (...args: string[]) => {
+      const [cmd, ...rest] = args;
+      return redisClient.call(cmd, ...rest) as Promise<any>;
+    },
+    prefix: "rl:auth:ip:",
+  }),
   message: { error: "Too many authentication attempts. Please try again in 15 minutes." },
   standardHeaders: true,
   legacyHeaders: false,
+  passOnStoreError: true,
 });
 
 // Targeted brute-force protection per account identifier
@@ -40,6 +50,13 @@ const authLimit = rateLimit({
 const identifierLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10, 
+  store: new RedisStore({
+    sendCommand: (...args: string[]) => {
+      const [cmd, ...rest] = args;
+      return redisClient.call(cmd, ...rest) as Promise<any>;
+    },
+    prefix: "rl:auth:id:",
+  }),
   keyGenerator: (req) => {
     // Stringify and normalize (NFKC) to prevent bypass via casing/whitespace/unicode variants
     const identifier = String(req.body.email || "").normalize('NFKC').toLowerCase().trim();
@@ -49,28 +66,52 @@ const identifierLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => !req.body.email,
+  passOnStoreError: true,
 });
 
 // Broad IP-based rate limiting
 const ipLimit = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
   max: 20, // 20 requests per minute
+  store: new RedisStore({
+    sendCommand: (...args: string[]) => {
+      const [cmd, ...rest] = args;
+      return redisClient.call(cmd, ...rest) as Promise<any>;
+    },
+    prefix: "rl:global:ip:",
+  }),
   message: { error: "Tactical network congestion detected. Please wait." },
   standardHeaders: true,
   legacyHeaders: false,
+  passOnStoreError: true,
 });
 
 const resetLimit = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 3, // Limit each IP to 3 reset requests
+  store: new RedisStore({
+    sendCommand: (...args: string[]) => {
+      const [cmd, ...rest] = args;
+      return redisClient.call(cmd, ...rest) as Promise<any>;
+    },
+    prefix: "rl:reset:ip:",
+  }),
   message: { error: "Too many reset requests. Please try again in 1 hour." },
   standardHeaders: true,
   legacyHeaders: false,
+  passOnStoreError: true,
 });
 
 const identifierResetLimit = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 2, // Limit each email to 2 requests per hour
+  store: new RedisStore({
+    sendCommand: (...args: string[]) => {
+      const [cmd, ...rest] = args;
+      return redisClient.call(cmd, ...rest) as Promise<any>;
+    },
+    prefix: "rl:reset:id:",
+  }),
   keyGenerator: (req) => {
     return String(req.body.email || "").normalize('NFKC').toLowerCase().trim() || req.ip || "unknown";
   },
@@ -78,6 +119,7 @@ const identifierResetLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => !req.body.email,
+  passOnStoreError: true,
 });
 
 // Username validation helper

@@ -39,6 +39,7 @@ RUN pnpm install --frozen-lockfile --prod
 
 # Copy built output from build stage
 COPY --from=build /app/artifacts/api-server/dist artifacts/api-server/dist
+COPY --from=build /app/lib/db/drizzle lib/db/drizzle
 
 WORKDIR /app/artifacts/api-server
 
