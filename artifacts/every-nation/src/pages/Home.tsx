@@ -19,7 +19,6 @@ export default function Home() {
           src="/EN_PAGE_BACKGROUND.webm"
           autoPlay
           muted
-          loop
           playsInline
         />
 
@@ -30,7 +29,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1.2, ease: "easeOut" }}
-                className="w-full flex flex-col items-center gap-24"
+                className="w-full flex flex-col items-center gap-10 md:gap-24"
               >
                 {/* NEW LOGO VIDEO */}
                 <div className="w-full max-w-[600px] flex justify-center">
