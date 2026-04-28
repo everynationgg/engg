@@ -22,7 +22,7 @@ export const TacticalButton: React.FC<TacticalButtonProps> = ({
       {/* Background Image (The actual button asset) */}
       <div className="absolute inset-0 z-0">
         <img
-          src="/attached_assets/home_btn.webp"
+          src="/home_btn.webp"
           className="w-full h-full object-fill"
           alt="button frame"
         />
