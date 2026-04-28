@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaFingerprint, FaTerminal, FaEnvelope, FaArrowRight } from "react-icons/fa";
+import { FaFingerprint, FaTerminal, FaEnvelope, FaArrowRight, FaKey } from "react-icons/fa";
 import { useParallax } from "@/hooks/useParallax";
 import TacticalSlate from "@/components/common/TacticalSlate";
 import { HUDOverlay } from "@/components/common/HUDOverlay";
@@ -39,8 +39,9 @@ export default function ForgotPassword() {
   };
 
   return (
-    <HUDOverlay pageLabel="CIPHER_RECOVERY">
-      <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden bg-[#020408] selection:bg-cyan-500/30">
+    <HUDOverlay pageLabel="AUTH_RECOVERY">
+      <div className="min-h-screen flex flex-col items-center pt-[112px] pb-12 px-4 md:px-8 relative overflow-x-hidden bg-[#020408] selection:bg-cyan-500/30">
+        {/* Cinematic Background Layer */}
         <motion.div 
           className="fixed inset-0 z-0 opacity-10 pointer-events-none grayscale"
           style={{ x, y }}
@@ -52,23 +53,22 @@ export default function ForgotPassword() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-[420px] relative z-20"
+          className="w-full max-w-[420px] relative z-20 mt-8"
         >
           <TacticalSlate color="#00f3ff">
             <div className="p-8 md:p-10 flex flex-col gap-8">
-              <div className="text-center flex flex-col items-center gap-4">
-                <div className="relative">
-                  <div className="w-16 h-16 border border-cyan-500/20 flex items-center justify-center relative">
-                     <div className={`absolute inset-0 border border-cyan-500/40 border-t-transparent animate-[spin_10s_linear_infinite]`} />
-                     <FaFingerprint className="text-xl text-cyan-400/40" />
-                  </div>
+              {/* Header */}
+              <div className="text-center flex flex-col items-center gap-6 px-4 md:px-8">
+                <div className="w-16 h-16 border border-cyan-500/20 flex items-center justify-center relative">
+                   <div className="absolute inset-0 border border-cyan-500/40 border-t-transparent animate-[spin_15s_linear_infinite]" />
+                   <FaKey className="text-xl text-cyan-400/40" />
                 </div>
-                <div className="flex flex-col gap-1">
-                  <h1 className="font-orbitron text-xl font-black tracking-[0.4em] uppercase text-white">
-                    Access <span className="text-cyan-400">Recovery</span>
+                <div className="flex flex-col gap-2">
+                  <h1 className="font-orbitron text-4xl lg:text-5xl font-black tracking-[0.4em] uppercase text-white leading-tight">
+                    Reset <span className="text-cyan-400">Cipher</span>
                   </h1>
                   <p className="font-mono text-[8px] uppercase tracking-[0.4em] text-white/20">
-                    Neural_Link_Lost
+                    Recovery_Protocol_Initialised
                   </p>
                 </div>
               </div>

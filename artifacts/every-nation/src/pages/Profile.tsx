@@ -123,7 +123,7 @@ export default function Profile() {
           <div className="absolute inset-0 bg-gradient-to-b from-[#020408]/80 via-transparent to-[#020408]" />
         </motion.div>
 
-        <main className="relative z-20 w-full max-w-[1400px] px-6 pt-40 pb-40 flex flex-col items-center">
+        <main className="relative z-20 w-full max-w-[1400px] px-4 md:px-8 xl:px-12 pt-[112px] pb-40 flex flex-col items-center">
 
           {loading ? (
             <div className="flex flex-col items-center gap-4 mt-32">
@@ -133,12 +133,12 @@ export default function Profile() {
           ) : (
             <div className="w-full flex flex-col gap-12">
               {/* HUD Header Section */}
-              <header className="w-full flex flex-col gap-3 mb-8">
+              <header className="w-full flex flex-col items-center gap-4 mb-8 text-center px-4 md:px-8">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-[1px] bg-cyan-500/40" />
                   <span className="font-mono text-[9px] uppercase tracking-[0.6em] text-cyan-400/60">Neural_Link_Active</span>
                 </div>
-                <h1 className="font-orbitron font-black text-2xl md:text-3xl tracking-[0.4em] uppercase text-white">
+                <h1 className="font-orbitron font-black text-4xl lg:text-5xl tracking-[0.4em] uppercase text-white leading-tight">
                   Command <span className="text-cyan-400">Nexus</span>
                 </h1>
               </header>

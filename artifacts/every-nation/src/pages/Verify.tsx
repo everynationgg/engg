@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaKey, FaArrowRight, FaFingerprint, FaSatelliteDish, FaExclamationTriangle } from "react-icons/fa";
+import { FaKey, FaArrowRight, FaFingerprint, FaSatelliteDish, FaExclamationTriangle, FaCheckCircle } from "react-icons/fa";
 import { useParallax } from "@/hooks/useParallax";
 import TacticalSlate from "@/components/common/TacticalSlate";
 import { HUDOverlay } from "@/components/common/HUDOverlay";
@@ -66,38 +66,36 @@ export default function Verify() {
   };
 
   return (
-    <HUDOverlay pageLabel="AUTH_VERIFY">
-      <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden bg-[#020408] selection:bg-yellow-500/30">
+    <HUDOverlay pageLabel="AUTH_VERIFICATION">
+      <div className="min-h-screen flex flex-col items-center pt-[112px] pb-12 px-4 md:px-8 relative overflow-x-hidden bg-[#020408] selection:bg-cyan-500/30">
         {/* Cinematic Background Layer */}
         <motion.div 
           className="fixed inset-0 z-0 opacity-10 pointer-events-none grayscale"
           style={{ x, y }}
         >
           <div className="absolute inset-0 bg-[url('/background.png')] bg-cover bg-center" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#020408]/60 to-[#020408]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#020408]/80 via-transparent to-[#020408]" />
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-[420px] relative z-20"
+          className="w-full max-w-[420px] relative z-20 mt-8"
         >
-          <TacticalSlate color="#eab308">
+          <TacticalSlate color="#00f3ff">
             <div className="p-8 md:p-10 flex flex-col gap-8">
-              {/* Header: Authentication Handshake */}
-              <div className="text-center flex flex-col items-center gap-4">
-                <div className="relative">
-                  <div className="w-16 h-16 border border-yellow-500/20 flex items-center justify-center relative">
-                     <div className="absolute inset-0 border border-yellow-500/40 animate-[spin_10s_linear_infinite] border-t-transparent" />
-                     <FaFingerprint className="text-xl text-yellow-500/40" />
-                  </div>
+              {/* Header */}
+              <div className="text-center flex flex-col items-center gap-6 px-4 md:px-8">
+                <div className="w-16 h-16 border border-cyan-500/20 flex items-center justify-center relative">
+                   <div className="absolute inset-0 border border-cyan-500/40 border-t-transparent animate-[spin_15s_linear_infinite]" />
+                   <FaCheckCircle className="text-xl text-cyan-400/40" />
                 </div>
-                <div className="flex flex-col gap-1">
-                  <h1 className="font-orbitron text-xl font-black tracking-[0.4em] uppercase text-white">
-                    Identity <span className="text-yellow-500">Hash</span>
+                <div className="flex flex-col gap-2">
+                  <h1 className="font-orbitron text-4xl lg:text-5xl font-black tracking-[0.4em] uppercase text-white leading-tight">
+                    Verify <span className="text-cyan-400">Identity</span>
                   </h1>
                   <p className="font-mono text-[8px] uppercase tracking-[0.4em] text-white/20">
-                    Verification_Frequency_Sync
+                    Neural_Link_Verification
                   </p>
                 </div>
               </div>
