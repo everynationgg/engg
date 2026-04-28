@@ -252,7 +252,7 @@ export default function AlliesSidebar() {
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          onMouseDown={(e) => { e.stopPropagation(); togglePanel("allies"); }}
+          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); togglePanel("allies"); }}
           data-allies-trigger
           className="fixed bottom-6 right-6 z-[100] w-12 h-12 bg-[#0a0b1e]/80 border border-cyan-500/20 hover:bg-cyan-500/10 hover:border-cyan-400/50 transition-all flex lg:hidden items-center justify-center group overflow-hidden shadow-[0_0_20px_rgba(6,182,212,0.15)]"
         >
