@@ -216,7 +216,7 @@
   --radius-xl: calc(var(--radius) + 4px);
 
   /* Layout Zones */
-  --nav-height: 64px;
+  --nav-height: 80px;
   --breadcrumb-height: 24px;
   --context-height: 48px;
   --main-spacing: 32px;

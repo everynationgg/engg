@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaLock, FaUser, FaArrowRight, FaFingerprint, FaTerminal } from "react-icons/fa";
+import { FaLock, FaUser, FaArrowRight, FaFingerprint, FaTerminal, FaIdCard } from "react-icons/fa";
 import { useParallax } from "@/hooks/useParallax";
 import TacticalSlate from "@/components/common/TacticalSlate";
 import { SciFiButton } from "@/components/common/SciFiButton";
@@ -29,8 +29,8 @@ export default function Login() {
     try {
       await login(email, password);
       setLocation("/shop");
-    } catch (err) {
-      setError("Authorization Failed: Credential Mismatch");
+    } catch (err: any) {
+      setError(err.message || "Authorization Failed: Credential Mismatch");
     } finally {
       setLoading(false);
     }
@@ -92,15 +92,15 @@ export default function Login() {
               <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                 <div className="flex flex-col gap-5">
                   <div className="flex flex-col gap-2">
-                    <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20 ml-1">Operator_ID</label>
+                    <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20 ml-1">Operator ID (Email or Username)</label>
                     <div className="relative group">
-                      <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-cyan-400 text-[10px] transition-colors z-20" />
+                      <FaIdCard className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-cyan-400 text-[10px] transition-colors z-20" />
                       <input
-                        type="email"
+                        type="text"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="w-full bg-white/[0.02] border border-white/5 py-3 pr-4 pl-10 font-mono text-[11px] tracking-wider text-white outline-none focus:border-cyan-500/20 focus:bg-cyan-500/[0.01] transition-all"
-                        placeholder="ACCESS_EMAIL"
+                        placeholder="IDENTIFIER"
                         required
                       />
                     </div>
@@ -122,6 +122,7 @@ export default function Login() {
                         className="w-full bg-white/[0.02] border border-white/5 py-3 pr-4 pl-10 font-mono text-[11px] tracking-[0.4em] text-white outline-none focus:border-cyan-500/20 focus:bg-cyan-500/[0.01] transition-all"
                         placeholder="••••••••"
                         required
+                        minLength={8}
                       />
                     </div>
                   </div>

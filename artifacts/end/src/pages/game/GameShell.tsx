@@ -64,12 +64,11 @@ function PhaseTimeline({ currentPhase }: { currentPhase: string }) {
         const isPast = idx < currentIndex;
         return (
           <div key={phase.id} className="flex items-center">
-            <div 
-              className={`text-[11px] tracking-[0.2em] uppercase font-orbitron font-bold px-4 py-1 rounded-sm transition-all duration-300 ${
-                isActive ? "bg-cyan-500/25 text-white border border-cyan-500/60 shadow-[0_0_15px_rgba(6,182,212,0.4)]" 
-                : isPast ? "text-cyan-700 font-medium" 
-                : "text-white/10"
-              }`}
+            <div
+              className={`text-[11px] tracking-[0.2em] uppercase font-orbitron font-bold px-4 py-1 rounded-sm transition-all duration-300 ${isActive ? "bg-cyan-500/25 text-white border border-cyan-500/60 shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+                : isPast ? "text-cyan-700 font-medium"
+                  : "text-white/10"
+                }`}
             >
               {phase.label}
             </div>
@@ -121,7 +120,15 @@ export default function GameShell() {
   const musicOn = (preferences?.musicVolume ?? 0) > 0;
   const touchStartX = useRef<number | null>(null);
 
-  const isHost = sessionStorage.getItem("lp_isCreating") === "true";
+  const [isHost] = useState(() => {
+    const isCreating = sessionStorage.getItem("lp_isCreating") === "true";
+    const alreadyHost = sessionStorage.getItem("lp_isHost") === "true";
+    if (isCreating || alreadyHost) {
+      sessionStorage.setItem("lp_isHost", "true");
+      return true;
+    }
+    return false;
+  });
   const { midGame, showConfirm, openConfirm, closeConfirm, handleConfirmQuit } = useQuitGame(isHost);
 
   const handleToggleMusic = () => {
@@ -137,7 +144,7 @@ export default function GameShell() {
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX.current === null) return;
     const deltaX = e.changedTouches[0].clientX - touchStartX.current;
-    
+
     // Swipe left (to the left) -> Open/Close Chat depending on direction
     if (deltaX < -100) { // Swipe Left
       if (!chatOpen) setChatOpen(true);
@@ -467,13 +474,13 @@ export default function GameShell() {
   return (
     <div className="relative min-h-screen w-full flex flex-col overflow-hidden" style={{ background: "hsl(220 30% 2%)" }}>
       <GlobalHUD isWarping={!!transition} />
-      
+
       {/* Top Navbar — primary control system on desktop */}
       <LandingNavbar
         onShowSettings={() => setShowSettings(true)}
         onShowProfile={() => setShowProfile(true)}
         onShowHowToPlay={() => setShowHowToPlay(true)}
-        onShowAuth={() => {}} // Auth not needed mid-game
+        onShowAuth={() => { }} // Auth not needed mid-game
         onShowMenu={() => {
           // Close all system modals before opening session menu
           setShowSettings(false);
@@ -483,21 +490,12 @@ export default function GameShell() {
         }}
       />
 
-      {/* Mobile Sidebar Menu */}
-      <LandingSidebar
-        onShowSettings={() => setShowSettings(true)}
-        onShowProfile={() => setShowProfile(true)}
-        onShowHowToPlay={() => setShowHowToPlay(true)}
-        musicOn={musicOn}
-        onToggleMusic={handleToggleMusic}
-        playSound={playSciFiClick}
-      />
 
       <div className="h-[var(--nav-height)] shrink-0 hidden lg:block" />
 
       <AnimatePresence>
         {isGlitching && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -546,32 +544,32 @@ export default function GameShell() {
                 <h2 className="font-orbitron font-black text-xl tracking-[0.3em] uppercase text-white">Game Menu</h2>
               </div>
 
-              <MenuButton 
-                label="Resume" 
-                onClick={() => setShowGameMenu(false)} 
-                primary 
+              <MenuButton
+                label="RESUME"
+                onClick={() => setShowGameMenu(false)}
+                primary
                 autoFocus
               />
-              
+
               {isHost && (
-                <MenuButton 
-                  label="Restart Round" 
+                <MenuButton
+                  label="RESTART"
                   onClick={() => {
                     getSocket().emit("restart_game", { sessionId: roomCode });
                     setShowGameMenu(false);
-                  }} 
+                  }}
                 />
               )}
 
               <div className="h-px bg-white/5 my-2" />
 
-              <MenuButton 
-                label="Quit Game" 
+              <MenuButton
+                label="QUIT GAME"
                 variant="danger"
                 onClick={() => {
                   setShowGameMenu(false);
                   openConfirm();
-                }} 
+                }}
               />
             </motion.div>
           </motion.div>
@@ -583,6 +581,7 @@ export default function GameShell() {
         <HamburgerMenu
           onShowSettings={() => setShowSettings(true)}
           onShowProfile={() => setShowProfile(true)}
+          onShowHowToPlay={() => setShowHowToPlay(true)}
           musicOn={musicOn}
           onToggleMusic={handleToggleMusic}
           playSound={playSciFiClick}
@@ -653,9 +652,9 @@ export default function GameShell() {
           </div>
         </div>
       )}
-      <SettingsModal 
-        isOpen={showSettings} 
-        onClose={() => setShowSettings(false)} 
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
       />
       <ProfileModal
         isOpen={showProfile}
@@ -687,16 +686,16 @@ export default function GameShell() {
   );
 }
 
-function MenuButton({ 
-  label, 
-  onClick, 
-  primary = false, 
+function MenuButton({
+  label,
+  onClick,
+  primary = false,
   variant = 'default',
-  autoFocus = false 
-}: { 
-  label: string; 
-  onClick: () => void; 
-  primary?: boolean; 
+  autoFocus = false
+}: {
+  label: string;
+  onClick: () => void;
+  primary?: boolean;
   variant?: 'default' | 'danger';
   autoFocus?: boolean;
 }) {
@@ -710,13 +709,12 @@ function MenuButton({
           onClick();
         }
       }}
-      className={`w-full py-4 font-orbitron font-bold text-xs tracking-[0.3em] uppercase transition-all duration-200 border ${
-        variant === 'danger' 
-          ? 'border-red-500/20 text-red-500 hover:bg-red-500/10 hover:border-red-500/50'
-          : primary 
-            ? 'border-cyan-500/40 bg-cyan-500/10 text-white hover:bg-cyan-500/20 hover:border-cyan-500/60 shadow-[0_0_20px_rgba(6,182,212,0.1)]'
-            : 'border-white/5 text-white/40 hover:text-white hover:border-white/20 hover:bg-white/5'
-      }`}
+      className={`w-full py-4 font-orbitron font-bold text-xs tracking-[0.3em] uppercase transition-all duration-200 border ${variant === 'danger'
+        ? 'border-red-500/20 text-red-500 hover:bg-red-500/10 hover:border-red-500/50'
+        : primary
+          ? 'border-cyan-500/40 bg-cyan-500/10 text-white hover:bg-cyan-500/20 hover:border-cyan-500/60 shadow-[0_0_20px_rgba(6,182,212,0.1)]'
+          : 'border-white/5 text-white/40 hover:text-white hover:border-white/20 hover:bg-white/5'
+        }`}
     >
       {label}
     </button>

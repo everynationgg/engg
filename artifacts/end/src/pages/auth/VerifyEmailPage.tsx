@@ -47,11 +47,8 @@ export default function VerifyEmailPage() {
           setStatus("success");
           await refreshUser();
           
-          setTimeout(() => {
-            addLog("IDENTITY_SYNC_COMPLETE.");
-            addLog("REDIRECTING TO COMMAND CENTER...");
-            setTimeout(() => setLocation("/profile"), 1500);
-          }, 1500);
+          addLog("IDENTITY_SYNC_COMPLETE.");
+          addLog("OPERATOR STATUS: VERIFIED.");
         } else {
           const data = await response.json();
           addLog(`HANDSHAKE FAILED: ${data.error?.toUpperCase() || "ACCESS_DENIED"}`);

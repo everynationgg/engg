@@ -13,6 +13,8 @@ export const usersTable = pgTable("users", {
   level: integer("level").default(1).notNull(),
   isAdmin: boolean("is_admin").default(false).notNull(),
   currentStreak: integer("current_streak").default(0).notNull(),
+  failedLoginAttempts: integer("failed_login_attempts").default(0).notNull(),
+  lockedUntil: timestamp("locked_until"),
   lastClaimedAt: timestamp("last_claimed_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

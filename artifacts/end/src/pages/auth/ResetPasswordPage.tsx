@@ -44,9 +44,15 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    if (newPassword.length < 6) {
+    if (newPassword.length < 8) {
       setStatus("error");
-      setMessage("Password must be at least 6 characters");
+      setMessage("Password must be at least 8 characters");
+      return;
+    }
+
+    if (!/[a-zA-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      setStatus("error");
+      setMessage("Password must contain at least one letter and one number");
       return;
     }
 
@@ -62,10 +68,7 @@ export default function ResetPasswordPage() {
 
       if (response.ok) {
         setStatus("success");
-        setMessage("✓ Password reset successfully!");
-        setTimeout(() => {
-          setLocation("/");
-        }, 2000);
+        setMessage("✓ Password reset successfully! You may now return to the terminal.");
       } else {
         const data = await response.json();
         setStatus("error");

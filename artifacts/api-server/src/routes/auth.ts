@@ -26,10 +26,36 @@ const router: IRouter = Router();
 
 // ── RATE LIMITERS ────────────────────────────────────────────────────────────
 // Brute-force protection for sensitive auth endpoints
+// Brute-force protection for sensitive auth endpoints
 const authLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 10, // Limit each IP to 10 attempts
   message: { error: "Too many authentication attempts. Please try again in 15 minutes." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Targeted brute-force protection per account identifier
+// NOTE: For production scaling, swap the default memory store for Redis
+const identifierLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10, 
+  keyGenerator: (req) => {
+    // Stringify and normalize (NFKC) to prevent bypass via casing/whitespace/unicode variants
+    const identifier = String(req.body.email || "").normalize('NFKC').toLowerCase().trim();
+    return identifier || req.ip || "unknown";
+  },
+  message: { error: "Too many login attempts. Protocol synchronized delay active." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => !req.body.email,
+});
+
+// Broad IP-based rate limiting
+const ipLimit = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 20, // 20 requests per minute
+  message: { error: "Tactical network congestion detected. Please wait." },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -40,6 +66,18 @@ const resetLimit = rateLimit({
   message: { error: "Too many reset requests. Please try again in 1 hour." },
   standardHeaders: true,
   legacyHeaders: false,
+});
+
+const identifierResetLimit = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 2, // Limit each email to 2 requests per hour
+  keyGenerator: (req) => {
+    return String(req.body.email || "").normalize('NFKC').toLowerCase().trim() || req.ip || "unknown";
+  },
+  message: { error: "Reset protocol active. Check your uplink for previous keys." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => !req.body.email,
 });
 
 // Username validation helper
@@ -61,14 +99,20 @@ router.post("/auth/register", authLimit, async (req, res) => {
   try {
     const body = RegisterUserBody.parse(req.body);
 
-    if (body.password.length < 6) {
-      res.status(400).json({ error: "Security protocol requires a minimum of 6 characters for passwords" });
+    if (body.password.length < 8) {
+      res.status(400).json({ error: "Security protocol requires a minimum of 8 characters for passwords" });
+      return;
+    }
+
+    // New: Complexity check (1 letter + 1 number)
+    if (!/[a-zA-Z]/.test(body.password) || !/[0-9]/.test(body.password)) {
+      res.status(400).json({ error: "Password must contain at least one letter and one number" });
       return;
     }
 
     // Sanitize inputs
-    const sanitizedEmail = xss(body.email.trim().toLowerCase());
-    const sanitizedUsername = xss(body.username.trim());
+    const sanitizedEmail = xss(body.email.trim().normalize('NFKC').toLowerCase());
+    const sanitizedUsername = xss(body.username.trim().normalize('NFKC').toLowerCase()); // Lowercase and normalize for case-insensitivity
 
     // Validate username
     const usernameCheck = validateUsername(sanitizedUsername);
@@ -191,40 +235,90 @@ router.post("/auth/register", authLimit, async (req, res) => {
 });
 
 // Login endpoint
-router.post("/auth/login", authLimit, async (req, res) => {
+// Using IP-based (ipLimit), IP+Auth (authLimit), and Identifier-based (identifierLimit) protection
+router.post("/auth/login", ipLimit, authLimit, identifierLimit, async (req, res) => {
+  const startTime = Date.now();
   try {
     const body = LoginUserBody.parse(req.body);
-    const sanitizedEmail = xss(body.email.trim().toLowerCase());
+    const identifier = body.email.trim().normalize('NFKC').toLowerCase();
+    const sanitizedIdentifier = xss(identifier);
 
-    const users = await db
+    // Timing-safe baseline
+    const DUMMY_HASH = "$2b$12$K9p/m.yP3iJqO2yvE8q.ieyvE8q.ieyvE8q.ieyvE8q.ieyvE8q.i"; // Cost matches SALT_ROUNDS=12
+
+    let users = await db
       .select()
       .from(usersTable)
-      .where(eq(usersTable.email, sanitizedEmail))
+      .where(eq(usersTable.email, sanitizedIdentifier))
       .limit(1);
 
     if (users.length === 0) {
-      await logAudit({
-        eventType: "AUTH_LOGIN_FAILURE",
-        description: `Failed login attempt for email: ${sanitizedEmail} (User not found)`,
-        req,
-      });
-      res.status(401).json({ error: "Invalid credentials" });
-      return;
+      users = await db
+        .select()
+        .from(usersTable)
+        .where(eq(usersTable.username, sanitizedIdentifier))
+        .limit(1);
     }
 
     const user = users[0];
 
-    const isPasswordValid = await comparePassword(body.password, user.passwordHash);
-    if (!isPasswordValid) {
+    // Check account lockout
+    if (user && user.lockedUntil && user.lockedUntil > new Date()) {
       await logAudit({
         userId: user.id,
-        eventType: "AUTH_LOGIN_FAILURE",
-        description: `Failed login attempt for user: ${user.username} (Incorrect password)`,
+        eventType: "AUTH_LOGIN_LOCKED",
+        description: `Login blocked for locked account: ${user.username}`,
         req,
       });
-      res.status(401).json({ error: "Invalid credentials" });
-      return;
+      // Timing-safe window: clamp execution time to 300-400ms (uniform random delay)
+      const elapsed = Date.now() - startTime;
+      const jitter = Math.floor(Math.random() * 101); // 0-100ms
+      const delay = Math.max(0, 300 - elapsed) + jitter;
+      await new Promise(r => setTimeout(r, delay));
+      return res.status(403).json({ error: "Access temporarily restricted. Please try again later." });
     }
+
+    // NOTE: Password reset flow bypasses lockedUntil to allow identity recovery
+    const passwordToCompare = user ? user.passwordHash : DUMMY_HASH;
+    const isPasswordValid = await comparePassword(body.password, passwordToCompare);
+
+    if (!user || !isPasswordValid) {
+      if (user) {
+        // Increment failure count
+        const newFailCount = user.failedLoginAttempts + 1;
+        const updateData: any = { failedLoginAttempts: newFailCount };
+        
+        if (newFailCount >= 5) {
+          updateData.lockedUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 min lock
+          updateData.failedLoginAttempts = 0; // Reset count on lock to allow retry after cooldown
+        }
+
+        await db.update(usersTable).set(updateData).where(eq(usersTable.id, user.id));
+
+        await logAudit({
+          userId: user.id,
+          eventType: "AUTH_LOGIN_FAILURE",
+          description: `Failed login attempt for user: ${user.username} (${newFailCount >= 5 ? 'Account Locked' : 'Incorrect password'})`,
+          req,
+        });
+      } else {
+        await logAudit({
+          eventType: "AUTH_LOGIN_FAILURE",
+          description: `Failed login attempt for identifier: ${sanitizedIdentifier} (User not found)`,
+          req,
+        });
+      }
+
+      // Timing-safe window: clamp execution time to 300-400ms (uniform random delay)
+      const elapsed = Date.now() - startTime;
+      const jitter = Math.floor(Math.random() * 101); // 0-100ms
+      const delay = Math.max(0, 300 - elapsed) + jitter;
+      await new Promise(r => setTimeout(r, delay));
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    // Success: Reset failure count
+    await db.update(usersTable).set({ failedLoginAttempts: 0, lockedUntil: null }).where(eq(usersTable.id, user.id));
 
     await logAudit({
       userId: user.id,
@@ -262,10 +356,10 @@ router.post("/auth/login", authLimit, async (req, res) => {
       isAdmin: user.isAdmin === true,
     };
 
-    res.json(response);
+    return res.json(response);
   } catch (error) {
     logger.error({ error }, "Login error");
-    res.status(400).json({ error: "Invalid request" });
+    return res.status(400).json({ error: "Invalid request" });
   }
 });
 
@@ -423,7 +517,7 @@ router.post(["/auth/resend", "/auth/resend-verification-email"], authLimit, auth
 });
 
 // Request password reset
-router.post("/auth/request-password-reset", resetLimit, async (req, res) => {
+router.post("/auth/request-password-reset", resetLimit, identifierResetLimit, async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -432,7 +526,7 @@ router.post("/auth/request-password-reset", resetLimit, async (req, res) => {
       return;
     }
 
-    const sanitizedEmail = xss(email.trim().toLowerCase());
+    const sanitizedEmail = xss(email.trim().normalize('NFKC').toLowerCase());
 
     // Get user
     const users = await db
@@ -443,8 +537,7 @@ router.post("/auth/request-password-reset", resetLimit, async (req, res) => {
 
     if (users.length === 0) {
       // Don't reveal if email exists (security best practice)
-      res.json({ success: true, message: "If the email exists, a reset link has been sent" });
-      return;
+      return res.json({ success: true, message: "If the account exists, recovery instructions have been sent." });
     }
 
     const user = users[0];
@@ -480,14 +573,14 @@ router.post("/auth/request-password-reset", resetLimit, async (req, res) => {
         req,
       });
 
-      res.json({ success: true, message: "If the email exists, a reset link has been sent" });
+      return res.json({ success: true, message: "If the account exists, recovery instructions have been sent." });
     } catch (emailError) {
       logger.error({ emailError, email }, "Failed to send password reset email");
-      res.status(500).json({ error: "Failed to send reset email" });
+      return res.status(500).json({ error: "Failed to send reset email" });
     }
   } catch (error) {
     console.error("Password reset request error:", error);
-    res.status(500).json({ error: "Server error" });
+    return res.status(500).json({ error: "Server error" });
   }
 });
 
@@ -502,8 +595,8 @@ router.post("/auth/reset-password", authLimit, async (req, res) => {
     }
 
     // Validate password length
-    if (newPassword.length < 6) {
-      res.status(400).json({ error: "Password must be at least 6 characters" });
+    if (newPassword.length < 8) {
+      res.status(400).json({ error: "Password must be at least 8 characters" });
       return;
     }
 
@@ -541,14 +634,30 @@ router.post("/auth/reset-password", authLimit, async (req, res) => {
 
     const user = users[0];
 
+    // New: Complexity check (1 letter + 1 number)
+    if (!/[a-zA-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      res.status(400).json({ error: "Password must contain at least one letter and one number" });
+      return;
+    }
+
     // Hash new password
     const newPasswordHash = await hashPassword(newPassword);
 
-    // Update password
-    await db.update(usersTable).set({ passwordHash: newPasswordHash }).where(eq(usersTable.id, user.id));
+    // Atomic update: password change + lockout clear + token invalidation
+    await db.transaction(async (tx) => {
+      // Update password and CLEAR lockout state
+      await tx
+        .update(usersTable)
+        .set({ 
+          passwordHash: newPasswordHash,
+          failedLoginAttempts: 0,
+          lockedUntil: null 
+        })
+        .where(eq(usersTable.id, user.id));
 
-    // Delete used token
-    await db.delete(passwordResetTokensTable).where(eq(passwordResetTokensTable.token, token));
+      // Delete used token
+      await tx.delete(passwordResetTokensTable).where(eq(passwordResetTokensTable.token, token));
+    });
 
     res.json({ success: true, message: "Password reset successful" });
   } catch (error) {

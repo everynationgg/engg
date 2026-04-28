@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import ForgotPasswordModal from "./ForgotPasswordModal";
 import { playSciFiClick } from "@/lib/sound";
+import { FaEnvelope, FaUser, FaLock } from "react-icons/fa";
 
 type AuthMode = "login" | "register";
 
@@ -24,6 +25,11 @@ export default function AuthModal({ onClose, onSuccess }: AuthModalProps) {
     setLocalError("");
     playSciFiClick();
 
+    if (mode === "register" && (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password))) {
+      setLocalError("Password must contain at least one letter and one number");
+      return;
+    }
+
     try {
       if (mode === "login") {
         await login(email, password);
@@ -32,8 +38,10 @@ export default function AuthModal({ onClose, onSuccess }: AuthModalProps) {
       }
       onSuccess?.();
       onClose();
-    } catch (err) {
-      setLocalError(err instanceof Error ? err.message : "An error occurred");
+    } catch (err: any) {
+      setLocalError(err.message || "An error occurred");
+    } finally {
+      // Any final cleanup if needed
     }
   };
 
@@ -97,29 +105,39 @@ export default function AuthModal({ onClose, onSuccess }: AuthModalProps) {
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label className="block font-mono text-[9px] tracking-[0.2em] uppercase opacity-40 mb-2">Network Address (Email)</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="w-full bg-white/5 border border-white/10 px-4 py-3 font-mono text-xs focus:border-cyan-500/50 focus:bg-cyan-500/5 outline-none transition-all placeholder:opacity-20"
-                    placeholder="ENTER_ADDRESS"
-                  />
+                  <label className="block text-[10px] font-orbitron uppercase tracking-widest text-cyan-500/60 mb-2">
+                      Email or Username
+                    </label>
+                    <div className="relative group">
+                      <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-500/30 group-focus-within:text-cyan-400 transition-colors" />
+                      <input
+                        type="text"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full bg-black/40 border border-cyan-500/20 rounded py-2.5 pl-10 pr-4 text-sm text-cyan-100 placeholder:text-cyan-900 focus:outline-none focus:border-cyan-500/50 transition-all font-mono"
+                        placeholder="IDENTIFIER"
+                      />
+                    </div>
                 </div>
 
                 {mode === "register" && (
                   <div>
                     <label className="block font-mono text-[9px] tracking-[0.2em] uppercase opacity-40 mb-2">Callsign (Username)</label>
-                    <input
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      required
-                      className="w-full bg-white/5 border border-white/10 px-4 py-3 font-mono text-xs focus:border-cyan-500/50 focus:bg-cyan-500/5 outline-none transition-all placeholder:opacity-20"
-                      placeholder="CHOOSE_CALLSIGN"
-                      minLength={3}
-                    />
+                    <div className="relative group">
+                      <div className="absolute left-3.5 md:left-4 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+                        <FaUser className="text-cyan-400 opacity-30 group-focus-within:opacity-70 transition-opacity text-[13px] md:text-[14px]" />
+                      </div>
+                      <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        required
+                        className="w-full bg-white/5 border border-white/10 pl-10 md:pl-12 pr-4 py-3 font-mono text-xs focus:border-cyan-500/50 focus:bg-cyan-500/5 outline-none transition-all placeholder:opacity-20 autofill:bg-transparent"
+                        placeholder="CHOOSE_CALLSIGN"
+                        minLength={3}
+                      />
+                    </div>
                   </div>
                 )}
 
@@ -136,15 +154,20 @@ export default function AuthModal({ onClose, onSuccess }: AuthModalProps) {
                       </button>
                     )}
                   </div>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="w-full bg-white/5 border border-white/10 px-4 py-3 font-mono text-xs focus:border-cyan-500/50 focus:bg-cyan-500/5 outline-none transition-all placeholder:opacity-20"
-                    placeholder="ENCRYPTED"
-                    minLength={6}
-                  />
+                  <div className="relative group">
+                    <div className="absolute left-3.5 md:left-4 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+                      <FaLock className="text-cyan-400 opacity-30 group-focus-within:opacity-70 transition-opacity text-[13px] md:text-[14px]" />
+                    </div>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="w-full bg-white/5 border border-white/10 pl-10 md:pl-12 pr-4 py-3 font-mono text-xs focus:border-cyan-500/50 focus:bg-cyan-500/5 outline-none transition-all placeholder:opacity-20 autofill:bg-transparent"
+                      placeholder="ENCRYPTED"
+                      minLength={8}
+                    />
+                  </div>
                 </div>
 
                 <button

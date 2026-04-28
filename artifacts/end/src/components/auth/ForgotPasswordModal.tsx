@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { FaEnvelope } from "react-icons/fa";
 
 interface ForgotPasswordModalProps {
   onClose: () => void;
@@ -52,22 +53,22 @@ export default function ForgotPasswordModal({ onClose }: ForgotPasswordModalProp
         <label className="block font-orbitron text-xs tracking-[0.1em] uppercase mb-2" style={{ color: "hsl(210 30% 60%)" }}>
           Email Address
         </label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-            setStatus("ready");
-          }}
-          placeholder="your@email.com"
-          className="w-full px-4 py-2 rounded font-orbitron text-sm"
-          style={{
-            background: "hsl(220 28% 15%)",
-            border: "1px solid hsl(210 30% 25%)",
-            color: "hsl(210 30% 80%)",
-          }}
-          disabled={status === "loading"}
-        />
+        <div className="relative group">
+          <div className="absolute left-3.5 md:left-4 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+            <FaEnvelope className="text-cyan-400 opacity-30 group-focus-within:opacity-70 transition-opacity text-[13px] md:text-[14px]" />
+          </div>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setStatus("ready");
+            }}
+            placeholder="your@email.com"
+            className="w-full pl-10 md:pl-12 pr-4 py-3 bg-white/5 border border-white/10 font-mono text-xs focus:border-cyan-500/50 focus:bg-cyan-500/5 outline-none transition-all placeholder:opacity-20 text-white autofill:bg-transparent"
+            disabled={status === "loading"}
+          />
+        </div>
       </div>
 
       {message && (

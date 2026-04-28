@@ -26,6 +26,12 @@ export default function Register() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+      setError("Security protocol requires at least one letter and one number");
+      setLoading(false);
+      return;
+    }
+
     try {
       await register(email, username, password);
       setLocation("/verify");
@@ -132,6 +138,7 @@ export default function Register() {
                         className="w-full bg-white/[0.02] border border-white/5 py-2.5 pr-4 pl-10 font-mono text-[11px] tracking-[0.4em] text-white outline-none focus:border-purple-500/20 focus:bg-purple-500/[0.01] transition-all"
                         placeholder="••••••••"
                         required
+                        minLength={8}
                       />
                     </div>
                   </div>

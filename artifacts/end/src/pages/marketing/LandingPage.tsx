@@ -144,8 +144,9 @@ export default function LandingPage() {
         onShowProfile={() => setShowProfileModal(true)}
         onShowHowToPlay={() => setShowHowToPlay(true)}
         onShowAuth={() => setShowAuthModal(true)}
-        onShowMenu={() => {}} 
       />
+
+      <div className="h-[var(--nav-height)] shrink-0 hidden lg:block" />
 
       {/* Mobile Sidebar Menu */}
       <LandingSidebar

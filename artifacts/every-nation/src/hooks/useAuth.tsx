@@ -120,7 +120,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email, password }),
       });
 
-      if (!response.ok) throw new Error("Invalid credentials");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Invalid credentials");
+      }
 
       const data = await response.json();
       localStorage.setItem(STORAGE_KEY_TOKEN, data.token);
@@ -142,8 +145,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLevel(data.level || 1);
       setIsLoggedIn(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
-      throw err;
+      const message = err instanceof Error ? err.message : "Login failed";
+      setError(message);
+      throw new Error(message);
     } finally {
       setIsLoading(false);
     }

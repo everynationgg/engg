@@ -138,10 +138,16 @@ export default function RoleConfigPage() {
         isYou: myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId,
       }));
       setLivePlayers(updated);
+      // Detect if I am a spectator or host
+      const me = session.players.find((p) => (myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId));
+      
+      // Detect if I am the host based on server authority
+      if (me?.isHost) {
+        sessionStorage.setItem("lp_isHost", "true");
+      }
+
       setUnlockedRoles(session.unlockedRoles || []);
 
-      // Detect if I am a spectator
-      const me = session.players.find((p) => (myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId));
       setIsSpectator(!!me?.isSpectator);
 
       // Store role assignment when server transitions to role_reveal or any later

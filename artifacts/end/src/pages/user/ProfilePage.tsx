@@ -84,7 +84,6 @@ export default function ProfilePage() {
         onShowProfile={() => refreshUser()}
         onShowHowToPlay={() => {}}
         onShowAuth={() => {}}
-        onShowMenu={() => {}}
       />
 
       <div className="h-[var(--nav-height)] shrink-0" />
