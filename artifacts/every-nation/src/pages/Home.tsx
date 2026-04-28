@@ -16,7 +16,7 @@ export default function Home() {
       <div className="landing-root h-screen relative overflow-hidden">
         <video
           className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-          src="/EN_PAGE_BACKGROUND.webm"
+          src="/attached_assets/EN_PAGE_BACKGROUND.webm"
           autoPlay
           muted
           playsInline
@@ -29,13 +29,13 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1.2, ease: "easeOut" }}
-                className="w-full flex flex-col items-center gap-10 md:gap-24"
+                className="w-full flex flex-col items-center gap-6 md:gap-40"
               >
                 {/* NEW LOGO VIDEO */}
-                <div className="w-full max-w-[600px] flex justify-center">
+                <div className="w-full max-w-[280px] md:max-w-[600px] flex justify-center">
                   <video
                     className="w-full h-auto"
-                    src="/en_page_logo.webm"
+                    src="/attached_assets/en_page_logo.webm"
                     autoPlay
                     muted
                     loop
@@ -47,7 +47,7 @@ export default function Home() {
                   {/* DISCORD */}
                   <div className="w-[300px]">
                     <TacticalButton
-                      className="w-full"
+                      className="w-full h-[44px] md:h-[52px] pl-[60px] md:pl-[72px]"
                       onClick={() => window.open("https://discord.gg/everynation", "_blank")}
                     >
                       <div className="flex flex-col items-start leading-tight">
@@ -61,7 +61,7 @@ export default function Home() {
                   <div className="w-[300px]">
                     <TacticalButton
                       active
-                      className="w-full"
+                      className="w-full h-[44px] md:h-[52px] pl-[60px] md:pl-[72px]"
                       onClick={() => window.location.href = "/hub"}
                     >
                       <div className="flex flex-col items-start leading-tight">
@@ -74,7 +74,7 @@ export default function Home() {
                   {/* SOCIALS */}
                   <div className="w-[300px]">
                     <TacticalButton
-                      className="w-full"
+                      className="w-full h-[44px] md:h-[52px] pl-[60px] md:pl-[72px]"
                       onClick={() => window.open("https://linktr.ee/everynationgg", "_blank")}
                     >
                       <div className="flex flex-col items-start leading-tight">
