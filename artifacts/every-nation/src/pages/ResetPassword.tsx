@@ -48,7 +48,10 @@ export default function ResetPassword() {
 
   return (
     <HUDOverlay pageLabel="CIPHER_RESET">
-      <div className="min-h-screen flex flex-col items-center pt-48 pb-12 px-4 md:px-8 relative overflow-x-hidden bg-[#020408] selection:bg-cyan-500/30">
+      <div className="min-h-screen flex flex-col items-center pb-12 px-4 md:px-8 relative overflow-x-hidden bg-[#020408] selection:bg-cyan-500/30">
+        {/* Header Clearance Spacer */}
+        <div className="h-[140px] lg:h-[180px] w-full shrink-0 pointer-events-none" />
+
         {/* Cinematic Background Layer */}
         <motion.div 
           className="fixed inset-0 z-0 opacity-10 pointer-events-none grayscale"

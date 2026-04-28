@@ -44,8 +44,10 @@ export default function Register() {
 
   return (
     <HUDOverlay pageLabel="AUTH_REGISTRATION">
-      <div className="min-h-screen flex flex-col items-center pt-48 pb-12 px-4 md:px-8 relative overflow-x-hidden bg-[#020408] selection:bg-cyan-500/30">
-        {/* Cinematic Background Layer */}
+      <div className="min-h-screen flex flex-col items-center pb-12 px-4 md:px-8 relative overflow-x-hidden bg-[#020408] selection:bg-cyan-500/30">
+        {/* Header Clearance Spacer */}
+        <div className="h-[140px] lg:h-[180px] w-full shrink-0 pointer-events-none" />
+
         <motion.div 
           className="fixed inset-0 z-0 opacity-10 pointer-events-none grayscale"
           style={{ x, y }}

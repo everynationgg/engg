@@ -177,9 +177,12 @@ export default function Hub() {
         <div className="fixed inset-0 z-1 bg-gradient-to-b from-[#020408]/90 via-[#020408]/60 to-[#020408]/95" />
         
         {/* Main Content Area */}
-        <main className="relative z-20 w-full max-w-[1600px] px-6 md:px-12 xl:px-16 pt-48 pb-32 flex flex-col lg:flex-row gap-16 items-start">
+        <main className="relative z-20 w-full max-w-[1600px] px-6 md:px-12 xl:px-16 pb-32 flex flex-col lg:flex-row gap-16 items-start">
           
-          <div className="flex-1 flex flex-col gap-12 w-full">
+          <div className="flex-1 flex flex-col w-full">
+            {/* Header Clearance Spacer */}
+            <div className="h-[140px] lg:h-[180px] w-full shrink-0 pointer-events-none" />
+
             {/* Header Overlay */}
             <header className="w-full flex flex-col items-center lg:items-start gap-4 mb-12 text-center lg:text-left px-4 md:px-8">
               <div className="flex items-center gap-3">

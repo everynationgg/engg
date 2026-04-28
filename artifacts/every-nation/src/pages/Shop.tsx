@@ -152,7 +152,9 @@ export default function Shop() {
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#020408]/80 to-[#020408]" />
         </motion.div>
 
-        <main className="relative z-20 w-full max-w-[1400px] px-4 md:px-8 xl:px-12 pt-48 pb-40 flex flex-col items-center">
+        <main className="relative z-20 w-full max-w-[1400px] px-4 md:px-8 xl:px-12 pb-40 flex flex-col items-center">
+          {/* Header Clearance Spacer */}
+          <div className="h-[140px] lg:h-[180px] w-full shrink-0 pointer-events-none" />
 
           {/* Header Section */}
           <header className="w-full flex flex-col items-center gap-4 mb-16 text-center px-4 md:px-8">
