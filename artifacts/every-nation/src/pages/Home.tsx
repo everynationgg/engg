@@ -14,14 +14,49 @@ export default function Home() {
   return (
     <HUDOverlay pageLabel="INITIAL_LINK">
       <div className="landing-root h-screen relative overflow-hidden">
+        {/* BACKGROUND VIDEO */}
         <video
-          className="absolute inset-0 w-full h-full object-cover opacity-80 pointer-events-none"
-          src="/_asset/en_page_logo.webm"
+          className="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none"
+          src="/_asset/EN_PAGE_BACKGROUND.webm"
           autoPlay
           muted
           loop
           playsInline
         />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#020408]/60 pointer-events-none" />
+
+        {/* LOGO, WELCOME TEXT & PRIMARY BUTTON */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0 mt-[-5vh]">
+          <video
+            className="w-[260px] h-[260px] object-contain opacity-90"
+            src="/_asset/en_page_logo.webm"
+            autoPlay
+            muted
+            loop
+            playsInline
+          />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 1 }}
+            className="flex flex-col items-center mt-[-30px]"
+          >
+            <h1 className="font-orbitron text-xl font-black tracking-[0.4em] text-white/80 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+              WELCOME TO EVERYNATION
+            </h1>
+            <div className="h-[1px] w-32 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent mt-4 mb-8" />
+            
+            <div className="pointer-events-auto">
+              <TacticalButton
+                active
+                className="w-[280px]"
+                onClick={() => window.location.href = "/hub"}
+              >
+                <span className="font-bold tracking-[0.05em] text-white">ENTER</span>
+              </TacticalButton>
+            </div>
+          </motion.div>
+        </div>
 
         <div className="absolute inset-0 flex flex-col items-center justify-end pb-32 z-10 px-6">
           <AnimatePresence>
@@ -40,17 +75,6 @@ export default function Home() {
                       onClick={() => window.open("https://discord.gg/everynation", "_blank")}
                     >
                       <span className="font-bold tracking-[0.05em]">DISCORD</span>
-                    </TacticalButton>
-                  </div>
-
-                  {/* ENTER (PRIMARY) */}
-                  <div className="w-[300px]">
-                    <TacticalButton
-                      active
-                      className="w-full"
-                      onClick={() => window.location.href = "/hub"}
-                    >
-                      <span className="font-bold tracking-[0.05em] text-white">ENTER</span>
                     </TacticalButton>
                   </div>
 
