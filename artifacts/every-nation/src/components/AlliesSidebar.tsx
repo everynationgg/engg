@@ -278,10 +278,10 @@ export default function AlliesSidebar() {
                 <div className="absolute top-0 left-0 w-full h-[1px] bg-cyan-500/20" />
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex flex-col">
-                    <h2 className="font-orbitron text-lg font-black tracking-[0.2em] uppercase text-white">
-                      Allies_<span className="text-cyan-400">Net</span>
+                    <h2 className="font-orbitron text-xl font-black tracking-[0.2em] uppercase text-white">
+                      Allies <span className="text-cyan-400">Net</span>
                     </h2>
-                    <span className="font-mono text-[7px] tracking-[0.4em] uppercase text-cyan-400/40 mt-1">Status: Active</span>
+                    <span className="font-mono text-[9px] tracking-[0.4em] uppercase text-cyan-400/40 mt-1.5">Status: Active</span>
                   </div>
                   <button onClick={() => activeChatAlly ? setActiveChatAlly(null) : setIsOpen(false)} className="w-8 h-8 flex items-center justify-center hover:bg-white/5 transition-colors">
                     {activeChatAlly ? <FaArrowLeft className="text-xs text-white/20" /> : <FaTimes className="text-xs text-white/20" />}
@@ -294,12 +294,12 @@ export default function AlliesSidebar() {
                 <div className="flex-1 flex flex-col overflow-hidden">
                   <div className="px-6 py-3 border-b border-white/5 flex items-center gap-3 bg-cyan-500/[0.02]">
                     <FaUserSecret className="text-cyan-400/40 text-xs" />
-                    <span className="font-orbitron text-[9px] uppercase text-white tracking-widest">{activeChatAlly.username}</span>
+                    <span className="font-orbitron text-[11px] uppercase text-white tracking-widest">{activeChatAlly.username}</span>
                   </div>
                   <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
                     {chatMessages.map((msg) => (
                       <div key={msg.id} className={`flex flex-col ${msg.senderId === activeChatAlly.id ? 'items-start' : 'items-end'}`}>
-                        <div className={`max-w-[90%] p-2.5 font-mono text-[10px] leading-relaxed border ${
+                        <div className={`max-w-[90%] p-3 font-mono text-[11px] leading-relaxed border ${
                           msg.senderId === activeChatAlly.id ? 'bg-white/5 border-white/5 text-white/70' : 'bg-cyan-500/5 border-cyan-500/10 text-cyan-100/80'
                         }`}>
                           {msg.message}
@@ -309,7 +309,7 @@ export default function AlliesSidebar() {
                         </span>
                       </div>
                     ))}
-                    {isAllyTyping && <span className="font-mono text-[7px] uppercase text-cyan-400/40 animate-pulse">Receiving...</span>}
+                    {isAllyTyping && <span className="font-mono text-[9px] uppercase text-cyan-400/40 animate-pulse">Receiving...</span>}
                   </div>
                   <div className="p-4 border-t border-white/5">
                     <div className="relative">
@@ -372,8 +372,8 @@ export default function AlliesSidebar() {
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3">
-                                <div className={`w-1 h-1 rounded-full ${ally.status === 'online' ? 'bg-cyan-500' : 'bg-white/10'}`} />
-                                <span className="font-orbitron text-[10px] uppercase text-white/60 group-hover:text-white transition-colors">{ally.username}</span>
+                                <div className={`w-2 h-2 rounded-full ${ally.status === 'online' ? 'bg-cyan-500 shadow-[0_0_8px_#06b6d4]' : 'bg-white/10'}`} />
+                                <span className="font-orbitron text-[12px] uppercase text-white/60 group-hover:text-white transition-colors">{ally.username}</span>
                               </div>
                               {unreadCounts[ally.id] && <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}
                             </div>
@@ -384,8 +384,8 @@ export default function AlliesSidebar() {
                       <div className="space-y-2">
                         {searchResults.map(u => (
                           <div key={u.id} className="p-3 bg-white/[0.02] border border-white/5 flex items-center justify-between">
-                            <span className="font-orbitron text-[9px] uppercase text-white">{u.username}</span>
-                            <button onClick={() => sendRequest(u.id)} className="px-3 py-1 bg-cyan-500/10 text-cyan-400 font-orbitron text-[7px] uppercase border border-cyan-500/30">Add</button>
+                            <span className="font-orbitron text-[11px] uppercase text-white">{u.username}</span>
+                            <button onClick={() => sendRequest(u.id)} className="px-4 py-1.5 bg-cyan-500/10 text-cyan-400 font-orbitron text-[8px] uppercase border border-cyan-500/30">Add</button>
                           </div>
                         ))}
                       </div>
@@ -396,8 +396,8 @@ export default function AlliesSidebar() {
 
               <div className="mt-auto p-6 border-t border-white/5 bg-black/20">
                 <div className="flex justify-between items-center opacity-20">
-                  <span className="font-mono text-[7px] uppercase tracking-widest">Link_Latency</span>
-                  <span className="font-mono text-[7px] uppercase tracking-widest">14ms</span>
+                  <span className="font-mono text-[9px] uppercase tracking-widest">Link_Latency</span>
+                  <span className="font-mono text-[9px] uppercase tracking-widest">14ms</span>
                 </div>
               </div>
             </motion.div>

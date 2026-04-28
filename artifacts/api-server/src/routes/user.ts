@@ -26,6 +26,7 @@ router.get("/user/profile", authMiddleware, async (req: AuthRequest, res) => {
         level: usersTable.level,
         isVerified: usersTable.isVerified,
         currentStreak: usersTable.currentStreak,
+        lastClaimedAt: usersTable.lastClaimedAt,
         createdAt: usersTable.createdAt,
       })
       .from(usersTable)

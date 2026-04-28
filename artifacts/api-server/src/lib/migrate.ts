@@ -22,8 +22,9 @@ export async function migrateDb(): Promise<void> {
     // Path resolution:
     // Development: engg/artifacts/api-server/src/lib/migrate.ts -> ../../../lib/db/drizzle
     // Production (Docker): engg/artifacts/api-server/dist/lib/migrate.mjs -> ../../../lib/db/drizzle
-    const migrationsFolder = process.env.MIGRATIONS_PATH || path.resolve(__dirname, "../../../lib/db/drizzle");
+    const migrationsFolder = process.env.MIGRATIONS_PATH || path.resolve(__dirname, "../../../../lib/db/drizzle");
     
+    console.log(`>>> MIGRATION_PATH: ${migrationsFolder}`);
     logger.info({ migrationsFolder }, "migrate: synchronizing schema with versioned migrations");
     
     await migrate(db, { migrationsFolder });

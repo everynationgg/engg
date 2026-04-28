@@ -87,11 +87,11 @@ export default function Navbar() {
           {isLoggedIn ? (
             <div className="flex items-center gap-5">
               {/* CREDITS */}
-              <div className="flex flex-col items-end">
-                <span className="font-mono text-[7px] text-white/20 uppercase tracking-widest">Assets</span>
-                <div className="flex items-center gap-1">
-                  <span className="font-orbitron text-xs text-cyan-400 font-bold">{credits.toLocaleString()}</span>
-                  <span className="text-[8px] text-cyan-400/40">CC</span>
+              <div className="flex flex-col items-end mr-2">
+                <span className="font-mono text-[8px] text-white/20 uppercase tracking-widest">Assets</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-orbitron text-sm text-cyan-400 font-bold">{credits.toLocaleString()}</span>
+                  <span className="text-[10px] text-cyan-400/40">CC</span>
                 </div>
               </div>
 
@@ -100,22 +100,22 @@ export default function Navbar() {
                 <div className="w-8 h-8 rounded-full border border-white/5 flex items-center justify-center bg-white/[0.02] group-hover/user:border-cyan-500/30 transition-all">
                   <FaUser className="text-white/20 text-xs group-hover/user:text-cyan-400/40" />
                 </div>
-                <div className="flex flex-col gap-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[9px] text-white font-bold uppercase tracking-widest">{username}</span>
-                    <div className="px-1.5 py-0.5 bg-cyan-500/10 border border-cyan-500/30 rounded-sm">
-                      <span className="font-orbitron text-[7px] font-black text-cyan-400">LVL_{level}</span>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-3">
+                    <span className="text-[11px] text-white font-bold uppercase tracking-[0.2em]">{username}</span>
+                    <div className="px-2 py-0.5 bg-cyan-500/10 border border-cyan-500/30 rounded-sm">
+                      <span className="font-orbitron text-[9px] font-black text-cyan-400">LVL_{level}</span>
                     </div>
                   </div>
-                  <div className="w-20 h-1 bg-white/5 relative overflow-hidden">
+                  <div className="w-24 h-1.5 bg-white/5 relative overflow-hidden">
                     <motion.div 
-                      className="absolute inset-y-0 left-0 bg-cyan-500"
+                      className="absolute inset-y-0 left-0 bg-cyan-500 shadow-[0_0_8px_#06b6d4]"
                       initial={{ width: 0 }}
                       animate={{ width: `${xpProgress * 100}%` }}
                       transition={{ duration: 1 }}
                     />
                   </div>
-                  <span className="text-[5px] text-cyan-400/40 uppercase font-mono tracking-tighter">Uplink_Syncing... {Math.floor(xpProgress * 100)}%</span>
+                  <span className="text-[7px] text-cyan-400/40 uppercase font-mono tracking-widest">Uplink_Syncing... {Math.floor(xpProgress * 100)}%</span>
                 </div>
               </Link>
 

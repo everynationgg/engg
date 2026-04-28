@@ -103,11 +103,20 @@ export default function Hub() {
       .then(res => res.json())
       .then(data => {
         setActivities(data.activities || []);
-        // Check if daily claimed recently
-        const lastDaily = data.activities?.find((a: any) => a.description.includes("Daily Tactical Briefing"));
-        if (lastDaily) {
-          const hoursSince = (Date.now() - new Date(lastDaily.timestamp).getTime()) / (1000 * 60 * 60);
+        // Source of Truth 1: Explicit field from DB
+        if (data.lastClaimedAt) {
+          const hoursSince = (Date.now() - new Date(data.lastClaimedAt).getTime()) / (1000 * 60 * 60);
           if (hoursSince < 24) setClaimed(true);
+        } else {
+          // Source of Truth 2: Activity logs (Fallback/Redundancy)
+          const lastDaily = data.activities?.find((a: any) => 
+            a.description.includes("Daily_Tactical_Sync") || 
+            a.description.includes("Daily_Sync_Success")
+          );
+          if (lastDaily) {
+            const hoursSince = (Date.now() - new Date(lastDaily.timestamp).getTime()) / (1000 * 60 * 60);
+            if (hoursSince < 24) setClaimed(true);
+          }
         }
       });
     }
@@ -168,9 +177,9 @@ export default function Hub() {
         <div className="fixed inset-0 z-1 bg-gradient-to-b from-[#020408]/90 via-[#020408]/60 to-[#020408]/95" />
         
         {/* Main Content Area */}
-        <main className="relative z-20 w-full max-w-[1440px] px-8 md:px-16 pt-40 flex flex-col lg:flex-row gap-12 items-start">
+        <main className="relative z-20 w-full max-w-[1600px] px-8 md:px-16 pt-32 flex flex-col lg:flex-row gap-16 items-start">
           
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col gap-12">
             {/* Header Overlay */}
             <header className="w-full flex flex-col gap-3 mb-12">
               <div className="flex items-center gap-3">
@@ -183,7 +192,8 @@ export default function Hub() {
             </header>
 
             {/* Daily Tactical Briefing */}
-            <TacticalSlate className="mb-12">
+            <div className="relative z-30">
+              <TacticalSlate>
                <div className="p-8 flex flex-col md:flex-row items-center justify-between gap-8">
                   <div className="flex items-center gap-6">
                     <div className="w-12 h-12 border border-cyan-500/20 flex items-center justify-center relative">
@@ -191,8 +201,8 @@ export default function Hub() {
                        <FaTerminal className="text-cyan-400 text-xl" />
                     </div>
                     <div className="flex flex-col gap-1">
-                       <h3 className="font-orbitron text-[11px] font-black uppercase tracking-[0.3em] text-white">Daily_Tactical_Briefing</h3>
-                       <span className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/30">Status: {claimed ? "IDENTITY_SYNCED" : "SYNC_REQUIRED"}</span>
+                       <h3 className="font-orbitron text-[14px] font-black uppercase tracking-[0.3em] text-white">Daily Tactical Briefing</h3>
+                       <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/30">Status: {claimed ? "IDENTITY SYNCED" : "SYNC REQUIRED"}</span>
                     </div>
                   </div>
                   
@@ -202,10 +212,11 @@ export default function Hub() {
                     onClick={handleClaim}
                     className="min-w-[200px]"
                   >
-                    {claiming ? "Syncing..." : claimed ? "Protocol_Complete" : "Synchronize_Identity"}
+                    {claiming ? "SYNCING..." : claimed ? "PROTOCOL COMPLETE" : "CLAIM DAILY"}
                   </SciFiButton>
                </div>
-            </TacticalSlate>
+              </TacticalSlate>
+            </div>
 
             {/* Main Mission Deck */}
             <div className="relative z-10 w-full pb-32">
