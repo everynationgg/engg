@@ -91,12 +91,12 @@ export default function ResetPassword() {
                   <div className="flex flex-col gap-2">
                     <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20 ml-1">New_Access_Cipher</label>
                     <div className="relative group">
-                      <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-cyan-400 text-[10px] transition-colors z-20" />
+                      <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-cyan-400 text-[10px] transition-colors z-20 pointer-events-none" />
                       <input
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full bg-white/[0.02] border border-white/5 py-3 pr-4 pl-10 font-mono text-[11px] tracking-[0.4em] text-white outline-none focus:border-cyan-500/20 focus:bg-cyan-500/[0.01] transition-all"
+                        className="w-full bg-white/[0.02] border border-white/5 py-3 pr-4 pl-12 font-mono text-[11px] tracking-[0.4em] text-white outline-none focus:border-cyan-500/20 focus:bg-cyan-500/[0.01] transition-all"
                         placeholder="••••••••"
                         required
                       />
@@ -106,12 +106,12 @@ export default function ResetPassword() {
                   <div className="flex flex-col gap-2">
                     <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20 ml-1">Confirm_Cipher</label>
                     <div className="relative group">
-                      <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-cyan-400 text-[10px] transition-colors z-20" />
+                      <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-cyan-400 text-[10px] transition-colors z-20 pointer-events-none" />
                       <input
                         type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full bg-white/[0.02] border border-white/5 py-3 pr-4 pl-10 font-mono text-[11px] tracking-[0.4em] text-white outline-none focus:border-cyan-500/20 focus:bg-cyan-500/[0.01] transition-all"
+                        className="w-full bg-white/[0.02] border border-white/5 py-3 pr-4 pl-12 font-mono text-[11px] tracking-[0.4em] text-white outline-none focus:border-cyan-500/20 focus:bg-cyan-500/[0.01] transition-all"
                         placeholder="••••••••"
                         required
                       />

@@ -124,12 +124,12 @@ export default function Verify() {
                   <div className="flex flex-col gap-2 text-center">
                     <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20">Cipher_Code</label>
                     <div className="relative group">
-                      <FaKey className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-yellow-500 text-[10px] transition-colors z-20" />
+                      <FaKey className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-yellow-500 text-[10px] transition-colors z-20 pointer-events-none" />
                       <input
                         type="text"
                         value={code}
                         onChange={(e) => setCode(e.target.value)}
-                        className="w-full bg-white/[0.02] border border-white/5 py-3 pr-4 pl-10 font-mono text-lg tracking-[0.8em] text-white outline-none focus:border-yellow-500/20 focus:bg-yellow-500/[0.01] transition-all uppercase text-center"
+                        className="w-full bg-white/[0.02] border border-white/5 py-3 pr-4 pl-12 font-mono text-lg tracking-[0.8em] text-white outline-none focus:border-yellow-500/20 focus:bg-yellow-500/[0.01] transition-all uppercase text-center"
                         placeholder="XXXXXX"
                         maxLength={6}
                         required

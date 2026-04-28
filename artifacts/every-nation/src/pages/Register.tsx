@@ -100,12 +100,12 @@ export default function Register() {
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20 ml-1">Codename</label>
                     <div className="relative group">
-                      <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-purple-400 text-[10px] transition-colors z-20" />
+                      <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-purple-400 text-[10px] transition-colors z-20 pointer-events-none" />
                       <input
                         type="text"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        className="w-full bg-white/[0.02] border border-white/5 py-2.5 pr-4 pl-10 font-mono text-[11px] tracking-wider text-white outline-none focus:border-purple-500/20 focus:bg-purple-500/[0.01] transition-all"
+                        className="w-full bg-white/[0.02] border border-white/5 py-2.5 pr-4 pl-12 font-mono text-[11px] tracking-wider text-white outline-none focus:border-purple-500/20 focus:bg-purple-500/[0.01] transition-all"
                         placeholder="CALLSIGN"
                         required
                       />
@@ -115,12 +115,12 @@ export default function Register() {
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20 ml-1">Uplink</label>
                     <div className="relative group">
-                      <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-purple-400 text-[10px] transition-colors z-20" />
+                      <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-purple-400 text-[10px] transition-colors z-20 pointer-events-none" />
                       <input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full bg-white/[0.02] border border-white/5 py-2.5 pr-4 pl-10 font-mono text-[11px] tracking-wider text-white outline-none focus:border-purple-500/20 focus:bg-purple-500/[0.01] transition-all"
+                        className="w-full bg-white/[0.02] border border-white/5 py-2.5 pr-4 pl-12 font-mono text-[11px] tracking-wider text-white outline-none focus:border-purple-500/20 focus:bg-purple-500/[0.01] transition-all"
                         placeholder="EMAIL_ADDR"
                         required
                       />
@@ -130,12 +130,12 @@ export default function Register() {
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20 ml-1">Cipher</label>
                     <div className="relative group">
-                      <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-purple-400 text-[10px] transition-colors z-20" />
+                      <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-purple-400 text-[10px] transition-colors z-20 pointer-events-none" />
                       <input
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full bg-white/[0.02] border border-white/5 py-2.5 pr-4 pl-10 font-mono text-[11px] tracking-[0.4em] text-white outline-none focus:border-purple-500/20 focus:bg-purple-500/[0.01] transition-all"
+                        className="w-full bg-white/[0.02] border border-white/5 py-2.5 pr-4 pl-12 font-mono text-[11px] tracking-[0.4em] text-white outline-none focus:border-purple-500/20 focus:bg-purple-500/[0.01] transition-all"
                         placeholder="••••••••"
                         required
                         minLength={8}

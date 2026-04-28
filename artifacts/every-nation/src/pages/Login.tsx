@@ -96,12 +96,12 @@ export default function Login() {
                   <div className="flex flex-col gap-2">
                     <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20 ml-1">Operator ID (Email or Username)</label>
                     <div className="relative group">
-                      <FaIdCard className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-cyan-400 text-[10px] transition-colors z-20" />
+                      <FaIdCard className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-cyan-400 text-[10px] transition-colors z-20 pointer-events-none" />
                       <input
                         type="text"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full bg-white/[0.02] border border-white/5 py-3 pr-4 pl-10 font-mono text-[11px] tracking-wider text-white outline-none focus:border-cyan-500/20 focus:bg-cyan-500/[0.01] transition-all"
+                        className="w-full bg-white/[0.02] border border-white/5 py-3 pr-4 pl-12 font-mono text-[11px] tracking-wider text-white outline-none focus:border-cyan-500/20 focus:bg-cyan-500/[0.01] transition-all"
                         placeholder="IDENTIFIER"
                         required
                       />
@@ -116,12 +116,12 @@ export default function Login() {
                        </Link>
                     </div>
                     <div className="relative group">
-                      <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-cyan-400 text-[10px] transition-colors z-20" />
+                      <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-cyan-400 text-[10px] transition-colors z-20 pointer-events-none" />
                       <input
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full bg-white/[0.02] border border-white/5 py-3 pr-4 pl-10 font-mono text-[11px] tracking-[0.4em] text-white outline-none focus:border-cyan-500/20 focus:bg-cyan-500/[0.01] transition-all"
+                        className="w-full bg-white/[0.02] border border-white/5 py-3 pr-4 pl-12 font-mono text-[11px] tracking-[0.4em] text-white outline-none focus:border-cyan-500/20 focus:bg-cyan-500/[0.01] transition-all"
                         placeholder="••••••••"
                         required
                         minLength={8}
