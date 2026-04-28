@@ -48,7 +48,8 @@ export default function ResetPassword() {
 
   return (
     <HUDOverlay pageLabel="CIPHER_RESET">
-      <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden bg-[#020408] selection:bg-cyan-500/30">
+      <div className="min-h-screen flex flex-col items-center pt-48 pb-12 px-4 md:px-8 relative overflow-x-hidden bg-[#020408] selection:bg-cyan-500/30">
+        {/* Cinematic Background Layer */}
         <motion.div 
           className="fixed inset-0 z-0 opacity-10 pointer-events-none grayscale"
           style={{ x, y }}
@@ -60,19 +61,20 @@ export default function ResetPassword() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-[420px] relative z-20"
+          className="w-full max-w-[420px] relative z-20 mt-8"
         >
           <TacticalSlate color="#00f3ff">
             <div className="p-8 md:p-10 flex flex-col gap-8">
-              <div className="text-center flex flex-col items-center gap-4">
+              {/* Header */}
+              <div className="text-center flex flex-col items-center gap-6 px-4 md:px-8">
                 <div className="relative">
                   <div className="w-16 h-16 border border-cyan-500/20 flex items-center justify-center relative">
                      <div className={`absolute inset-0 border border-cyan-500/40 border-t-transparent animate-[spin_1s_linear_infinite] shadow-[0_0_10px_#00f3ff]`} />
                      <FaFingerprint className="text-xl text-cyan-300" />
                   </div>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <h1 className="font-orbitron text-xl font-black tracking-[0.4em] uppercase text-white">
+                <div className="flex flex-col gap-2">
+                  <h1 className="font-orbitron text-4xl lg:text-5xl font-black tracking-[0.4em] uppercase text-white leading-tight">
                     Cipher <span className="text-cyan-400">Reset</span>
                   </h1>
                   <p className="font-mono text-[8px] uppercase tracking-[0.4em] text-white/20">

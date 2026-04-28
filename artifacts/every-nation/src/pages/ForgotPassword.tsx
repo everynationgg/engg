@@ -40,7 +40,7 @@ export default function ForgotPassword() {
 
   return (
     <HUDOverlay pageLabel="AUTH_RECOVERY">
-      <div className="min-h-screen flex flex-col items-center pt-[112px] pb-12 px-4 md:px-8 relative overflow-x-hidden bg-[#020408] selection:bg-cyan-500/30">
+      <div className="min-h-screen flex flex-col items-center pt-48 pb-12 px-4 md:px-8 relative overflow-x-hidden bg-[#020408] selection:bg-cyan-500/30">
         {/* Cinematic Background Layer */}
         <motion.div 
           className="fixed inset-0 z-0 opacity-10 pointer-events-none grayscale"

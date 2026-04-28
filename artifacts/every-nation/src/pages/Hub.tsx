@@ -177,7 +177,7 @@ export default function Hub() {
         <div className="fixed inset-0 z-1 bg-gradient-to-b from-[#020408]/90 via-[#020408]/60 to-[#020408]/95" />
         
         {/* Main Content Area */}
-        <main className="relative z-20 w-full max-w-[1600px] px-6 md:px-12 xl:px-16 pt-[112px] pb-32 flex flex-col lg:flex-row gap-16 items-start">
+        <main className="relative z-20 w-full max-w-[1600px] px-6 md:px-12 xl:px-16 pt-48 pb-32 flex flex-col lg:flex-row gap-16 items-start">
           
           <div className="flex-1 flex flex-col gap-12 w-full">
             {/* Header Overlay */}

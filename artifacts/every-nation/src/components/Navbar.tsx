@@ -73,77 +73,99 @@ export default function Navbar() {
           </div>
 
           {/* RIGHT: USER (High Priority / Constrained) */}
-          <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 shrink-0 max-w-[50%] lg:max-w-[42%] justify-end overflow-hidden">
+          <div className="flex items-center gap-4 sm:gap-6 lg:gap-8 shrink-0 max-w-[60%] lg:max-w-[50%] justify-end">
             {isLoggedIn ? (
-              <div className="flex items-center gap-3 sm:gap-3 lg:gap-4">
-                {/* CREDITS (Always Visible) */}
-                <div className="flex flex-col items-end">
-                  <span className="font-mono text-[7px] text-white/20 uppercase tracking-widest hidden xl:block mb-0.5">Assets</span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-orbitron text-xs sm:text-sm text-cyan-400 font-bold whitespace-nowrap truncate max-w-[90px]">{credits.toLocaleString()}</span>
-                    <span className="text-[8px] text-cyan-400/40 font-mono">CC</span>
+              <div className="flex items-center gap-4 sm:gap-6 lg:gap-8">
+                {/* 1. ASSET MODULE (Credits) */}
+                <div className="hidden sm:flex items-center gap-4 px-4 py-1.5 bg-cyan-500/[0.03] border border-cyan-500/20 rounded-sm group/credits hover:border-cyan-500/40 transition-all cursor-default">
+                  <div className="flex flex-col items-start leading-none">
+                    <span className="font-mono text-[6px] text-cyan-400/40 uppercase tracking-[0.3em] mb-1">Available_Units</span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="font-orbitron text-sm lg:text-base text-cyan-400 font-black tracking-wider group-hover/credits:drop-shadow-[0_0_8px_rgba(6,182,212,0.5)] transition-all">
+                        {credits.toLocaleString()}
+                      </span>
+                      <span className="text-[8px] text-cyan-400/40 font-mono font-bold">CC</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* USER CLUSTER */}
-                <Link href="/profile" className="flex items-center gap-2 sm:gap-3 group/user min-w-0">
-                  <div className="w-8 h-8 rounded-full border border-white/5 flex items-center justify-center bg-white/[0.02] group-hover/user:border-cyan-500/30 transition-all shrink-0">
-                    <FaUser className="text-white/30 text-[10px] group-hover/user:text-cyan-400" />
-                  </div>
-                  <div className="flex flex-col gap-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] sm:text-[11px] text-white font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] truncate max-w-[60px] sm:max-w-[100px]">{username}</span>
-                      <div className="px-1.5 py-0.5 bg-cyan-500/10 border border-cyan-500/30 rounded-sm shrink-0">
-                        <span className="font-orbitron text-[7px] sm:text-[8px] font-black text-cyan-400">L_{level}</span>
+                {/* 2. IDENTITY MODULE */}
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="h-8 w-[1px] bg-white/5 hidden xl:block" /> {/* Section Divider */}
+
+                  <Link href="/profile" className="flex items-center gap-3 group/user min-w-0">
+                    <div className="relative shrink-0">
+                      {/* Avatar with Glow */}
+                      <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center bg-white/[0.03] group-hover/user:border-cyan-500/50 group-hover/user:shadow-[0_0_15px_rgba(6,182,212,0.2)] transition-all overflow-hidden relative">
+                        <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/10 to-transparent opacity-0 group-hover/user:opacity-100 transition-opacity" />
+                        <FaUser className="text-white/40 text-[14px] group-hover/user:text-cyan-400 transition-colors" />
+                      </div>
+                      {/* Status Indicator */}
+                      <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-[#020408] rounded-full flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full shadow-[0_0_5px_#00f3ff]" />
                       </div>
                     </div>
-                    {/* XP bar: hidden on small screens */}
-                    <div className="hidden 2xl:block w-24 h-1 bg-white/5 relative overflow-hidden rounded-full">
-                      <motion.div
-                        className="absolute inset-y-0 left-0 bg-cyan-500"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${xpProgress * 100}%` }}
-                        transition={{ duration: 1.5 }}
-                      />
+
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] lg:text-xs text-white font-black uppercase tracking-widest truncate max-w-[80px] lg:max-w-[120px] group-hover/user:text-cyan-100 transition-colors">
+                          {username}
+                        </span>
+                        <div className="px-1.5 py-0.5 bg-cyan-500/10 border border-cyan-500/30 rounded-sm shrink-0">
+                          <span className="font-orbitron text-[8px] font-black text-cyan-400">LV_{level}</span>
+                        </div>
+                      </div>
+                      {/* XP bar with refined style */}
+                      <div className="hidden xl:block w-full h-1 bg-white/5 relative overflow-hidden rounded-full border border-white/5">
+                        <motion.div
+                          className="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-600 to-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.5)]"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${xpProgress * 100}%` }}
+                          transition={{ duration: 1.5 }}
+                        />
+                      </div>
                     </div>
-                  </div>
-                </Link>
+                  </Link>
+                </div>
 
-                {/* ALLIES TRIGGER */}
-                <button
-                  onClick={() => {
-                    const alliesBtn = document.querySelector('[data-allies-trigger]') as HTMLButtonElement;
-                    if (alliesBtn) alliesBtn.click();
-                  }}
-                  className="p-1.5 sm:p-2 bg-white/5 border border-white/5 text-white/40 hover:text-cyan-400 transition-all shrink-0"
-                  title="Allies Network"
-                >
-                  <FaUserFriends size={12} />
-                </button>
+                {/* 3. CONTROL MODULE */}
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="h-8 w-[1px] bg-white/5" /> {/* Section Divider */}
 
-                {/* SYSTEM CONTROLS */}
-                {/* FIX: z-index raised to z-[300] so dropdown clears Allies panel and other overlays */}
-                <div className="relative shrink-0">
+                  {/* Allies Trigger */}
                   <button
-                    onClick={() => setShowSettings(!showSettings)}
-                    className={`p-1.5 sm:p-2 border transition-all ${showSettings
-                      ? "bg-cyan-500/20 border-cyan-500 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.3)]"
-                      : "bg-white/5 border-white/5 text-white/40 hover:text-white"
-                      }`}
+                    onClick={() => {
+                      const alliesBtn = document.querySelector('[data-allies-trigger]') as HTMLButtonElement;
+                      if (alliesBtn) alliesBtn.click();
+                    }}
+                    className="p-2.5 bg-white/[0.03] border border-white/10 text-white/40 hover:text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all shrink-0 rounded-sm group/btn"
+                    title="Allies Network"
                   >
-                    <FaCog size={12} className={showSettings ? "animate-[spin_4s_linear_infinite]" : ""} />
+                    <FaUserFriends size={16} className="group-hover/btn:scale-110 transition-transform" />
                   </button>
 
-                  <AnimatePresence>
-                    {showSettings && (
-                      <>
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="fixed inset-0 z-[299]"
-                          onClick={() => setShowSettings(false)}
-                        />
+                  {/* System Settings */}
+                  <div className="relative shrink-0">
+                    <button
+                      onClick={() => setShowSettings(!showSettings)}
+                      className={`p-2.5 border transition-all rounded-sm group/settings ${showSettings
+                        ? "bg-cyan-500/20 border-cyan-500 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.3)]"
+                        : "bg-white/[0.03] border-white/10 text-white/40 hover:text-white hover:border-white/30 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]"
+                        }`}
+                    >
+                      <FaCog size={16} className={`${showSettings ? "animate-[spin_4s_linear_infinite]" : "group-hover/settings:rotate-90 transition-transform duration-500"}`} />
+                    </button>
+
+                    <AnimatePresence>
+                      {showSettings && (
+                        <>
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[299]"
+                            onClick={() => setShowSettings(false)}
+                          />
                         <motion.div
                           initial={{ opacity: 0, y: 10, scale: 0.95 }}
                           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -180,7 +202,8 @@ export default function Navbar() {
                   </AnimatePresence>
                 </div>
               </div>
-            ) : (
+            </div>
+          ) : (
               <SciFiButton
                 variant="primary"
                 size="sm"

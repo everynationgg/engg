@@ -152,7 +152,7 @@ export default function Shop() {
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#020408]/80 to-[#020408]" />
         </motion.div>
 
-        <main className="relative z-20 w-full max-w-[1400px] px-4 md:px-8 xl:px-12 pt-[112px] pb-40 flex flex-col items-center">
+        <main className="relative z-20 w-full max-w-[1400px] px-4 md:px-8 xl:px-12 pt-48 pb-40 flex flex-col items-center">
 
           {/* Header Section */}
           <header className="w-full flex flex-col items-center gap-4 mb-16 text-center px-4 md:px-8">
@@ -221,10 +221,26 @@ export default function Shop() {
                </TacticalSlate>
             </div>
           ) : (
-            <div className="flex flex-col lg:flex-row gap-8 w-full items-start">
-              {/* LEFT: Selection Deck (35%) */}
-              <div className="w-full lg:w-[35%] flex flex-col gap-3">
-                <div className="flex items-center gap-3 mb-2 px-2">
+            <div className="flex flex-col lg:flex-row gap-8 w-full items-start justify-center">
+              {/* LEFT: Selection Deck (45%) */}
+              <div className="w-full lg:w-[45%] flex flex-col gap-4">
+                {/* 2X BONUS PROMINENT BANNER */}
+                <div className="sticky top-[136px] z-30 w-full mb-2 bg-cyan-500/10 border border-cyan-500/40 p-4 backdrop-blur-lg shadow-[0_0_20px_rgba(6,182,212,0.1)]">
+                   <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                         <FaBolt className="text-cyan-400 text-xs animate-pulse" />
+                         <div className="flex flex-col">
+                            <span className="font-orbitron text-[11px] font-black text-white tracking-[0.2em] uppercase">2X_Bonus_Signal</span>
+                            <span className="font-mono text-[7px] text-cyan-400/60 uppercase tracking-widest mt-0.5">Verified for First Time Purchase</span>
+                         </div>
+                      </div>
+                      <div className="px-2 py-1 border border-cyan-500/20 bg-cyan-500/5">
+                         <span className="font-mono text-[9px] font-bold text-cyan-400">ACTIVE</span>
+                      </div>
+                   </div>
+                </div>
+
+                <div className="flex items-center gap-3 mt-4 mb-2 px-2">
                    <span className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20">Select_Node</span>
                    <div className="flex-1 h-[1px] bg-white/5" />
                 </div>
@@ -268,8 +284,8 @@ export default function Shop() {
                 })}
               </div>
 
-              {/* RIGHT: Tactical Detail Panel (65%) */}
-              <div className="w-full lg:w-[65%] sticky top-32">
+              {/* RIGHT: Tactical Detail Panel (55%) */}
+              <div className="w-full lg:w-[55%] sticky top-[136px]">
                 <AnimatePresence mode="wait">
                   {selectedPack && (
                     <motion.div
