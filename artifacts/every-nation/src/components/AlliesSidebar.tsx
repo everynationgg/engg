@@ -282,6 +282,7 @@ export default function AlliesSidebar() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "tween", duration: 0.3 }}
+              onClick={(e) => e.stopPropagation()}
               className="fixed top-0 right-0 bottom-0 w-full sm:w-[320px] z-[1000] flex flex-col bg-[#020408] border-l border-white/5"
             >
               {/* Scanline Header */}

@@ -2,19 +2,15 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaUser, FaSignOutAlt, FaBars, FaTimes, FaUserFriends, FaCog, FaVolumeUp, FaTerminal, FaFingerprint } from "react-icons/fa";
-import { SciFiButton } from "@/components/common/SciFiButton";
+import { FaUser, FaSignOutAlt, FaUserFriends, FaCog, FaChevronRight, FaFingerprint } from "react-icons/fa";
 import { useUI } from "@/context/UIContext";
 
 export default function Navbar() {
-  const { isLoggedIn, username, credits, xp, level, logout } = useAuth();
+  const { isLoggedIn, username, credits, level, logout } = useAuth();
   const { activePanel, togglePanel, closeAll } = useUI();
   const [location, navigate] = useLocation();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false); // Mobile menu
   const [scrolled, setScrolled] = useState(false);
-
-  // Calculate XP progress (500 XP per level)
-  const xpProgress = (xp % 500) / 500;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -41,245 +37,169 @@ export default function Navbar() {
     { name: "Credit Shop", href: "/shop" },
   ];
 
-  const showSolidBg = scrolled || isOpen;
-
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 transition-all duration-300 border-b overflow-visible ${showSolidBg ? "bg-black/95 backdrop-blur-md border-white/5 py-3" : "bg-transparent border-transparent py-5"
+        className={`fixed top-0 left-0 right-0 transition-all duration-300 border-b ${scrolled || isOpen ? "bg-black/95 backdrop-blur-md border-white/5 py-3" : "bg-transparent border-transparent py-5"
           } ${activePanel === "settings" ? "z-[1100]" : "z-[500]"}`}
       >
-        <div className="w-full max-w-[1800px] mx-auto px-4 md:px-8 lg:px-12 h-20 flex items-center justify-between pointer-events-auto relative">
-          {/* LEFT: LOGO */}
-          <Link href="/" className="flex items-center gap-4 group">
-            <div className="w-12 h-12 bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center group-hover:border-cyan-400 group-hover:bg-cyan-400/20 transition-all duration-300 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <span className="font-orbitron font-black text-2xl tracking-tighter text-white group-hover:text-cyan-400 transition-colors">EG</span>
-              <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-cyan-400/40" />
-              <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-cyan-400/40" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-orbitron font-black text-xl tracking-[0.2em] text-white leading-none">EVERY_NATION</span>
-              <span className="font-mono text-[8px] text-cyan-400/40 uppercase tracking-[0.5em] mt-1">Operational_Unit_01</span>
+        <div className="w-full max-w-[1800px] mx-auto px-6 h-12 flex items-center justify-between pointer-events-auto">
+          
+          {/* LEFT: BRAND */}
+          <Link href="/" className="flex items-center gap-3 group">
+            <span className="font-orbitron font-black text-2xl tracking-tighter text-white group-hover:text-cyan-400 transition-colors">EN</span>
+            <div className="hidden sm:flex flex-col border-l border-white/10 pl-3">
+              <span className="font-orbitron font-black text-sm tracking-[0.2em] text-white/90">EVERY_NATION</span>
+              <span className="font-mono text-[8px] text-white/20 uppercase tracking-[0.4em]">Unit_01</span>
             </div>
           </Link>
 
-          {/* CENTER: NAV (Floating Hub) */}
-          <div className="hidden lg:flex items-center gap-1 bg-white/[0.03] border border-white/5 p-1 rounded-sm backdrop-blur-sm">
+          {/* CENTER: NAVIGATION */}
+          <div className="hidden lg:flex items-center gap-8">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 href={link.href}
-                className={`px-8 py-3 font-orbitron text-[10px] uppercase tracking-[0.3em] transition-all relative group overflow-hidden ${location === link.href ? "text-cyan-400" : "text-white/40 hover:text-white"
+                className={`px-3 py-2 font-orbitron text-[11px] uppercase tracking-[0.2em] transition-all duration-200 relative outline-none focus-visible:text-cyan-400 ${location === link.href ? "text-cyan-400" : "text-white/60 hover:text-white"
                   }`}
               >
+                {link.name}
                 {location === link.href && (
-                  <motion.div layoutId="nav-glow" className="absolute inset-0 bg-cyan-500/5 border-x border-cyan-500/20" />
+                  <motion.div layoutId="nav-underline" className="absolute bottom-0 left-0 right-0 h-[2px] bg-cyan-400" />
                 )}
-                <span className="relative z-10">{link.name}</span>
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[1px] bg-cyan-400 group-hover:w-full transition-all duration-300" />
               </Link>
             ))}
           </div>
 
-          {/* RIGHT: USER (Locked Right) */}
-          <div className="hidden lg:flex items-center gap-6 xl:gap-10 shrink-0 justify-end z-10 min-w-[200px]">
-            {isLoggedIn ? (
-              <div className="flex items-center gap-6 xl:gap-10">
-                {/* 1. ASSET MODULE (Credits) - Ultra-Breathable HUD */}
-                <div className="hidden sm:flex items-center gap-5 px-8 py-3 bg-white/[0.03] border border-white/10 rounded-sm group/credits hover:border-cyan-500/40 hover:bg-cyan-500/[0.05] transition-all duration-200 ease-out cursor-default relative overflow-hidden backdrop-blur-md">
-                  {/* Holographic Scanline - Ultra Subtle Hover Only */}
-                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-cyan-400/[0.03] to-transparent -translate-y-full group-hover/credits:animate-[scanline_1.5s_ease-in-out_infinite] opacity-0 group-hover/credits:opacity-100 transition-opacity duration-500" />
+          {/* RIGHT: IDENTITY + CONTROLS */}
+          <div className="flex items-center gap-6">
+            {!isLoggedIn ? (
+              <button 
+                onClick={() => navigate("/login")}
+                className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-sm hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all group"
+              >
+                <FaFingerprint className="text-white/40 group-hover:text-cyan-400 text-xs" />
+                <span className="font-orbitron text-[10px] font-bold tracking-[0.2em] text-white">LOGIN</span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-6">
+                {/* Identity Trigger (Clickable Username) */}
+                <button 
+                  onClick={(e) => { e.stopPropagation(); togglePanel("settings"); }}
+                  className={`hidden md:block font-orbitron text-[11px] font-black tracking-widest uppercase transition-all duration-200 outline-none focus-visible:text-cyan-400 ${activePanel === "settings" ? "text-cyan-400" : "text-white/60 hover:text-white cursor-pointer"}`}
+                >
+                  {username}
+                </button>
 
-                  <div className="flex flex-col items-center leading-none relative z-10">
-                    <span className="font-mono text-[7px] text-white/20 uppercase tracking-[0.4em] mb-2 group-hover/credits:text-cyan-400/50 transition-colors duration-200">Asset_Uplink</span>
-                    <div className="flex items-baseline gap-3">
-                      <span className="font-orbitron text-sm lg:text-base text-white/90 group-hover/credits:text-cyan-400 font-black tracking-[0.1em] transition-colors duration-200">
-                        {credits.toLocaleString()}
-                      </span>
-                      <span className="text-[9px] text-white/20 font-mono font-bold tracking-widest group-hover/credits:text-cyan-400/30 transition-colors duration-200">CC</span>
-                    </div>
-                  </div>
+                {/* Allies Trigger */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); togglePanel("allies"); }}
+                  className={`w-9 h-9 flex items-center justify-center rounded-sm border transition-all duration-200 outline-none focus-visible:ring-1 focus-visible:ring-cyan-400 ${activePanel === "allies"
+                    ? "bg-cyan-500/10 border-cyan-500/50 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)]"
+                    : "bg-white/5 border-white/10 text-white/40 hover:text-white hover:border-white/30"
+                  }`}
+                  title="Allies Network"
+                >
+                  <FaUserFriends size={14} />
+                </button>
 
-                  {/* Tech Corner Accents - Subtle IDLE */}
-                  <div className="absolute top-0 right-0 w-1.5 h-1.5 border-t border-r border-white/5 group-hover/credits:border-cyan-400/30 transition-colors duration-200" />
-                  <div className="absolute bottom-0 left-0 w-1.5 h-1.5 border-b border-l border-white/5 group-hover/credits:border-cyan-400/30 transition-colors duration-200" />
-                </div>
-
-                {/* 2. IDENTITY MODULE - High-Contrast HUD */}
-                <div className="flex items-center gap-6 xl:gap-8 min-w-0">
-                  {/* Static Divider */}
-                  <div className="h-10 w-[1px] bg-white/5 hidden xl:block" />
-
-                  <Link href="/profile" className="flex items-center gap-5 group/user min-w-0">
-                    <div className="relative shrink-0 w-11 h-11">
-                      {/* Avatar Container - Controlled Coordinate System */}
-                      <div className="w-full h-full rounded-full border border-white/10 p-[1px] flex items-center justify-center bg-white/[0.02] group-hover/user:border-cyan-500/40 group-hover/user:bg-cyan-500/[0.06] transition-all duration-200 ease-out relative overflow-hidden">
-                        <div className="w-full h-full rounded-full bg-[#020408] flex items-center justify-center overflow-hidden relative">
-                          <FaUser className="text-white/20 text-[16px] group-hover/user:text-cyan-400 transition-all duration-200" />
-                        </div>
-                      </div>
-
-                      {/* Status Indicator - Anchored to Circle Bottom-Right */}
-                      <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#020408] rounded-full flex items-center justify-center z-20">
-                        <div className="w-2 h-2 bg-cyan-500 rounded-full shadow-[0_0_8px_#00f3ff]" />
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-1.5 min-w-0">
-                      <div className="flex items-center gap-4">
-                        <span className="text-[12px] text-white/70 font-black uppercase tracking-[0.15em] truncate max-w-[90px] lg:max-w-[130px] group-hover/user:text-white transition-colors duration-200">
-                          {username}
-                        </span>
-                        <div className="px-5 py-1.5 bg-white/5 border border-white/10 rounded-sm shrink-0 group-hover/user:border-cyan-500/30 group-hover/user:bg-cyan-500/10 transition-all duration-200">
-                          <span className="font-orbitron text-[10px] font-black text-white/40 group-hover/user:text-cyan-400 tracking-widest">LV_{level}</span>
-                        </div>
-                      </div>
-
-                      {/* Integrated Tactical XP Bar */}
-                      <div className="hidden xl:flex items-center gap-2.5 w-full opacity-30 group-hover/user:opacity-100 transition-all duration-300">
-                        <div className="flex-1 h-[2px] bg-white/5 relative overflow-hidden rounded-full">
-                          <motion.div
-                            className="absolute inset-y-0 left-0 bg-cyan-500"
-                            initial={{ width: 0 }}
-                            animate={{ width: `${xpProgress * 100}%` }}
-                            transition={{ duration: 2, ease: "easeOut" }}
-                          />
-                        </div>
-                        <span className="font-mono text-[6px] text-white/20 uppercase tracking-tighter">{Math.round(xpProgress * 100)}%</span>
-                      </div>
-                    </div>
-                  </Link>
-                </div>
-
-                {/* 3. CONTROL MODULE - Precision Interface */}
-                <div className="flex items-center gap-3 relative z-10">
-                  <div className="h-8 w-[1px] bg-white/5 mx-2" />
-
-                  {/* Allies Trigger - Context State Pipeline */}
+                {/* Settings Dropdown Trigger */}
+                <div className="relative">
                   <button
-                    onClick={() => togglePanel("allies")}
-                    className={`p-3 border transition-all duration-200 shrink-0 rounded-sm group/btn relative ${activePanel === "allies"
+                    onClick={(e) => { e.stopPropagation(); togglePanel("settings"); }}
+                    className={`w-9 h-9 flex items-center justify-center rounded-sm border transition-all ${activePanel === "settings"
                       ? "bg-cyan-500/10 border-cyan-500/50 text-cyan-400"
-                      : "bg-white/[0.02] border-white/10 text-white/40 hover:text-cyan-400 hover:border-cyan-500/40 hover:bg-cyan-500/[0.06]"
+                      : "bg-white/5 border-white/10 text-white/40 hover:text-white hover:border-white/30"
                     }`}
-                    title="Allies Network"
                   >
-                    <FaUserFriends size={16} className="group-hover/btn:scale-110 transition-transform relative z-10 duration-200" />
-                    
-                    {/* Active Pulse Indicator for Allies */}
-                    <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-red-500/40 rounded-full blur-[2px] opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+                    <FaCog size={14} className={activePanel === "settings" ? "animate-spin-slow" : ""} />
                   </button>
 
-                  {/* System Settings - Precise HUD Dropdown */}
-                  <div className="relative shrink-0">
-                    <button
-                      onClick={() => togglePanel("settings")}
-                      className={`p-3 border transition-all duration-200 rounded-sm group/settings relative overflow-hidden ${activePanel === "settings"
-                        ? "bg-cyan-500/10 border-cyan-500/50 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
-                        : "bg-white/[0.02] border-white/10 text-white/40 hover:text-white hover:border-white/30"
-                        }`}
-                    >
-                      <FaCog size={16} className={`relative z-10 ${activePanel === "settings" ? "animate-[spin_4s_linear_infinite]" : "group-hover/settings:rotate-90 transition-transform duration-500"}`} />
-                    </button>
-
-                    <AnimatePresence>
-                      {activePanel === "settings" && (
-                        <>
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-[1105]"
-                            onClick={() => closeAll()}
-                          />
-                          <motion.div
-                            initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                            transition={{ duration: 0.15, ease: "easeOut" }}
-                            className="absolute top-full right-0 mt-5 w-52 bg-[#020408]/98 border border-white/10 p-5 shadow-2xl backdrop-blur-md z-[1110]"
-                          >
-                            <div className="flex flex-col gap-1">
-                              <div className="flex items-center gap-2 mb-3">
-                                <div className="w-1 h-1 bg-cyan-500 shadow-[0_0_5px_#00f3ff]" />
-                                <span className="font-mono text-[7px] uppercase tracking-[0.5em] text-white/20">System_Directives</span>
-                              </div>
-
-                              <button className="flex items-center justify-between w-full p-3 text-left hover:bg-white/5 group transition-all duration-150 border border-transparent hover:border-white/5">
-                                <div className="flex items-center gap-3">
-                                  <FaVolumeUp size={10} className="text-white/20 group-hover:text-cyan-400 transition-colors" />
-                                  <span className="font-orbitron text-[9px] uppercase tracking-widest text-white/60 group-hover:text-white transition-colors">Audio_Engine</span>
-                                </div>
-                                <div className="w-1 h-1 bg-white/10 rounded-full group-hover:bg-cyan-500/40 transition-colors" />
-                              </button>
-
-                              <button className="flex items-center justify-between w-full p-3 text-left hover:bg-white/5 group transition-all duration-150 border border-transparent hover:border-white/5">
-                                <div className="flex items-center gap-3">
-                                  <FaTerminal size={10} className="text-white/20 group-hover:text-cyan-400 transition-colors" />
-                                  <span className="font-orbitron text-[9px] uppercase tracking-widest text-white/60 group-hover:text-white transition-colors">Preferences</span>
-                                </div>
-                                <div className="w-1 h-1 bg-white/10 rounded-full group-hover:bg-cyan-500/40 transition-colors" />
-                              </button>
-
-                              <div className="h-[1px] bg-white/5 my-3" />
-
-                              <button
-                                onClick={logout}
-                                className="flex items-center gap-3 w-full p-3 text-left hover:bg-red-500/10 group transition-all duration-150"
-                              >
-                                <FaSignOutAlt size={10} className="text-white/20 group-hover:text-red-500 transition-colors" />
-                                <span className="font-orbitron text-[9px] uppercase tracking-widest text-white/60 group-hover:text-red-500 transition-colors">TERMINATE_SESSION</span>
-                              </button>
+                  <AnimatePresence>
+                    {activePanel === "settings" && (
+                      <>
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="fixed inset-0 z-[1105]"
+                          onClick={() => closeAll()}
+                        />
+                        <motion.div
+                          initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                          transition={{ duration: 0.15, ease: "easeOut" }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="absolute top-full right-0 mt-4 w-52 bg-[#020408] border border-white/10 p-4 shadow-2xl rounded-md z-[1110]"
+                        >
+                          {/* ASSETS */}
+                          <div className="mb-4">
+                            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/20 block mb-2 px-1">Assets</span>
+                            <div className="flex items-baseline gap-2 px-1">
+                              <span className="font-orbitron text-xl font-black text-white leading-none">{credits.toLocaleString()}</span>
+                              <span className="font-mono text-[9px] text-cyan-400/40 font-bold tracking-widest uppercase">CC</span>
                             </div>
-                          </motion.div>
-                        </>
-                      )}
-                    </AnimatePresence>
-                  </div>
+                          </div>
+
+                          <div className="h-[1px] bg-white/5 my-4" />
+
+                          {/* ACCOUNT */}
+                          <div className="flex flex-col gap-1">
+                            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/20 block mb-2 px-1">Account</span>
+                            <Link href="/profile" className="flex items-center justify-between p-2.5 rounded-sm hover:bg-white/5 transition-colors group">
+                              <div className="flex items-center gap-3">
+                                <FaUser size={10} className="text-white/20 group-hover:text-cyan-400" />
+                                <span className="font-orbitron text-[10px] uppercase tracking-widest text-white/60 group-hover:text-white">Profile</span>
+                              </div>
+                              <FaChevronRight size={8} className="text-white/10 group-hover:text-white/40" />
+                            </Link>
+
+                            <button
+                              onClick={logout}
+                              className="flex items-center gap-3 p-2.5 rounded-sm hover:bg-red-500/10 transition-colors group mt-2"
+                            >
+                              <FaSignOutAlt size={10} className="text-white/20 group-hover:text-red-500" />
+                              <span className="font-orbitron text-[10px] uppercase tracking-widest text-white/60 group-hover:text-red-500">Logout</span>
+                            </button>
+                          </div>
+
+                          <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between opacity-20">
+                            <span className="font-mono text-[7px] uppercase tracking-widest text-white">LVL_{level}</span>
+                            <span className="font-mono text-[7px] uppercase tracking-widest text-white">SECURE_LINK</span>
+                          </div>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
-            ) : (
-              <div className="flex items-center gap-4">
-                <div className="h-8 w-[1px] bg-white/5" />
-                <SciFiButton
-                  variant="primary"
-                  size="sm"
-                  onClick={() => navigate("/login")}
-                  className="relative group/login overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-white/5 translate-x-[-100%] group-hover/login:translate-x-[100%] transition-transform duration-700 ease-in-out" />
-                  <span className="relative z-10 flex items-center gap-2">
-                    <FaFingerprint className="text-[10px]" />
-                    AUTHORIZE_ACCESS
-                  </span>
-                </SciFiButton>
-              </div>
             )}
-          </div>
 
-          {/* MOBILE TOGGLE */}
-          <button className="lg:hidden text-cyan-400/40 hover:text-cyan-400 transition-colors" onClick={() => setIsOpen(!isOpen)}>
-            {isOpen ? <FaTimes size={18} /> : <FaBars size={18} />}
-          </button>
+            {/* Mobile menu toggle */}
+            <button className="lg:hidden text-white/40 hover:text-white transition-colors ml-2" onClick={() => setIsOpen(!isOpen)}>
+              <div className="w-6 h-4 flex flex-col justify-between">
+                <span className={`h-[1px] w-full bg-current transition-all ${isOpen ? "rotate-45 translate-y-[7.5px]" : ""}`} />
+                <span className={`h-[1px] w-full bg-current transition-all ${isOpen ? "opacity-0" : ""}`} />
+                <span className={`h-[1px] w-full bg-current transition-all ${isOpen ? "-rotate-45 -translate-y-[7.5px]" : ""}`} />
+              </div>
+            </button>
+          </div>
         </div>
 
-        {/* TACTICAL BREADCRUMBS */}
-        {/* FIX: removed overflow-hidden so the settings dropdown can escape the navbar bounds */}
-        <div className="w-full border-t border-white/5 bg-black/40 backdrop-blur-sm h-6 flex items-center px-6 md:px-12">
+        {/* BREADCRUMB BAR (Clean version) */}
+        <div className="w-full border-t border-white/5 bg-black/20 h-6 flex items-center px-6">
           <div className="flex items-center gap-3 opacity-30">
-            <span className="font-mono text-[7px] uppercase tracking-[0.2em] text-cyan-400">Path:</span>
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-[7px] uppercase tracking-widest text-white">Root</span>
-              <span className="text-[6px] text-white/40">&gt;</span>
-              <span className="font-mono text-[7px] uppercase tracking-widest text-cyan-400">
-                {location === "/" ? "Home" : location.slice(1).replace("-", "_").toUpperCase()}
-              </span>
-            </div>
+            <span className="font-mono text-[7px] uppercase tracking-widest text-white">PATH: ROOT</span>
+            <span className="text-[6px] text-white/40">&gt;</span>
+            <span className="font-mono text-[7px] uppercase tracking-widest text-cyan-400">
+              {location === "/" ? "HOME" : location.slice(1).replace("-", "_").toUpperCase()}
+            </span>
           </div>
         </div>
       </nav>
 
+      {/* Mobile Drawer */}
       <AnimatePresence>
         {isOpen && (
           <>
@@ -289,73 +209,43 @@ export default function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 bottom-0 left-0 w-[300px] lg:hidden z-[1000] bg-[#020408] border-r border-white/5 flex flex-col overflow-y-auto"
-              style={{ paddingTop: "env(safe-area-inset-top, 2rem)" }}
+              className="fixed top-0 bottom-0 left-0 w-[280px] lg:hidden z-[1000] bg-[#020408] border-r border-white/5 flex flex-col"
             >
-              <div className="p-8 border-b border-white/5 flex items-center justify-between shrink-0">
-                <span className="font-orbitron font-black text-xl tracking-tighter text-white">ENGG</span>
-                <button onClick={() => setIsOpen(false)} className="text-white/40 hover:text-white transition-colors p-2">
-                  <FaTimes size={20} />
-                </button>
+              <div className="p-8 border-b border-white/5 flex items-center gap-4">
+                <span className="font-orbitron font-black text-2xl tracking-tighter text-white">EN</span>
+                <span className="font-orbitron font-black text-xs tracking-widest text-white/40">OPERATIONS</span>
               </div>
 
-              <div className="flex flex-col p-4 mt-4">
+              <div className="flex flex-col p-4 gap-2">
                 {navLinks.map((link) => (
                   <Link
                     key={link.name}
                     href={link.href}
-                    className={`p-5 font-orbitron text-[10px] uppercase tracking-[0.3em] transition-all border-l-2 mb-2 min-h-[52px] flex items-center ${location === link.href
-                      ? "text-cyan-400 border-cyan-400 bg-cyan-400/5"
-                      : "text-white/40 border-transparent hover:text-white hover:bg-white/5"
+                    className={`p-4 font-orbitron text-[10px] uppercase tracking-widest transition-all ${location === link.href ? "text-cyan-400 bg-cyan-400/5" : "text-white/40 hover:text-white"
                       }`}
                   >
                     {link.name}
                   </Link>
                 ))}
-
+                
                 {!isLoggedIn && (
-                  <button
-                    onClick={() => navigate("/login")}
-                    className="mt-8 mx-4 min-h-[52px] border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 font-orbitron text-[10px] uppercase tracking-[0.4em] hover:bg-cyan-500/20 transition-all flex items-center justify-center"
-                  >
-                    Authorize_Access
+                  <button onClick={() => navigate("/login")} className="mt-8 mx-4 p-4 border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 font-orbitron text-[10px] uppercase tracking-widest">
+                    AUTHORIZE_ACCESS
                   </button>
                 )}
               </div>
 
               {isLoggedIn && (
-                <div className="mt-auto p-8 border-t border-white/5 bg-white/[0.02] mb-safe">
-                  <div className="flex flex-col gap-4 mb-8">
+                <div className="mt-auto p-8 border-t border-white/5">
+                  <div className="flex flex-col gap-4">
                     <div className="flex flex-col gap-1">
-                      <span className="font-mono text-[6px] text-cyan-400/40 uppercase tracking-[0.4em]">Operational_Assets</span>
-                      <span className="font-orbitron text-base text-cyan-400 font-black tracking-wider">
-                        {credits.toLocaleString()} <span className="text-[10px] opacity-40">CC</span>
-                      </span>
+                      <span className="font-mono text-[7px] text-white/30 uppercase tracking-[0.4em]">Operational_Assets</span>
+                      <span className="font-orbitron text-base text-white font-black">{credits.toLocaleString()} CC</span>
                     </div>
-                    <div className="h-[1px] bg-white/5 w-full" />
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full border border-cyan-500/20 flex items-center justify-center bg-cyan-500/5 shadow-[0_0_15px_rgba(6,182,212,0.15)]">
-                        <FaUser className="text-cyan-400/60" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[11px] text-white font-black uppercase tracking-widest">{username}</span>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[8px] text-cyan-400 font-mono">LVL_{level}</span>
-                          <div className="w-12 h-1 bg-white/5 rounded-full overflow-hidden">
-                            <div className="h-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.5)]" style={{ width: `${xpProgress * 100}%` }} />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <button onClick={logout} className="w-full p-4 border border-red-500/30 text-red-400 font-orbitron text-[8px] uppercase tracking-widest">
+                      TERMINATE_SESSION
+                    </button>
                   </div>
-
-                  <button
-                    onClick={logout}
-                    className="w-full flex items-center justify-center gap-3 min-h-[52px] border border-red-500/30 text-red-400 font-orbitron text-[8px] uppercase tracking-[0.3em] hover:bg-red-500/10 transition-all"
-                  >
-                    <FaSignOutAlt size={12} />
-                    TERMINATE_SESSION
-                  </button>
                 </div>
               )}
             </motion.div>
