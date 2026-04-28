@@ -16,33 +16,21 @@ export default function Home() {
       <div className="landing-root h-screen relative overflow-hidden">
         <video
           className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-          src="/EN_PAGE_BACKGROUND.webm"
+          src="/bg-video.mp4"
           autoPlay
           muted
           playsInline
         />
 
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 px-6 pt-20">
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 px-6 pt-10 md:pt-20">
           <AnimatePresence>
             {uiVisible && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1.2, ease: "easeOut" }}
-                className="w-full flex flex-col items-center gap-6 md:gap-40"
+                className="w-full flex flex-col items-center gap-12"
               >
-                {/* NEW LOGO VIDEO */}
-                <div className="w-full max-w-[280px] md:max-w-[600px] flex justify-center">
-                  <video
-                    className="w-full h-auto"
-                    src="/en_page_logo.webm"
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                  />
-                </div>
-
                 <div className="flex flex-wrap justify-center gap-8 w-full max-w-[1200px]">
                   {/* DISCORD */}
                   <div className="w-[300px]">
