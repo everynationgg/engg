@@ -1552,6 +1552,9 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
           >
             <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 2 }} className="w-1.5 h-1.5 rounded-full bg-current shadow-[0_0_8px_currentColor]" />
             {role.name}
+            {PREMIUM_ROLE_IDS.includes(role.id) && (
+              <span className="text-[9px] px-2 py-0.5 rounded border border-amber-500/50 bg-amber-500/10 text-amber-500 font-bold tracking-widest ml-2">VIP</span>
+            )}
           </div>
         </div>
 

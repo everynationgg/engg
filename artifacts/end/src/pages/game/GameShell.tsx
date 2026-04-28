@@ -27,6 +27,7 @@ import { getSoundEnabled, setSoundEnabled, startLobbyMusic, stopLobbyMusic } fro
 import { usePreferences } from "@/hooks/usePreferences";
 import LandingNavbar from "@/components/system/LandingNavbar";
 import LandingSidebar from "@/components/system/LandingSidebar";
+import HamburgerMenu from "@/components/system/HamburgerMenu";
 
 // Phases that warrant a dramatic countdown overlay before switching
 const DRAMATIC_PHASES = new Set(["voting", "result", "discussion"]);
@@ -112,10 +113,10 @@ export default function GameShell() {
   const [chatUnread, setChatUnread] = useState(0);
   const [chatTypingActive, setChatTypingActive] = useState(false);
   const [isGlitching, setIsGlitching] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [showGameMenu, setShowGameMenu] = useState(false);
   const { preferences, updateMusicVolume } = usePreferences();
   const musicOn = (preferences?.musicVolume ?? 0) > 0;
   const touchStartX = useRef<number | null>(null);
@@ -162,18 +163,20 @@ export default function GameShell() {
 
         // If any sub-modal is open, let it handle the ESC key (it will call onClose)
         // We don't want to toggle the pause menu background state while a modal is closing.
-        if (showSettings || showProfile || showHowToPlay) {
-          // No-op here, the modal components have their own ESC listeners.
+        if (showSettings || showProfile || showHowToPlay || showGameMenu) {
+          if (showGameMenu) setShowGameMenu(false);
           return;
         }
 
-        // Otherwise, toggle pause menu
-        setIsPaused(prev => !prev);
+        // Desktop Game Menu Toggle
+        if (window.innerWidth >= 1024) {
+          setShowGameMenu(prev => !prev);
+        }
       }
     };
     window.addEventListener("keydown", handleKeyDown, true);
     return () => window.removeEventListener("keydown", handleKeyDown, true);
-  }, [chatOpen, showSettings, showProfile, showHowToPlay]);
+  }, [chatOpen, showSettings, showProfile, showHowToPlay, showGameMenu]);
 
   // Redirect if no room code
   useEffect(() => {
@@ -473,6 +476,16 @@ export default function GameShell() {
         onToggleMusic={handleToggleMusic}
       />
 
+      {/* Top-Right HUD Trigger (Subtle Fallback) */}
+      <div className="fixed top-4 right-4 z-[101] hidden lg:block">
+        <button 
+          onClick={() => setShowGameMenu(true)}
+          className="px-3 py-1.5 border border-white/5 bg-black/20 text-[10px] font-orbitron tracking-[0.3em] text-white/20 hover:text-white/60 hover:bg-white/5 transition-all uppercase"
+        >
+          Menu
+        </button>
+      </div>
+
       {/* Mobile Sidebar Menu */}
       <LandingSidebar
         onShowSettings={() => setShowSettings(true)}
@@ -500,115 +513,89 @@ export default function GameShell() {
         )}
       </AnimatePresence>
 
-      {/* TOP-RIGHT CONTROLS (Pause/Menu) */}
-      <div className="fixed top-4 right-4 z-[101] flex items-center gap-3 pointer-events-auto">
-        <button 
-          onClick={() => setIsPaused(true)}
-          className="h-10 px-3 border border-white/5 bg-black/40 backdrop-blur-md flex items-center gap-3 hover:bg-cyan-500/10 hover:border-cyan-500/30 transition-all group relative overflow-hidden"
-        >
-          {/* Animated Background Pulse */}
-          <div className="absolute inset-0 bg-cyan-500/5 animate-pulse" />
-          
-          <span className="font-orbitron text-[9px] uppercase tracking-[0.3em] text-white/40 group-hover:text-cyan-400 transition-colors hidden sm:inline">
-            Menu
-          </span>
-
-          <div className="flex gap-1.5">
-            <div className="w-[2px] h-3 bg-cyan-400/40 group-hover:bg-cyan-400 transition-colors shadow-[0_0_8px_rgba(34,211,238,0.4)]" />
-            <div className="w-[2px] h-3 bg-cyan-400/40 group-hover:bg-cyan-400 transition-colors shadow-[0_0_8px_rgba(34,211,238,0.4)]" />
-          </div>
-
-          <span className="font-orbitron text-[9px] uppercase tracking-[0.3em] text-white/40 group-hover:text-cyan-400 transition-colors sm:hidden">
-            Menu
-          </span>
-        </button>
-      </div>
-
       <AnimatePresence>
-        {isPaused && (
-          <motion.div 
+        {showGameMenu && (
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-md px-6 pointer-events-auto"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setIsPaused(false);
+            className="fixed inset-0 z-[2000] hidden lg:flex flex-col items-center justify-center bg-black/60 backdrop-blur-md"
+            onClick={() => setShowGameMenu(false)}
+            onKeyDown={(e) => {
+              if (e.key === "Tab") {
+                const focusable = e.currentTarget.querySelectorAll('button');
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (e.shiftKey && document.activeElement === first) {
+                  e.preventDefault();
+                  last.focus();
+                } else if (!e.shiftKey && document.activeElement === last) {
+                  e.preventDefault();
+                  first.focus();
+                }
+              }
             }}
           >
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="w-full max-w-[320px] bg-[#020408] border border-cyan-500/20 p-8 flex flex-col items-center gap-6 relative shadow-[0_0_50px_rgba(0,0,0,0.5)] pointer-events-auto"
+            <style dangerouslySetInnerHTML={{ __html: 'body { overflow: hidden !important; }' }} />
+            <motion.div
+              initial={{ scale: 0.95, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 10 }}
+              className="w-[320px] flex flex-col gap-3 p-8 border border-white/10 bg-black/90 shadow-[0_30px_60px_rgba(0,0,0,0.8)]"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Tactical Brackets */}
-              <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-cyan-500/40" />
-              <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-cyan-500/40" />
-              
-              <div className="flex flex-col items-center gap-1 mb-4">
-                <span className="font-mono text-[7px] uppercase tracking-[0.6em] text-cyan-400/40">Operation_Suspended</span>
-                <h2 className="font-orbitron font-black text-xl tracking-[0.3em] uppercase text-white">Pause</h2>
+              <div className="mb-6 flex flex-col items-center">
+                <span className="font-mono text-[8px] tracking-[0.5em] uppercase text-cyan-400/40 mb-1">Session_Status</span>
+                <h2 className="font-orbitron font-black text-xl tracking-[0.3em] uppercase text-white">Game Menu</h2>
               </div>
 
-              <div className="flex flex-col w-full gap-2">
-                <button 
-                  onClick={() => setIsPaused(false)}
-                  className="w-full py-4 border border-cyan-500/30 bg-cyan-500/5 hover:bg-cyan-500/10 transition-all font-orbitron text-[10px] uppercase tracking-[0.4em] text-cyan-400"
-                >
-                  RESUME MISSION
-                </button>
-
-                {isHost && (
-                  <button 
-                    onClick={() => {
-                      getSocket().emit("restart_game", { sessionId: roomCode });
-                      setIsPaused(false);
-                    }}
-                    className="w-full py-4 border border-white/5 hover:border-white/20 transition-all font-orbitron text-[10px] uppercase tracking-[0.4em] text-white/40 hover:text-white"
-                  >
-                    RESTART_ROUND
-                  </button>
-                )}
-
-                <div className="h-[1px] bg-white/5 my-2 w-full" />
-
-                <button 
-                  onClick={() => {
-                    playSciFiClick();
-                    openConfirm();
-                  }}
-                  className="w-full py-4 border border-red-500/20 hover:bg-red-500/10 hover:border-red-500/60 transition-all font-orbitron text-[10px] uppercase tracking-[0.4em] text-red-500"
-                >
-                  TERMINATE_SESSION
-                </button>
-              </div>
-
-              <ConfirmModal
-                isOpen={showConfirm}
-                title="TERMINATE SESSION"
-                message="Confirm intentional disconnect from current operation?"
-                warning={
-                  isHost
-                    ? "WARNING: HOST_STATUS ACTIVE. SESSION WILL TERMINATE FOR ALL OPERATORS."
-                    : midGame
-                      ? "WARNING: MID_ENGAGEMENT. DISCONNECT WILL IMPACT UNIT COHESION."
-                      : undefined
-                }
-                confirmLabel="TERMINATE"
-                cancelLabel="RESUME"
-                onConfirm={handleConfirmQuit}
-                onCancel={closeConfirm}
+              <MenuButton 
+                label="Resume" 
+                onClick={() => setShowGameMenu(false)} 
+                primary 
+                autoFocus
               />
+              
+              {isHost && (
+                <MenuButton 
+                  label="Restart Round" 
+                  onClick={() => {
+                    getSocket().emit("restart_game", { sessionId: roomCode });
+                    setShowGameMenu(false);
+                  }} 
+                />
+              )}
 
-              <div className="flex flex-col items-center opacity-40 mt-8 space-y-2">
-                <span className="font-mono text-[9px] uppercase tracking-[0.3em] font-bold">Operator: {sessionStorage.getItem("lp_callsign") || "UNKNOWN"}</span>
-                <span className="font-mono text-[9px] uppercase tracking-[0.3em] opacity-50">Session_Token: {roomCode}</span>
-              </div>
+              <div className="h-px bg-white/5 my-2" />
+
+              <MenuButton 
+                label="Quit Game" 
+                variant="danger"
+                onClick={() => {
+                  setShowGameMenu(false);
+                  openConfirm();
+                }} 
+              />
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Mobile Mission Interrupt Panel (Radial) */}
+      <div className="lg:hidden">
+        <HamburgerMenu
+          onShowSettings={() => setShowSettings(true)}
+          onShowProfile={() => setShowProfile(true)}
+          musicOn={musicOn}
+          onToggleMusic={handleToggleMusic}
+          playSound={playSciFiClick}
+          showQuitButton={true}
+          isHost={isHost}
+          onRestartRound={() => {
+            getSocket().emit("restart_game", { sessionId: roomCode });
+          }}
+        />
+      </div>
 
       <PhaseTimeline currentPhase={displayedPhase} />
       {renderPhase()}
@@ -680,7 +667,62 @@ export default function GameShell() {
       {showHowToPlay && (
         <HowToPlayModal onClose={() => setShowHowToPlay(false)} />
       )}
+
+      {showConfirm && (
+        <ConfirmModal
+          isOpen={showConfirm}
+          title="TERMINATE SESSION"
+          message="Confirm intentional disconnect from current operation?"
+          warning={
+            isHost
+              ? "WARNING: HOST_STATUS ACTIVE. SESSION WILL TERMINATE FOR ALL OPERATORS."
+              : midGame
+                ? "WARNING: MID_ENGAGEMENT. DISCONNECT WILL IMPACT UNIT COHESION."
+                : undefined
+          }
+          confirmLabel="TERMINATE"
+          cancelLabel="RESUME"
+          onConfirm={handleConfirmQuit}
+          onCancel={closeConfirm}
+        />
+      )}
     </div>
+  );
+}
+
+function MenuButton({ 
+  label, 
+  onClick, 
+  primary = false, 
+  variant = 'default',
+  autoFocus = false 
+}: { 
+  label: string; 
+  onClick: () => void; 
+  primary?: boolean; 
+  variant?: 'default' | 'danger';
+  autoFocus?: boolean;
+}) {
+  return (
+    <button
+      autoFocus={autoFocus}
+      onClick={() => { playSciFiClick(); onClick(); }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className={`w-full py-4 font-orbitron font-bold text-xs tracking-[0.3em] uppercase transition-all duration-200 border ${
+        variant === 'danger' 
+          ? 'border-red-500/20 text-red-500 hover:bg-red-500/10 hover:border-red-500/50'
+          : primary 
+            ? 'border-cyan-500/40 bg-cyan-500/10 text-white hover:bg-cyan-500/20 hover:border-cyan-500/60 shadow-[0_0_20px_rgba(6,182,212,0.1)]'
+            : 'border-white/5 text-white/40 hover:text-white hover:border-white/20 hover:bg-white/5'
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 
