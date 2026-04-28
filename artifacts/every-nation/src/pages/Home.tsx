@@ -29,9 +29,9 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1.2, ease: "easeOut" }}
-                className="w-full flex flex-col items-center gap-12"
+                className="w-full flex flex-col items-center gap-16"
               >
-                <div className="flex flex-wrap justify-center gap-8 w-full max-w-[1200px]">
+                <div className="flex flex-wrap justify-center gap-8 w-full max-w-[1200px] mt-20 md:mt-40">
                   {/* DISCORD */}
                   <div className="w-[300px]">
                     <TacticalButton
