@@ -14,7 +14,7 @@ export const TacticalButton: React.FC<TacticalButtonProps> = ({
   return (
     <button
       className={cn(
-        "relative group flex items-center justify-center transition-all duration-300 active:scale-95 select-none overflow-hidden h-10 w-full",
+        "relative group flex items-center justify-center transition-all duration-300 active:scale-95 select-none overflow-hidden h-16 w-full",
         className
       )}
       {...props}
@@ -23,7 +23,7 @@ export const TacticalButton: React.FC<TacticalButtonProps> = ({
       <div className="absolute inset-0 z-0">
         <img
           src="/home_btn.webp"
-          className="w-full h-full object-contain"
+          className="w-full h-full object-cover"
           alt="button frame"
         />
       </div>

@@ -16,9 +16,10 @@ export default function Home() {
       <div className="landing-root h-screen relative overflow-hidden">
         <video
           className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-          src="/bg-video.mp4"
+          src="/EN_PAGE_BACKGROUND.webm"
           autoPlay
           muted
+          loop
           playsInline
         />
 
