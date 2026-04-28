@@ -1,10 +1,10 @@
 import type { Server as SocketIOServer, Socket } from "socket.io";
 import { z } from "zod";
 import { randomUUID } from "node:crypto";
-import { 
-  validate, 
-  startGameSchema, 
-  startGameCustomSchema, 
+import {
+  validate,
+  startGameSchema,
+  startGameCustomSchema,
   sessionIdSchema,
   submitActionSchema,
   castVoteSchema,
@@ -13,20 +13,20 @@ import {
   sessionOnlySchema
 } from "../schemas.js";
 import { logger } from "../../lib/logger.js";
-import { 
-  isRedisOverloaded, 
-  getSession, 
-  saveSession, 
-  withCasRetry, 
+import {
+  isRedisOverloaded,
+  getSession,
+  saveSession,
+  withCasRetry,
   CAS_SKIP,
   freshEmergencyVote,
   freshRoundSummary
 } from "../../sessions.js";
-import { 
-  startGame, 
-  acknowledgeRole, 
-  submitAction, 
-  castVote, 
+import {
+  startGame,
+  acknowledgeRole,
+  submitAction,
+  castVote,
   recheckVotingCompletion,
   startEmergencyVote,
   castEmergencyVote,
@@ -70,7 +70,7 @@ export function registerGameHandlers(
       const player = session.players.find((p) => p.id === socket.id);
       if (!player?.isHost) return CAS_SKIP;
       if (session.phase !== "lobby" && session.phase !== "role_config") return CAS_SKIP;
-      
+
       if (customRoles) {
         session.rolesAssigned = { ...customRoles };
         session.initialRoles = { ...customRoles };
@@ -105,7 +105,7 @@ export function registerGameHandlers(
 
     phaseUpdate(io, sessionId, cas.session);
     logGameEvent("game_started", sessionId, socket.id, { players: cas.session.players.length });
-    
+
     await logAudit({
       userId: state.currentUserId,
       eventType: "GAME_START",
@@ -120,7 +120,7 @@ export function registerGameHandlers(
   socket.on("unlock_role", async (data: unknown, ack) => {
     const unlockRoleSchema = z.object({
       sessionId: sessionIdSchema,
-      roleId: z.enum(["virus", "router"]),
+      roleId: z.enum(["virus", "router", "doctor"]),
     });
     const parsed = validate(unlockRoleSchema, data, ack);
     if (!parsed) return;
@@ -131,7 +131,7 @@ export function registerGameHandlers(
       return;
     }
 
-    const price = roleId === "virus" ? 25 : 35;
+    const price = (roleId === "virus" || roleId === "doctor") ? 25 : 35;
     try {
       const result = await db.transaction(async (tx) => {
         const user = await tx.select().from(usersTable).where(eq(usersTable.id, state.currentUserId!)).limit(1);
@@ -148,7 +148,7 @@ export function registerGameHandlers(
           .from(creditTransactionsTable)
           .where(sql`${creditTransactionsTable.userId} = ${state.currentUserId!} AND ${creditTransactionsTable.packId} = ${idempotencyKey}`)
           .limit(1);
-        
+
         if (existingTx.length > 0) return "already_processed";
 
         // Deduct and log
@@ -177,7 +177,7 @@ export function registerGameHandlers(
         const fresh = await getSession(sessionId);
         if (fresh) phaseUpdate(io, sessionId, fresh);
         chatSystemMessage(io, sessionId, `${roleId.toUpperCase()} protocol initialized`);
-        
+
         await logAudit({
           userId: state.currentUserId,
           eventType: "CREDIT_SPEND_UNLOCK",
@@ -191,7 +191,7 @@ export function registerGameHandlers(
         if (result === "already_unlocked") error = "Already unlocked in this session";
         if (result === "already_processed") error = "Transaction already processed";
         if (result === "insufficient_funds") error = "Insufficient credits for this protocol";
-        
+
         ack?.({ success: false, error });
       }
     } catch (err) {
@@ -210,7 +210,7 @@ export function registerGameHandlers(
       if (session.phase !== "role_reveal") return CAS_SKIP;
       acknowledgeRole(session, socket.id);
       if ((session.phase as string) === "orbit_action") {
-         // Transitioned to orbit
+        // Transitioned to orbit
       }
       return true as const;
     });
@@ -354,7 +354,7 @@ export function registerGameHandlers(
     if (cas) {
       phaseUpdate(io, sessionId, cas.session);
       chatSystemMessage(io, sessionId, "Systems rebooting... New game starting.");
-      
+
       await logAudit({
         userId: state.currentUserId,
         eventType: "GAME_RESTART",
@@ -399,7 +399,7 @@ export function registerGameHandlers(
 
     if (cas) {
       io.to(sessionId).emit("session_closed", { message: "The host has ended the session." });
-      
+
       await logAudit({
         userId: state.currentUserId,
         eventType: "GAME_END",
@@ -425,7 +425,7 @@ export function registerGameHandlers(
 
     if (cas) {
       phaseUpdate(io, sessionId, cas.session);
-      
+
       await logAudit({
         userId: state.currentUserId,
         eventType: "MOD_KICK_PLAYER",

@@ -10,8 +10,6 @@ interface LandingNavbarProps {
   onShowAuth: () => void;
   musicOn: boolean;
   onToggleMusic: () => void;
-  isHost?: boolean;
-  onRestartRound?: () => void;
 }
 
 export default function LandingNavbar({
@@ -21,8 +19,6 @@ export default function LandingNavbar({
   onShowAuth,
   musicOn,
   onToggleMusic,
-  isHost,
-  onRestartRound,
 }: LandingNavbarProps) {
   const { isLoggedIn, logout } = useAuth();
 
@@ -55,10 +51,10 @@ export default function LandingNavbar({
       {/* Nav Links */}
       <div className="flex items-center gap-8">
         <NavbarLink label="HOW TO PLAY" onClick={onShowHowToPlay} />
+        <NavbarLink label="SETTINGS" onClick={onShowSettings} />
         
         <div className="w-px h-4 bg-white/10 mx-2" />
         
-        {/* System Nexus Dropdown */}
         <SystemNexusDropdown 
           onShowSettings={onShowSettings}
           onShowProfile={onShowProfile}
@@ -66,8 +62,6 @@ export default function LandingNavbar({
           onToggleMusic={onToggleMusic}
           isLoggedIn={isLoggedIn}
           onLogout={handleLogout}
-          isHost={isHost}
-          onRestartRound={onRestartRound}
         />
 
         {!isLoggedIn && (
@@ -159,9 +153,7 @@ function SystemNexusDropdown({
   musicOn, 
   onToggleMusic, 
   isLoggedIn, 
-  onLogout,
-  isHost,
-  onRestartRound
+  onLogout
 }: { 
   onShowSettings: () => void;
   onShowProfile: () => void;
@@ -169,8 +161,6 @@ function SystemNexusDropdown({
   onToggleMusic: () => void;
   isLoggedIn: boolean;
   onLogout: () => void;
-  isHost?: boolean;
-  onRestartRound?: () => void;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -222,15 +212,6 @@ function SystemNexusDropdown({
               />
 
               <div className="h-px bg-white/10 my-1 mx-2" />
-
-              {isHost && onRestartRound && (
-                <DropdownItem 
-                  icon={<RestartIcon />} 
-                  label="INITIATE_RESTART" 
-                  onClick={() => { setOpen(false); onRestartRound(); }} 
-                  variant="warning"
-                />
-              )}
 
               {isLoggedIn && (
                 <DropdownItem 

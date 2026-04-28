@@ -471,11 +471,6 @@ export default function GameShell() {
         onShowAuth={() => {}} // Auth not needed mid-game
         musicOn={musicOn}
         onToggleMusic={handleToggleMusic}
-        isHost={isHost}
-        onRestartRound={() => {
-          getSocket().emit("restart_game", { sessionId: roomCode });
-          setIsPaused(false);
-        }}
       />
 
       {/* Mobile Sidebar Menu */}

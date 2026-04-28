@@ -51,7 +51,7 @@ function randomizeRoles(playerCount: number, unlockedRoles: string[]): RoleCount
   const counts: RoleCounts = {};
   ROLES.forEach((r) => { counts[r.id] = 0; });
 
-  const availableRoles = NON_SPECTATOR_ROLES.filter(r => 
+  const availableRoles = NON_SPECTATOR_ROLES.filter(r =>
     !PREMIUM_ROLE_IDS.includes(r.id) || unlockedRoles.includes(r.id)
   );
 
@@ -435,7 +435,7 @@ export default function RoleConfigPage() {
       return;
     }
     setStartError(null);
-    
+
     // Auto-assign host as spectator for custom games
     const host = players.find(p => p.isHost);
     const finalCustomRoles = { ...customRoles };
@@ -445,7 +445,7 @@ export default function RoleConfigPage() {
 
     // Debug log: print finalCustomRoles and player IDs before emitting
     console.log("[DEBUG] Emitting start_game_custom", { sessionId: roomCode, customRoles: finalCustomRoles, customDeck });
-    
+
     const socket = getSocket();
     socket.emit(
       "start_game_custom",
@@ -540,7 +540,7 @@ export default function RoleConfigPage() {
     if (isUnlocking) return;
     playSciFiClick();
     setIsUnlocking(true);
-    
+
     const socket = getSocket();
     socket.emit("unlock_role", { sessionId: roomCode, roleId }, (resp: { success: boolean; error?: string }) => {
       setIsUnlocking(false);
@@ -639,7 +639,7 @@ export default function RoleConfigPage() {
               </div>
             </div>
           ) : (
-             <div className="text-right">
+            <div className="text-right">
               <div className="text-[10px] tracking-[0.4em] uppercase mb-1 opacity-40 font-bold">Unauthenticated_Session</div>
               <div className="font-orbitron font-black text-sm tracking-[0.3em] text-white/60">GUEST_ACCESS</div>
             </div>
@@ -653,103 +653,103 @@ export default function RoleConfigPage() {
       <div className="flex flex-col lg:flex-row flex-1 relative overflow-hidden">
         {/* LEFT SIDEBAR — players (desktop only, hidden on mobile) */}
         <div className="hidden lg:flex w-72 shrink-0 flex-col border-r h-full overflow-hidden" style={{ background: "hsl(220 30% 6%)", borderColor: "hsl(210 30% 14%)" }}>
-           <div className="p-6 border-b" style={{ borderColor: "hsl(210 30% 14%)" }}>
-              <div className="text-[11px] tracking-[0.5em] uppercase font-mono mb-2 opacity-30 font-bold">Secure_Lobby_Node</div>
-              <div className="flex flex-col gap-3">
-                 <div className="font-orbitron font-black text-3xl tracking-[0.3em] text-white shadow-cyan-500/20">{roomCode}</div>
-                 <button
-                   onClick={handleCopyLink}
-                   className="w-full py-1.5 font-orbitron text-[10px] tracking-[0.1em] uppercase rounded border transition-all duration-150 cursor-pointer"
-                   style={{
-                     background: copyFeedback ? "hsl(140 60% 15% / 0.6)" : "hsl(220 28% 10%)",
-                     borderColor: copyFeedback ? "hsl(140 60% 45%)" : "hsl(185 100% 50% / 0.35)",
-                     color: copyFeedback ? "hsl(140 60% 60%)" : "hsl(185 100% 50%)",
-                   }}
-                 >
-                   {copyFeedback ? "COPIED!" : "COPY LINK"}
-                 </button>
-               </div>
-              <div className="mt-2 flex items-center justify-between">
-                <div className="text-[10px] font-mono uppercase tracking-widest" style={{ color: "hsl(185 100% 50% / 0.6)" }}>
-                  {Object.values(roleCounts).reduce((a, b) => a + b, 0)} Total Roles
-                </div>
-                <div className="text-[9px] font-mono uppercase tracking-widest" style={{ color: "hsl(210 30% 35%)" }}>
-                  {players.length} Players
-                </div>
+          <div className="p-6 border-b" style={{ borderColor: "hsl(210 30% 14%)" }}>
+            <div className="text-[11px] tracking-[0.5em] uppercase font-mono mb-2 opacity-30 font-bold">Secure_Lobby_Node</div>
+            <div className="flex flex-col gap-3">
+              <div className="font-orbitron font-black text-3xl tracking-[0.3em] text-white shadow-cyan-500/20">{roomCode}</div>
+              <button
+                onClick={handleCopyLink}
+                className="w-full py-1.5 font-orbitron text-[10px] tracking-[0.1em] uppercase rounded border transition-all duration-150 cursor-pointer"
+                style={{
+                  background: copyFeedback ? "hsl(140 60% 15% / 0.6)" : "hsl(220 28% 10%)",
+                  borderColor: copyFeedback ? "hsl(140 60% 45%)" : "hsl(185 100% 50% / 0.35)",
+                  color: copyFeedback ? "hsl(140 60% 60%)" : "hsl(185 100% 50%)",
+                }}
+              >
+                {copyFeedback ? "COPIED!" : "COPY LINK"}
+              </button>
+            </div>
+            <div className="mt-2 flex items-center justify-between">
+              <div className="text-[10px] font-mono uppercase tracking-widest" style={{ color: "hsl(185 100% 50% / 0.6)" }}>
+                {Object.values(roleCounts).reduce((a, b) => a + b, 0)} Total Roles
               </div>
-           </div>
+              <div className="text-[9px] font-mono uppercase tracking-widest" style={{ color: "hsl(210 30% 35%)" }}>
+                {players.length} Players
+              </div>
+            </div>
+          </div>
 
-           {/* Role summary: moved to top for better visibility */}
-           {showActiveRoles && (
-             <div className="px-5 py-4 border-b bg-cyan-500/5 pb-6" style={{ borderColor: "hsl(210 30% 14%)" }}>
-               <div className="text-[10px] tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(210 30% 55%)" }}>Active Roles Manifest</div>
-               <div className="flex flex-wrap gap-1.5 mb-2">
-                 {ROLES.filter((r) => (roleCounts[r.id] || 0) > 0).map((r) => (
-                   <div 
-                     key={r.id} 
-                     className="px-1.5 py-0.5 rounded border flex items-center gap-1.5"
-                     style={{ 
-                       background: "hsl(220 30% 10%)",
-                       borderColor: r.team === "alien" ? "hsl(270 80% 50% / 0.3)" : r.team === "chaotic" ? "hsl(300 70% 50% / 0.3)" : "hsl(185 100% 50% / 0.3)"
-                     }}
-                   >
-                     <span
-                       className="text-[9px] font-orbitron tracking-wider uppercase"
-                       style={{
-                         color: r.team === "alien" ? "hsl(270 80% 65%)" : r.team === "chaotic" ? "hsl(300 70% 65%)" : "hsl(185 100% 60%)",
-                       }}
-                     >
-                       {r.name}
-                     </span>
-                     <span className="text-[9px] font-bold" style={{ color: "hsl(190 60% 75%)" }}>{roleCounts[r.id]}</span>
-                   </div>
-                 ))}
-                 {ROLES.every((r) => (roleCounts[r.id] || 0) === 0) && (
-                   <div className="text-[10px] font-mono italic" style={{ color: "hsl(210 30% 35%)" }}>Initialization required — no roles selected</div>
-                 )}
-               </div>
-             </div>
-           )}
-
-           <div className="flex-1 overflow-y-auto px-4 py-3">
-              <div className="text-[10px] tracking-widest uppercase mb-3 px-1" style={{ color: "hsl(210 30% 45%)" }}>Personnel_List</div>
-              <div className="space-y-1">
-                 {players.map((player) => (
-                    <div 
-                      key={player.id} 
-                      className="group relative flex items-center justify-between p-2 rounded transition-all duration-200"
-                      style={{ 
-                        background: player.isYou ? "hsl(185 100% 50% / 0.05)" : "transparent",
-                        border: player.isYou ? "1px solid hsl(185 100% 50% / 0.15)" : "1px solid transparent"
+          {/* Role summary: moved to top for better visibility */}
+          {showActiveRoles && (
+            <div className="px-5 py-4 border-b bg-cyan-500/5 pb-6" style={{ borderColor: "hsl(210 30% 14%)" }}>
+              <div className="text-[10px] tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(210 30% 55%)" }}>Active Roles Manifest</div>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {ROLES.filter((r) => (roleCounts[r.id] || 0) > 0).map((r) => (
+                  <div
+                    key={r.id}
+                    className="px-1.5 py-0.5 rounded border flex items-center gap-1.5"
+                    style={{
+                      background: "hsl(220 30% 10%)",
+                      borderColor: r.team === "alien" ? "hsl(270 80% 50% / 0.3)" : r.team === "chaotic" ? "hsl(300 70% 50% / 0.3)" : "hsl(185 100% 50% / 0.3)"
+                    }}
+                  >
+                    <span
+                      className="text-[9px] font-orbitron tracking-wider uppercase"
+                      style={{
+                        color: r.team === "alien" ? "hsl(270 80% 65%)" : r.team === "chaotic" ? "hsl(300 70% 65%)" : "hsl(185 100% 60%)",
                       }}
                     >
-                       <div className="flex items-center gap-4 min-w-0">
-                          <div className={`w-2 h-2 rounded-full ${player.isYou ? "bg-cyan-500 shadow-[0_0_10px_#00f3ff] animate-pulse" : "bg-white/10"}`} />
-                          <span className={`font-orbitron text-[12px] font-bold tracking-widest uppercase truncate ${player.isYou ? "text-white" : "text-white/30"}`}>
-                            {player.name}
-                          </span>
-                       </div>
-                       {player.isHost && (
-                          <div className="px-2 py-0.5 rounded-[1px] bg-cyan-500/15 border border-cyan-500/30 text-[8px] font-orbitron font-black tracking-[0.2em] text-cyan-400 italic">
-                             HOST
-                          </div>
-                       )}
-                       {amIHost && !player.isYou && (
-                         <button
-                           onClick={() => handleKickPlayer(player)}
-                           className="opacity-0 group-hover:opacity-100 absolute right-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-500 text-[8px] px-1.5 py-0.5 transition-all"
-                         >
-                           KICK
-                         </button>
-                       )}
-                    </div>
-                 ))}
+                      {r.name}
+                    </span>
+                    <span className="text-[9px] font-bold" style={{ color: "hsl(190 60% 75%)" }}>{roleCounts[r.id]}</span>
+                  </div>
+                ))}
+                {ROLES.every((r) => (roleCounts[r.id] || 0) === 0) && (
+                  <div className="text-[10px] font-mono italic" style={{ color: "hsl(210 30% 35%)" }}>Initialization required — no roles selected</div>
+                )}
               </div>
-           </div>
+            </div>
+          )}
+
+          <div className="flex-1 overflow-y-auto px-4 py-3">
+            <div className="text-[10px] tracking-widest uppercase mb-3 px-1" style={{ color: "hsl(210 30% 45%)" }}>Personnel_List</div>
+            <div className="space-y-1">
+              {players.map((player) => (
+                <div
+                  key={player.id}
+                  className="group relative flex items-center justify-between p-2 rounded transition-all duration-200"
+                  style={{
+                    background: player.isYou ? "hsl(185 100% 50% / 0.05)" : "transparent",
+                    border: player.isYou ? "1px solid hsl(185 100% 50% / 0.15)" : "1px solid transparent"
+                  }}
+                >
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className={`w-2 h-2 rounded-full ${player.isYou ? "bg-cyan-500 shadow-[0_0_10px_#00f3ff] animate-pulse" : "bg-white/10"}`} />
+                    <span className={`font-orbitron text-[12px] font-bold tracking-widest uppercase truncate ${player.isYou ? "text-white" : "text-white/30"}`}>
+                      {player.name}
+                    </span>
+                  </div>
+                  {player.isHost && (
+                    <div className="px-2 py-0.5 rounded-[1px] bg-cyan-500/15 border border-cyan-500/30 text-[8px] font-orbitron font-black tracking-[0.2em] text-cyan-400 italic">
+                      HOST
+                    </div>
+                  )}
+                  {amIHost && !player.isYou && (
+                    <button
+                      onClick={() => handleKickPlayer(player)}
+                      className="opacity-0 group-hover:opacity-100 absolute right-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-500 text-[8px] px-1.5 py-0.5 transition-all"
+                    >
+                      KICK
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* CENTER PANEL */}
-        <div 
+        <div
           className="flex-1 overflow-y-auto px-4 sm:px-6 pb-8 h-full custom-scrollbar"
           onClick={(e) => {
             if (e.target === e.currentTarget) setSelectedRole(null);
@@ -790,7 +790,7 @@ export default function RoleConfigPage() {
                 {copyFeedback ? "COPIED!" : "COPY LINK"}
               </button>
             </div>
-            
+
             {/* Horizontal scrolling player list on mobile */}
             <div className="flex overflow-x-auto gap-1.5 pb-2 scrollbar-none">
               {players.map((player) => (
@@ -840,7 +840,7 @@ export default function RoleConfigPage() {
                   <div className="text-[10px] text-red-500 font-mono uppercase tracking-widest mb-1">{startError}</div>
                 )}
                 <div className="grid grid-cols-2 gap-2">
-                   <button
+                  <button
                     onClick={handleRandomize}
                     className="px-3 py-2 font-orbitron font-bold text-[10px] tracking-[0.1em] uppercase rounded border transition-all"
                     style={{
@@ -971,79 +971,79 @@ export default function RoleConfigPage() {
               </button>
             </div>
           )}
-      {/* Custom Game Modal */}
-      <Modal open={customGameOpen} onClose={() => setCustomGameOpen(false)} title="Custom Game Setup">
-        <div className="flex flex-col gap-4">
-          {(() => {
-            const selectableRoles = NON_SPECTATOR_ROLES.filter(r => 
-              !PREMIUM_ROLE_IDS.includes(r.id) || unlockedRoles.includes(r.id)
-            );
-            return (
-              <>
-                <div className="font-orbitron text-sm mb-2">Assign roles to each player:</div>
-                {players.map((player) => (
-                  <div key={player.id} className="flex items-center gap-3">
-                    <span className="min-w-[100px] font-orbitron text-xs" style={{ color: "hsl(185 100% 70%)" }}>{player.name}{player.isHost ? " (Host)" : ""}</span>
-                    {player.isHost ? (
-                      <div className="px-2 py-1 rounded border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 font-orbitron text-[10px] tracking-wider uppercase">
-                        Spectator (Auto)
+          {/* Custom Game Modal */}
+          <Modal open={customGameOpen} onClose={() => setCustomGameOpen(false)} title="Custom Game Setup">
+            <div className="flex flex-col gap-4">
+              {(() => {
+                const selectableRoles = NON_SPECTATOR_ROLES.filter(r =>
+                  !PREMIUM_ROLE_IDS.includes(r.id) || unlockedRoles.includes(r.id)
+                );
+                return (
+                  <>
+                    <div className="font-orbitron text-sm mb-2">Assign roles to each player:</div>
+                    {players.map((player) => (
+                      <div key={player.id} className="flex items-center gap-3">
+                        <span className="min-w-[100px] font-orbitron text-xs" style={{ color: "hsl(185 100% 70%)" }}>{player.name}{player.isHost ? " (Host)" : ""}</span>
+                        {player.isHost ? (
+                          <div className="px-2 py-1 rounded border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 font-orbitron text-[10px] tracking-wider uppercase">
+                            Spectator (Auto)
+                          </div>
+                        ) : (
+                          <select
+                            className="px-2 py-1 rounded border bg-black text-white"
+                            value={customRoles[player.id] || ""}
+                            onChange={e => setCustomRoles(r => ({ ...r, [player.id]: e.target.value }))}
+                          >
+                            <option value="">— Assign a role —</option>
+                            {selectableRoles.map(role => (
+                              <option key={role.id} value={role.id}>{role.name}</option>
+                            ))}
+                            {SPECTATOR_ROLE && <option value={SPECTATOR_ROLE.id}>{SPECTATOR_ROLE.name}</option>}
+                          </select>
+                        )}
                       </div>
-                    ) : (
-                      <select
-                        className="px-2 py-1 rounded border bg-black text-white"
-                        value={customRoles[player.id] || ""}
-                        onChange={e => setCustomRoles(r => ({ ...r, [player.id]: e.target.value }))}
-                      >
-                        <option value="">— Assign a role —</option>
-                        {selectableRoles.map(role => (
-                          <option key={role.id} value={role.id}>{role.name}</option>
-                        ))}
-                        {SPECTATOR_ROLE && <option value={SPECTATOR_ROLE.id}>{SPECTATOR_ROLE.name}</option>}
-                      </select>
-                    )}
-                  </div>
-                ))}
-                <div className="font-orbitron text-sm mt-4 mb-2">Assign 3 center deck cards:</div>
-                <div className="flex flex-col gap-2">
-                  {[0,1,2].map(idx => (
-                    <div key={idx} className="flex items-center gap-3">
-                      <span className="min-w-[80px] font-orbitron text-xs" style={{ color: "hsl(210 80% 70%)" }}>{`Card ${idx+1}`}</span>
-                      <select
-                        className="px-2 py-1 rounded border bg-black text-white"
-                        value={customDeck[idx]}
-                        onChange={e => handleCustomDeckChange(idx, e.target.value)}
-                      >
-                        <option value="">— Assign a role —</option>
-                        {selectableRoles.map(role => (
-                          <option key={role.id} value={role.id}>{role.name}</option>
-                        ))}
-                      </select>
+                    ))}
+                    <div className="font-orbitron text-sm mt-4 mb-2">Assign 3 center deck cards:</div>
+                    <div className="flex flex-col gap-2">
+                      {[0, 1, 2].map(idx => (
+                        <div key={idx} className="flex items-center gap-3">
+                          <span className="min-w-[80px] font-orbitron text-xs" style={{ color: "hsl(210 80% 70%)" }}>{`Card ${idx + 1}`}</span>
+                          <select
+                            className="px-2 py-1 rounded border bg-black text-white"
+                            value={customDeck[idx]}
+                            onChange={e => handleCustomDeckChange(idx, e.target.value)}
+                          >
+                            <option value="">— Assign a role —</option>
+                            {selectableRoles.map(role => (
+                              <option key={role.id} value={role.id}>{role.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </>
-            );
-          })()}
-          <div className="flex gap-3 mt-4">
-            <button
-              className="flex-1 px-4 py-2 rounded bg-blue-700 text-white font-orbitron text-xs tracking-wider"
-              disabled={!customGameReady}
-              onClick={handleStartCustomGame}
-            >
-              Start Game
-            </button>
-            <button
-              className="flex-1 px-4 py-2 rounded bg-gray-700 text-white font-orbitron text-xs tracking-wider"
-              onClick={() => setCustomGameOpen(false)}
-            >
-              Cancel
-            </button>
-          </div>
-          {startError && (
-            <div className="text-xs mt-2" style={{ color: "hsl(0 75% 60%)" }}>{startError}</div>
-          )}
-        </div>
-      </Modal>
+                  </>
+                );
+              })()}
+              <div className="flex gap-3 mt-4">
+                <button
+                  className="flex-1 px-4 py-2 rounded bg-blue-700 text-white font-orbitron text-xs tracking-wider"
+                  disabled={!customGameReady}
+                  onClick={handleStartCustomGame}
+                >
+                  Start Game
+                </button>
+                <button
+                  className="flex-1 px-4 py-2 rounded bg-gray-700 text-white font-orbitron text-xs tracking-wider"
+                  onClick={() => setCustomGameOpen(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+              {startError && (
+                <div className="text-xs mt-2" style={{ color: "hsl(0 75% 60%)" }}>{startError}</div>
+              )}
+            </div>
+          </Modal>
 
           {/* Alien Team */}
           <div className="mb-4">
@@ -1171,14 +1171,14 @@ export default function RoleConfigPage() {
                 exit={{ y: "100%", opacity: 0 }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
                 className="fixed lg:relative inset-x-0 bottom-0 z-50 lg:z-0 flex w-full lg:w-[clamp(240px,30%,400px)] shrink-0 flex-col border-t lg:border-t-0 lg:border-l lg:h-full lg:overflow-hidden shadow-[0_-20px_40px_rgba(0,0,0,0.5)] lg:shadow-none backdrop-blur-xl lg:backdrop-blur-0"
-                style={{ 
-                  background: "hsl(220 30% 6% / 0.95)", 
+                style={{
+                  background: "hsl(220 30% 6% / 0.95)",
                   borderColor: "hsl(210 30% 14%)",
                   minHeight: "70vh"
                 }}
               >
-                <RolePreview 
-                  role={selectedRole} 
+                <RolePreview
+                  role={selectedRole}
                   isLocked={PREMIUM_ROLE_IDS.includes(selectedRole.id) && !unlockedRoles.includes(selectedRole.id)}
                   onUnlock={handleUnlockRole}
                   userCredits={credits}
@@ -1191,21 +1191,21 @@ export default function RoleConfigPage() {
               </motion.div>
             </>
           )}
-          
+
           {/* Desktop Standby State — show when nothing selected on large screens */}
           {!selectedRole && (
             <div
               className="hidden lg:flex relative w-[clamp(240px,30%,400px)] shrink-0 flex-col border-l h-full"
               style={{ background: "hsl(220 30% 6%)", borderColor: "hsl(210 30% 14%)" }}
             >
-              <RolePreview 
-                role={null} 
+              <RolePreview
+                role={null}
                 isLocked={false}
-                onUnlock={() => {}}
+                onUnlock={() => { }}
                 userCredits={credits}
                 isUnlocking={false}
                 isLoggedIn={isLoggedIn}
-                onShowProfile={() => {}}
+                onShowProfile={() => { }}
                 onBuyCredits={() => setShowShopModal(true)}
               />
             </div>
@@ -1241,10 +1241,10 @@ function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRe
       const rect = cardRef.current.getBoundingClientRect();
       const tooltipWidth = 190; // Default minWidth
       const padding = 12;
-      
+
       let left = rect.left + rect.width / 2;
       let transformX = "-50%";
-      
+
       // Boundary check for mobile/small screens
       if (left - tooltipWidth / 2 < padding) {
         // Too close to left
@@ -1306,7 +1306,7 @@ function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRe
             className="absolute -inset-1 rounded-lg pointer-events-none z-0"
             style={{ border: `1px solid ${accentColor}` }}
           >
-            <motion.div 
+            <motion.div
               animate={{ opacity: [0.1, 0.3, 0.1] }}
               transition={{ repeat: Infinity, duration: 2 }}
               className="absolute inset-0 rounded-lg"
@@ -1343,11 +1343,11 @@ function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRe
             {count}
           </div>
         )}
-        
+
         {/* Lock Overlay */}
         {isLocked && (
           <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center">
-             <FaLock className="text-white/40 text-xl" />
+            <FaLock className="text-white/40 text-xl" />
           </div>
         )}
       </div>
@@ -1444,13 +1444,14 @@ function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRe
 const ROLE_PRICES: Record<string, number> = {
   virus: 25,
   router: 35,
+  doctor: 25,
 };
 
-function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLoggedIn, onShowProfile, onBuyCredits, onClose }: { 
-  role: Role | null; 
-  isLocked: boolean; 
-  onUnlock: (id: string) => void; 
-  userCredits: number; 
+function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLoggedIn, onShowProfile, onBuyCredits, onClose }: {
+  role: Role | null;
+  isLocked: boolean;
+  onUnlock: (id: string) => void;
+  userCredits: number;
   isUnlocking: boolean;
   isLoggedIn: boolean;
   onShowProfile: () => void;
@@ -1513,18 +1514,18 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
         </div>
         {/* Team badge */}
         <div className="absolute top-6 left-6 flex items-center gap-2">
-           <div
-             className={`px-1.5 lg:px-2 py-0.5 rounded font-orbitron text-xs tracking-widest uppercase font-bold team-badge ${role.team}-color`}
-             style={{
-               background: accentColorDim,
-               border: `1px solid ${accentColor}`,
-               color: accentColorLight,
-               backdropFilter: "blur(4px)",
-               fontSize: "0.6rem",
-             }}
-           >
-             {teamLabel}
-           </div>
+          <div
+            className={`px-1.5 lg:px-2 py-0.5 rounded font-orbitron text-xs tracking-widest uppercase font-bold team-badge ${role.team}-color`}
+            style={{
+              background: accentColorDim,
+              border: `1px solid ${accentColor}`,
+              color: accentColorLight,
+              backdropFilter: "blur(4px)",
+              fontSize: "0.6rem",
+            }}
+          >
+            {teamLabel}
+          </div>
         </div>
 
         {/* Mobile Close Button */}
@@ -1567,7 +1568,7 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
                 <FaLock className="text-[10px]" />
                 <div className="text-[10px] tracking-[0.3em] uppercase font-mono">Authorization Required</div>
               </div>
-              
+
               {!isLoggedIn ? (
                 <button
                   onClick={onShowProfile}
@@ -1582,7 +1583,7 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
                     <span className="font-mono text-[9px] uppercase tracking-widest text-white/30">Protocol Fee</span>
                     <span className="font-orbitron text-sm font-bold text-cyan-400">{ROLE_PRICES[role.id] || 0} CC</span>
                   </div>
-                  
+
                   {userCredits >= (ROLE_PRICES[role.id] || 0) ? (
                     <button
                       onClick={() => onUnlock(role.id)}

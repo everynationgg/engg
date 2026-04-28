@@ -40,7 +40,7 @@ export default function LandingPage() {
 
   useEffect(() => {
     startLobbyMusic();
-    
+
     // Check for login redirect from logout
     const params = new URLSearchParams(window.location.search);
     if (params.get("login") === "true") {
@@ -169,115 +169,115 @@ export default function LandingPage() {
           <div className="ix-page-enter">
             {/* Title */}
             <div className="flex flex-col items-center">
-            <h1 className="mb-1" data-testid="title-lockdown">
-              <span
-                className="block font-orbitron font-black text-3xl sm:text-4xl tracking-widest uppercase leading-none"
-                style={{ color: "hsl(185 100% 55%)", textShadow: "0 0 16px hsl(185 100% 50% / 0.9), 0 0 40px hsl(185 100% 50% / 0.4)" }}
-              >
-                ERRANT
-              </span>
-              <span
-                className="block font-orbitron font-black text-3xl sm:text-4xl tracking-widest uppercase leading-none mt-1"
-                style={{ color: "hsl(185 100% 55%)", textShadow: "0 0 16px hsl(185 100% 50% / 0.9), 0 0 40px hsl(185 100% 50% / 0.4)" }}
-              >
-                NIGHT
-              </span>
-            </h1>
-            <div className="mb-3" />
+              <h1 className="mb-1" data-testid="title-lockdown">
+                <span
+                  className="block font-orbitron font-black text-3xl sm:text-4xl tracking-widest uppercase leading-none"
+                  style={{ color: "hsl(185 100% 55%)", textShadow: "0 0 16px hsl(185 100% 50% / 0.9), 0 0 40px hsl(185 100% 50% / 0.4)" }}
+                >
+                  ERRANT
+                </span>
+                <span
+                  className="block font-orbitron font-black text-3xl sm:text-4xl tracking-widest uppercase leading-none mt-1"
+                  style={{ color: "hsl(185 100% 55%)", textShadow: "0 0 16px hsl(185 100% 50% / 0.9), 0 0 40px hsl(185 100% 50% / 0.4)" }}
+                >
+                  NIGHT
+                </span>
+              </h1>
+              <div className="mb-3" />
 
-            {/* Divider line */}
-            <div
-              className="w-36 h-px mb-4"
-              style={{ background: "linear-gradient(90deg, transparent, hsl(185 100% 50%), transparent)" }}
-            />
+              {/* Divider line */}
+              <div
+                className="w-36 h-px mb-4"
+                style={{ background: "linear-gradient(90deg, transparent, hsl(185 100% 50%), transparent)" }}
+              />
 
-            {/* Subtitle */}
-            <p
-              className="text-xs sm:text-sm tracking-wider mb-6 leading-relaxed"
-              style={{ color: "hsl(190 60% 70%)", fontFamily: "'Exo 2', sans-serif" }}
-              data-testid="subtitle-text"
-            >
-              A real-time social deduction game. Find the alien before it's too late.
-            </p>
-
-            {/* Buttons */}
-            <nav className="flex flex-col gap-4 w-full max-w-xs" aria-label="Game actions">
-              <button
-                onClick={handleCreateLobby}
-                data-testid="button-create-lobby"
-                className="ix-btn relative w-full py-4 font-orbitron font-bold text-sm tracking-[0.25em] uppercase rounded-md border-2 transition-all duration-200 cursor-pointer"
-                style={{
-                  background: "linear-gradient(135deg, hsl(185 100% 20% / 0.8), hsl(185 100% 10% / 0.9))",
-                  borderColor: "hsl(185 100% 50%)",
-                  color: "hsl(185 100% 70%)",
-                  boxShadow: "0 0 10px hsl(185 100% 50% / 0.4), 0 0 20px hsl(185 100% 50% / 0.2), inset 0 0 10px hsl(185 100% 50% / 0.05)",
-                }}
-                onMouseEnter={(e) => {
-                  const btn = e.currentTarget;
-                  btn.style.boxShadow = "0 0 18px hsl(185 100% 50% / 0.7), 0 0 40px hsl(185 100% 50% / 0.4), inset 0 0 14px hsl(185 100% 50% / 0.1)";
-                  btn.style.color = "hsl(185 100% 90%)";
-                }}
-                onMouseLeave={(e) => {
-                  const btn = e.currentTarget;
-                  btn.style.boxShadow = "0 0 10px hsl(185 100% 50% / 0.4), 0 0 20px hsl(185 100% 50% / 0.2), inset 0 0 10px hsl(185 100% 50% / 0.05)";
-                  btn.style.color = "hsl(185 100% 70%)";
-                }}
+              {/* Subtitle */}
+              <p
+                className="text-xs sm:text-sm tracking-wider mb-6 leading-relaxed"
+                style={{ color: "hsl(190 60% 70%)", fontFamily: "'Exo 2', sans-serif" }}
+                data-testid="subtitle-text"
               >
-                CREATE LOBBY
-              </button>
+                A real-time social deduction game. Find the alien before it's too late.
+              </p>
 
-              <button
-                onClick={handleJoinGame}
-                data-testid="button-join-game"
-                className="ix-btn relative w-full py-4 font-orbitron font-bold text-sm tracking-[0.25em] uppercase rounded-md border-2 transition-all duration-200 cursor-pointer"
-                style={{
-                  background: "linear-gradient(135deg, hsl(270 80% 20% / 0.8), hsl(270 80% 10% / 0.9))",
-                  borderColor: "hsl(270 80% 55%)",
-                  color: "hsl(270 80% 75%)",
-                  boxShadow: "0 0 10px hsl(270 80% 55% / 0.4), 0 0 20px hsl(270 80% 55% / 0.2), inset 0 0 10px hsl(270 80% 55% / 0.05)",
-                }}
-                onMouseEnter={(e) => {
-                  const btn = e.currentTarget;
-                  btn.style.boxShadow = "0 0 18px hsl(270 80% 55% / 0.7), 0 0 40px hsl(270 80% 55% / 0.4), inset 0 0 14px hsl(270 80% 55% / 0.1)";
-                  btn.style.color = "hsl(270 80% 90%)";
-                }}
-                onMouseLeave={(e) => {
-                  const btn = e.currentTarget;
-                  btn.style.boxShadow = "0 0 10px hsl(270 80% 55% / 0.4), 0 0 20px hsl(270 80% 55% / 0.2), inset 0 0 10px hsl(270 80% 55% / 0.05)";
-                  btn.style.color = "hsl(270 80% 75%)";
-                }}
-              >
-                JOIN GAME
-              </button>
+              {/* Buttons */}
+              <nav className="flex flex-col gap-4 w-full max-w-xs" aria-label="Game actions">
+                <button
+                  onClick={handleCreateLobby}
+                  data-testid="button-create-lobby"
+                  className="ix-btn relative w-full py-4 font-orbitron font-bold text-sm tracking-[0.25em] uppercase rounded-md border-2 transition-all duration-200 cursor-pointer"
+                  style={{
+                    background: "linear-gradient(135deg, hsl(185 100% 20% / 0.8), hsl(185 100% 10% / 0.9))",
+                    borderColor: "hsl(185 100% 50%)",
+                    color: "hsl(185 100% 70%)",
+                    boxShadow: "0 0 10px hsl(185 100% 50% / 0.4), 0 0 20px hsl(185 100% 50% / 0.2), inset 0 0 10px hsl(185 100% 50% / 0.05)",
+                  }}
+                  onMouseEnter={(e) => {
+                    const btn = e.currentTarget;
+                    btn.style.boxShadow = "0 0 18px hsl(185 100% 50% / 0.7), 0 0 40px hsl(185 100% 50% / 0.4), inset 0 0 14px hsl(185 100% 50% / 0.1)";
+                    btn.style.color = "hsl(185 100% 90%)";
+                  }}
+                  onMouseLeave={(e) => {
+                    const btn = e.currentTarget;
+                    btn.style.boxShadow = "0 0 10px hsl(185 100% 50% / 0.4), 0 0 20px hsl(185 100% 50% / 0.2), inset 0 0 10px hsl(185 100% 50% / 0.05)";
+                    btn.style.color = "hsl(185 100% 70%)";
+                  }}
+                >
+                  CREATE LOBBY
+                </button>
 
-              <a
-                href="/"
-                onClick={() => playSciFiClick()}
-                className="ix-btn relative w-full py-4 font-orbitron font-bold text-sm tracking-[0.25em] uppercase rounded-md border-2 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 text-center"
-                style={{
-                  background: "rgba(0, 0, 0, 0.4)",
-                  borderColor: "rgba(255, 255, 255, 0.15)",
-                  color: "rgba(255, 255, 255, 0.5)",
-                  boxShadow: "0 0 10px rgba(255, 255, 255, 0.05)",
-                }}
-                onMouseEnter={(e) => {
-                  const btn = e.currentTarget;
-                  btn.style.borderColor = "rgba(255, 255, 255, 0.4)";
-                  btn.style.color = "rgba(255, 255, 255, 0.9)";
-                  btn.style.boxShadow = "0 0 15px rgba(255, 255, 255, 0.15)";
-                  btn.style.background = "rgba(255, 255, 255, 0.05)";
-                }}
-                onMouseLeave={(e) => {
-                  const btn = e.currentTarget;
-                  btn.style.borderColor = "rgba(255, 255, 255, 0.15)";
-                  btn.style.color = "rgba(255, 255, 255, 0.5)";
-                  btn.style.boxShadow = "0 0 10px rgba(255, 255, 255, 0.05)";
-                  btn.style.background = "rgba(0, 0, 0, 0.4)";
-                }}
-              >
-                RETURN TO BASE
-              </a>
-            </nav>
+                <button
+                  onClick={handleJoinGame}
+                  data-testid="button-join-game"
+                  className="ix-btn relative w-full py-4 font-orbitron font-bold text-sm tracking-[0.25em] uppercase rounded-md border-2 transition-all duration-200 cursor-pointer"
+                  style={{
+                    background: "linear-gradient(135deg, hsl(270 80% 20% / 0.8), hsl(270 80% 10% / 0.9))",
+                    borderColor: "hsl(270 80% 55%)",
+                    color: "hsl(270 80% 75%)",
+                    boxShadow: "0 0 10px hsl(270 80% 55% / 0.4), 0 0 20px hsl(270 80% 55% / 0.2), inset 0 0 10px hsl(270 80% 55% / 0.05)",
+                  }}
+                  onMouseEnter={(e) => {
+                    const btn = e.currentTarget;
+                    btn.style.boxShadow = "0 0 18px hsl(270 80% 55% / 0.7), 0 0 40px hsl(270 80% 55% / 0.4), inset 0 0 14px hsl(270 80% 55% / 0.1)";
+                    btn.style.color = "hsl(270 80% 90%)";
+                  }}
+                  onMouseLeave={(e) => {
+                    const btn = e.currentTarget;
+                    btn.style.boxShadow = "0 0 10px hsl(270 80% 55% / 0.4), 0 0 20px hsl(270 80% 55% / 0.2), inset 0 0 10px hsl(270 80% 55% / 0.05)";
+                    btn.style.color = "hsl(270 80% 75%)";
+                  }}
+                >
+                  JOIN GAME
+                </button>
+
+                <a
+                  href="/"
+                  onClick={() => playSciFiClick()}
+                  className="ix-btn relative w-full py-4 font-orbitron font-bold text-sm tracking-[0.25em] uppercase rounded-md border-2 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 text-center"
+                  style={{
+                    background: "rgba(0, 0, 0, 0.4)",
+                    borderColor: "rgba(255, 255, 255, 0.15)",
+                    color: "rgba(255, 255, 255, 0.5)",
+                    boxShadow: "0 0 10px rgba(255, 255, 255, 0.05)",
+                  }}
+                  onMouseEnter={(e) => {
+                    const btn = e.currentTarget;
+                    btn.style.borderColor = "rgba(255, 255, 255, 0.4)";
+                    btn.style.color = "rgba(255, 255, 255, 0.9)";
+                    btn.style.boxShadow = "0 0 15px rgba(255, 255, 255, 0.15)";
+                    btn.style.background = "rgba(255, 255, 255, 0.05)";
+                  }}
+                  onMouseLeave={(e) => {
+                    const btn = e.currentTarget;
+                    btn.style.borderColor = "rgba(255, 255, 255, 0.15)";
+                    btn.style.color = "rgba(255, 255, 255, 0.5)";
+                    btn.style.boxShadow = "0 0 10px rgba(255, 255, 255, 0.05)";
+                    btn.style.background = "rgba(0, 0, 0, 0.4)";
+                  }}
+                >
+                  RETURN TO BASE
+                </a>
+              </nav>
             </div>
           </div>
         )}

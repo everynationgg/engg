@@ -82,6 +82,15 @@ export default function HamburgerMenu({
 
   const menuItems = [];
 
+  menuItems.push({
+    id: "resume",
+    icon: <PlayIcon />,
+    label: "RESUME",
+    tooltip: "Return to active engagement.",
+    onClick: closeMenu,
+    color: "#00f3ff"
+  });
+
   if (isLoggedIn) {
     menuItems.push({
       id: "profile",
@@ -162,7 +171,7 @@ export default function HamburgerMenu({
   // --- DESKTOP VS MOBILE FILTERING ---
   const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
   const filteredItems = isDesktop 
-    ? menuItems.filter(item => ["restart", "logout"].includes(item.id)) 
+    ? menuItems.filter(item => ["resume", "restart", "quit"].includes(item.id)) 
     : menuItems;
 
   // Global ESC listener for desktop (opens the menu)
@@ -330,3 +339,4 @@ function SoundOnIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" 
 function SoundOffIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></svg>; }
 function ExitIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter"><path d="M18.36 6.64a9 9 0 1 1-12.73 0" /><line x1="12" y1="2" x2="12" y2="12" /></svg>; }
 function RestartIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter"><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" /></svg>; }
+function PlayIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter"><polygon points="5 3 19 12 5 21 5 3" /></svg>; }
