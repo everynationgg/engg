@@ -41,7 +41,7 @@ export default function Navbar() {
     <>
       <nav
         className={`fixed top-0 left-0 right-0 transition-all duration-300 border-b ${scrolled || isOpen ? "bg-black/95 backdrop-blur-md border-white/5 py-3" : "bg-transparent border-transparent py-5"
-          } ${activePanel !== "none" ? "z-[50]" : "z-[50]"}`}
+          } ${activePanel !== "none" ? "z-[90]" : "z-[50]"}`}
       >
         <div className="w-full max-w-[1800px] mx-auto px-6 h-12 flex items-center justify-between pointer-events-auto">
           
@@ -122,7 +122,7 @@ export default function Navbar() {
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
-                          className="fixed inset-0 z-[40]"
+                          className="fixed inset-0 z-[80]"
                           onClick={() => closeAll()}
                         />
                         <motion.div
@@ -131,7 +131,7 @@ export default function Navbar() {
                           exit={{ opacity: 0, y: 8, scale: 0.98 }}
                           transition={{ duration: 0.15, ease: "easeOut" }}
                           onClick={(e) => e.stopPropagation()}
-                          className="absolute top-full right-0 mt-4 w-52 bg-[#020408] border border-white/10 p-4 shadow-2xl rounded-md z-[70]"
+                          className="absolute top-full right-0 mt-4 w-52 bg-[#020408] border border-white/10 p-4 shadow-2xl rounded-md z-[110]"
                         >
                           {/* ASSETS */}
                           <div className="mb-4">
