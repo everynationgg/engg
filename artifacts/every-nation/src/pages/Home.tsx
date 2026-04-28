@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { HUDOverlay } from "@/components/common/HUDOverlay";
-import { TacticalButton } from "@/components/common/TacticalButton";
+import { SciFiButton } from "@/components/common/SciFiButton";
 
 export default function Home() {
   const [, navigate] = useLocation();
