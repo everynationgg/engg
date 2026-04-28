@@ -21,7 +21,7 @@ function formatRoleName(roleId?: string | null): string {
 }
 
 export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
-  const { username, userId, isVerified, resendVerificationEmail, refreshUser, isLoading: authLoading } = useAuth();
+  const { username, userId, isVerified, logout, resendVerificationEmail, refreshUser, isLoading: authLoading } = useAuth();
   const { personalStats, roleStats, fetchPersonalStats, fetchRoleStats } = useRecordGameResult();
   const { achievements } = useAchievements();
   const [loading, setLoading] = useState(true);
@@ -170,12 +170,24 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 )}
               </div>
 
-              <button
-                onClick={() => { playSciFiClick(); onClose(); }}
-                className="w-full py-3 mt-4 border border-white/10 hover:border-cyan-500/40 font-orbitron text-[10px] tracking-[0.4em] uppercase hover:bg-cyan-500/5 transition-all text-white/60 hover:text-white"
-              >
-                Close Terminal
-              </button>
+              <div className="flex flex-col gap-3 mt-8">
+                <button
+                  onClick={() => { playSciFiClick(); onClose(); }}
+                  className="w-full py-3 border border-white/10 hover:border-cyan-500/40 font-orbitron text-[10px] tracking-[0.4em] uppercase hover:bg-cyan-500/5 transition-all text-white/60 hover:text-white"
+                >
+                  Close Terminal
+                </button>
+                <button
+                  onClick={() => {
+                    playSciFiClick();
+                    logout();
+                    window.location.href = "/?login=true";
+                  }}
+                  className="w-full py-3 border border-red-500/20 hover:border-red-500/50 font-orbitron text-[10px] tracking-[0.4em] uppercase hover:bg-red-500/10 transition-all text-red-500/60 hover:text-red-500"
+                >
+                  Terminate_Session
+                </button>
+              </div>
             </div>
           )}
         </div>

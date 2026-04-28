@@ -161,9 +161,11 @@ export default function GameShell() {
           return;
         }
 
-        // If any sub-modal is open, let it handle the ESC key (it will call onClose)
-        // We don't want to toggle the pause menu background state while a modal is closing.
+        // If any sub-modal is open, close it first
         if (showSettings || showProfile || showHowToPlay || showGameMenu) {
+          if (showSettings) setShowSettings(false);
+          if (showProfile) setShowProfile(false);
+          if (showHowToPlay) setShowHowToPlay(false);
           if (showGameMenu) setShowGameMenu(false);
           return;
         }
@@ -472,19 +474,14 @@ export default function GameShell() {
         onShowProfile={() => setShowProfile(true)}
         onShowHowToPlay={() => setShowHowToPlay(true)}
         onShowAuth={() => {}} // Auth not needed mid-game
-        musicOn={musicOn}
-        onToggleMusic={handleToggleMusic}
+        onShowMenu={() => {
+          // Close all system modals before opening session menu
+          setShowSettings(false);
+          setShowProfile(false);
+          setShowHowToPlay(false);
+          setShowGameMenu(true);
+        }}
       />
-
-      {/* Top-Right HUD Trigger (Subtle Fallback) */}
-      <div className="fixed top-4 right-4 z-[101] hidden lg:block">
-        <button 
-          onClick={() => setShowGameMenu(true)}
-          className="px-3 py-1.5 border border-white/5 bg-black/20 text-[10px] font-orbitron tracking-[0.3em] text-white/20 hover:text-white/60 hover:bg-white/5 transition-all uppercase"
-        >
-          Menu
-        </button>
-      </div>
 
       {/* Mobile Sidebar Menu */}
       <LandingSidebar

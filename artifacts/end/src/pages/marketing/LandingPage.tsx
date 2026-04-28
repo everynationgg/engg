@@ -144,8 +144,7 @@ export default function LandingPage() {
         onShowProfile={() => setShowProfileModal(true)}
         onShowHowToPlay={() => setShowHowToPlay(true)}
         onShowAuth={() => setShowAuthModal(true)}
-        musicOn={musicOn}
-        onToggleMusic={handleToggleMusic}
+        onShowMenu={() => {}} 
       />
 
       {/* Mobile Sidebar Menu */}

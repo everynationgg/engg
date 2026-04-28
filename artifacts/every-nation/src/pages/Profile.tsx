@@ -50,6 +50,10 @@ export default function Profile() {
 
   const handleUpdateCipher = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (cipherForm.next.length < 6) {
+      systemToast("Cipher must be at least 6 characters.", "error");
+      return;
+    }
     if (cipherForm.next !== cipherForm.confirm) {
       systemToast("Cipher mismatch.", "error");
       return;
@@ -403,12 +407,14 @@ export default function Profile() {
                                 value={cipherForm.next}
                                 onChange={e => setCipherForm({ ...cipherForm, next: e.target.value })}
                                 className="w-full bg-white/[0.02] border border-white/5 p-3 font-mono text-xs tracking-widest outline-none focus:border-cyan-500/20" 
+                                minLength={6}
                              />
                              <input 
                                 type="password" required placeholder="Verify_Key"
                                 value={cipherForm.confirm}
                                 onChange={e => setCipherForm({ ...cipherForm, confirm: e.target.value })}
                                 className="w-full bg-white/[0.02] border border-white/5 p-3 font-mono text-xs tracking-widest outline-none focus:border-cyan-500/20" 
+                                minLength={6}
                              />
                           </div>
                           <div className="flex gap-3">

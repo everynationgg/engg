@@ -84,8 +84,7 @@ export default function ProfilePage() {
         onShowProfile={() => refreshUser()}
         onShowHowToPlay={() => {}}
         onShowAuth={() => {}}
-        musicOn={musicOn}
-        onToggleMusic={handleToggleMusic}
+        onShowMenu={() => {}}
       />
 
       <div className="h-[var(--nav-height)] shrink-0" />

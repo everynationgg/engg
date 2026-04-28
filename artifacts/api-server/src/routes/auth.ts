@@ -61,8 +61,8 @@ router.post("/auth/register", authLimit, async (req, res) => {
   try {
     const body = RegisterUserBody.parse(req.body);
 
-    if (body.password.length < 8) {
-      res.status(400).json({ error: "Security protocol requires a minimum of 8 characters for passwords" });
+    if (body.password.length < 6) {
+      res.status(400).json({ error: "Security protocol requires a minimum of 6 characters for passwords" });
       return;
     }
 
