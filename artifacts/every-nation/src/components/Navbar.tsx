@@ -85,7 +85,7 @@ export default function Navbar() {
               <div className="flex items-center gap-6">
                 {/* Identity Trigger (Clickable Username) */}
                 <button 
-                  onClick={(e) => { e.stopPropagation(); togglePanel("settings"); }}
+                  onMouseDown={(e) => { e.stopPropagation(); togglePanel("settings"); }}
                   className={`hidden md:block font-orbitron text-[11px] font-black tracking-widest uppercase transition-all duration-200 outline-none focus-visible:text-cyan-400 ${activePanel === "settings" ? "text-cyan-400" : "text-white/60 hover:text-white cursor-pointer"}`}
                 >
                   {username}
@@ -93,7 +93,7 @@ export default function Navbar() {
 
                 {/* Allies Trigger */}
                 <button
-                  onClick={(e) => { e.stopPropagation(); togglePanel("allies"); }}
+                  onMouseDown={(e) => { e.stopPropagation(); togglePanel("allies"); }}
                   className={`w-9 h-9 flex items-center justify-center rounded-sm border transition-all duration-200 outline-none focus-visible:ring-1 focus-visible:ring-cyan-400 ${activePanel === "allies"
                     ? "bg-cyan-500/10 border-cyan-500/50 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)]"
                     : "bg-white/5 border-white/10 text-white/40 hover:text-white hover:border-white/30"
@@ -106,7 +106,7 @@ export default function Navbar() {
                 {/* Settings Dropdown Trigger */}
                 <div className="relative">
                   <button
-                    onClick={(e) => { e.stopPropagation(); togglePanel("settings"); }}
+                    onMouseDown={(e) => { e.stopPropagation(); togglePanel("settings"); }}
                     className={`w-9 h-9 flex items-center justify-center rounded-sm border transition-all ${activePanel === "settings"
                       ? "bg-cyan-500/10 border-cyan-500/50 text-cyan-400"
                       : "bg-white/5 border-white/10 text-white/40 hover:text-white hover:border-white/30"
