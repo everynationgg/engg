@@ -128,7 +128,7 @@ export default function Login() {
                         className="flex-1 py-3 pr-4 bg-transparent font-mono text-[11px] tracking-[0.4em] text-white outline-none"
                         placeholder="••••••••"
                         required
-                        minLength={8}
+                        minLength={6}
                       />
                     </div>
                   </div>

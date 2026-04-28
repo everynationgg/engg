@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaUserPlus, FaUserFriends, FaSearch, FaCheck, FaTimes, FaUserSecret, FaCircle, FaArrowLeft, FaSatelliteDish, FaArrowRight, FaTrash, FaExclamationCircle } from "react-icons/fa";
 import { useAuth } from "@/hooks/useAuth";
-import { getSocket } from "@/lib/socket";
 import { useUI } from "@/context/UIContext";
+import { useMessaging } from "@/context/MessagingContext";
 
 interface Ally {
   id: string;
@@ -23,155 +23,57 @@ export default function AlliesSidebar() {
   const [loading, setLoading] = useState(false);
   const [isAccepting, setIsAccepting] = useState<string | null>(null);
 
-  // Chat State
+  // Messaging State (Consumed from Global Store)
+  const { 
+    conversations, 
+    unreadCounts, 
+    sendMessage: transmitMessage, 
+    loadConversationHistory,
+    setActiveChatUserId 
+  } = useMessaging();
+
   const [activeChatAlly, setActiveChatAlly] = useState<Ally | null>(null);
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [messageInput, setMessageInput] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
-  const [lastMessageCount, setLastMessageCount] = useState(0);
   const [isAllyTyping, setIsAllyTyping] = useState(false);
   const isTypingRef = useRef(false);
   const typingTimeoutRef = useRef<any>(null);
+
+  const chatMessages = activeChatAlly ? (conversations[activeChatAlly.id] || []) : [];
 
   useEffect(() => {
     if (isLoggedIn && token) {
       fetchAllies();
       fetchPendingRequests();
-      fetchUnreadCounts();
-      
-      const interval = setInterval(() => {
-        fetchUnreadCounts();
-      }, 5000);
-      return () => clearInterval(interval);
     }
-    return undefined;
   }, [isLoggedIn, token]);
 
   useEffect(() => {
-    let interval: any;
-    if (activeChatAlly && activePanel === "allies") {
-      fetchMessages(activeChatAlly.id);
-      interval = setInterval(() => fetchMessages(activeChatAlly.id), 10000);
+    if (activeChatAlly) {
+      loadConversationHistory(activeChatAlly.id);
+      setActiveChatUserId(activeChatAlly.id);
+    } else {
+      setActiveChatUserId(null);
     }
-    return () => clearInterval(interval);
-  }, [activeChatAlly, activePanel]);
+  }, [activeChatAlly]);
 
-  useEffect(() => {
-    if (!isLoggedIn || !token) return undefined;
-    const socket = getSocket(token);
-    
-    const onPrivateMessage = (msg: any) => {
-      if (activeChatAlly && (msg.senderId === activeChatAlly.id || msg.receiverId === activeChatAlly.id)) {
-        setIsAllyTyping(false);
-        setChatMessages(prev => {
-          const exists = prev.find(m => m.id === msg.id);
-          if (exists) return prev;
-          if (msg.senderId === activeChatAlly.id) playNotificationSound();
-          return [...prev, msg];
-        });
-        if (msg.senderId === activeChatAlly.id) fetchMessages(activeChatAlly.id);
-      } else {
-        fetchUnreadCounts();
-      }
-    };
-
-    const onTypingUpdate = (data: { senderId: string; isTyping: boolean }) => {
-      if (activeChatAlly && data.senderId === activeChatAlly.id) setIsAllyTyping(data.isTyping);
-    };
-
-    const onReadReceipt = (data: { receiverId: string; readAt: string }) => {
-      if (activeChatAlly && data.receiverId === activeChatAlly.id) {
-        setChatMessages(prev => prev.map(m => ({ ...m, isRead: true })));
-      }
-    };
-
-    socket.on("private_message", onPrivateMessage);
-    socket.on("pm_typing_update", onTypingUpdate);
-    socket.on("pm_read_receipt", onReadReceipt);
-    return () => {
-      socket.off("private_message", onPrivateMessage);
-      socket.off("pm_typing_update", onTypingUpdate);
-      socket.off("pm_read_receipt", onReadReceipt);
-    };
-  }, [isLoggedIn, token, activeChatAlly]);
-
+  // Typing logic remains local for UI feedback, but we keep it minimal
   const handleTyping = (text: string) => {
     setMessageInput(text);
-    if (!activeChatAlly || !token) return;
-
-    const socket = getSocket(token);
-    if (!isTypingRef.current && text.length > 0) {
-      isTypingRef.current = true;
-      socket.emit("pm_typing_update", { receiverId: activeChatAlly.id, isTyping: true });
-    }
-
-    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    typingTimeoutRef.current = setTimeout(() => {
-      isTypingRef.current = false;
-      socket.emit("pm_typing_update", { receiverId: activeChatAlly.id, isTyping: false });
-    }, 3000);
-  };
-
-  const fetchMessages = async (otherUserId: string) => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/messages/private/${otherUserId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      if (data.length > lastMessageCount) {
-        const latest = data[data.length - 1];
-        if (latest.senderId === otherUserId) playNotificationSound();
-      }
-      setChatMessages(data);
-      setLastMessageCount(data.length);
-      fetchUnreadCounts();
-    } catch (err) { console.error(err); }
-  };
-
-  const fetchUnreadCounts = async () => {
-    if (!isLoggedIn || !token) return;
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/messages/unread-counts`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      const counts: Record<string, number> = {};
-      let totalUnread = 0;
-      data.forEach((item: any) => {
-        counts[item.senderId] = item.count;
-        totalUnread += item.count;
-      });
-      const prevTotal = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
-      if (totalUnread > prevTotal && !activeChatAlly) playNotificationSound();
-      setUnreadCounts(counts);
-    } catch (err) { console.error(err); }
-  };
-
-  const playNotificationSound = () => {
-    try {
-      const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3");
-      audio.volume = 0.2;
-      audio.play().catch(() => {});
-    } catch (e) {}
+    // (Optional: Implement global typing update via MessagingContext later)
   };
 
   const sendMessage = async () => {
     if (!activeChatAlly || !messageInput.trim() || isSending) return;
     setIsSending(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/messages/send`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ receiverId: activeChatAlly.id, message: messageInput })
-      });
-      if (res.ok) {
-        setMessageInput("");
-        fetchMessages(activeChatAlly.id);
-      }
-    } catch (err) { console.error(err); } finally { setIsSending(false); }
+      await transmitMessage(activeChatAlly.id, messageInput);
+      setMessageInput("");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const fetchAllies = async () => {

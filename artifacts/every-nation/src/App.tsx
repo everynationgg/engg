@@ -17,6 +17,9 @@ import Navbar from "@/components/Navbar";
 import AlliesSidebar from "@/components/AlliesSidebar";
 import WarpJump from "@/components/common/WarpJump";
 import SystemToastContainer from "@/components/common/SystemToast";
+import { MessagingProvider } from "@/context/MessagingContext";
+import { UIProvider } from "@/context/UIContext";
+import { HUDFilters } from "@/components/common/HUDRenderer";
 
 function Router() {
   return (
@@ -34,10 +37,6 @@ function Router() {
     </Switch>
   );
 }
-
-import { HUDFilters } from "@/components/common/HUDRenderer";
-
-import { UIProvider } from "@/context/UIContext";
 
 export default function App() {
   const [location] = useLocation();
@@ -59,22 +58,24 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <UIProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <div className="min-h-screen bg-black text-white selection:bg-cyan-500/30 overflow-x-hidden">
-            <HUDFilters />
-            <SystemToastContainer />
-            <AnimatePresence>
-              {isWarping && <WarpJump />}
-            </AnimatePresence>
-            {!isHomePage && <Navbar />}
-            {!isHomePage && <AlliesSidebar />}
-            <div className={`${isWarping ? "opacity-0" : "opacity-100 transition-opacity duration-300"} ${!isHomePage ? "pt-[100px] lg:pt-[120px]" : ""}`}>
-              <Router />
+      <MessagingProvider>
+        <UIProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <div className="min-h-screen bg-black text-white selection:bg-cyan-500/30 overflow-x-hidden">
+              <HUDFilters />
+              <SystemToastContainer />
+              <AnimatePresence>
+                {isWarping && <WarpJump />}
+              </AnimatePresence>
+              {!isHomePage && <Navbar />}
+              {!isHomePage && <AlliesSidebar />}
+              <div className={`${isWarping ? "opacity-0" : "opacity-100 transition-opacity duration-300"} ${!isHomePage ? "pt-[100px] lg:pt-[120px]" : ""}`}>
+                <Router />
+              </div>
             </div>
-          </div>
-        </WouterRouter>
-      </UIProvider>
+          </WouterRouter>
+        </UIProvider>
+      </MessagingProvider>
     </AuthProvider>
   );
 }
