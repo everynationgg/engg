@@ -4,9 +4,10 @@ import { motion } from "framer-motion";
 interface HUDOverlayProps {
   children: React.ReactNode;
   pageLabel: string;
+  showVignette?: boolean;
 }
 
-export function HUDOverlay({ children, pageLabel }: HUDOverlayProps) {
+export function HUDOverlay({ children, pageLabel, showVignette = true }: HUDOverlayProps) {
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[#020408] text-white">
       {/* GLOBAL HUD FRAME */}
@@ -34,7 +35,9 @@ export function HUDOverlay({ children, pageLabel }: HUDOverlayProps) {
       <div className="fixed inset-0 pointer-events-none z-[85] scanline opacity-[0.03]" />
       
       {/* VIGNETTE */}
-      <div className="fixed inset-0 pointer-events-none z-[82] bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]" />
+      {showVignette && (
+        <div className="fixed inset-0 pointer-events-none z-[82] bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]" />
+      )}
 
       {/* MAIN CONTENT CONTENT */}
       <motion.main 

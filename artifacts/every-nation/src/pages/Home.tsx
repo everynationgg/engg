@@ -12,10 +12,10 @@ export default function Home() {
   }, []);
 
   return (
-    <HUDOverlay pageLabel="INITIAL_LINK">
+    <HUDOverlay pageLabel="INITIAL_LINK" showVignette={false}>
       <div className="landing-root h-screen relative overflow-hidden">
         <video
-          className="absolute inset-0 w-full h-full object-cover opacity-30 grayscale pointer-events-none"
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
           src="/bg-video.mp4"
           autoPlay
           muted
