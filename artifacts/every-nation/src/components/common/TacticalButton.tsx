@@ -21,7 +21,7 @@ export const TacticalButton: React.FC<TacticalButtonProps> = ({
     >
       {/* 1. Precision Background Image */}
       <img
-        src="/btn_v2.png"
+        src="/home_btn.webp"
         className="absolute inset-0 w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-opacity"
         alt="tactical button frame"
       />

@@ -79,3 +79,6 @@ attached_assets/image_*.png
 *.log
 .test
 largest-files.txt
+
+# Dev-only seed scripts (security risk)
+artifacts/api-server/src/seed-dev.ts

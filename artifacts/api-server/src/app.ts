@@ -79,6 +79,8 @@ const DEFAULT_ALLOWED_ORIGINS = new Set([
   "https://engg.online",
   "https://www.engg.online",
   "https://end.engg.online",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
 ]);
 
 function isAllowedOrigin(origin?: string): boolean {
@@ -210,7 +212,7 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 // Example: Call logReplay(gameId, replayData) at the end of each game session
-app.use(logReplay);
+// (Removed app.use(logReplay) as it is a utility, not middleware)
 
 // Example usage: i18next.t("welcome")
 // TODO: Integrate with API responses and UI

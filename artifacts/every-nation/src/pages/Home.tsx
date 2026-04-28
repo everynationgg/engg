@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { HUDOverlay } from "@/components/common/HUDOverlay";
 import { TacticalButton } from "@/components/common/TacticalButton";
 
 export default function Home() {
+  const [, navigate] = useLocation();
   const [uiVisible, setUiVisible] = useState(false);
 
   useEffect(() => {
@@ -51,7 +53,7 @@ export default function Home() {
                 <TacticalButton
                   active
                   className="w-[280px] md:w-[400px]"
-                  onClick={() => window.location.href = "/hub"}
+                  onClick={() => navigate("/hub")}
                 >
                   <div className="flex flex-col items-center leading-tight">
                     <span className="text-[10px] md:text-[14px] font-black text-cyan-400 group-hover:text-white tracking-[0.25em]">ENTER</span>

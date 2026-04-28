@@ -8,6 +8,7 @@ import { migrateDb } from "./lib/migrate.js";
 import { pool } from "@workspace/db";
 import { redisClient } from "./config/redis.js";
 
+
 // Register SMTP email provider
 import { setupSmtpEmailProvider } from "./setup-email-provider.js";
 setupSmtpEmailProvider();
@@ -96,6 +97,18 @@ httpServer.listen(port, "0.0.0.0", () => {
 
       console.log(">>> Restoring sessions from DB...");
       await restoreSessionsFromDb();
+
+      // Optional Dev Seeding (Dynamic Import)
+      if (process.env.NODE_ENV === "development") {
+        try {
+          const { seedDevUser } = await import("./seed-dev.js");
+          console.log(">>> Seeding dev identities...");
+          await seedDevUser();
+        } catch (err) {
+          console.log(">>> Skip dev seeding (seed-dev.ts not found or ignored)");
+        }
+      }
+
 
       console.log(">>> Starting snapshot job...");
       startSnapshotJob(30_000);
