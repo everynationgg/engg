@@ -22,6 +22,22 @@ export default function Home() {
           playsInline
         />
 
+        {/* CENTRAL BRANDING - High Fidelity SVG Identity */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+            className="w-[300px] md:w-[600px] h-[300px] md:h-[600px] opacity-20"
+          >
+            <img
+              src="/btn_asset.svg"
+              alt="System Identity"
+              className="w-full h-full object-contain"
+            />
+          </motion.div>
+        </div>
+
         {/* Cinematic Bottom Vignette for Legibility */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none z-10" />
 

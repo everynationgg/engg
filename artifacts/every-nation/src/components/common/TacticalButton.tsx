@@ -14,15 +14,15 @@ export const TacticalButton: React.FC<TacticalButtonProps> = ({
   return (
     <button
       className={cn(
-        "relative group transition-all duration-300 active:scale-95 select-none overflow-hidden w-[280px] md:w-[400px] aspect-[4.3/1]",
+        "relative group transition-all duration-300 active:scale-95 select-none overflow-hidden w-[280px] md:w-[400px] aspect-[3/1]",
         className
       )}
       {...props}
     >
       {/* 1. Precision Background Image */}
       <img
-        src="/home_btn.webp"
-        className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+        src="/btn_asset.svg"
+        className="absolute inset-0 w-full h-full object-fill opacity-90 group-hover:opacity-100 transition-opacity"
         alt="tactical button frame"
       />
 
