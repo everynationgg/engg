@@ -22,7 +22,6 @@ export default function Home() {
           loop
           playsInline
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#020408] via-transparent to-[#020408]/80 pointer-events-none" />
 
         <div className="absolute inset-0 flex flex-col items-center justify-end pb-32 z-10 px-6">
           <AnimatePresence>
@@ -33,17 +32,14 @@ export default function Home() {
                 transition={{ duration: 0.8, ease: "easeOut" }}
                 className="w-full flex flex-col items-center gap-12"
               >
-                <div className="flex flex-wrap justify-center gap-8 w-full max-w-[1200px]">
+                <div className="flex flex-wrap justify-center gap-10 w-full max-w-[1200px]">
                   {/* DISCORD */}
                   <div className="w-[300px]">
                     <TacticalButton
                       className="w-full"
                       onClick={() => window.open("https://discord.gg/everynation", "_blank")}
                     >
-                      <div className="flex flex-col items-start leading-tight">
-                        <span className="text-[12px] font-black tracking-[0.2em]">DISCORD</span>
-                        <span className="font-mono text-[7px] text-white/30 tracking-[0.2em]">Link_Discord</span>
-                      </div>
+                      <span className="font-bold tracking-[0.05em]">DISCORD</span>
                     </TacticalButton>
                   </div>
 
@@ -54,10 +50,7 @@ export default function Home() {
                       className="w-full"
                       onClick={() => window.location.href = "/hub"}
                     >
-                      <div className="flex flex-col items-start leading-tight">
-                        <span className="text-[12px] font-black text-cyan-400 group-hover:text-white tracking-[0.2em]">ENTER</span>
-                        <span className="font-mono text-[7px] text-cyan-400/30 group-hover:text-white/30 tracking-[0.2em]">Deploy_Unit</span>
-                      </div>
+                      <span className="font-bold tracking-[0.05em] text-white">ENTER</span>
                     </TacticalButton>
                   </div>
 
@@ -67,10 +60,7 @@ export default function Home() {
                       className="w-full"
                       onClick={() => window.open("https://linktr.ee/everynationgg", "_blank")}
                     >
-                      <div className="flex flex-col items-start leading-tight">
-                        <span className="text-[12px] font-black tracking-[0.2em]">SOCIALS</span>
-                        <span className="font-mono text-[7px] text-white/30 tracking-[0.2em]">Link_Nexus</span>
-                      </div>
+                      <span className="font-bold tracking-[0.05em]">SOCIALS</span>
                     </TacticalButton>
                   </div>
                 </div>
