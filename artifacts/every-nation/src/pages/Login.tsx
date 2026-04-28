@@ -40,7 +40,7 @@ export default function Login() {
     <HUDOverlay pageLabel="AUTH_IDENTITY">
       <div className="min-h-screen flex flex-col items-center pb-12 px-4 md:px-8 relative overflow-x-hidden bg-[#020408] selection:bg-cyan-500/30">
         {/* Header Clearance Spacer */}
-        <div className="h-[140px] lg:h-[180px] w-full shrink-0 pointer-events-none" />
+        <div className="h-[120px] lg:h-[140px] w-full shrink-0 pointer-events-none" />
 
         <motion.div 
           className="fixed inset-0 z-0 opacity-10 pointer-events-none grayscale"

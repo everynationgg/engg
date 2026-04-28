@@ -39,7 +39,7 @@ export default function Navbar() {
         className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 border-b overflow-visible ${showSolidBg ? "bg-black/95 backdrop-blur-md border-white/5 py-3" : "bg-transparent border-transparent py-5"
           }`}
       >
-        <div className="w-full max-w-[1800px] mx-auto px-4 md:px-8 xl:px-12 flex items-center justify-between gap-4">
+        <div className="w-full max-w-[1800px] mx-auto px-4 lg:px-8 xl:px-12 flex items-center justify-between gap-4">
 
           {/* LEFT: LOGO (High Priority) */}
           <Link href="/" className="group flex items-center gap-3 shrink-0">
@@ -48,7 +48,7 @@ export default function Navbar() {
                 <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 bg-white/80" />
               </div>
               <div className="flex flex-col">
-                <span className="font-orbitron font-black text-base sm:text-lg tracking-[0.2em] uppercase text-white">
+                <span className="font-orbitron font-black text-sm sm:text-base lg:text-lg tracking-[0.2em] uppercase text-white">
                   ENGG
                 </span>
                 <span className="font-mono text-[6px] tracking-[0.4em] uppercase text-white/20 hidden sm:block">
@@ -72,8 +72,8 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* RIGHT: USER (High Priority / Constrained) */}
-          <div className="flex items-center gap-4 sm:gap-6 lg:gap-8 shrink-0 max-w-[60%] lg:max-w-[50%] justify-end">
+          {/* RIGHT: USER (High Priority / Constrained) - HIDDEN ON MOBILE */}
+          <div className="hidden lg:flex items-center gap-4 sm:gap-6 lg:gap-8 shrink-0 max-w-[60%] lg:max-w-[50%] justify-end">
             {isLoggedIn ? (
               <div className="flex items-center gap-4 sm:gap-6 lg:gap-8">
                 {/* 1. ASSET MODULE (Credits) */}
@@ -166,50 +166,50 @@ export default function Navbar() {
                             className="fixed inset-0 z-[299]"
                             onClick={() => setShowSettings(false)}
                           />
-                        <motion.div
-                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                          // FIX: bumped from z-[110] → z-[300] to sit above Allies panel
-                          className="absolute top-full right-0 mt-4 w-48 bg-[#020408] border border-white/10 p-4 shadow-2xl backdrop-blur-xl z-[300]"
-                        >
-                          <div className="flex flex-col gap-1">
-                            <span className="font-mono text-[6px] uppercase tracking-[0.4em] text-white/20 mb-2">System_Directives</span>
+                          <motion.div
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            // FIX: bumped from z-[110] → z-[300] to sit above Allies panel
+                            className="absolute top-full right-0 mt-4 w-48 bg-[#020408] border border-white/10 p-4 shadow-2xl backdrop-blur-xl z-[300]"
+                          >
+                            <div className="flex flex-col gap-1">
+                              <span className="font-mono text-[6px] uppercase tracking-[0.4em] text-white/20 mb-2">System_Directives</span>
 
-                            <button className="flex items-center gap-3 w-full p-2 text-left hover:bg-white/5 group transition-colors">
-                              <FaVolumeUp size={10} className="text-white/20 group-hover:text-cyan-400" />
-                              <span className="font-orbitron text-[8px] uppercase tracking-widest text-white/60 group-hover:text-white">Audio_Engine</span>
-                            </button>
+                              <button className="flex items-center gap-3 w-full p-2 text-left hover:bg-white/5 group transition-colors">
+                                <FaVolumeUp size={10} className="text-white/20 group-hover:text-cyan-400" />
+                                <span className="font-orbitron text-[8px] uppercase tracking-widest text-white/60 group-hover:text-white">Audio_Engine</span>
+                              </button>
 
-                            <button className="flex items-center gap-3 w-full p-2 text-left hover:bg-white/5 group transition-colors">
-                              <FaTerminal size={10} className="text-white/20 group-hover:text-cyan-400" />
-                              <span className="font-orbitron text-[8px] uppercase tracking-widest text-white/60 group-hover:text-white">Preferences</span>
-                            </button>
+                              <button className="flex items-center gap-3 w-full p-2 text-left hover:bg-white/5 group transition-colors">
+                                <FaTerminal size={10} className="text-white/20 group-hover:text-cyan-400" />
+                                <span className="font-orbitron text-[8px] uppercase tracking-widest text-white/60 group-hover:text-white">Preferences</span>
+                              </button>
 
-                            <div className="h-[1px] bg-white/5 my-2" />
+                              <div className="h-[1px] bg-white/5 my-2" />
 
-                            <button
-                              onClick={logout}
-                              className="flex items-center gap-3 w-full p-2 text-left hover:bg-red-500/10 group transition-colors"
-                            >
-                              <FaSignOutAlt size={10} className="text-white/20 group-hover:text-red-500" />
-                              <span className="font-orbitron text-[8px] uppercase tracking-widest text-white/60 group-hover:text-red-500">Terminate_Session</span>
-                            </button>
-                          </div>
-                        </motion.div>
-                      </>
-                    )}
-                  </AnimatePresence>
+                              <button
+                                onClick={logout}
+                                className="flex items-center gap-3 w-full p-2 text-left hover:bg-red-500/10 group transition-colors"
+                              >
+                                <FaSignOutAlt size={10} className="text-white/20 group-hover:text-red-500" />
+                                <span className="font-orbitron text-[8px] uppercase tracking-widest text-white/60 group-hover:text-red-500">Terminate_Session</span>
+                              </button>
+                            </div>
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : (
+            ) : (
               <SciFiButton
                 variant="primary"
                 size="sm"
                 onClick={() => navigate("/login")}
               >
-                Initialize
+                LOGIN
               </SciFiButton>
             )}
           </div>
@@ -241,13 +241,16 @@ export default function Navbar() {
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsOpen(false)} className="fixed inset-0 z-[999] bg-black/90 lg:hidden" />
             <motion.div
-              initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
-              transition={{ type: "tween", duration: 0.3 }}
-              className="fixed top-0 bottom-0 left-0 w-[300px] lg:hidden z-[1000] bg-[#020408] border-r border-white/5 flex flex-col"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed top-0 bottom-0 left-0 w-[300px] lg:hidden z-[1000] bg-[#020408] border-r border-white/5 flex flex-col overflow-y-auto"
+              style={{ paddingTop: "env(safe-area-inset-top, 2rem)" }}
             >
-              <div className="p-8 border-b border-white/5 flex items-center justify-between">
+              <div className="p-8 border-b border-white/5 flex items-center justify-between shrink-0">
                 <span className="font-orbitron font-black text-xl tracking-tighter text-white">ENGG</span>
-                <button onClick={() => setIsOpen(false)} className="text-white/40 hover:text-white transition-colors">
+                <button onClick={() => setIsOpen(false)} className="text-white/40 hover:text-white transition-colors p-2">
                   <FaTimes size={20} />
                 </button>
               </div>
@@ -257,7 +260,7 @@ export default function Navbar() {
                   <Link
                     key={link.name}
                     href={link.href}
-                    className={`p-4 font-orbitron text-[10px] uppercase tracking-[0.3em] transition-all border-l-2 mb-2 ${location === link.href
+                    className={`p-5 font-orbitron text-[10px] uppercase tracking-[0.3em] transition-all border-l-2 mb-2 min-h-[52px] flex items-center ${location === link.href
                       ? "text-cyan-400 border-cyan-400 bg-cyan-400/5"
                       : "text-white/40 border-transparent hover:text-white hover:bg-white/5"
                       }`}
@@ -269,7 +272,7 @@ export default function Navbar() {
                 {!isLoggedIn && (
                   <button
                     onClick={() => navigate("/login")}
-                    className="mt-8 mx-4 p-4 border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 font-orbitron text-[10px] uppercase tracking-[0.4em]"
+                    className="mt-8 mx-4 min-h-[52px] border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 font-orbitron text-[10px] uppercase tracking-[0.4em] hover:bg-cyan-500/20 transition-all flex items-center justify-center"
                   >
                     Authorize_Access
                   </button>
@@ -277,22 +280,37 @@ export default function Navbar() {
               </div>
 
               {isLoggedIn && (
-                <div className="mt-auto p-8 border-t border-white/5 bg-white/[0.02]">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center bg-white/5">
-                      <FaUser className="text-white/40" />
+                <div className="mt-auto p-8 border-t border-white/5 bg-white/[0.02] mb-safe">
+                  <div className="flex flex-col gap-4 mb-8">
+                    <div className="flex flex-col gap-1">
+                      <span className="font-mono text-[6px] text-cyan-400/40 uppercase tracking-[0.4em]">Operational_Assets</span>
+                      <span className="font-orbitron text-base text-cyan-400 font-black tracking-wider">
+                        {credits.toLocaleString()} <span className="text-[10px] opacity-40">CC</span>
+                      </span>
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-white font-bold uppercase tracking-widest">{username}</span>
-                      <span className="text-[8px] text-cyan-400 font-mono">LVL_{level}</span>
+                    <div className="h-[1px] bg-white/5 w-full" />
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full border border-cyan-500/20 flex items-center justify-center bg-cyan-500/5 shadow-[0_0_15px_rgba(6,182,212,0.1)]">
+                        <FaUser className="text-cyan-400/60" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[11px] text-white font-black uppercase tracking-widest">{username}</span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[8px] text-cyan-400 font-mono">LVL_{level}</span>
+                          <div className="w-12 h-1 bg-white/5 rounded-full overflow-hidden">
+                            <div className="h-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.5)]" style={{ width: `${xpProgress * 100}%` }} />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
+
                   <button
                     onClick={logout}
-                    className="w-full flex items-center justify-center gap-3 p-4 border border-red-500/30 text-red-400 font-orbitron text-[8px] uppercase tracking-[0.3em] hover:bg-red-500/10 transition-all"
+                    className="w-full flex items-center justify-center gap-3 min-h-[52px] border border-red-500/30 text-red-400 font-orbitron text-[8px] uppercase tracking-[0.3em] hover:bg-red-500/10 transition-all"
                   >
                     <FaSignOutAlt size={12} />
-                    LOGOUT
+                    TERMINATE_SESSION
                   </button>
                 </div>
               )}

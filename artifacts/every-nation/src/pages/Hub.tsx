@@ -181,7 +181,7 @@ export default function Hub() {
           
           <div className="flex-1 flex flex-col w-full">
             {/* Header Clearance Spacer */}
-            <div className="h-[140px] lg:h-[180px] w-full shrink-0 pointer-events-none" />
+            <div className="h-[120px] lg:h-[140px] w-full shrink-0 pointer-events-none" />
 
             {/* Header Overlay */}
             <header className="w-full flex flex-col items-center lg:items-start gap-4 mb-12 text-center lg:text-left px-4 md:px-8">
