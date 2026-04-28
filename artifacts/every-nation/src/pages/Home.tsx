@@ -15,8 +15,8 @@ export default function Home() {
     <HUDOverlay pageLabel="INITIAL_LINK">
       <div className="landing-root h-screen relative overflow-hidden">
         <video
-          className="absolute inset-0 w-full h-full object-cover opacity-30 grayscale pointer-events-none"
-          src="/bg-video.mp4"
+          className="absolute inset-0 w-full h-full object-cover opacity-80 pointer-events-none"
+          src="/_asset/en_page_logo.webm"
           autoPlay
           muted
           loop
