@@ -14,10 +14,10 @@ const UIContext = createContext<UIContextType | undefined>(undefined);
 export function UIProvider({ children }: { children: ReactNode }) {
   const [activePanel, setActivePanel] = useState<ActivePanel>("none");
 
-  const closeAll = () => setActivePanel("none");
-  const togglePanel = (panel: ActivePanel) => {
+  const closeAll = React.useCallback(() => setActivePanel("none"), []);
+  const togglePanel = React.useCallback((panel: ActivePanel) => {
     setActivePanel(prev => prev === panel ? "none" : panel);
-  };
+  }, []);
 
   return (
     <UIContext.Provider 
