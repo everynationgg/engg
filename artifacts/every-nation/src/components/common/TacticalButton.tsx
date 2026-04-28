@@ -42,11 +42,23 @@ export const TacticalButton: React.FC<TacticalButtonProps> = ({
       </div>
 
       {/* MAIN BODY CONTAINER */}
-      <div className="relative -ml-3 flex-grow h-10 flex items-center">
-        {/* Background Layer */}
+      <div className="relative -ml-3 flex-grow h-10 flex items-center overflow-hidden">
+        {/* Background Video Layer */}
+        <div className="absolute inset-0 z-0">
+          <video
+            src="/home_btn.webm"
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full h-full object-cover opacity-60"
+          />
+        </div>
+
+        {/* Background Overlay Layer */}
         <div 
           className={cn(
-            "absolute inset-0 bg-[#020408]/60 backdrop-blur-md border-y border-r border-white/10 transition-all duration-300 group-hover:bg-cyan-500/10 group-hover:border-cyan-500/30",
+            "absolute inset-0 bg-[#020408]/40 backdrop-blur-sm border-y border-r border-white/10 transition-all duration-300 group-hover:bg-cyan-500/10 group-hover:border-cyan-500/30",
             active && "bg-cyan-500/20 border-cyan-500/40"
           )}
           style={{
@@ -58,7 +70,7 @@ export const TacticalButton: React.FC<TacticalButtonProps> = ({
         <div className="absolute top-0 left-2.5 right-0 h-[1px] bg-white/20 group-hover:bg-cyan-400/40" />
 
         {/* Inner Content Area */}
-        <div className="relative z-10 w-full pl-6 pr-8 flex items-center justify-center font-orbitron text-[10px] uppercase tracking-[0.3em] text-white/80 group-hover:text-white transition-colors">
+        <div className="relative z-10 w-full pl-6 pr-8 flex items-center justify-center font-orbitron text-[10px] uppercase tracking-[0.3em] text-white group-hover:text-cyan-400 transition-colors drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">
           {children}
         </div>
 
