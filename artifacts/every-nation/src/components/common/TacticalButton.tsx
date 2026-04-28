@@ -14,25 +14,25 @@ export const TacticalButton: React.FC<TacticalButtonProps> = ({
   return (
     <button
       className={cn(
-        "relative group flex items-center justify-center transition-all duration-300 active:scale-95 select-none overflow-hidden h-14 w-full max-w-[320px] md:max-w-none",
+        "relative group transition-all duration-300 active:scale-95 select-none overflow-hidden w-[280px] md:w-[360px] aspect-[4.3/1]",
         className
       )}
       {...props}
     >
-      {/* Background Image (The actual button asset) */}
+      {/* Precision Background Image */}
       <div className="absolute inset-0 z-0">
         <img
           src="/home_btn.webp"
-          className="w-full h-full object-fill"
-          alt="button frame"
+          className="w-full h-full object-contain"
+          alt="tactical button frame"
         />
       </div>
 
-      {/* Hover Highlight Overlay */}
-      <div className="absolute inset-0 z-1 bg-cyan-400/0 group-hover:bg-cyan-400/5 transition-colors duration-300" />
+      {/* Hover Highlight Overlay - Only on the usable panel area */}
+      <div className="absolute left-[28%] right-[8%] inset-y-[15%] z-1 bg-cyan-400/0 group-hover:bg-cyan-400/5 transition-colors duration-300 rounded-sm" />
 
-      {/* Content Area */}
-      <div className="relative z-10 w-full px-6 flex flex-col items-center justify-center font-orbitron text-[10px] md:text-[11px] uppercase tracking-[0.2em] md:tracking-[0.3em] text-white group-hover:text-cyan-400 transition-colors drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">
+      {/* Content Area - Optically anchored to the right panel zone */}
+      <div className="absolute left-[28%] right-[8%] h-full z-10 flex flex-col items-center justify-center font-orbitron text-white group-hover:text-cyan-400 transition-colors drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">
         {children}
       </div>
     </button>
