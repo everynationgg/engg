@@ -9,7 +9,7 @@ const sciFiButtonVariants = cva(
     variants: {
       variant: {
         default: "text-cyan-400 hover:text-cyan-300",
-        primary: "text-[#020408] font-black",
+        primary: "text-cyan-400 hover:text-white font-bold",
         danger: "text-red-400 hover:text-red-300",
         outline: "text-white/60 hover:text-white",
         ghost: "text-cyan-500/50 hover:text-cyan-400",
@@ -61,7 +61,7 @@ const SciFiButton = forwardRef<HTMLButtonElement, SciFiButtonProps>(
           className={cn(
             "absolute inset-0 transition-all duration-300",
             variant === "default" && "bg-cyan-500/5 border border-cyan-500/10 group-hover:bg-cyan-500/10 group-hover:border-cyan-500/20",
-            variant === "primary" && "bg-cyan-400 group-hover:bg-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.3)]",
+            variant === "primary" && "bg-gradient-to-br from-cyan-400/20 to-cyan-500/10 border border-cyan-400/30 group-hover:from-cyan-400/30 group-hover:to-cyan-500/20 shadow-[0_0_20px_rgba(6,182,212,0.15)]",
             variant === "danger" && "bg-red-500/5 border border-red-500/10 group-hover:bg-red-500/10 group-hover:border-red-500/20",
             variant === "outline" && "bg-white/[0.01] border border-white/5 group-hover:border-white/20 group-hover:bg-white/[0.03]",
             variant === "ghost" && "bg-transparent group-hover:bg-cyan-500/[0.03]"

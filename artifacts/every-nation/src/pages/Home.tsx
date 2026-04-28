@@ -41,36 +41,36 @@ export default function Home() {
                 {/* DISCORD */}
                 <SciFiButton
                   variant="outline"
-                  className="w-[280px] md:w-[400px] h-20"
+                  className="w-[200px] md:w-[280px] h-12"
                   onClick={() => window.open("https://discord.gg/everynation", "_blank")}
                 >
                   <div className="flex flex-col items-center leading-tight">
-                    <span className="text-[10px] md:text-[14px] font-black tracking-[0.25em]">DISCORD</span>
-                    <span className="font-mono text-[7px] md:text-[9px] text-white/30 tracking-[0.2em]">Link_Discord</span>
+                    <span className="text-[10px] md:text-[12px] font-black tracking-[0.2em]">DISCORD</span>
+                    <span className="font-mono text-[6px] md:text-[7px] text-white/20 tracking-[0.2em]">Link_Discord</span>
                   </div>
                 </SciFiButton>
 
                 {/* ENTER (PRIMARY) */}
                 <SciFiButton
                   variant="primary"
-                  className="w-[280px] md:w-[400px] h-20"
+                  className="w-[200px] md:w-[280px] h-14"
                   onClick={() => navigate("/hub")}
                 >
-                  <div className="flex flex-col items-center leading-tight text-[#020408]">
-                    <span className="text-[10px] md:text-[14px] font-black tracking-[0.25em]">ENTER</span>
-                    <span className="font-mono text-[7px] md:text-[9px] opacity-40 tracking-[0.2em]">Deploy_Unit</span>
+                  <div className="flex flex-col items-center leading-tight">
+                    <span className="text-[10px] md:text-[12px] font-black tracking-[0.2em]">ENTER</span>
+                    <span className="font-mono text-[6px] md:text-[7px] opacity-40 tracking-[0.2em]">Deploy_Unit</span>
                   </div>
                 </SciFiButton>
 
                 {/* SOCIALS */}
                 <SciFiButton
                   variant="outline"
-                  className="w-[280px] md:w-[400px] h-20"
+                  className="w-[200px] md:w-[280px] h-12"
                   onClick={() => window.open("https://linktr.ee/everynationgg", "_blank")}
                 >
                   <div className="flex flex-col items-center leading-tight">
-                    <span className="text-[10px] md:text-[14px] font-black tracking-[0.25em]">SOCIALS</span>
-                    <span className="font-mono text-[7px] md:text-[9px] text-white/30 tracking-[0.2em]">Link_Nexus</span>
+                    <span className="text-[10px] md:text-[12px] font-black tracking-[0.2em]">SOCIALS</span>
+                    <span className="font-mono text-[6px] md:text-[7px] text-white/20 tracking-[0.2em]">Link_Nexus</span>
                   </div>
                 </SciFiButton>
               </motion.div>
