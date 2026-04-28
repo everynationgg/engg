@@ -1,29 +1,31 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
+export type ActivePanel = "none" | "allies" | "settings";
+
 interface UIContextType {
-  isAlliesOpen: boolean;
-  setAlliesOpen: (open: boolean) => void;
-  toggleAllies: () => void;
-  isSettingsOpen: boolean;
-  setSettingsOpen: (open: boolean) => void;
+  activePanel: ActivePanel;
+  setActivePanel: (panel: ActivePanel) => void;
+  closeAll: () => void;
+  togglePanel: (panel: ActivePanel) => void;
 }
 
 const UIContext = createContext<UIContextType | undefined>(undefined);
 
 export function UIProvider({ children }: { children: ReactNode }) {
-  const [isAlliesOpen, setAlliesOpen] = useState(false);
-  const [isSettingsOpen, setSettingsOpen] = useState(false);
+  const [activePanel, setActivePanel] = useState<ActivePanel>("none");
 
-  const toggleAllies = () => setAlliesOpen(prev => !prev);
+  const closeAll = () => setActivePanel("none");
+  const togglePanel = (panel: ActivePanel) => {
+    setActivePanel(prev => prev === panel ? "none" : panel);
+  };
 
   return (
     <UIContext.Provider 
       value={{ 
-        isAlliesOpen, 
-        setAlliesOpen, 
-        toggleAllies,
-        isSettingsOpen,
-        setSettingsOpen
+        activePanel,
+        setActivePanel,
+        closeAll,
+        togglePanel
       }}
     >
       {children}

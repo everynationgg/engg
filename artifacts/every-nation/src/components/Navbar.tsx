@@ -8,7 +8,7 @@ import { useUI } from "@/context/UIContext";
 
 export default function Navbar() {
   const { isLoggedIn, username, credits, xp, level, logout } = useAuth();
-  const { setAlliesOpen, isSettingsOpen, setSettingsOpen } = useUI();
+  const { activePanel, togglePanel, closeAll } = useUI();
   const [location, navigate] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -23,8 +23,17 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeAll();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [closeAll]);
+
+  useEffect(() => {
     setIsOpen(false);
-  }, [location]);
+    closeAll();
+  }, [location, closeAll]);
 
   const navLinks = [
     { name: "Home", href: "/" },
@@ -37,38 +46,38 @@ export default function Navbar() {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 border-b overflow-visible ${showSolidBg ? "bg-black/95 backdrop-blur-md border-white/5 py-3" : "bg-transparent border-transparent py-5"
-          }`}
+        className={`fixed top-0 left-0 right-0 transition-all duration-300 border-b overflow-visible ${showSolidBg ? "bg-black/95 backdrop-blur-md border-white/5 py-3" : "bg-transparent border-transparent py-5"
+          } ${activePanel === "settings" ? "z-[1100]" : "z-[500]"}`}
       >
-        <div className="w-full max-w-[1800px] mx-auto px-4 lg:px-8 xl:px-12 flex items-center justify-between gap-4">
-
-          {/* LEFT: LOGO (Locked Left) */}
-          <Link href="/" className="group flex items-center gap-3 shrink-0 z-10">
-            <div className="flex items-center gap-3">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 border border-white/10 bg-white/5 flex items-center justify-center relative">
-                <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 bg-white/80" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-orbitron font-black text-sm sm:text-base lg:text-lg tracking-[0.2em] uppercase text-white">
-                  ENGG
-                </span>
-                <span className="font-mono text-[6px] tracking-[0.4em] uppercase text-white/20 hidden sm:block">
-                  Operational_Nexus
-                </span>
-              </div>
+        <div className="w-full max-w-[1800px] mx-auto px-4 md:px-8 lg:px-12 h-20 flex items-center justify-between pointer-events-auto relative">
+          {/* LEFT: LOGO */}
+          <Link href="/" className="flex items-center gap-4 group">
+            <div className="w-12 h-12 bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center group-hover:border-cyan-400 group-hover:bg-cyan-400/20 transition-all duration-300 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <span className="font-orbitron font-black text-2xl tracking-tighter text-white group-hover:text-cyan-400 transition-colors">EG</span>
+              <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-cyan-400/40" />
+              <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-cyan-400/40" />
+            </div>
+            <div className="flex flex-col">
+              <span className="font-orbitron font-black text-xl tracking-[0.2em] text-white leading-none">EVERY_NATION</span>
+              <span className="font-mono text-[8px] text-cyan-400/40 uppercase tracking-[0.5em] mt-1">Operational_Unit_01</span>
             </div>
           </Link>
 
-          {/* CENTER: NAV (Balanced Center) */}
-          <div className="hidden lg:flex flex-1 items-center justify-center gap-8 xl:gap-12 mx-4 overflow-hidden">
+          {/* CENTER: NAV (Floating Hub) */}
+          <div className="hidden lg:flex items-center gap-1 bg-white/[0.03] border border-white/5 p-1 rounded-sm backdrop-blur-sm">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 href={link.href}
-                className={`font-orbitron text-[9px] uppercase tracking-[0.3em] transition-all whitespace-nowrap ${location === link.href ? "text-cyan-400" : "text-white/40 hover:text-white"
+                className={`px-8 py-3 font-orbitron text-[10px] uppercase tracking-[0.3em] transition-all relative group overflow-hidden ${location === link.href ? "text-cyan-400" : "text-white/40 hover:text-white"
                   }`}
               >
-                {link.name}
+                {location === link.href && (
+                  <motion.div layoutId="nav-glow" className="absolute inset-0 bg-cyan-500/5 border-x border-cyan-500/20" />
+                )}
+                <span className="relative z-10">{link.name}</span>
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[1px] bg-cyan-400 group-hover:w-full transition-all duration-300" />
               </Link>
             ))}
           </div>
@@ -149,8 +158,11 @@ export default function Navbar() {
 
                   {/* Allies Trigger - Context State Pipeline */}
                   <button
-                    onClick={() => setAlliesOpen(true)}
-                    className="p-3 bg-white/[0.02] border border-white/10 text-white/40 hover:text-cyan-400 hover:border-cyan-500/40 hover:bg-cyan-500/[0.06] transition-all duration-200 shrink-0 rounded-sm group/btn relative"
+                    onClick={() => togglePanel("allies")}
+                    className={`p-3 border transition-all duration-200 shrink-0 rounded-sm group/btn relative ${activePanel === "allies"
+                      ? "bg-cyan-500/10 border-cyan-500/50 text-cyan-400"
+                      : "bg-white/[0.02] border-white/10 text-white/40 hover:text-cyan-400 hover:border-cyan-500/40 hover:bg-cyan-500/[0.06]"
+                    }`}
                     title="Allies Network"
                   >
                     <FaUserFriends size={16} className="group-hover/btn:scale-110 transition-transform relative z-10 duration-200" />
@@ -162,31 +174,31 @@ export default function Navbar() {
                   {/* System Settings - Precise HUD Dropdown */}
                   <div className="relative shrink-0">
                     <button
-                      onClick={() => setSettingsOpen(!isSettingsOpen)}
-                      className={`p-3 border transition-all duration-200 rounded-sm group/settings relative overflow-hidden ${isSettingsOpen
+                      onClick={() => togglePanel("settings")}
+                      className={`p-3 border transition-all duration-200 rounded-sm group/settings relative overflow-hidden ${activePanel === "settings"
                         ? "bg-cyan-500/10 border-cyan-500/50 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
                         : "bg-white/[0.02] border-white/10 text-white/40 hover:text-white hover:border-white/30"
                         }`}
                     >
-                      <FaCog size={16} className={`relative z-10 ${isSettingsOpen ? "animate-[spin_4s_linear_infinite]" : "group-hover/settings:rotate-90 transition-transform duration-500"}`} />
+                      <FaCog size={16} className={`relative z-10 ${activePanel === "settings" ? "animate-[spin_4s_linear_infinite]" : "group-hover/settings:rotate-90 transition-transform duration-500"}`} />
                     </button>
 
                     <AnimatePresence>
-                      {isSettingsOpen && (
+                      {activePanel === "settings" && (
                         <>
                           <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-[299]"
-                            onClick={() => setSettingsOpen(false)}
+                            className="fixed inset-0 z-[1105]"
+                            onClick={() => closeAll()}
                           />
                           <motion.div
                             initial={{ opacity: 0, y: 8, scale: 0.98 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 8, scale: 0.98 }}
                             transition={{ duration: 0.15, ease: "easeOut" }}
-                            className="absolute top-full right-0 mt-5 w-52 bg-[#020408]/98 border border-white/10 p-5 shadow-2xl backdrop-blur-md z-[300]"
+                            className="absolute top-full right-0 mt-5 w-52 bg-[#020408]/98 border border-white/10 p-5 shadow-2xl backdrop-blur-md z-[1110]"
                           >
                             <div className="flex flex-col gap-1">
                               <div className="flex items-center gap-2 mb-3">
@@ -322,7 +334,7 @@ export default function Navbar() {
                     </div>
                     <div className="h-[1px] bg-white/5 w-full" />
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full border border-cyan-500/20 flex items-center justify-center bg-cyan-500/5 shadow-[0_0_15px_rgba(6,182,212,0.1)]">
+                      <div className="w-10 h-10 rounded-full border border-cyan-500/20 flex items-center justify-center bg-cyan-500/5 shadow-[0_0_15px_rgba(6,182,212,0.15)]">
                         <FaUser className="text-cyan-400/60" />
                       </div>
                       <div className="flex flex-col">
