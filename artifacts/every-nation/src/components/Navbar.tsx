@@ -73,17 +73,17 @@ export default function Navbar() {
           </div>
 
           {/* RIGHT: USER (Locked Right) */}
-          <div className="hidden lg:flex items-center gap-4 sm:gap-6 lg:gap-8 shrink-0 justify-end z-10 min-w-[200px]">
+          <div className="hidden lg:flex items-center gap-6 xl:gap-10 shrink-0 justify-end z-10 min-w-[200px]">
             {isLoggedIn ? (
-              <div className="flex items-center gap-4 sm:gap-6 lg:gap-8">
-                {/* 1. ASSET MODULE (Credits) - Refined HUD */}
-                <div className="hidden sm:flex items-center gap-4 px-5 py-2 bg-white/[0.02] border border-white/10 rounded-sm group/credits hover:border-cyan-500/40 hover:bg-cyan-500/[0.04] transition-all duration-200 ease-out cursor-default relative overflow-hidden backdrop-blur-md">
+              <div className="flex items-center gap-6 xl:gap-10">
+                {/* 1. ASSET MODULE (Credits) - Breathable HUD */}
+                <div className="hidden sm:flex items-center gap-5 px-6 py-2.5 bg-white/[0.03] border border-white/10 rounded-sm group/credits hover:border-cyan-500/40 hover:bg-cyan-500/[0.05] transition-all duration-200 ease-out cursor-default relative overflow-hidden backdrop-blur-md">
                   {/* Holographic Scanline - Ultra Subtle Hover Only */}
                   <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-cyan-400/[0.03] to-transparent -translate-y-full group-hover/credits:animate-[scanline_1.5s_ease-in-out_infinite] opacity-0 group-hover/credits:opacity-100 transition-opacity duration-500" />
 
                   <div className="flex flex-col items-start leading-none relative z-10">
-                    <span className="font-mono text-[7px] text-white/20 uppercase tracking-[0.4em] mb-1 group-hover/credits:text-cyan-400/50 transition-colors duration-200">Asset_Uplink</span>
-                    <div className="flex items-baseline gap-2">
+                    <span className="font-mono text-[7px] text-white/20 uppercase tracking-[0.4em] mb-1.5 group-hover/credits:text-cyan-400/50 transition-colors duration-200">Asset_Uplink</span>
+                    <div className="flex items-baseline gap-2.5">
                       <span className="font-orbitron text-sm lg:text-base text-white/90 group-hover/credits:text-cyan-400 font-black tracking-wider transition-colors duration-200">
                         {credits.toLocaleString()}
                       </span>
@@ -97,11 +97,11 @@ export default function Navbar() {
                 </div>
 
                 {/* 2. IDENTITY MODULE - High-Contrast HUD */}
-                <div className="flex items-center gap-4 min-w-0">
+                <div className="flex items-center gap-6 xl:gap-8 min-w-0">
                   {/* Static Divider */}
-                  <div className="h-8 w-[1px] bg-white/5 hidden xl:block" />
+                  <div className="h-10 w-[1px] bg-white/5 hidden xl:block" />
 
-                  <Link href="/profile" className="flex items-center gap-4 group/user min-w-0">
+                  <Link href="/profile" className="flex items-center gap-5 group/user min-w-0">
                     <div className="relative shrink-0">
                       {/* Avatar Container - Controlled Glow */}
                       <div className="w-11 h-11 rounded-full border border-white/10 p-[1px] flex items-center justify-center bg-white/[0.02] group-hover/user:border-cyan-500/40 group-hover/user:bg-cyan-500/[0.06] transition-all duration-200 ease-out relative overflow-hidden">
@@ -116,18 +116,18 @@ export default function Navbar() {
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                    <div className="flex flex-col gap-1.5 min-w-0">
+                      <div className="flex items-center gap-3">
                         <span className="text-[12px] text-white/70 font-black uppercase tracking-[0.15em] truncate max-w-[90px] lg:max-w-[130px] group-hover/user:text-white transition-colors duration-200">
                           {username}
                         </span>
-                        <div className="px-2 py-0.5 bg-white/5 border border-white/10 rounded-sm shrink-0 group-hover/user:border-cyan-500/30 group-hover/user:bg-cyan-500/10 transition-all duration-200">
+                        <div className="px-3 py-1 bg-white/5 border border-white/10 rounded-sm shrink-0 group-hover/user:border-cyan-500/30 group-hover/user:bg-cyan-500/10 transition-all duration-200">
                           <span className="font-orbitron text-[9px] font-black text-white/40 group-hover/user:text-cyan-400">LV_{level}</span>
                         </div>
                       </div>
 
                       {/* Integrated Tactical XP Bar */}
-                      <div className="hidden xl:flex items-center gap-2 w-full opacity-30 group-hover/user:opacity-100 transition-all duration-300">
+                      <div className="hidden xl:flex items-center gap-2.5 w-full opacity-30 group-hover/user:opacity-100 transition-all duration-300">
                         <div className="flex-1 h-[2px] bg-white/5 relative overflow-hidden rounded-full">
                           <motion.div
                             className="absolute inset-y-0 left-0 bg-cyan-500"
