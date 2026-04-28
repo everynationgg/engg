@@ -189,7 +189,7 @@ export default function Hub() {
                 <div className="w-8 h-[1px] bg-cyan-500/40" />
                 <span className="font-mono text-[9px] uppercase tracking-[0.6em] text-cyan-400/60">Node_Selection</span>
               </div>
-              <h1 className="font-orbitron font-black text-4xl lg:text-5xl tracking-[0.4em] uppercase text-white leading-tight">
+              <h1 className="font-orbitron font-black text-2xl sm:text-3xl lg:text-4xl tracking-[0.4em] uppercase text-white leading-tight">
                 Gaming <span className="text-cyan-400">Hub</span>
               </h1>
             </header>

@@ -94,7 +94,7 @@ export default function Verify() {
                    <FaCheckCircle className="text-xl text-cyan-400/40" />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <h1 className="font-orbitron text-4xl lg:text-5xl font-black tracking-[0.4em] uppercase text-white leading-tight">
+                  <h1 className="font-orbitron text-2xl sm:text-3xl lg:text-4xl font-black tracking-[0.4em] uppercase text-white leading-tight">
                     Verify <span className="text-cyan-400">Identity</span>
                   </h1>
                   <p className="font-mono text-[8px] uppercase tracking-[0.4em] text-white/20">
