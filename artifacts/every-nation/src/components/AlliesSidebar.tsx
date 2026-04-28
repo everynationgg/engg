@@ -274,7 +274,7 @@ export default function AlliesSidebar() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => closeAll()}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999]"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[40]"
             />
             
             <motion.div
@@ -283,7 +283,7 @@ export default function AlliesSidebar() {
               exit={{ x: "100%" }}
               transition={{ type: "tween", duration: 0.3 }}
               onClick={(e) => e.stopPropagation()}
-              className="fixed top-0 right-0 bottom-0 w-full sm:w-[320px] z-[1000] flex flex-col bg-[#020408] border-l border-white/5"
+              className="fixed top-0 right-0 bottom-0 w-full sm:w-[320px] z-[60] flex flex-col bg-[#020408] border-l border-white/5"
             >
               {/* Scanline Header */}
               <div className="relative pt-12 px-6 pb-4 border-b border-white/5">
