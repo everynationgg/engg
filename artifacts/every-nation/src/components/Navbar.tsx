@@ -4,12 +4,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaUser, FaSignOutAlt, FaBars, FaTimes, FaUserFriends, FaCog, FaVolumeUp, FaTerminal, FaFingerprint } from "react-icons/fa";
 import { SciFiButton } from "@/components/common/SciFiButton";
+import { useUI } from "@/context/UIContext";
 
 export default function Navbar() {
   const { isLoggedIn, username, credits, xp, level, logout } = useAuth();
+  const { setAlliesOpen, isSettingsOpen, setSettingsOpen } = useUI();
   const [location, navigate] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   // Calculate XP progress (500 XP per level)
@@ -76,15 +77,15 @@ export default function Navbar() {
           <div className="hidden lg:flex items-center gap-6 xl:gap-10 shrink-0 justify-end z-10 min-w-[200px]">
             {isLoggedIn ? (
               <div className="flex items-center gap-6 xl:gap-10">
-                {/* 1. ASSET MODULE (Credits) - Breathable HUD */}
-                <div className="hidden sm:flex items-center gap-5 px-6 py-2.5 bg-white/[0.03] border border-white/10 rounded-sm group/credits hover:border-cyan-500/40 hover:bg-cyan-500/[0.05] transition-all duration-200 ease-out cursor-default relative overflow-hidden backdrop-blur-md">
+                {/* 1. ASSET MODULE (Credits) - Ultra-Breathable HUD */}
+                <div className="hidden sm:flex items-center gap-5 px-8 py-3 bg-white/[0.03] border border-white/10 rounded-sm group/credits hover:border-cyan-500/40 hover:bg-cyan-500/[0.05] transition-all duration-200 ease-out cursor-default relative overflow-hidden backdrop-blur-md">
                   {/* Holographic Scanline - Ultra Subtle Hover Only */}
                   <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-cyan-400/[0.03] to-transparent -translate-y-full group-hover/credits:animate-[scanline_1.5s_ease-in-out_infinite] opacity-0 group-hover/credits:opacity-100 transition-opacity duration-500" />
 
-                  <div className="flex flex-col items-start leading-none relative z-10">
-                    <span className="font-mono text-[7px] text-white/20 uppercase tracking-[0.4em] mb-1.5 group-hover/credits:text-cyan-400/50 transition-colors duration-200">Asset_Uplink</span>
-                    <div className="flex items-baseline gap-2.5">
-                      <span className="font-orbitron text-sm lg:text-base text-white/90 group-hover/credits:text-cyan-400 font-black tracking-wider transition-colors duration-200">
+                  <div className="flex flex-col items-center leading-none relative z-10">
+                    <span className="font-mono text-[7px] text-white/20 uppercase tracking-[0.4em] mb-2 group-hover/credits:text-cyan-400/50 transition-colors duration-200">Asset_Uplink</span>
+                    <div className="flex items-baseline gap-3">
+                      <span className="font-orbitron text-sm lg:text-base text-white/90 group-hover/credits:text-cyan-400 font-black tracking-[0.1em] transition-colors duration-200">
                         {credits.toLocaleString()}
                       </span>
                       <span className="text-[9px] text-white/20 font-mono font-bold tracking-widest group-hover/credits:text-cyan-400/30 transition-colors duration-200">CC</span>
@@ -102,27 +103,27 @@ export default function Navbar() {
                   <div className="h-10 w-[1px] bg-white/5 hidden xl:block" />
 
                   <Link href="/profile" className="flex items-center gap-5 group/user min-w-0">
-                    <div className="relative shrink-0">
-                      {/* Avatar Container - Controlled Glow */}
-                      <div className="w-11 h-11 rounded-full border border-white/10 p-[1px] flex items-center justify-center bg-white/[0.02] group-hover/user:border-cyan-500/40 group-hover/user:bg-cyan-500/[0.06] transition-all duration-200 ease-out relative overflow-hidden">
+                    <div className="relative shrink-0 w-11 h-11">
+                      {/* Avatar Container - Controlled Coordinate System */}
+                      <div className="w-full h-full rounded-full border border-white/10 p-[1px] flex items-center justify-center bg-white/[0.02] group-hover/user:border-cyan-500/40 group-hover/user:bg-cyan-500/[0.06] transition-all duration-200 ease-out relative overflow-hidden">
                         <div className="w-full h-full rounded-full bg-[#020408] flex items-center justify-center overflow-hidden relative">
                           <FaUser className="text-white/20 text-[16px] group-hover/user:text-cyan-400 transition-all duration-200" />
                         </div>
                       </div>
 
-                      {/* Status Indicator - High Contrast Solid */}
-                      <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#020408] rounded-full flex items-center justify-center">
+                      {/* Status Indicator - Anchored to Circle Bottom-Right */}
+                      <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#020408] rounded-full flex items-center justify-center z-20">
                         <div className="w-2 h-2 bg-cyan-500 rounded-full shadow-[0_0_8px_#00f3ff]" />
                       </div>
                     </div>
 
                     <div className="flex flex-col gap-1.5 min-w-0">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-4">
                         <span className="text-[12px] text-white/70 font-black uppercase tracking-[0.15em] truncate max-w-[90px] lg:max-w-[130px] group-hover/user:text-white transition-colors duration-200">
                           {username}
                         </span>
-                        <div className="px-3 py-1 bg-white/5 border border-white/10 rounded-sm shrink-0 group-hover/user:border-cyan-500/30 group-hover/user:bg-cyan-500/10 transition-all duration-200">
-                          <span className="font-orbitron text-[9px] font-black text-white/40 group-hover/user:text-cyan-400">LV_{level}</span>
+                        <div className="px-5 py-1.5 bg-white/5 border border-white/10 rounded-sm shrink-0 group-hover/user:border-cyan-500/30 group-hover/user:bg-cyan-500/10 transition-all duration-200">
+                          <span className="font-orbitron text-[10px] font-black text-white/40 group-hover/user:text-cyan-400 tracking-widest">LV_{level}</span>
                         </div>
                       </div>
 
@@ -143,42 +144,42 @@ export default function Navbar() {
                 </div>
 
                 {/* 3. CONTROL MODULE - Precision Interface */}
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-[1px] bg-white/5" />
+                <div className="flex items-center gap-3 relative z-10">
+                  <div className="h-8 w-[1px] bg-white/5 mx-2" />
 
-                  {/* Allies Trigger */}
+                  {/* Allies Trigger - Context State Pipeline */}
                   <button
-                    onClick={() => {
-                      const alliesBtn = document.querySelector('[data-allies-trigger]') as HTMLButtonElement;
-                      if (alliesBtn) alliesBtn.click();
-                    }}
+                    onClick={() => setAlliesOpen(true)}
                     className="p-3 bg-white/[0.02] border border-white/10 text-white/40 hover:text-cyan-400 hover:border-cyan-500/40 hover:bg-cyan-500/[0.06] transition-all duration-200 shrink-0 rounded-sm group/btn relative"
                     title="Allies Network"
                   >
                     <FaUserFriends size={16} className="group-hover/btn:scale-110 transition-transform relative z-10 duration-200" />
+                    
+                    {/* Active Pulse Indicator for Allies */}
+                    <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-red-500/40 rounded-full blur-[2px] opacity-0 group-hover/btn:opacity-100 transition-opacity" />
                   </button>
 
-                  {/* System Settings */}
+                  {/* System Settings - Precise HUD Dropdown */}
                   <div className="relative shrink-0">
                     <button
-                      onClick={() => setShowSettings(!showSettings)}
-                      className={`p-3 border transition-all duration-200 rounded-sm group/settings relative ${showSettings
+                      onClick={() => setSettingsOpen(!isSettingsOpen)}
+                      className={`p-3 border transition-all duration-200 rounded-sm group/settings relative overflow-hidden ${isSettingsOpen
                         ? "bg-cyan-500/10 border-cyan-500/50 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
                         : "bg-white/[0.02] border-white/10 text-white/40 hover:text-white hover:border-white/30"
                         }`}
                     >
-                      <FaCog size={16} className={`relative z-10 ${showSettings ? "animate-[spin_4s_linear_infinite]" : "group-hover/settings:rotate-90 transition-transform duration-500"}`} />
+                      <FaCog size={16} className={`relative z-10 ${isSettingsOpen ? "animate-[spin_4s_linear_infinite]" : "group-hover/settings:rotate-90 transition-transform duration-500"}`} />
                     </button>
 
                     <AnimatePresence>
-                      {showSettings && (
+                      {isSettingsOpen && (
                         <>
                           <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             className="fixed inset-0 z-[299]"
-                            onClick={() => setShowSettings(false)}
+                            onClick={() => setSettingsOpen(false)}
                           />
                           <motion.div
                             initial={{ opacity: 0, y: 8, scale: 0.98 }}

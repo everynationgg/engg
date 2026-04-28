@@ -36,6 +36,8 @@ function Router() {
 
 import { HUDFilters } from "@/components/common/HUDRenderer";
 
+import { UIProvider } from "@/context/UIContext";
+
 export default function App() {
   const [location] = useLocation();
   const [isWarping, setIsWarping] = useState(false);
@@ -56,19 +58,21 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-        <div className="min-h-screen bg-black text-white selection:bg-cyan-500/30 overflow-x-hidden">
-          <HUDFilters />
-          <SystemToastContainer />
-          <AnimatePresence>
-            {isWarping && <WarpJump />}
-          </AnimatePresence>
-          <Navbar />
-          <div className={`${isWarping ? "opacity-0" : "opacity-100 transition-opacity duration-300"} ${!isHomePage ? "pt-[100px] lg:pt-[120px]" : ""}`}>
-            <Router />
+      <UIProvider>
+        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+          <div className="min-h-screen bg-black text-white selection:bg-cyan-500/30 overflow-x-hidden">
+            <HUDFilters />
+            <SystemToastContainer />
+            <AnimatePresence>
+              {isWarping && <WarpJump />}
+            </AnimatePresence>
+            <Navbar />
+            <div className={`${isWarping ? "opacity-0" : "opacity-100 transition-opacity duration-300"} ${!isHomePage ? "pt-[100px] lg:pt-[120px]" : ""}`}>
+              <Router />
+            </div>
           </div>
-        </div>
-      </WouterRouter>
+        </WouterRouter>
+      </UIProvider>
     </AuthProvider>
   );
 }

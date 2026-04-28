@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaUserPlus, FaUserFriends, FaSearch, FaCheck, FaTimes, FaUserSecret, FaCircle, FaArrowLeft, FaSatelliteDish, FaArrowRight, FaTrash, FaExclamationCircle } from "react-icons/fa";
 import { useAuth } from "@/hooks/useAuth";
 import { getSocket } from "@/lib/socket";
+import { useUI } from "@/context/UIContext";
 
 interface Ally {
   id: string;
@@ -13,7 +14,7 @@ interface Ally {
 
 export default function AlliesSidebar() {
   const { token, isLoggedIn } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
+  const { isAlliesOpen, setAlliesOpen } = useUI();
   const [searchQuery, setSearchQuery] = useState("");
   const [allies, setAllies] = useState<Ally[]>([]);
   const [pendingRequests, setPendingRequests] = useState<Ally[]>([]);
@@ -49,12 +50,12 @@ export default function AlliesSidebar() {
 
   useEffect(() => {
     let interval: any;
-    if (activeChatAlly && isOpen) {
+    if (activeChatAlly && isAlliesOpen) {
       fetchMessages(activeChatAlly.id);
       interval = setInterval(() => fetchMessages(activeChatAlly.id), 10000);
     }
     return () => clearInterval(interval);
-  }, [activeChatAlly, isOpen]);
+  }, [activeChatAlly, isAlliesOpen]);
 
   useEffect(() => {
     if (!isLoggedIn || !token) return undefined;
@@ -247,11 +248,11 @@ export default function AlliesSidebar() {
 
   return (
     <>
-      {!isOpen && (
+      {!isAlliesOpen && (
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          onClick={() => setIsOpen(true)}
+          onClick={() => setAlliesOpen(true)}
           data-allies-trigger
           className="fixed bottom-6 right-6 z-[100] w-12 h-12 bg-[#0a0b1e]/80 border border-cyan-500/20 hover:bg-cyan-500/10 hover:border-cyan-400/50 transition-all flex lg:hidden items-center justify-center group overflow-hidden shadow-[0_0_20px_rgba(6,182,212,0.15)]"
         >
@@ -265,7 +266,7 @@ export default function AlliesSidebar() {
       )}
 
       <AnimatePresence>
-        {isOpen && (
+        {isAlliesOpen && (
             <motion.div
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
@@ -283,7 +284,7 @@ export default function AlliesSidebar() {
                     </h2>
                     <span className="font-mono text-[9px] tracking-[0.4em] uppercase text-cyan-400/40 mt-1.5">Status: Active</span>
                   </div>
-                  <button onClick={() => activeChatAlly ? setActiveChatAlly(null) : setIsOpen(false)} className="w-8 h-8 flex items-center justify-center hover:bg-white/5 transition-colors">
+                  <button onClick={() => activeChatAlly ? setActiveChatAlly(null) : setAlliesOpen(false)} className="w-8 h-8 flex items-center justify-center hover:bg-white/5 transition-colors">
                     {activeChatAlly ? <FaArrowLeft className="text-xs text-white/20" /> : <FaTimes className="text-xs text-white/20" />}
                   </button>
                 </div>
