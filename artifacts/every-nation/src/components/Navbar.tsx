@@ -49,7 +49,7 @@ export default function Navbar() {
           <Link href="/" className="flex items-center gap-3 group h-12">
             <div className="w-10 h-10 flex items-center justify-center overflow-hidden">
               <video
-                src="/en_page_logo.webm"
+                src="/_asset/en_page_logo.webm"
                 autoPlay
                 muted
                 loop

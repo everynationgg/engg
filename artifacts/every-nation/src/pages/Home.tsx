@@ -29,13 +29,13 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1.2, ease: "easeOut" }}
-                className="w-full flex flex-col items-center gap-16"
+                className="w-full flex flex-col items-center gap-24"
               >
                 {/* NEW LOGO VIDEO */}
                 <div className="w-full max-w-[600px] flex justify-center">
                   <video
                     className="w-full h-auto"
-                    src="/en_page_logo.webm"
+                    src="/_asset/en_page_logo.webm"
                     autoPlay
                     muted
                     loop
@@ -99,4 +99,3 @@ export default function Home() {
     </HUDOverlay>
   );
 }
-
