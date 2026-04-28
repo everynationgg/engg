@@ -14,26 +14,28 @@ export const TacticalButton: React.FC<TacticalButtonProps> = ({
   return (
     <button
       className={cn(
-        "relative group transition-all duration-300 active:scale-95 select-none overflow-hidden w-[280px] md:w-[360px] aspect-[4.3/1]",
+        "relative group transition-all duration-300 active:scale-95 select-none overflow-hidden w-[280px] md:w-[400px] aspect-[4.3/1]",
         className
       )}
       {...props}
     >
-      {/* Precision Background Image */}
-      <div className="absolute inset-0 z-0">
-        <img
-          src="/home_btn.webp"
-          className="w-full h-full object-contain"
-          alt="tactical button frame"
-        />
-      </div>
+      {/* 1. Precision Background Image */}
+      <img
+        src="/home_btn.webp"
+        className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+        alt="tactical button frame"
+      />
 
-      {/* Hover Highlight Overlay - Only on the usable panel area */}
+      {/* 2. Hover Highlight Overlay - Constrained to the right panel */}
       <div className="absolute left-[28%] right-[8%] inset-y-[15%] z-1 bg-cyan-400/0 group-hover:bg-cyan-400/5 transition-colors duration-300 rounded-sm" />
 
-      {/* Content Area - Optically anchored to the right panel zone */}
-      <div className="absolute left-[28%] right-[8%] h-full z-10 flex flex-col items-center justify-center font-orbitron text-white group-hover:text-cyan-400 transition-colors drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">
-        {children}
+      {/* 3. Zoned Content Layer - Anchored to the asset's coordinate system */}
+      <div className="absolute inset-0 z-10 pointer-events-none">
+        <div className="absolute left-[28%] right-[8%] top-0 bottom-0 flex items-center justify-center">
+          <div className="font-orbitron text-white group-hover:text-cyan-400 transition-colors drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">
+            {children}
+          </div>
+        </div>
       </div>
     </button>
   );
