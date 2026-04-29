@@ -220,10 +220,7 @@ export default function ResultPage() {
 
     recordedResultRef.current = true;
     const won = determinePlayerWon(playerData.role, voteResult.winTeam, playerData.alignment) ? "yes" : "no";
-    recordResult({ gameId, role: playerData.role, won, alignment: playerData.alignment })
-      .then(() => {
-        setTimeout(() => setShowRewards(true), 1500);
-      });
+    recordResult({ gameId, role: playerData.role, won, alignment: playerData.alignment });
     setPendingVoteResult(null);
   }, [gameId, hasRecorded, isInitialized, isLoggedIn, recordResult, userId]);
 
@@ -820,9 +817,6 @@ export default function ResultPage() {
         />
       )}
 
-      {showRewards && lastRewards && (
-        <RewardSummary rewards={lastRewards} onClose={() => setShowRewards(false)} />
-      )}
     </div>
   );
 }
