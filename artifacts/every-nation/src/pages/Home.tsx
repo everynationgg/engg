@@ -12,11 +12,13 @@ interface PngButtonProps {
   onClick: () => void;
   width?: number;
   delay?: number;
+  className?: string;
 }
 
-function PngButton({ src, alt, onClick, width = 260, delay = 0 }: PngButtonProps) {
+function PngButton({ src, alt, onClick, width = 260, delay = 0, className = "" }: PngButtonProps) {
   return (
     <motion.div
+      className={className}
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, delay, ease: "easeOut" }}
@@ -35,16 +37,21 @@ function PngButton({ src, alt, onClick, width = 260, delay = 0 }: PngButtonProps
           border: "none",
           cursor: "pointer",
           padding: 0,
-          display: "block",
-          width: `${width}px`,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          width: "100%",
+          maxWidth: `${width}px`,
         }}
       >
-        <img
-          src={src}
-          alt={alt}
-          draggable={false}
-          style={{ width: "100%", height: "auto", display: "block", userSelect: "none", opacity: 0.65 }}
-        />
+        <div style={{ width: "100%", height: "85px", display: "flex", justifyContent: "center", alignItems: "center" }}>
+          <img
+            src={src}
+            alt={alt}
+            draggable={false}
+            style={{ width: "100%", height: "auto", display: "block", userSelect: "none", opacity: 0.65, pointerEvents: "none" }}
+          />
+        </div>
       </motion.button>
     </motion.div>
   );
@@ -63,7 +70,7 @@ export default function Home() {
     <HUDOverlay pageLabel="INITIAL_LINK" showVignette={false}>
       <div className="landing-root h-screen relative overflow-hidden">
         <video
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none scale-[0.9] md:scale-100 origin-center transition-transform"
           src="/bg-video.mp4"
           autoPlay
           muted
@@ -73,17 +80,18 @@ export default function Home() {
         {/* Cinematic Bottom Vignette for Legibility */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none z-10" />
 
-        {/* BOTTOM NAVIGATION HUB - PNG Button Row */}
-        <div className="absolute bottom-10 md:bottom-16 left-1/2 -translate-x-1/2 z-20 px-6">
+        {/* BOTTOM NAVIGATION HUB - Responsive Order */}
+        <div className="absolute bottom-8 md:bottom-16 left-1/2 -translate-x-1/2 z-20 px-4 w-full md:w-auto">
           <AnimatePresence>
             {uiVisible && (
-              <div className="flex flex-nowrap justify-center items-center gap-2 md:gap-4">
+              <div className="flex flex-col md:flex-row flex-nowrap justify-center items-center gap-4 md:gap-4">
                 <PngButton
                   src="/DISCORD.svg"
                   alt="Discord"
                   onClick={() => window.open("https://discord.gg/everynation", "_blank")}
                   width={240}
                   delay={0.3}
+                  className="order-2 md:order-1 w-[45%] md:w-auto flex justify-center relative right-6 md:right-auto"
                 />
                 <PngButton
                   src="/ENTER.svg"
@@ -91,6 +99,7 @@ export default function Home() {
                   onClick={() => navigate("/hub")}
                   width={276}
                   delay={0.1}
+                  className="order-1 md:order-2 w-[55%] md:w-auto flex justify-center"
                 />
                 <PngButton
                   src="/SOCIALS.svg"
@@ -98,6 +107,7 @@ export default function Home() {
                   onClick={() => window.open("https://linktr.ee/everynationgg", "_blank")}
                   width={240}
                   delay={0.3}
+                  className="order-3 md:order-3 w-[45%] md:w-auto flex justify-center relative left-6 bottom-4 md:left-auto md:bottom-auto"
                 />
               </div>
             )}
