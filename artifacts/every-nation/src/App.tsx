@@ -15,7 +15,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 
 import Navbar from "@/components/Navbar";
 import AlliesSidebar from "@/components/AlliesSidebar";
-import WarpJump from "@/components/common/WarpJump";
+
 import SystemToastContainer from "@/components/common/SystemToast";
 import { MessagingProvider } from "@/context/MessagingContext";
 import { UIProvider } from "@/context/UIContext";
@@ -40,21 +40,9 @@ function Router() {
 
 export default function App() {
   const [location] = useLocation();
-  const [isWarping, setIsWarping] = useState(false);
-  const [prevLocation, setPrevLocation] = useState(location);
-  const isHomePage = location === "/" || location === "";
 
-  useEffect(() => {
-    if (location !== prevLocation) {
-      setIsWarping(true);
-      const timer = setTimeout(() => {
-        setIsWarping(false);
-        setPrevLocation(location);
-      }, 900);
-      return () => clearTimeout(timer);
-    }
-    return undefined;
-  }, [location, prevLocation]);
+
+  const isHomePage = location === "/" || location === "";
 
   return (
     <AuthProvider>
@@ -64,12 +52,9 @@ export default function App() {
             <div className="min-h-screen bg-black text-white selection:bg-cyan-500/30 overflow-x-hidden">
               <HUDFilters />
               <SystemToastContainer />
-              <AnimatePresence>
-                {isWarping && <WarpJump />}
-              </AnimatePresence>
               {!isHomePage && <Navbar />}
               {!isHomePage && <AlliesSidebar />}
-              <div className={`${isWarping ? "opacity-0" : "opacity-100 transition-opacity duration-300"} ${!isHomePage ? "pt-[100px] lg:pt-[120px]" : ""}`}>
+              <div className={`${!isHomePage ? "pt-[100px] lg:pt-[120px]" : ""}`}>
                 <Router />
               </div>
             </div>
