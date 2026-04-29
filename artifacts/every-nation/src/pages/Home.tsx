@@ -29,14 +29,14 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none z-10" />
 
         {/* BOTTOM NAVIGATION HUB - Cinematic Control Panel */}
-        <div className="absolute bottom-10 md:bottom-20 left-0 right-0 z-20 px-6">
+        <div className="absolute bottom-10 md:bottom-20 left-1/2 -translate-x-1/2 z-20 px-6">
           <AnimatePresence>
             {uiVisible && (
               <motion.div
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
-                className="flex flex-wrap justify-center gap-4 md:gap-8 w-full max-w-[1600px] mx-auto"
+                className="flex flex-wrap justify-center gap-4 md:gap-8"
               >
                 {/* DISCORD */}
                 <SciFiButton
