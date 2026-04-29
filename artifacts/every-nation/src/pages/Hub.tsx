@@ -143,7 +143,7 @@ export default function Hub() {
       title: "Errant Night",
       subtitle: "Neural Defense Protocol",
       description: "A high-stakes network defense simulator. Trace the anomaly through the digital ether before system-wide compromise.",
-      image: "/hub_errant.webp",
+      image: "/ERRANT.png",
       href: "/end",
       status: "online" as const
     },
@@ -175,14 +175,14 @@ export default function Hub() {
         <div className="fixed inset-0 z-1 bg-gradient-to-b from-[#020408]/90 via-[#020408]/60 to-[#020408]/95" />
 
         {/* Main Content Area */}
-        <main className="relative z-20 w-full max-w-[1600px] px-6 md:px-12 xl:px-16 pb-32 flex flex-col lg:flex-row gap-16 items-start">
+        <main className="relative z-20 w-full max-w-[1400px] px-6 md:px-12 xl:px-16 pb-32 flex flex-col items-center">
 
           <div className="flex-1 flex flex-col w-full">
             {/* Header Clearance Spacer */}
             <div className="h-[104px] w-full shrink-0 pointer-events-none" />
 
             {/* Header Overlay */}
-            <header className="w-full flex flex-col items-center lg:items-start gap-4 mb-12 text-center lg:text-left px-4 md:px-8">
+            <header className="w-full flex flex-col items-center gap-4 mb-12 text-center px-4 md:px-8">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-[1px] bg-cyan-500/40" />
                 <span className="font-mono text-[9px] uppercase tracking-[0.6em] text-cyan-400/60">Node_Selection</span>
@@ -229,46 +229,7 @@ export default function Hub() {
             </div>
           </div>
 
-          {/* Operation History Sidebar */}
-          <aside className="w-full lg:w-[320px] sticky top-40 flex flex-col gap-6">
-            <div className="flex items-center gap-3 mb-2">
-              <FaHistory className="text-cyan-400/40 text-xs" />
-              <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-white/40">Recent_Operations</span>
-            </div>
 
-            <div className="flex flex-col gap-3">
-              {activities.length === 0 ? (
-                <div className="p-6 border border-white/5 bg-white/[0.02] flex flex-col items-center gap-4">
-                  <FaClock className="text-white/5 text-xl" />
-                  <span className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/10 text-center">No_Operational_History_Detected</span>
-                </div>
-              ) : (
-                activities.map((act, i) => (
-                  <motion.div
-                    key={act.id}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="p-4 border border-white/5 bg-white/[0.02] group hover:bg-white/[0.05] transition-colors"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-mono text-[6px] uppercase tracking-widest text-cyan-400/60">{act.type}</span>
-                      <span className="font-mono text-[6px] text-white/10">{new Date(act.timestamp).toLocaleDateString()}</span>
-                    </div>
-                    <p className="font-mono text-[8px] uppercase tracking-wider text-white/40 group-hover:text-white/80 transition-colors">
-                      {act.description}
-                    </p>
-                    {act.amount && (
-                      <div className="mt-2 flex items-center gap-1">
-                        <span className="font-orbitron text-[8px] font-bold text-cyan-400">+{act.amount}</span>
-                        <span className="font-mono text-[6px] text-cyan-400/40 uppercase">Credits</span>
-                      </div>
-                    )}
-                  </motion.div>
-                ))
-              )}
-            </div>
-          </aside>
         </main>
       </div>
     </HUDOverlay>

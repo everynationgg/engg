@@ -85,10 +85,10 @@ export default function Navbar() {
             {!isLoggedIn ? (
               <button 
                 onClick={() => navigate("/login")}
-                className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-sm hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all group"
+                className="flex items-center gap-3 px-6 py-3 bg-white/5 border border-white/10 rounded-sm hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all group"
               >
-                <FaFingerprint className="text-white/40 group-hover:text-cyan-400 text-xs" />
-                <span className="font-orbitron text-[10px] font-bold tracking-[0.2em] text-white">LOGIN</span>
+                <FaFingerprint className="text-white/40 group-hover:text-cyan-400 text-sm" />
+                <span className="font-orbitron text-[14px] font-bold tracking-[0.2em] text-white">LOGIN</span>
               </button>
             ) : (
               <div className="flex items-center gap-6">

@@ -53,7 +53,7 @@ export default function Login() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-[420px] relative z-20 mt-8"
+          className="w-full max-w-[560px] relative z-20 mt-8"
         >
           <TacticalSlate color="#00f3ff">
             <div className="p-8 md:p-10 flex flex-col gap-8">
@@ -66,10 +66,10 @@ export default function Login() {
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <h1 className="font-orbitron text-2xl sm:text-3xl lg:text-4xl font-black tracking-[0.4em] uppercase text-white leading-tight">
+                  <h1 className="font-orbitron text-3xl sm:text-4xl lg:text-5xl font-black tracking-[0.4em] uppercase text-white leading-tight">
                     Identity <span className="text-cyan-400">Uplink</span>
                   </h1>
-                  <p className="font-mono text-[8px] uppercase tracking-[0.4em] text-white/20">
+                  <p className="font-mono text-[11px] uppercase tracking-[0.4em] text-white/20">
                     Secure_Handshake_Active
                   </p>
                 </div>
@@ -94,16 +94,16 @@ export default function Login() {
               <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                 <div className="flex flex-col gap-5">
                   <div className="flex flex-col gap-2">
-                    <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20 ml-1">Operator ID (Email or Username)</label>
+                    <label className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/20 ml-1">Operator ID (Email or Username)</label>
                     <div className="flex items-center bg-white/[0.02] border border-white/5 focus-within:border-cyan-500/20 focus-within:bg-cyan-500/[0.01] transition-all group">
                       <div className="pl-4 pr-3 text-white/10 group-focus-within:text-cyan-400 transition-colors pointer-events-none shrink-0">
-                        <FaIdCard size={10} />
+                        <FaIdCard size={12} />
                       </div>
                       <input
                         type="text"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="flex-1 py-3 pr-4 bg-transparent font-mono text-[11px] tracking-wider text-white outline-none"
+                        className="flex-1 py-4 pr-4 bg-transparent font-mono text-[14px] tracking-wider text-white outline-none"
                         placeholder="IDENTIFIER"
                         required
                       />
@@ -112,20 +112,20 @@ export default function Login() {
 
                   <div className="flex flex-col gap-2">
                     <div className="flex justify-between items-center px-1">
-                       <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20">Access_Cipher</label>
-                       <Link href="/forgot-password" title="Recover Access" className="font-mono text-[7px] uppercase text-cyan-500/20 hover:text-cyan-400 transition-colors tracking-widest">
+                       <label className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/20">Access_Cipher</label>
+                       <Link href="/forgot-password" title="Recover Access" className="font-mono text-[10px] uppercase text-cyan-500/20 hover:text-cyan-400 transition-colors tracking-widest">
                           Forgotten?
                        </Link>
                     </div>
                     <div className="flex items-center bg-white/[0.02] border border-white/5 focus-within:border-cyan-500/20 focus-within:bg-cyan-500/[0.01] transition-all group">
                       <div className="pl-4 pr-3 text-white/10 group-focus-within:text-cyan-400 transition-colors pointer-events-none shrink-0">
-                        <FaLock size={10} />
+                        <FaLock size={12} />
                       </div>
                       <input
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="flex-1 py-3 pr-4 bg-transparent font-mono text-[11px] tracking-[0.4em] text-white outline-none"
+                        className="flex-1 py-4 pr-4 bg-transparent font-mono text-[14px] tracking-[0.4em] text-white outline-none"
                         placeholder="••••••••"
                         required
                         minLength={6}
@@ -138,12 +138,12 @@ export default function Login() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full h-11 bg-cyan-400/90 hover:bg-cyan-400 text-[#020408] transition-all duration-300 flex items-center justify-center gap-3 group"
+                    className="w-full h-14 bg-cyan-400/90 hover:bg-cyan-400 text-[#020408] transition-all duration-300 flex items-center justify-center gap-4 group"
                   >
-                    <span className="font-orbitron font-black tracking-[0.2em] text-[10px] uppercase">
+                    <span className="font-orbitron font-black tracking-[0.2em] text-[14px] uppercase">
                       {loading ? "Syncing..." : "Initiate_Handshake"}
                     </span>
-                    {!loading && <FaArrowRight className="text-[10px] group-hover:translate-x-1 transition-transform" />}
+                    {!loading && <FaArrowRight className="text-[14px] group-hover:translate-x-1 transition-transform" />}
                   </button>
 
                   <div className="flex items-center gap-3">
