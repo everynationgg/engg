@@ -9,7 +9,7 @@ if (!_rawJwtSecret) {
 // Re-assign after the guard so TypeScript knows the type is `string` inside function bodies.
 const JWT_SECRET: string = _rawJwtSecret;
 
-const SALT_ROUNDS = 10;
+const SALT_ROUNDS = 12;
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, SALT_ROUNDS);
@@ -23,7 +23,38 @@ export async function comparePassword(
 }
 
 export function generateToken(userId: string): string {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: "7d" });
+  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: "24h" });
+}
+
+import { db, usersTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
+import type { Request, Response, NextFunction } from "express";
+
+export async function authenticateAdmin(req: Request, res: Response, next: NextFunction) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith("Bearer ")) {
+    res.status(401).json({ error: "Authorization required" });
+    return;
+  }
+
+  const token = authHeader.split(" ")[1];
+  const verified = verifyToken(token);
+  if (!verified) {
+    res.status(401).json({ error: "Invalid session" });
+    return;
+  }
+
+  const users = await db.select().from(usersTable).where(eq(usersTable.id, verified.userId)).limit(1);
+  const user = users[0];
+
+  if (!user || !user.isAdmin) {
+    res.status(403).json({ error: "Administrative privileges required" });
+    return;
+  }
+
+  (req as any).userId = user.id;
+  (req as any).user = user;
+  next();
 }
 
 export function verifyToken(token: string): { userId: string } | null {
@@ -79,5 +110,27 @@ export function verifyPlayerToken(token: string, playerId: string): boolean {
     return timingSafeEqual(a, b);
   } catch {
     return false;
+  }
+}
+
+/**
+ * Generates a long-lived refresh token for session rotation.
+ */
+export function generateRefreshToken(userId: string): string {
+  const secret = process.env.REFRESH_TOKEN_SECRET || JWT_SECRET;
+  return jwt.sign({ userId, type: 'refresh' }, secret, { expiresIn: "30d" });
+}
+
+/**
+ * Verifies a refresh token and returns the userId if valid.
+ */
+export function verifyRefreshToken(token: string): string | null {
+  try {
+    const secret = process.env.REFRESH_TOKEN_SECRET || JWT_SECRET;
+    const decoded = jwt.verify(token, secret) as { userId: string; type: string };
+    if (decoded.type !== 'refresh') return null;
+    return decoded.userId;
+  } catch (err) {
+    return null;
   }
 }

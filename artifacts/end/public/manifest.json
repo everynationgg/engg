@@ -1,6 +1,6 @@
 {
-  "name": "ERROR: NEWFORM DETECTED: ENfestation",
-  "short_name": "ENfestation",
+  "name": "Errant Night",
+  "short_name": "Errant Night",
   "description": "A free, browser-based multiplayer social deduction game. Create a room, invite friends, and survive the infestation!",
   "start_url": "/end",
   "display": "standalone",

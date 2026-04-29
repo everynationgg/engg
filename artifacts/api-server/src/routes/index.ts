@@ -10,6 +10,9 @@ import { chatRouter } from "./chat";
 import { ttsRouter } from "./tts";
 import metricsRouter from "./metrics";
 import shopRouter from "./shop";
+import userRouter from "./user";
+import adminRouter from "./admin.js";
+import { messagesRouter } from "./messages";
 
 const router: IRouter = Router();
 
@@ -24,5 +27,8 @@ router.use(chatRouter);
 router.use(ttsRouter);
 router.use(metricsRouter);
 router.use(shopRouter);
+router.use(userRouter);
+router.use(messagesRouter);
+router.use("/admin", adminRouter);
 
 export default router;

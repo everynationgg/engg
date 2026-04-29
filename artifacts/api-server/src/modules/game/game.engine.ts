@@ -1,5 +1,5 @@
 /**
- * Game Engine — pure, deterministic game logic for Enfestation.
+ * Game Engine — pure, deterministic game logic for Errant Night.
  *
  * This module contains ALL gameplay logic extracted from socket.ts and
  * resolution.ts. It is completely independent of Socket.IO, Express, and
@@ -57,6 +57,7 @@ export interface GameSettings {
 export interface PlayerAction {
   type: string;
   targets: string[];
+  alignment?: "Good" | "Bad";
 }
 
 export interface EmergencyVoteState {
@@ -73,7 +74,7 @@ export interface VoteResult {
   eliminatedName: string | null;
   eliminatedRole: string | null;
   winTeam: "crew" | "alien" | "tie";
-  allRoles: { playerId: string; stablePlayerId?: string; playerName: string; role: string; initialRole: string; alive: boolean }[];
+  allRoles: { playerId: string; stablePlayerId?: string; playerName: string; role: string; initialRole: string; alive: boolean; alignment?: "Good" | "Bad" }[];
   centerCards: string[];
 }
 
@@ -114,6 +115,7 @@ export interface PrivateFeedback {
     | "shifter_exchange"
     | "virus_result"
     | "router_result"
+    | "doctor_result"
     | "skipped"
     | "no_action"
     | "passive"
@@ -148,7 +150,9 @@ export interface GameState {
   votingStartedAt: number | null;
   emergencyVote: EmergencyVoteState;
   votes: Record<string, string>;
+  chaoticAlignments: Record<string, "Good" | "Bad">;
   voteResult: VoteResult | null;
+  anesthetizedPlayers: string[];
   roundSummary: RoundSummary;
   createdAt: number;
   /** Stable playerIds (UUIDs) that have been kicked — these players cannot rejoin. */
@@ -235,6 +239,7 @@ const PASSIVE_ROLE_IDS = new Set(["crew", "parasite"]);
 
 /** Strict resolution order for ability processing. */
 const ROLE_ORDER = [
+  "doctor",
   "virus",
   "router",
   "sentinel",
@@ -329,6 +334,8 @@ export function createGame(sessionId: string, hostPlayer: Player): GameState {
     votingStartedAt: null,
     emergencyVote: freshEmergencyVote(),
     votes: {},
+    chaoticAlignments: {},
+    anesthetizedPlayers: [],
     voteResult: null,
     roundSummary: freshRoundSummary(),
     createdAt: Date.now(),
@@ -403,6 +410,7 @@ export function startGame(
   state.votingStartedAt = null;
   state.emergencyVote = freshEmergencyVote();
   state.votes = {};
+  state.anesthetizedPlayers = [];
   state.voteResult = null;
   state.roundSummary = freshRoundSummary();
   state.orbitFeedback = {};
@@ -436,6 +444,22 @@ export function acknowledgeRole(
     state.roleAcknowledgements.push(playerId);
   }
   if (revealAction) {
+    const roleId = state.rolesAssigned[playerId];
+    
+    // ROLE AUTHORITY VALIDATION (Reveal Phase)
+    if (roleId === "doctor" && revealAction.type !== "anesthetize") {
+       return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "invalid doctor action" };
+    }
+    if (roleId === "virus" && revealAction.type !== "packet_loss") {
+       return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "invalid virus action" };
+    }
+    if (roleId === "router" && revealAction.type !== "gateway_hijack") {
+       return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "invalid router action" };
+    }
+    if (roleId !== "doctor" && roleId !== "virus" && roleId !== "router" && roleId !== "chaotic") {
+       return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "unauthorized reveal action" };
+    }
+
     // Prevent reveal-phase roles (Virus, Router) from targeting spectators
     for (const tId of (revealAction.targets || [])) {
       const targetPlayer = state.players.find(p => p.id === tId);
@@ -444,6 +468,10 @@ export function acknowledgeRole(
       }
     }
     state.revealActions[playerId] = revealAction;
+    if (revealAction.alignment) {
+      if (!state.chaoticAlignments) state.chaoticAlignments = {};
+      state.chaoticAlignments[playerId] = revealAction.alignment;
+    }
   }
 
   const orbitInfo = computeOrbitInfo(state, playerId);
@@ -545,14 +573,40 @@ export function submitAction(
   action: PlayerAction,
 ): ActionResult {
   if (state.phase !== "orbit_action") {
-    return { accepted: false, allSubmitted: false, error: "wrong phase" };
-  }
-  if (!state.players.some((p) => p.id === playerId)) {
-    return { accepted: false, allSubmitted: false, error: "not in session" };
+    return { accepted: false, allSubmitted: false, error: "Phase protocol mismatch: orbit_action required" };
   }
   const player = state.players.find(p => p.id === playerId);
-  if (player?.isSpectator) {
-    return { accepted: false, allSubmitted: false, error: "spectators cannot act" };
+  if (!player) {
+    return { accepted: false, allSubmitted: false, error: "Identity verification failed: player not in session" };
+  }
+  if (player.isSpectator) {
+    return { accepted: false, allSubmitted: false, error: "Spectator interference prohibited" };
+  }
+
+  // ── FINALITY LOCK ──
+  // Prevent race conditions or double-submissions
+  if (state.orbitCompleted.includes(playerId)) {
+    return { accepted: false, allSubmitted: false, error: "Action already synchronized" };
+  }
+
+  // ── ROLE AUTHORITY VALIDATION ──
+  // Strictly enforce that the player's role is allowed to perform the submitted action type
+  const roleId = state.rolesAssigned[playerId];
+  const allowedActions: Record<string, string[]> = {
+    scanner: ["scan_player", "scan_deck", "skip"],
+    alien: ["alien_view", "skip"],
+    disruptor: ["disrupt", "skip"],
+    commander: ["boost", "skip"],
+    warper: ["warp", "skip"],
+    shifter: ["exchange", "skip"],
+    sentinel: ["watch", "skip"],
+    seeker: ["seek", "skip"],
+    parasite: ["passive", "none"], // Auto-handled
+    crew: ["none"], // Auto-handled
+  };
+
+  if (!allowedActions[roleId]?.includes(action.type)) {
+    return { accepted: false, allSubmitted: false, error: `Unauthorized protocol for role: ${roleId}` };
   }
 
   // Prevent targeting spectators in Orbit phase
@@ -561,7 +615,7 @@ export function submitAction(
     if (tId.startsWith("center_")) continue;
     const targetPlayer = state.players.find(p => p.id === tId);
     if (targetPlayer && targetPlayer.isSpectator) {
-      return { accepted: false, allSubmitted: false, error: "cannot target spectators" };
+      return { accepted: false, allSubmitted: false, error: "Targeting spectators is prohibited" };
     }
   }
 
@@ -622,7 +676,19 @@ export function resolveRound(state: GameState): ResolutionResult {
     for (const actor of actors) {
       const action = state.orbitActions[actor.id];
 
-      // Virus and Router act during Role Reveal — log their reveal action in the summary
+      // Roles that act during Role Reveal
+      if (roleId === "doctor") {
+        const revealAction = state.revealActions[actor.id];
+        if (revealAction && revealAction.targets[0]) {
+          const target = state.players.find(p => p.id === revealAction.targets[0]);
+          feedback[actor.id] = { type: "doctor_result", data: { targetName: target?.name ?? "a player" } };
+          logActor(actor.name, actor.id, `anesthetized ${target?.name ?? "a player"}`);
+        } else {
+          feedback[actor.id] = { type: "skipped" };
+          logActor(actor.name, actor.id, "skipped their ability");
+        }
+        continue;
+      }
       if (roleId === "virus") {
         const revealAction = state.revealActions[actor.id];
         if (revealAction && revealAction.targets[0]) {
@@ -641,7 +707,7 @@ export function resolveRound(state: GameState): ResolutionResult {
           const source = state.players.find(p => p.id === revealAction.targets[0]);
           const dest = state.players.find(p => p.id === revealAction.targets[1]);
           feedback[actor.id] = { type: "router_result", data: { sourceName: source?.name ?? "a player", destName: dest?.name ?? "another player" } };
-          logActor(actor.name, actor.id, `hijacked ${source?.name ?? "a player"}'s ability to redirect to ${dest?.name ?? "another player"}`);
+          logActor(actor.name, actor.id, `hijacked ${source?.name ?? "a player"}'s ability`);
         } else {
           feedback[actor.id] = { type: "skipped" };
           logActor(actor.name, actor.id, "skipped their ability");
@@ -669,15 +735,29 @@ export function resolveRound(state: GameState): ResolutionResult {
         continue;
       }
 
+      const originalTargets = [...action.targets];
       let targets = [...action.targets];
 
       // Router Effect: Gateway Hijack
       if (state.hijackedTargets[actor.id]) {
         const destinationId = state.hijackedTargets[actor.id];
-        const destination = state.players.find(p => p.id === destinationId);
-        if (destination) {
-          targets = [destinationId];
-          logActor(actor.name, actor.id, `gateway was hijacked (redirected to ${destination.name})`);
+        
+        // REFINEMENT: Hijack only applies to actions targeting players.
+        // It does NOT redirect Deck-based actions (center_*) or affect certain roles.
+        const isDeckAction = action?.targets?.some(t => t.startsWith("center_"));
+        const isExemptRole = ["alien", "commander", "crew"].includes(roleId);
+
+        if (!isDeckAction && !isExemptRole) {
+          const destination = state.players.find(p => p.id === destinationId);
+          if (destination) {
+            if (roleId === "warper") {
+              // Special rule: Warper is forced to change their redirect target (second target)
+              // Example: Warper (B) C -> D becomes C -> E (where E is Router's target)
+              targets = [targets[0], destinationId];
+            } else {
+              targets = [destinationId];
+            }
+          }
         }
       }
 
@@ -760,8 +840,13 @@ export function resolveRound(state: GameState): ResolutionResult {
             logActor(actor.name, actor.id, "(Disruptor) attempted to block — target was immune");
           } else {
             blockedPlayers.add(targetId);
+            const originalTarget = state.players.find(p => p.id === originalTargets[0]);
             logInternal(targetId, "ability was blocked");
-            logActor(actor.name, actor.id, `(Disruptor) blocked ${targetPlayer?.name ?? "a player"}'s ability`);
+            logActor(
+              actor.name, 
+              actor.id, 
+              `(Disruptor) blocked ${originalTarget?.name ?? "a player"}'s ability`
+            );
           }
           break;
         }
@@ -778,7 +863,13 @@ export function resolveRound(state: GameState): ResolutionResult {
           const target = state.players.find((p) => p.id === targets[0]);
           if (target) {
             const role = state.rolesAssigned[target.id];
-            const alignment = role === "alien" || role === "parasite" ? "Bad" : "Good";
+            let alignment = role === "alien" || role === "parasite" || role === "virus" ? "Bad" : "Good";
+            
+            // Chaotic Alignment Override
+            if (role === "chaotic" && state.chaoticAlignments[target.id]) {
+              alignment = state.chaoticAlignments[target.id];
+            }
+
             feedback[actor.id] = {
               type: "seek_result",
               data: { targetName: target.name, alignment },
@@ -816,16 +907,22 @@ export function resolveRound(state: GameState): ResolutionResult {
             const roleB = state.rolesAssigned[tB];
             state.rolesAssigned[tA] = roleB;
             state.rolesAssigned[tB] = roleA;
+            const originalA = state.players.find(p => p.id === originalTargets[0]);
+            const originalB = state.players.find(p => p.id === originalTargets[1]);
+
             logInternal(tA, "role was swapped by a warper");
             logInternal(tB, "role was swapped by a warper");
             feedback[actor.id] = {
               type: "warper_swap",
-              data: { playerAName: playerA.name, playerBName: playerB.name },
+              data: { 
+                playerAName: originalA?.name ?? playerA.name, 
+                playerBName: originalB?.name ?? playerB.name 
+              },
             };
             logActor(
               actor.name,
               actor.id,
-              `swapped the roles of ${playerA.name} and ${playerB.name}`,
+              `swapped the roles of ${originalA?.name ?? playerA.name} and ${originalB?.name ?? playerB.name}`,
             );
           } else {
             feedback[actor.id] = { type: "no_action" };
@@ -1039,32 +1136,38 @@ export function castVote(
   targetId: string,
 ): VoteCastResult {
   if (state.phase !== "voting") {
-    return { accepted: false, votingComplete: false, error: "wrong phase" };
-  }
-  if (!state.players.some((p) => p.id === voterId)) {
-    return { accepted: false, votingComplete: false, error: "not in session" };
+    return { accepted: false, votingComplete: false, error: "Phase protocol mismatch: voting phase required" };
   }
   const voter = state.players.find(p => p.id === voterId);
-  if (voter?.isSpectator) {
-    return { accepted: false, votingComplete: false, error: "spectators cannot vote" };
+  if (!voter) {
+    return { accepted: false, votingComplete: false, error: "Identity verification failed: player not in session" };
+  }
+  if (voter.isSpectator) {
+    return { accepted: false, votingComplete: false, error: "Spectators cannot vote" };
   }
 
-  // No re-voting
-  if (state.votes[voterId] !== undefined) {
-    return { accepted: true, votingComplete: false };
+  // ── FINALITY LOCK ──
+  // Prevent changing votes or double-voting once synchronized
+  if (state.votes[voterId]) {
+    return { accepted: false, votingComplete: false, error: "Vote already synchronized and locked" };
+  }
+
+  // ── ANESTHESIA ENFORCEMENT ──
+  if (voter?.playerId && state.anesthetizedPlayers?.includes(voter.playerId)) {
+    return { accepted: false, votingComplete: false, error: "Neural link inhibited: you cannot cast a vote this round" };
   }
 
   // Validate target
   if (targetId !== "abstain") {
     if (targetId === voterId) {
-      return { accepted: false, votingComplete: false, error: "no self-vote" };
+      return { accepted: false, votingComplete: false, error: "Self-targeting prohibited in voting protocol" };
     }
     const targetPlayer = state.players.find((p) => p.id === targetId);
     if (!targetPlayer) {
-      return { accepted: false, votingComplete: false, error: "invalid target" };
+      return { accepted: false, votingComplete: false, error: "Target not found in session" };
     }
     if (targetPlayer.isSpectator) {
-      return { accepted: false, votingComplete: false, error: "cannot target spectators" };
+      return { accepted: false, votingComplete: false, error: "Targeting spectators is prohibited" };
     }
   }
 
@@ -1082,7 +1185,11 @@ export function castVote(
 
   // Check if all *active* (connected) players have voted
   const activeCount = getActivePlayers(state).length;
-  if (Object.keys(state.votes).length < activeCount) {
+  const activeAnesthetizedCount = (state.anesthetizedPlayers || []).filter(pId => 
+    state.players.find(p => p.playerId === pId)?.connectionStatus === "connected"
+  ).length;
+  
+  if (Object.keys(state.votes).length < (activeCount - activeAnesthetizedCount)) {
     return { accepted: true, votingComplete: false };
   }
 
@@ -1166,7 +1273,11 @@ export function recheckVotingCompletion(state: GameState): VoteCastResult {
   }
 
   const activeCount = getActivePlayers(state).length;
-  if (Object.keys(state.votes).length < activeCount) {
+  const activeAnesthetizedCount = (state.anesthetizedPlayers || []).filter(pId => 
+    state.players.find(p => p.playerId === pId)?.connectionStatus === "connected"
+  ).length;
+
+  if (Object.keys(state.votes).length < (activeCount - activeAnesthetizedCount)) {
     return { accepted: true, votingComplete: false };
   }
 
@@ -1258,16 +1369,25 @@ export function tallyVotes(state: GameState): VoteResult {
     role: state.rolesAssigned[p.id] ?? "unknown",
     initialRole: state.initialRoles[p.id] ?? "unknown",
     alive: p.alive !== false,
+    alignment: state.chaoticAlignments?.[p.id],
   }));
 
   const centerCards = state.centerCards ?? [];
 
+  const isAlienInPlay = Object.values(state.rolesAssigned).includes("alien");
+  const isParasiteInPlay = Object.values(state.rolesAssigned).includes("parasite");
+  const isVirusInPlay = Object.values(state.rolesAssigned).includes("virus");
+  
+  // Any "Bad" role makes a tie (no-one voted out) an Alien win.
+  const isAnyEvilInPlay = isAlienInPlay || isParasiteInPlay || isVirusInPlay;
+
   if (topTargets.length !== 1 || !topTargets[0]) {
+    // TIE OR NO VOTES: Bad roles win by default if present
     return {
       eliminatedId: null,
-      eliminatedName: null,
+      eliminatedName: topTargets.length > 1 ? "DEADLOCK: Consensus failure" : "No protocol targeted",
       eliminatedRole: null,
-      winTeam: "tie",
+      winTeam: isAnyEvilInPlay ? "alien" : "tie",
       allRoles,
       centerCards,
     };
@@ -1276,8 +1396,23 @@ export function tallyVotes(state: GameState): VoteResult {
   const eliminatedId = topTargets[0];
   const eliminated = state.players.find((p) => p.id === eliminatedId);
   const eliminatedRole = state.rolesAssigned[eliminatedId] ?? "unknown";
-  const isAlienInPlay = Object.values(state.rolesAssigned).includes("alien");
-  const winTeam = (eliminatedRole === "alien" || (!isAlienInPlay && eliminatedRole === "parasite")) ? "crew" : "alien";
+  
+  /**
+   * WIN HIERARCHY (The most "Evil" role present must be the one eliminated):
+   * 1. If Alien is in play, they MUST be voted out for Crew to win.
+   * 2. If no Alien, but Parasite is in play, Parasite MUST be voted out for Crew to win.
+   * 3. If no Alien and no Parasite, but Virus is in play, Virus MUST be voted out for Crew to win.
+   * 4. If none of the above are in play (All Crew), voting anyone out results in an Alien win (Crew loss).
+   */
+  let winTeam: "crew" | "alien" | "tie" = "alien";
+  
+  if (eliminatedRole === "alien") {
+    winTeam = "crew";
+  } else if (!isAlienInPlay && eliminatedRole === "parasite") {
+    winTeam = "crew";
+  } else if (!isAlienInPlay && !isParasiteInPlay && eliminatedRole === "virus") {
+    winTeam = "crew";
+  }
 
   return {
     eliminatedId,
@@ -1320,6 +1455,8 @@ export function restartGame(state: GameState): GameState {
   state.votingStartedAt = null;
   state.emergencyVote = freshEmergencyVote();
   state.votes = {};
+  state.anesthetizedPlayers = [];
+  state.chaoticAlignments = {};
   state.voteResult = null;
   state.roundSummary = freshRoundSummary();
   state.interruptedFromPhase = undefined;
@@ -1367,6 +1504,10 @@ export function reconnectPlayer(state: GameState, oldId: string, newId: string):
 
   // Remap keyed records
   const remap = (record: any, name: string) => {
+    if (!record) {
+      console.log(`[reconnectPlayer] WARNING: ${name} record itself is undefined! Initializing...`);
+      return;
+    }
     if (record[oldId] !== undefined) {
       record[newId] = record[oldId];
       delete record[oldId];
@@ -1376,17 +1517,27 @@ export function reconnectPlayer(state: GameState, oldId: string, newId: string):
     }
   };
 
+  // Ensure record fields exist before remapping to avoid crashes with legacy sessions
+  state.rolesAssigned = state.rolesAssigned || {};
+  state.initialRoles = state.initialRoles || {};
+  state.orbitActions = state.orbitActions || {};
+  state.orbitFeedback = state.orbitFeedback || {};
+  state.votes = state.votes || {};
+  state.chaoticAlignments = state.chaoticAlignments || {};
+
   remap(state.rolesAssigned, "rolesAssigned");
   remap(state.initialRoles, "initialRoles");
   remap(state.orbitActions, "orbitActions");
   remap(state.orbitFeedback, "orbitFeedback");
   remap(state.votes, "votes");
+  remap(state.chaoticAlignments, "chaoticAlignments");
 
   // Remap arrays of IDs
   const remapArray = (arr: string[]) => arr.map((id) => (id === oldId ? newId : id));
   state.orbitCompleted = remapArray(state.orbitCompleted);
   state.roleAcknowledgements = remapArray(state.roleAcknowledgements);
   state.resolutionAcknowledgements = remapArray(state.resolutionAcknowledgements);
+  // anesthetizedPlayers uses stable playerId — no remapping required
 
   // Remap emergency vote state (yesVoters, noVoters, callerId all use socket IDs)
   if (state.emergencyVote) {
@@ -1521,15 +1672,35 @@ export function kickPlayer(
 export function processRevealActions(state: GameState): void {
   state.jammedPlayerId = null;
   state.hijackedTargets = {};
+  state.anesthetizedPlayers = [];
 
   for (const [actorId, action] of Object.entries(state.revealActions)) {
     const role = state.rolesAssigned[actorId];
-    if (role === "virus") {
-      state.jammedPlayerId = action.targets[0] || null;
+    if (role === "doctor") {
+      const targetSocketId = action.targets[0];
+      const target = state.players.find(p => p.id === targetSocketId);
+      const actor = state.players.find(p => p.id === actorId);
+      if (target?.playerId && actor?.playerId && target.playerId !== actor.playerId) {
+        state.anesthetizedPlayers.push(target.playerId);
+      }
+    } else if (role === "virus") {
+      const targetId = action.targets[0];
+      const targetRole = state.rolesAssigned[targetId];
+      // REFINEMENT: Router is immune to Packet Loss (Jamming)
+      if (targetId && targetRole !== "router") {
+        state.jammedPlayerId = targetId;
+      }
     } else if (role === "router") {
       const [sourceId, destId] = action.targets;
-      if (sourceId && destId) {
+      const sourceRole = state.rolesAssigned[sourceId];
+      // REFINEMENT: Virus is immune to Gateway Hijack
+      if (sourceId && destId && sourceRole !== "virus") {
         state.hijackedTargets[sourceId] = destId;
+      }
+    } else if (role === "chaotic") {
+      const alignment = action.targets[0] as "Good" | "Bad";
+      if (alignment) {
+        state.chaoticAlignments[actorId] = alignment;
       }
     }
   }
@@ -1717,10 +1888,9 @@ export function endGame(
   if (!requester.isHost) return { accepted: false, error: "Only host can end the game" };
   if (state.phase !== "interrupted") return { accepted: false, error: "Game is not interrupted" };
 
-  // Mark that the host ended the interrupt — prevents auto-resume on late reconnects.
-  // restartGame() clears this along with interruptedFromPhase and playersInGrace.
-  state.hostEndedInterrupt = true;
-  restartGame(state);
+  // Mark that the host ended the session — terminates for all players.
+  state.status = "closed";
+  state.joinable = false;
   return { accepted: true };
 }
 

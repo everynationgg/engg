@@ -10,6 +10,7 @@ import shifterImg from "@assets/role-shifter_1776003488682.webp";
 import warperImg from "@assets/role-warper_1776003488682.webp";
 import virusImg from "@assets/role-virus.webp";
 import routerImg from "@assets/role-router.webp";
+import doctorImg from "@assets/role-doctor.webp";
 import spectatorImg from "@assets/role-spectator.webp";
 
 import alienVid from "@assets/role-alien.webm";
@@ -24,6 +25,7 @@ import shifterVid from "@assets/role-shifter.webm";
 import warperVid from "@assets/role-warper.webm";
 import virusVid from "@assets/role-virus.webm";
 import routerVid from "@assets/role-router.webm";
+import doctorVid from "@assets/role-doctor.webm";
 import spectatorVid from "@assets/role-spectator.webm";
 
 
@@ -39,6 +41,7 @@ import shifterEvictionVid from "@assets/role-shifter-eviction.webm";
 import warperEvictionVid from "@assets/role-warper-eviction.webm";
 import virusEvictionVid from "@assets/role-virus-eviction.webm";
 import routerEvictionVid from "@assets/role-router-eviction.webm";
+import doctorEvictionVid from "@assets/role-doctor-eviction.webm";
 import spectatorEvictionVid from "@assets/role-spectator.webm";
 
 export type RoleTeam = "alien" | "crew" | "chaotic" | "spectator";
@@ -52,6 +55,8 @@ export interface Role {
   video: string;
   evictionVideo: string;
   winCondition: string;
+  abilityName: string;
+  abilityDescription: string;
   ability: string;
   notes: string;
   salutation: string;
@@ -71,7 +76,9 @@ export const ROLES: Role[] = [
     video: spectatorVid,
     evictionVideo: spectatorEvictionVid,
     winCondition: "Just watching. No win/lose.",
-    ability: "Observe the game. No actions.",
+    abilityName: "Omniscient Observation",
+    abilityDescription: "Observe the game from the digital ether. You see all actions, votes, and roles, but your presence cannot influence the outcome.",
+    ability: "Observe the game from the digital ether. You see all actions, votes, and roles, but your presence cannot influence the outcome.",
     notes: "Cannot interact, vote, or act. Only sees the game.",
     salutation: "You are a Spectator, {username}. Enjoy the show!",
     lore: "You are here to watch, not to play. You see everything, but cannot interact or influence the outcome. Sit back and enjoy the chaos.",
@@ -86,7 +93,9 @@ export const ROLES: Role[] = [
     video: alienVid,
     evictionVideo: alienEvictionVid,
     winCondition: "Do not get voted out",
-    ability: "View 1 center card",
+    abilityName: "Shadow Infiltration",
+    abilityDescription: "View 1 center card to verify its signature. Keep your true form hidden from the crew.",
+    ability: "View 1 center card to verify its signature. Keep your true form hidden from the crew.",
     notes: "None",
     salutation: "Greetings, {username}. Your true form remains hidden.",
     lore: "You are the apex predator aboard this vessel.\nYour kind has infiltrated the crew undetected.\nEvery smile, every handshake — a calculated act.\n\nDo not reveal yourself.\nSurvive long enough, and victory is yours.",
@@ -101,7 +110,9 @@ export const ROLES: Role[] = [
     video: parasiteVid,
     evictionVideo: parasiteEvictionVid,
     winCondition: "Get voted out",
-    ability: "See Alien(s)",
+    abilityName: "Hive Mind Link",
+    abilityDescription: "Locate and synchronize with the Alien(s) at the start of the match. You work in the shadows to draw suspicion away from the Hive.",
+    ability: "Locate and synchronize with the Alien(s) at the start of the match. You work in the shadows to draw suspicion away from the Hive.",
     notes: "Alien cannot see you",
     salutation: "{username}, your loyalty is your weapon.",
     lore: "You serve the Alien without their knowledge of you.\nYou seek to be voted out — a willing sacrifice that destabilizes the crew.\n\nYour death is not failure.\nYour death is the plan.",
@@ -116,7 +127,9 @@ export const ROLES: Role[] = [
     video: disruptorVid,
     evictionVideo: disruptorEvictionVid,
     winCondition: "Depends on chosen alignment",
-    ability: "Block 1 player's ability",
+    abilityName: "Signal Jamming",
+    abilityDescription: "Select one player to jam their transmitter. Their ability will be neutralized for the duration of this round.",
+    ability: "Select one player to jam their transmitter. Their ability will be neutralized for the duration of this round.",
     notes: "None",
     salutation: "{username}, the system has cracks — and you are one of them.",
     lore: "You answer to no one.\nYour allegiance shifts with the wind, your ability to block others cuts deep.\n\nChoose your side wisely.\nThe outcome of this game depends on which team you decide to serve.",
@@ -131,7 +144,9 @@ export const ROLES: Role[] = [
     video: shifterVid,
     evictionVideo: shifterEvictionVid,
     winCondition: "Depends on chosen alignment",
-    ability: "Steal another player's role",
+    abilityName: "Identity Hijack",
+    abilityDescription: "Select one player to extract and overwrite their identity. You assume their role and objectives entirely.",
+    ability: "Select one player to extract and overwrite their identity. You assume their role and objectives entirely.",
     notes: "None",
     salutation: "Who are you really, {username}?",
     lore: "Identities are not permanent — not for you.\nYou can steal another player's role entirely, replacing your fate with theirs.\n\nDecide your allegiance.\nThen become whoever you need to be to win.",
@@ -146,7 +161,9 @@ export const ROLES: Role[] = [
     video: warperVid,
     evictionVideo: warperEvictionVid,
     winCondition: "Depends on chosen alignment",
-    ability: "Swap 2 players' roles",
+    abilityName: "Reality Fracture",
+    abilityDescription: "Select two players to swap their digital signatures. They will trade roles without knowing the source of the shift.",
+    ability: "Select two players to swap their digital signatures. They will trade roles without knowing the source of the shift.",
     notes: "None",
     salutation: "{username}, reality bends to your will.",
     lore: "You hold the power to reassign fates.\nTwo players. Two roles. Swapped without warning.\n\nYou are neither crew nor alien until you choose.\nUse your power at the right moment and reshape the outcome of everything.",
@@ -161,7 +178,9 @@ export const ROLES: Role[] = [
     video: commanderVid,
     evictionVideo: commanderEvictionVid,
     winCondition: "Eliminate Alien",
-    ability: "Obtain +1 additional vote",
+    abilityName: "Command Authority",
+    abilityDescription: "Activate to double the weight of your vote. If successful, your input counts as 2 units in the final tally.",
+    ability: "Activate to double the weight of your vote. If successful, your input counts as 2 units in the final tally.",
     notes: "Activate during the ability phase. If blocked, bonus is lost.",
     salutation: "Commander {username}, your crew needs you.",
     lore: "You are the backbone of this operation.\nYour vote carries weight, your word carries authority.\n\nActivate your command authority during the orbit phase.\nIf successful, your vote counts double this round.",
@@ -176,7 +195,9 @@ export const ROLES: Role[] = [
     video: crewVid,
     evictionVideo: crewEvictionVid,
     winCondition: "Eliminate Alien",
-    ability: "None",
+    abilityName: "System Maintenance",
+    abilityDescription: "You have no specialized abilities. Use your deduction and teamwork to expose the intruder.",
+    ability: "You have no specialized abilities. Use your deduction and teamwork to expose the intruder.",
     notes: "None",
     salutation: "Welcome aboard, {username}.",
     lore: "You are the foundation of the crew.\nNo special powers. No hidden agenda.\n\nYour greatest strength is your numbers.\nTrust carefully, speak openly, and vote with conviction.",
@@ -191,7 +212,9 @@ export const ROLES: Role[] = [
     video: sentinelVid,
     evictionVideo: sentinelEvictionVid,
     winCondition: "Eliminate Alien",
-    ability: "See all actions affecting 1 player in order",
+    abilityName: "Event Logging",
+    abilityDescription: "Select a player to monitor. You will receive a detailed log of all actions that affected them this round.",
+    ability: "Select a player to monitor. You will receive a detailed log of all actions that affected them this round.",
     notes: "None",
     salutation: "{username}, nothing escapes your watch.",
     lore: "You observe everything that happens to those you protect.\nActions leave traces — and you read them all.\n\nKnowledge is your armor.\nUse it to expose the alien before it's too late.",
@@ -206,7 +229,9 @@ export const ROLES: Role[] = [
     video: scannerVid,
     evictionVideo: scannerEvictionVid,
     winCondition: "Eliminate Alien",
-    ability: "View 2 center cards OR view 1 player's original role",
+    abilityName: "Deep Scan",
+    abilityDescription: "Analyze 2 center cards to identify unassigned roles, OR scan 1 player to learn their original role assignment.",
+    ability: "Analyze 2 center cards to identify unassigned roles, OR scan 1 player to learn their original role assignment.",
     notes: "Cannot be blocked",
     salutation: "Scanning identity: {username}. Verified.",
     lore: "Your equipment cuts through deception like a blade.\nNo ability can block your scan. No lie survives your analysis.\n\nTwo center cards or one player's origin — choose wisely.\nThe truth you uncover could save everyone.",
@@ -221,7 +246,9 @@ export const ROLES: Role[] = [
     video: seekerVid,
     evictionVideo: seekerEvictionVid,
     winCondition: "Eliminate Alien",
-    ability: "Learn if a player is Good or Bad",
+    abilityName: "Alignment Pulse",
+    abilityDescription: "Ping a player to determine their core alignment. The result will return as either 'Good' or 'Bad'.",
+    ability: "Ping a player to determine their core alignment. The result will return as either 'Good' or 'Bad'.",
     notes: "None",
     salutation: "{username}, the hunt begins now.",
     lore: "You can sense alignment where others see only faces.\nOne question, one player — good or bad.\n\nYour instincts are your compass.\nFollow them, and the alien cannot hide forever.",
@@ -236,8 +263,10 @@ export const ROLES: Role[] = [
     video: virusVid,
     evictionVideo: virusEvictionVid,
     winCondition: "Alien Team Wins",
-    ability: "You used Packet Loss on (target). They are corrupted.",
-    notes: "Acts during Role Reveal. Cannot target Aliens.",
+    abilityName: "Packet Loss",
+    abilityDescription: "Acts during Role Reveal. Target a non-alien player to corrupt their interface. Their next action will target a random entity. Immune to Router.",
+    ability: "Acts during Role Reveal. Target a non-alien player to corrupt their interface. Their next action will target a random entity. Immune to Router.",
+    notes: "Acts during Role Reveal. Cannot target Aliens. Immune to Router.",
     salutation: "System compromised. Target identified: {username}.",
     lore: "You are a ghost in the machine. A digital plague.\nDuring the reveal, choose a crew member to disconnect from reality.\n\nIn the next round, they will wander blind,\ntargeting ghosts in a glitched interface.",
     canAct: false,
@@ -253,10 +282,31 @@ export const ROLES: Role[] = [
     video: routerVid,
     evictionVideo: routerEvictionVid,
     winCondition: "Chaotic Victory",
-    ability: "Gateway Hijack — During Reveal, select a 'Source' player and a 'Destination' player. The Source's next ability will be forced onto the Destination.",
-    notes: "Acts during Role Reveal.",
+    abilityName: "Gateway Hijack",
+    abilityDescription: "Acts during Role Reveal. Select a 'Source' and a 'Destination' player. The Source's ability will be redirected to the Destination. Immune to Virus.",
+    ability: "Acts during Role Reveal. Select a 'Source' and a 'Destination' player. The Source's ability will be redirected to the Destination. Immune to Virus.",
+    notes: "Acts during Role Reveal. Immune to Virus.",
     salutation: "Traffic intercepted. Where shall we send them, {username}?",
     lore: "Information is traffic, and you own the hub.\nDuring the reveal, build a bridge between two players.\n\nOne will reach out, the other will receive.\nThey will never know the path was altered until it's too late.",
+    canAct: false,
+    isLocked: true,
+    price: "$2.99",
+  },
+  {
+    id: "doctor",
+    name: "Doctor",
+    team: "crew",
+    alignment: "Crew Team",
+    image: doctorImg,
+    video: doctorVid,
+    evictionVideo: doctorEvictionVid,
+    winCondition: "Crew wins.",
+    abilityName: "Anesthetize",
+    abilityDescription: "Acts during Role Reveal. Target one player to prevent them from casting a vote during the next Voting Phase.",
+    ability: "Acts during Role Reveal. Target one player to prevent them from casting a vote during the next Voting Phase.",
+    notes: "Acts during Role Reveal. Cannot be blocked by Disruptor. The target knows they are anesthetized, but others do not. Nullifies Commander's bonus vote.",
+    salutation: "Doctor {username}, your medical expertise is vital.",
+    lore: "You are the guardian of health and order aboard this station.\nYour skills go beyond simple medicine — you can temporarily disconnect a player's cognitive functions, ensuring they cannot interfere with critical decisions.\n\nAct during the role reveal.\nChoose carefully, for your choice is blind, and its impact is absolute.",
     canAct: false,
     isLocked: true,
     price: "$2.99",

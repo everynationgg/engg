@@ -16,14 +16,71 @@ Sentry.init({
 });
 
 const app: Express = express();
-app.set("trust proxy", 1);
+app.set("trust proxy", 1); // Trust the first proxy (Fly.io/Vercel) to satisfy express-rate-limit security checks
 // Security headers
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      reportOnly: true, // Start in report-only mode as requested
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'", 
+          "https://*.paypal.com:*", 
+          "https://*.paypalobjects.com",
+          "https://*.braintreegateway.com",
+          "https://apis.google.com",
+          "https://static.cloudflareinsights.com",
+          "'unsafe-inline'",
+          "'unsafe-eval'",
+        ],
+        connectSrc: [
+          "'self'",
+          "https://*.paypal.com:*",
+          "https://*.paypalobjects.com",
+          "https://*.braintreegateway.com",
+          "https://api-m.paypal.com",
+          "https://api-m.sandbox.paypal.com",
+          "https://static.cloudflareinsights.com",
+          "wss://*.engg.online",
+        ],
+        frameSrc: [
+          "'self'",
+          "https://www.paypal.com",
+          "https://www.sandbox.paypal.com",
+        ],
+        imgSrc: [
+          "'self'", 
+          "data:", 
+          "https://www.paypalobjects.com",
+        ],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: [],
+      },
+    },
+    hsts: {
+      maxAge: 31536000, // 1 year
+      includeSubDomains: true,
+      preload: true,
+    },
+    referrerPolicy: {
+      policy: "strict-origin-when-cross-origin",
+    },
+    frameguard: {
+      action: "deny",
+    },
+    xContentTypeOptions: true,
+  })
+);
 
 const DEFAULT_ALLOWED_ORIGINS = new Set([
   "https://engg.online",
   "https://www.engg.online",
   "https://end.engg.online",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
 ]);
 
 function isAllowedOrigin(origin?: string): boolean {
@@ -64,7 +121,7 @@ app.get("/api/healthz", (_req, res) => {
 // Rate limiting - prevent brute force
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // max 300 requests per window (increased from 100)
+  max: 1000, // max 1000 requests per window (increased from 300)
   message: { error: "Too many requests, please try again later." },
   standardHeaders: true,
   legacyHeaders: false,
@@ -79,14 +136,18 @@ const globalLimiter = rateLimit({
       /^\/api\/games\/[^/]+\/chat\/since\//.test(path)
     );
   },
+  validate: { trustProxy: false },
 });
 
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10, // stricter limit for auth routes
+  windowMs: 60 * 1000, // 1 minute window for faster recovery
+  max: 100, // 100 requests per minute
   message: { error: "Too many auth attempts, please try again later." },
   standardHeaders: true,
   legacyHeaders: false,
+  // Skip the 'me' endpoint from strict auth limiting as it's called on every page mount/refresh
+  skip: (req: Request) => req.path === "/auth/me" || req.path === "/me",
+  validate: { trustProxy: false },
 });
 
 app.use(globalLimiter);
@@ -151,7 +212,7 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 // Example: Call logReplay(gameId, replayData) at the end of each game session
-app.use(logReplay);
+// (Removed app.use(logReplay) as it is a utility, not middleware)
 
 // Example usage: i18next.t("welcome")
 // TODO: Integrate with API responses and UI

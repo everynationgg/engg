@@ -22,7 +22,7 @@ export function useFocusTrap(isOpen: boolean) {
     if (focusable.length) focusable[0].focus();
 
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key !== "Tab") return;
+      if (e.key !== "Tab" || !node) return;
       const focusables = Array.from(
         node.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
       ).filter(el => !el.hasAttribute('disabled'));

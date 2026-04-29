@@ -24,7 +24,7 @@ export const HealthCheckResponse = zod.object({
 export const registerUserBodyUsernameMin = 3;
 export const registerUserBodyUsernameMax = 50;
 
-export const registerUserBodyPasswordMin = 6;
+export const registerUserBodyPasswordMin = 8;
 
 
 
@@ -40,7 +40,7 @@ export const RegisterUserBody = zod.object({
  * @summary Login user
  */
 export const LoginUserBody = zod.object({
-  "email": zod.string().email(),
+  "email": zod.string(),
   "password": zod.string()
 })
 
@@ -49,8 +49,10 @@ export const LoginUserResponse = zod.object({
   "email": zod.string(),
   "username": zod.string(),
   "token": zod.string(),
+  "refreshToken": zod.string(),
   "isVerified": zod.boolean(),
-  "credits": zod.number()
+  "credits": zod.number(),
+  "isAdmin": zod.boolean()
 })
 
 
@@ -64,7 +66,8 @@ export const GetCurrentUserResponse = zod.object({
   "username": zod.string(),
   "createdAt": zod.coerce.date(),
   "isVerified": zod.boolean(),
-  "credits": zod.number()
+  "credits": zod.number(),
+  "isAdmin": zod.boolean()
 })
 
 
@@ -75,7 +78,8 @@ export const GetCurrentUserResponse = zod.object({
 export const RecordGameResultBody = zod.object({
   "gameId": zod.string().describe('Unique game identifier'),
   "role": zod.string().describe('Role played (alien, crew, commander, etc.)'),
-  "won": zod.enum(['yes', 'no']).describe('Whether player won the game')
+  "won": zod.enum(['yes', 'no']).describe('Whether player won the game'),
+  "alignment": zod.enum(['Good', 'Bad']).optional().describe('Alignment choice (Good/Bad) for chaotic roles')
 })
 
 
@@ -113,6 +117,14 @@ export const GetLeaderboardResponse = zod.object({
   "rank": zod.number()
 })),
   "totalPlayers": zod.number()
+})
+
+/**
+ * Exchange a valid refresh token for a new access token
+ * @summary Refresh access token
+ */
+export const RefreshTokenBody = zod.object({
+  "refreshToken": zod.string()
 })
 
 

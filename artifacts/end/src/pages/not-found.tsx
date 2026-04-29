@@ -7,7 +7,7 @@ const LOG_LINES = [
   "redirect recommended",
 ];
 
-const REDIRECT_URL = "https://engg.online";
+const REDIRECT_URL = "/";
 const COUNTDOWN_START = 5;
 
 interface Ripple {
@@ -44,18 +44,7 @@ export default function NotFound() {
   // Start countdown after all lines are shown
   useEffect(() => {
     if (visibleLines < LOG_LINES.length) return;
-    const id = setInterval(() => {
-      setCountdown((c) => {
-        if (c <= 1) {
-          clearInterval(id);
-          setRedirecting(true);
-          window.location.href = REDIRECT_URL;
-          return 0;
-        }
-        return c - 1;
-      });
-    }, 1000);
-    return () => clearInterval(id);
+    // Countdown removed to prevent forced redirect
   }, [visibleLines]);
 
   function addRipple(e: React.MouseEvent<HTMLAnchorElement>) {
@@ -355,9 +344,7 @@ export default function NotFound() {
 
           {visibleLines >= LOG_LINES.length && (
             <div className="nf-countdown">
-              {redirecting
-                ? "Redirecting..."
-                : <>Auto-redirect in <span>{countdown}s</span></>}
+              SIGNAL_LOST_RECOVERY_PROTOCOL_READY
             </div>
           )}
         </div>

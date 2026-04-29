@@ -23,7 +23,8 @@ export interface GameHistoryEntry {
   id: string;
   gameId: string;
   role: string;
-  won: boolean;
+  won: "yes" | "no" | "draw";
+  alignment?: string;
   playedAt: string;
 }
 
@@ -40,6 +41,7 @@ export interface GameResultData {
   gameId: string;
   role: string;
   won: "yes" | "no";
+  alignment?: string;
 }
 
 export function useRecordGameResult() {
@@ -52,6 +54,7 @@ export function useRecordGameResult() {
   const [isRecording, setIsRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasRecorded, setHasRecorded] = useState(false);
+  const [lastRewards, setLastRewards] = useState<{ xp: number; credits: number } | null>(null);
 
   /**
    * Record a game result and fetch updated stats + leaderboard
@@ -77,8 +80,9 @@ export function useRecordGameResult() {
         body: JSON.stringify(gameResultData),
 });
 
-        if (!recordResponse.ok) {
-          throw new Error("Failed to record game result");
+        if (recordResponse.ok) {
+          const data = await recordResponse.json();
+          if (data.rewards) setLastRewards(data.rewards);
         }
 
         // Fetch updated personal stats
@@ -220,6 +224,7 @@ export function useRecordGameResult() {
     isRecording,
     error,
     hasRecorded,
+    lastRewards,
   };
 }
 
@@ -228,22 +233,20 @@ export function useRecordGameResult() {
  */
 export function determinePlayerWon(
   playerRole: string,
-  winTeam: "crew" | "alien" | "tie"
+  winTeam: "crew" | "alien" | "tie",
+  alignment?: "Good" | "Bad"
 ): boolean {
   if (winTeam === "tie") return false;
 
   const roleObj = ROLES.find((r) => r.id === playerRole);
   if (!roleObj) return false;
 
-  const playerTeam = roleObj.team; // "crew" | "alien" | "chaotic"
+  let playerTeam = roleObj.team;
+  if (playerTeam === "chaotic" && alignment) {
+    playerTeam = (alignment === "Bad") ? "alien" : "crew";
+  }
   
-  // Crew roles win if crew wins
-  if (playerTeam === "crew" && winTeam === "crew") return true;
-  // Alien roles (including parasite) win if alien wins
-  if (playerTeam === "alien" && winTeam === "alien") return true;
-  // Chaotic roles don't win in these outcomes
-  
-  return false;
+  return playerTeam === winTeam;
 }
 
 /**

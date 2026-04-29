@@ -2,22 +2,24 @@ import { Switch, Route, Router as WouterRouter, useLocation, useParams } from "w
 import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import SystemToastContainer from "@/components/SystemToast";
+import SystemToastContainer from "@/components/common/SystemToast";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { PreferencesProvider } from "@/hooks/usePreferences";
-import LandingPage from "@/pages/LandingPage";
-import ProfilePage from "@/pages/ProfilePage";
-import SettingsPage from "@/pages/SettingsPage";
-import VerifyEmailPage from "@/pages/VerifyEmailPage";
-import ResetPasswordPage from "@/pages/ResetPasswordPage";
-import JoinPage from "@/pages/JoinPage";
-import GameShell from "@/pages/GameShell";
+import { PayPalScriptProvider } from "@paypal/react-paypal-js";
+import LandingPage from "@/pages/marketing/LandingPage";
+import ProfilePage from "@/pages/user/ProfilePage";
+import SettingsPage from "@/pages/user/SettingsPage";
+import VerifyEmailPage from "@/pages/auth/VerifyEmailPage";
+import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
+import JoinPage from "@/pages/marketing/JoinPage";
+import GameShell from "@/pages/game/GameShell";
+import AuditLogsPage from "@/pages/admin/AuditLogsPage";
 import NotFound from "@/pages/not-found";
-import GlobalControls from "@/components/GlobalControls";
-import ShipOSBoot from "@/components/ShipOSBoot";
-import ParallaxBackground from "@/components/ParallaxBackground";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import GlobalControls from "@/components/system/GlobalControls";
+import ShipOSBoot from "@/components/system/ShipOSBoot";
+import ParallaxBackground from "@/components/common/ParallaxBackground";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +71,8 @@ function Router() {
         <Route path="/result" component={OldGameRouteRedirect} />
         {/* Game room — /room/:roomCode (must be last before catch-all) */}
         <Route path="/room/:roomCode" component={GameShell} />
+        {/* Admin tools */}
+        <Route path="/admin/logs" component={AuditLogsPage} />
         {/* 404 catch-all */}
         <Route component={NotFound} />
       </Switch>
@@ -78,22 +82,25 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <PreferencesProvider>
-            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}> 
-              <ErrorBoundary>
-                <Router />
-              </ErrorBoundary>
-            </WouterRouter>
-            <Toaster />
-            <SystemToastContainer />
-          </PreferencesProvider>
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <PayPalScriptProvider options={{ "clientId": import.meta.env.VITE_PAYPAL_CLIENT_ID || "test" }}>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <TooltipProvider>
+            <PreferencesProvider>
+              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}> 
+                <ErrorBoundary>
+                  <Router />
+                </ErrorBoundary>
+              </WouterRouter>
+              <Toaster />
+              <SystemToastContainer />
+            </PreferencesProvider>
+          </TooltipProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </PayPalScriptProvider>
   );
 }
 
 export default App;
+

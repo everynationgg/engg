@@ -47,7 +47,16 @@ friendsRouter.get("/user/friends", authMiddleware, async (req: AuthRequest, res)
       .from(usersTable)
       .where(inArray(usersTable.id, friendIds));
 
-    res.json(friends);
+    const io = req.app.get("io");
+    const friendsWithStatus = friends.map(f => {
+      const isOnline = io?.sockets.adapter.rooms.get(`user:${f.id}`)?.size ?? 0;
+      return {
+        ...f,
+        status: isOnline > 0 ? "online" : "offline"
+      };
+    });
+
+    res.json(friendsWithStatus);
   } catch (error) {
     logger.error({ err: error }, "Error fetching friends");
     res.status(500).json({ error: "Failed to fetch friends" });
@@ -109,8 +118,12 @@ friendsRouter.post(
       }
 
       // Check friend exists and no relationship exists in a single round-trip
-      const [targetUser, existingFriendship] = await Promise.all([
-        db.query.usersTable.findFirst({ where: eq(usersTable.id, friendId) }),
+      const [targetUsers, existingFriendship] = await Promise.all([
+        db
+          .select({ id: usersTable.id })
+          .from(usersTable)
+          .where(eq(usersTable.id, friendId))
+          .limit(1),
         db
           .select({ status: friendshipsTable.status })
           .from(friendshipsTable)
@@ -123,7 +136,7 @@ friendsRouter.post(
           .limit(1),
       ]);
 
-      if (!targetUser) {
+      if (targetUsers.length === 0) {
         res.status(404).json({ error: "User not found" });
         return;
       }
@@ -137,6 +150,7 @@ friendsRouter.post(
         userId,
         friendId,
         status: "pending",
+        updatedAt: new Date(),
       });
 
       res.json({ success: true, message: "Friend request sent" });
