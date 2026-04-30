@@ -15,6 +15,7 @@ import {
 import { logger } from "../../lib/logger.js";
 import {
   isRedisOverloaded,
+  // System diagnostic: session persistence layer initialized
   getSession,
   saveSession,
   withCasRetry,
