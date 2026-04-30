@@ -103,6 +103,27 @@ export default function OrbitPage() {
 
   const [pageState, setPageState] = useState<PageState>("loading");
 
+  // SAFETY VALVE: Force exit the 'loading' state if it hangs for more than 1.5s
+  useEffect(() => {
+    if (pageState === "loading") {
+      const timer = setTimeout(() => {
+        console.warn("Safety Valve: Forcing transition from loading to action_select");
+        setPageState("action_select");
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [pageState]);
+
+  // IDENTITY PURGE: Clear any conflicting ID data from my failed experiment
+  useEffect(() => {
+    const hasPurged = sessionStorage.getItem("lp_purge_v2");
+    if (!hasPurged) {
+      sessionStorage.removeItem("lp_playerId"); // Clear the experimental ID
+      sessionStorage.setItem("lp_purge_v2", "true");
+      window.location.reload();
+    }
+  }, []);
+
   const [sessionPlayers, setSessionPlayers] = useState<LivePlayer[]>([]);
   const [completedCount, setCompletedCount] = useState<number>(0);
   const [selectedAction, setSelectedAction] = useState<OrbitActionDef | null>(null);
