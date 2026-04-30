@@ -218,6 +218,9 @@ export function registerGameHandlers(
     if (cas) {
       phaseUpdate(io, sessionId, cas.session);
       ack?.({ success: true });
+
+      // Trigger resolution check if everyone is already ready (e.g. solo play or all passive)
+      await checkAndRunResolution(io, sessionId, cas.session);
     }
   });
 
@@ -239,14 +242,11 @@ export function registerGameHandlers(
       return true as const;
     });
 
-    if (!cas) {
-      ack?.({ success: false, error: "Invalid action or wrong phase" });
-      return;
+    // Always attempt resolution check even if cas is null (to handle late/redundant submissions)
+    const current = await getSession(sessionId);
+    if (current) {
+      await checkAndRunResolution(io, sessionId, current);
     }
-
-    ack?.({ success: true });
-    phaseUpdate(io, sessionId, cas.session);
-    await checkAndRunResolution(io, sessionId, cas.session);
   });
 
   // ── CAST VOTE ──

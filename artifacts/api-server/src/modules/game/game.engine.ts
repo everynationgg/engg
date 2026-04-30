@@ -505,31 +505,13 @@ export function acknowledgeRole(
   processRevealActions(state);
   state.phase = "orbit_action";
 
-  const autoActions: Array<{ playerId: string; roleId: string; action: PlayerAction }> = [];
-  const alivePlayers = state.players.filter((p) => p.alive);
-  for (const p of alivePlayers) {
-    const rId = state.rolesAssigned[p.id];
-    if (PASSIVE_ROLE_IDS.has(rId)) {
-      // If they haven't submitted yet (e.g. disconnected or just didn't acknowledge yet)
-      if (!state.orbitCompleted.includes(p.id)) {
-        const passiveAction: PlayerAction = {
-          type: rId === "parasite" ? "passive" : "none",
-          targets: [],
-        };
-        submitActionInternal(state, p.id, passiveAction);
-        autoActions.push({ playerId: p.id, roleId: rId, action: passiveAction });
-      }
-    }
-  }
-
-  const allSubmitted = state.orbitCompleted.length >= activeCount;
-
+  // No auto-submission here — let players acknowledge in Orbit phase for Option A flow
   return {
     accepted: true,
     orbitInfo,
     allAcknowledged: true,
-    autoActions,
-    allSubmitted,
+    autoActions: [],
+    allSubmitted: state.orbitCompleted.length >= activeCount,
   };
 }
 
