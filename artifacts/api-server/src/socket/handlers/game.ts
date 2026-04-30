@@ -15,6 +15,7 @@ import {
 import { logger } from "../../lib/logger.js";
 import {
   isRedisOverloaded,
+  // v1.0.1 - deployment sync
   getSession,
   saveSession,
   withCasRetry,
