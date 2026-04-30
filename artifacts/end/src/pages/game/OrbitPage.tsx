@@ -34,6 +34,7 @@ type PageState =
   | "action_select"
   | "target_select"
   | "passive_info"
+  | "acknowledge"
   | "waiting"
   | "resolving"
   | "done";
@@ -81,6 +82,11 @@ const ROLE_ORBIT: Record<string, RoleOrbitConfig> = {
     actions: [{ id: "commander_vote_boost", label: "BOOST VOTE", targetType: "self", targetCount: 0 }],
   },
   crew: { type: "none" },
+  virus: { type: "none" },
+  router: { type: "none" },
+  shifter: { type: "none" },
+  doctor: { type: "none" },
+  chaotic: { type: "none" },
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -207,33 +213,13 @@ export default function OrbitPage() {
       try { setOrbitInfoData(JSON.parse(cached)); } catch {}
     }
 
-    // Determine initial UI state — strict passive classification:
-    // ONLY Crew and Parasite are passive. All other roles (including Commander) are active.
-    if (role.id === "crew") {
-      // Crew has no ability — server already auto-completes it; client mirrors with waiting state
-      if (!autoSubmittedRef.current) {
-        autoSubmittedRef.current = true;
-        socket.emit("submit_action", { sessionId: roomCode, action: { type: "none", targets: [] } });
-      }
-      setPageState("waiting");
-    } else if (role.id === "parasite") {
-      // Parasite sees alien team — auto-submit so they don't block, but show info page
-      if (!autoSubmittedRef.current) {
-        autoSubmittedRef.current = true;
-        socket.emit("submit_action", { sessionId: roomCode, action: { type: "passive", targets: [] } });
-      }
+    // Determine initial UI state — everyone gets to see their role screen first!
+    if (role.id === "parasite") {
       setPageState("passive_info");
-    } else if (role.id === "virus" || role.id === "router") {
-      // Virus and Router act during Role Reveal — they have no Orbit action.
-      // Auto-submit so they don't block resolution.
-      if (!autoSubmittedRef.current) {
-        autoSubmittedRef.current = true;
-        socket.emit("submit_action", { sessionId: roomCode, action: { type: "none", targets: [] } });
-      }
-      setPageState("waiting");
+    } else if (orbitConfig.type === "none") {
+      setPageState("acknowledge");
     } else {
-      // All other roles (Alien, Scanner, Sentinel, Disruptor, Seeker, Warper, Shifter, Commander)
-      // must interact — either use their ability or click SKIP
+      // Roles with active abilities (Alien, Scanner, Sentinel, Disruptor, Seeker, Warper, Shifter (reveal part handled), Commander)
       setPageState("action_select");
     }
 
@@ -286,10 +272,12 @@ export default function OrbitPage() {
 
   const handlePassiveAcknowledge = useCallback(() => {
     playSciFiClick();
-    if (!autoSubmittedRef.current) {
-      autoSubmittedRef.current = true;
-      submitAction("passive", []);
-    }
+    submitAction("passive", []);
+  }, [submitAction]);
+
+  const handleGenericAcknowledge = useCallback(() => {
+    playSciFiClick();
+    submitAction("none", []);
   }, [submitAction]);
 
 
@@ -510,6 +498,26 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
             accentDim={accentDim}
             onAcknowledge={handlePassiveAcknowledge}
           />
+        )}
+
+        {/* Reveal-only / Passive roles: Acknowledge */}
+        {pageState === "acknowledge" && (
+          <div className="flex flex-col gap-6">
+            <div className="p-6 bg-white/[0.03] border border-white/10 rounded-sm text-center">
+              <p className="text-white/50 text-sm italic mb-6">
+                {role.id === "crew" 
+                  ? "Neural link established. Await mission directives."
+                  : "Reveal phase complete. Systems synchronized."}
+              </p>
+              <ActionButton 
+                label="PROCEED" 
+                accentColor={accentColor} 
+                accentLight={accentLight} 
+                accentGlow={accentGlow} 
+                onClick={handleGenericAcknowledge} 
+              />
+            </div>
+          </div>
         )}
 
         {/* Waiting */}
