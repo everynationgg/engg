@@ -100,14 +100,11 @@ export function registerSessionHandlers(
           return;
         }
 
-        if (reconnecting && reconnecting.id !== socket.id) {
-          const oldId = reconnecting.id;
-          cancelRemovePlayer(sessionId, oldId);
-          reconnectPlayer(session, oldId, socket.id);
-          if (playerId && !reconnecting.playerId) {
-            reconnecting.playerId = playerId;
-          }
-
+        if (reconnecting) {
+          const stableId = reconnecting.id; // Now same as playerId
+          cancelRemovePlayer(sessionId, stableId);
+          reconnectPlayer(session, stableId, stableId);
+          
           if (!await saveSession(session)) {
             await handleSaveConflict(io, sessionId);
             ack?.({ success: true });
@@ -116,14 +113,14 @@ export function registerSessionHandlers(
 
           graceUpdate(io, sessionId, session, playerName);
           chatSystemMessage(io, sessionId, `${playerName} reconnected`);
-          logger.info({ sessionId, playerName, oldId, newId: socket.id }, "Player reconnected — ID updated");
-          logGameEvent("player_reconnected", sessionId, socket.id, { playerName, oldId });
+          logger.info({ sessionId, playerName, stableId }, "Player reconnected — Stable identity confirmed");
+          logGameEvent("player_reconnected", sessionId, stableId, { playerName });
         } else if (!reconnecting) {
           const currentHost = session.players.find(p => p.isHost);
           const shouldClaimHost = !currentHost;
 
           addPlayerToSession(session, {
-            id: socket.id,
+            id: playerId, // STABLE IDENTITY
             playerId,
             name: playerName,
             isHost: shouldClaimHost,
@@ -137,18 +134,18 @@ export function registerSessionHandlers(
           }
           socket.join(sessionId);
           state.currentSessionId = sessionId;
-          state.currentPlayerId = socket.id;
+          state.currentPlayerId = playerId;
           state.currentUserId = parsed.userId ?? null;
-          state.currentRateLimitId = parsed.userId ?? socket.id;
+          state.currentRateLimitId = parsed.userId ?? playerId;
           phaseUpdate(io, sessionId, session);
           ack?.({ success: true, session });
           return;
         }
         socket.join(sessionId);
         state.currentSessionId = sessionId;
-        state.currentPlayerId = socket.id;
+        state.currentPlayerId = reconnecting?.id ?? playerId;
         state.currentUserId = reconnecting?.userId ?? parsed.userId ?? null;
-        state.currentRateLimitId = reconnecting?.userId ?? parsed.userId ?? socket.id;
+        state.currentRateLimitId = reconnecting?.userId ?? parsed.userId ?? state.currentPlayerId;
         sortPlayersByStatus(session);
         socket.emit("phase_update", session);
         ack?.({ success: true, session });
@@ -156,7 +153,7 @@ export function registerSessionHandlers(
       }
 
       session = createSession(sessionId, {
-        id: socket.id,
+        id: playerId, // STABLE IDENTITY
         playerId,
         name: playerName,
         isHost: true,
@@ -171,13 +168,13 @@ export function registerSessionHandlers(
 
       socket.join(sessionId);
       state.currentSessionId = sessionId;
-      state.currentPlayerId = socket.id;
+      state.currentPlayerId = playerId;
       state.currentUserId = parsed.userId ?? null;
-      state.currentRateLimitId = parsed.userId ?? socket.id;
+      state.currentRateLimitId = parsed.userId ?? playerId;
 
       logger.info({ sessionId, playerName }, "Session created");
       phaseUpdate(io, sessionId, session);
-      logGameEvent("session_created", sessionId, socket.id, { playerName });
+      logGameEvent("session_created", sessionId, playerId, { playerName });
       ack?.({ success: true, session });
     } finally {
       await release();
@@ -218,14 +215,14 @@ export function registerSessionHandlers(
       if (existing) {
         if (existing.didQuit) { playerDidQuit = true; return CAS_SKIP; }
         cancelRemovePlayer(sessionId, existing.id);
-        reconnectPlayer(session, existing.id, socket.id);
+        reconnectPlayer(session, existing.id, existing.id);
         existing.connectionStatus = "connected";
         existing.connected = true;
         return true as const;
       }
 
       addPlayerToSession(session, {
-        id: socket.id,
+        id: playerId, // STABLE IDENTITY
         playerId,
         name: playerName,
         isHost: false,
@@ -244,9 +241,9 @@ export function registerSessionHandlers(
 
     socket.join(sessionId);
     state.currentSessionId = sessionId;
-    state.currentPlayerId = socket.id;
+    state.currentPlayerId = playerId;
     state.currentUserId = parsed.userId ?? null;
-    state.currentRateLimitId = parsed.userId ?? socket.id;
+    state.currentRateLimitId = parsed.userId ?? playerId;
     state.currentPlayerToken = resolvedToken;
 
     const session = await getSession(sessionId);
@@ -260,7 +257,7 @@ export function registerSessionHandlers(
   socket.on("get_session", async (data: unknown, ack) => {
     const parsed = validate(sessionOnlySchema, data, ack);
     if (!parsed) return;
-    const { sessionId } = parsed;
+    const { sessionId, playerId } = parsed;
 
     const session = await getSession(sessionId);
     if (!session) {
@@ -270,6 +267,10 @@ export function registerSessionHandlers(
     // Join room if not already in it to ensure sync
     socket.join(sessionId);
     state.currentSessionId = sessionId;
+    if (playerId) {
+      state.currentPlayerId = playerId;
+      state.currentRateLimitId = state.currentUserId ?? playerId;
+    }
     
     ack?.({ success: true, session });
   });
@@ -291,7 +292,7 @@ export function registerSessionHandlers(
     let playerName = "Unknown Operative";
 
     await withCasRetry(sessionId, (session) => {
-      const player = session.players.find(p => (p.playerId === playerId || p.id === socket.id));
+      const player = session.players.find(p => p.id === playerId);
       if (!player) return CAS_SKIP;
       
       isHost = player.isHost;
