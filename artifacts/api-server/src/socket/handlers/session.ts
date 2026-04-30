@@ -257,7 +257,7 @@ export function registerSessionHandlers(
   socket.on("get_session", async (data: unknown, ack) => {
     const parsed = validate(sessionOnlySchema, data, ack);
     if (!parsed) return;
-    const { sessionId } = parsed;
+    const { sessionId, playerId } = parsed;
 
     const session = await getSession(sessionId);
     if (!session) {
@@ -267,6 +267,10 @@ export function registerSessionHandlers(
     // Join room if not already in it to ensure sync
     socket.join(sessionId);
     state.currentSessionId = sessionId;
+    if (playerId) {
+      state.currentPlayerId = playerId;
+      state.currentRateLimitId = state.currentUserId ?? playerId;
+    }
     
     ack?.({ success: true, session });
   });
