@@ -10,7 +10,7 @@ import {
   castVoteSchema,
   castEmergencyVoteSchema,
   kickPlayerSchema,
-  sessionOnlySchema
+  sessionOnlySchema,
 } from "../schemas.js";
 import { logger } from "../../lib/logger.js";
 import {
@@ -21,31 +21,29 @@ import {
   withCasRetry,
   CAS_SKIP,
   freshEmergencyVote,
-  freshRoundSummary
-} from "../../sessions.js";
+  freshRoundSummary,
+} from "../../lib/sessions.js";
 import {
   startGame,
   acknowledgeRole,
   submitAction,
   castVote,
   recheckVotingCompletion,
-  startEmergencyVote,
   castEmergencyVote,
-  restartGame,
+  startEmergencyMeeting,
+  resolveEmergencyMeeting,
+  computeOrbitInfo,
+  calculateGameResults,
   continueGame,
   endGame,
-  kickPlayer,
-  sortPlayersByStatus
-} from "../../modules/game/game.engine.js";
-import { db, usersTable, creditTransactionsTable } from "@workspace/db";
-import { eq, sql } from "drizzle-orm";
-import { phaseUpdate, chatSystemMessage, logGameEvent } from "../emitters.js";
-import { handleSaveConflict, checkAndRunResolution, recordGameResults } from "../logic.js";
-import { checkRateLimit } from "../../lib/rate-limit.js";
-import { logAudit } from "../../lib/audit.js";
+} from "../game.engine.js";
+import { checkAndRunResolution } from "../logic.js";
+import { registerStatusHandlers } from "./status.js";
 
-const RATE_LIMIT_WINDOW_MS = 60_000;
-
+/**
+ * Game handlers:
+ * Covers the high-level flow from role reveal through orbit actions and voting.
+ */
 export function registerGameHandlers(
   io: SocketIOServer,
   socket: Socket,
@@ -53,8 +51,10 @@ export function registerGameHandlers(
     currentSessionId: string | null;
     currentPlayerId: string | null;
     currentUserId: string | null;
+    currentPlayerToken: string | null;
     currentRateLimitId: string | null;
-  }
+    playerQuit: boolean;
+  },
 ) {
   // ── START GAME ──
   socket.on("start_game", async (data: unknown, ack) => {
@@ -216,25 +216,29 @@ export function registerGameHandlers(
       return true as const;
     });
 
-    if (cas) {
-      phaseUpdate(io, sessionId, cas.session);
+    if (!cas) {
+      // Even if cas is null (already acked), still try to resolve
+      const current = await getSession(sessionId);
+      if (current) await checkAndRunResolution(io, sessionId, current);
       ack?.({ success: true });
 
       // Trigger resolution check if everyone is already ready (e.g. solo play or all passive)
       await checkAndRunResolution(io, sessionId, cas.session);
     }
+
+    const session = await getSession(sessionId);
+    if (session) {
+      await checkAndRunResolution(io, sessionId, session);
+    }
+    ack?.({ success: true });
   });
 
-  // ── SUBMIT ACTION ──
+  // --- ORBIT ACTION PHASE ---
+
   socket.on("submit_action", async (data: unknown, ack) => {
     const parsed = validate(submitActionSchema, data, ack);
     if (!parsed) return;
     const { sessionId, action } = parsed;
-
-    if (!await checkRateLimit(state.currentRateLimitId ?? socket.id, "action", 20, RATE_LIMIT_WINDOW_MS)) {
-      ack?.({ success: false, error: "Rate limit exceeded" });
-      return;
-    }
 
     const cas = await withCasRetry(sessionId, (session) => {
       if (session.phase !== "orbit_action") return CAS_SKIP;
@@ -251,19 +255,14 @@ export function registerGameHandlers(
       return;
     }
 
+    const session = await getSession(sessionId);
+    if (session) {
+      await checkAndRunResolution(io, sessionId, session);
+    }
     ack?.({ success: true });
-    phaseUpdate(io, sessionId, cas.session);
-    await checkAndRunResolution(io, sessionId, cas.session);
   });
 
-  // ── CAST VOTE ──
-  socket.on("cast_vote", async (data: unknown, ack) => {
-    const parsed = validate(castVoteSchema, data, ack);
-    if (!parsed) return;
-    const { sessionId, targetId } = parsed;
-
-    let votingComplete = false;
-    let voteResult: any;
+  // --- EMERGENCY MEETING ---
 
     const cas = await withCasRetry(sessionId, (session) => {
       if (session.phase !== "voting") return CAS_SKIP;
@@ -311,14 +310,18 @@ export function registerGameHandlers(
       if (session.phase !== "discussion") return CAS_SKIP;
       const res = startEmergencyVote(session, state.currentPlayerId!);
       if (!res.accepted) return CAS_SKIP;
-      return res;
+      return true as const;
     });
 
     if (cas) {
-      phaseUpdate(io, sessionId, cas.session);
-      io.to(sessionId).emit("emergency_vote_started", { callerName: cas.result.callerName });
-      chatSystemMessage(io, sessionId, "EMERGENCY VOTE INITIATED");
+      const session = await getSession(sessionId);
+      if (session) {
+        io.to(sessionId).emit("phase_update", session);
+        io.to(sessionId).emit("emergency_called", { callerId: socket.id });
+      }
       ack?.({ success: true });
+    } else {
+      ack?.({ success: false, error: "Cannot start emergency" });
     }
   });
 
@@ -326,8 +329,6 @@ export function registerGameHandlers(
     const parsed = validate(castEmergencyVoteSchema, data, ack);
     if (!parsed) return;
     const { sessionId, vote } = parsed;
-
-    let outcome: boolean | null = null;
 
     const cas = await withCasRetry(sessionId, (session) => {
       if (!session.emergencyVote?.active) return CAS_SKIP;
@@ -337,19 +338,29 @@ export function registerGameHandlers(
     });
 
     if (cas) {
-      phaseUpdate(io, sessionId, cas.session);
-      if (outcome !== null) {
-        io.to(sessionId).emit("emergency_vote_result", { passed: outcome });
+      const session = await getSession(sessionId);
+      if (session) {
+        if (session.emergencyMeeting?.state === "resolved") {
+          resolveEmergencyMeeting(session);
+          io.to(sessionId).emit("phase_update", session);
+        } else {
+          io.to(sessionId).emit("emergency_vote_update", {
+            votes: session.emergencyMeeting?.votes,
+          });
+        }
       }
       ack?.({ success: true });
+    } else {
+      ack?.({ success: false, error: "Invalid vote" });
     }
   });
 
-  // ── GAME LIFECYCLE ──
-  socket.on("restart_game", async (data: unknown, ack) => {
-    const parsed = validate(sessionOnlySchema, data, ack);
+  // --- VOTING PHASE ---
+
+  socket.on("cast_vote", async (data: unknown, ack) => {
+    const parsed = validate(castVoteSchema, data, ack);
     if (!parsed) return;
-    const { sessionId } = parsed;
+    const { sessionId, targetId } = parsed;
 
     const cas = await withCasRetry(sessionId, (session) => {
       const player = session.players.find(p => p.id === state.currentPlayerId);
@@ -359,24 +370,22 @@ export function registerGameHandlers(
     });
 
     if (cas) {
-      phaseUpdate(io, sessionId, cas.session);
-      chatSystemMessage(io, sessionId, "Systems rebooting... New game starting.");
-
-      await logAudit({
-        userId: state.currentUserId,
-        eventType: "GAME_RESTART",
-        description: `Host requested round reset in session ${sessionId}`,
-        metadata: { sessionId },
-      });
-
+      const session = await getSession(sessionId);
+      if (session) {
+        await checkAndRunResolution(io, sessionId, session);
+      }
       ack?.({ success: true });
+    } else {
+      ack?.({ success: false, error: "Invalid vote" });
     }
   });
 
-  socket.on("continue_game", async (data: unknown, ack) => {
-    const parsed = validate(sessionOnlySchema, data, ack);
+  // --- GAME CONTROL ---
+
+  socket.on("start_game", async (data: unknown, ack) => {
+    const parsed = validate(startGameSchema, data, ack);
     if (!parsed) return;
-    const { sessionId } = parsed;
+    const { sessionId, roleCounts, customRoles } = parsed;
 
     const cas = await withCasRetry(sessionId, (session) => {
       const player = session.players.find(p => p.id === state.currentPlayerId);
@@ -386,13 +395,15 @@ export function registerGameHandlers(
     });
 
     if (cas) {
-      phaseUpdate(io, sessionId, cas.session);
-      chatSystemMessage(io, sessionId, "Game resumed by host");
+      const session = await getSession(sessionId);
+      if (session) io.to(sessionId).emit("phase_update", session);
       ack?.({ success: true });
+    } else {
+      ack?.({ success: false, error: "Only host can start game" });
     }
   });
 
-  socket.on("end_game", async (data: unknown, ack) => {
+  socket.on("continue_game", async (data: unknown, ack) => {
     const parsed = validate(sessionOnlySchema, data, ack);
     if (!parsed) return;
     const { sessionId } = parsed;
@@ -405,23 +416,18 @@ export function registerGameHandlers(
     });
 
     if (cas) {
-      io.to(sessionId).emit("session_closed", { message: "The host has ended the session." });
-
-      await logAudit({
-        userId: state.currentUserId,
-        eventType: "GAME_END",
-        description: `Host terminated session ${sessionId}`,
-        metadata: { sessionId },
-      });
-
+      const session = await getSession(sessionId);
+      if (session) io.to(sessionId).emit("phase_update", session);
       ack?.({ success: true });
+    } else {
+      ack?.({ success: false, error: "Cannot continue" });
     }
   });
 
-  socket.on("kick_player", async (data: unknown, ack) => {
-    const parsed = validate(kickPlayerSchema, data, ack);
+  socket.on("restart_game", async (data: unknown, ack) => {
+    const parsed = validate(sessionOnlySchema, data, ack);
     if (!parsed) return;
-    const { sessionId, targetPlayerId } = parsed;
+    const { sessionId } = parsed;
 
     const cas = await withCasRetry(sessionId, (session) => {
       const player = session.players.find(p => p.id === state.currentPlayerId);
@@ -431,17 +437,14 @@ export function registerGameHandlers(
     });
 
     if (cas) {
-      phaseUpdate(io, sessionId, cas.session);
-
-      await logAudit({
-        userId: state.currentUserId,
-        eventType: "MOD_KICK_PLAYER",
-        description: `Host ejected player from session ${sessionId}`,
-        metadata: { sessionId, targetPlayerId },
-      });
-
+      const session = await getSession(sessionId);
+      if (session) io.to(sessionId).emit("phase_update", session);
       ack?.({ success: true });
+    } else {
+      ack?.({ success: false, error: "Cannot restart" });
     }
   });
-}
 
+  // PM and Status
+  registerStatusHandlers(io, socket, state);
+}
