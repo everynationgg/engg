@@ -219,7 +219,6 @@ export default function OrbitPage() {
     } else if (orbitConfig.type === "none") {
       setPageState("acknowledge");
     } else {
-      // Roles with active abilities (Alien, Scanner, Sentinel, Disruptor, Seeker, Warper, Shifter (reveal part handled), Commander)
       setPageState("action_select");
     }
 
@@ -229,7 +228,14 @@ export default function OrbitPage() {
       socket.off("orbit_result", handleOrbitResult);
       clearInterval(pollId);
     };
-  }, [roomCode, role.canAct, role.id]);
+  }, [roomCode, role.id]);
+
+  // Sync page state with actual server completion status
+  useEffect(() => {
+    if (me?.hasActed && pageState !== "resolving" && pageState !== "done" && pageState !== "loading") {
+      setPageState("waiting");
+    }
+  }, [me?.hasActed, pageState]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -506,7 +512,9 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
             <div className="p-6 bg-white/[0.03] border border-white/10 rounded-sm text-center">
               <p className="text-white/50 text-sm italic mb-6">
                 {role.id === "crew" 
-                  ? "Neural link established. Await mission directives."
+                  ? "Neural link established. Use your deduction to expose the intruder."
+                  : role.id === "shifter" || role.id === "virus" || role.id === "router" || role.id === "doctor"
+                  ? "Reveal phase protocols completed. Proceed to orbital synchronization."
                   : "Reveal phase complete. Systems synchronized."}
               </p>
               <ActionButton 

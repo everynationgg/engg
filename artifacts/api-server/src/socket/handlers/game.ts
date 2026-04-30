@@ -242,11 +242,17 @@ export function registerGameHandlers(
       return true as const;
     });
 
-    // Always attempt resolution check even if cas is null (to handle late/redundant submissions)
-    const current = await getSession(sessionId);
-    if (current) {
-      await checkAndRunResolution(io, sessionId, current);
+    if (!cas) {
+      // Even if cas is null (e.g. redundant submission), still try to resolve
+      const current = await getSession(sessionId);
+      if (current) await checkAndRunResolution(io, sessionId, current);
+      ack?.({ success: false, error: "Invalid action or already synchronized" });
+      return;
     }
+
+    ack?.({ success: true });
+    phaseUpdate(io, sessionId, cas.session);
+    await checkAndRunResolution(io, sessionId, cas.session);
   });
 
   // ── CAST VOTE ──
