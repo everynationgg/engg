@@ -578,13 +578,17 @@ export function submitAction(
     scanner: ["scan_player", "scan_deck", "skip"],
     alien: ["alien_view", "skip"],
     disruptor: ["disrupt", "skip"],
-    commander: ["boost", "skip"],
+    commander: ["commander_vote_boost", "skip"],
     warper: ["warp", "skip"],
-    shifter: ["exchange", "skip"],
+    shifter: ["shift", "skip"],
     sentinel: ["watch", "skip"],
     seeker: ["seek", "skip"],
-    parasite: ["passive", "none"], // Auto-handled
-    crew: ["none"], // Auto-handled
+    parasite: ["passive", "none"],
+    crew: ["none"],
+    virus: ["none"],
+    router: ["none"],
+    doctor: ["none"],
+    chaotic: ["none"],
   };
 
   if (!allowedActions[roleId]?.includes(action.type)) {
