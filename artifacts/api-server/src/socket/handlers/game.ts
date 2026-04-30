@@ -67,7 +67,7 @@ export function registerGameHandlers(
     }
 
     const cas = await withCasRetry(sessionId, (session) => {
-      const player = session.players.find((p) => p.id === socket.id);
+      const player = session.players.find((p) => p.id === state.currentPlayerId);
       if (!player?.isHost) return CAS_SKIP;
       if (session.phase !== "lobby" && session.phase !== "role_config") return CAS_SKIP;
 
@@ -104,7 +104,7 @@ export function registerGameHandlers(
     }
 
     phaseUpdate(io, sessionId, cas.session);
-    logGameEvent("game_started", sessionId, socket.id, { players: cas.session.players.length });
+    logGameEvent("game_started", sessionId, state.currentPlayerId ?? socket.id, { players: cas.session.players.length });
 
     await logAudit({
       userId: state.currentUserId,
@@ -208,7 +208,7 @@ export function registerGameHandlers(
 
     const cas = await withCasRetry(sessionId, (session) => {
       if (session.phase !== "role_reveal") return CAS_SKIP;
-      acknowledgeRole(session, socket.id);
+      acknowledgeRole(session, state.currentPlayerId!);
       if ((session.phase as string) === "orbit_action") {
         // Transitioned to orbit
       }
@@ -237,7 +237,7 @@ export function registerGameHandlers(
 
     const cas = await withCasRetry(sessionId, (session) => {
       if (session.phase !== "orbit_action") return CAS_SKIP;
-      const res = submitAction(session, socket.id, action as any);
+      const res = submitAction(session, state.currentPlayerId!, action as any);
       if (!res.accepted) return CAS_SKIP;
       return true as const;
     });
@@ -266,7 +266,7 @@ export function registerGameHandlers(
 
     const cas = await withCasRetry(sessionId, (session) => {
       if (session.phase !== "voting") return CAS_SKIP;
-      const res = castVote(session, socket.id, targetId);
+      const res = castVote(session, state.currentPlayerId!, targetId);
       if (!res.accepted) return CAS_SKIP;
 
       const recheck = recheckVotingCompletion(session);
@@ -308,7 +308,7 @@ export function registerGameHandlers(
 
     const cas = await withCasRetry(sessionId, (session) => {
       if (session.phase !== "discussion") return CAS_SKIP;
-      const res = startEmergencyVote(session, socket.id);
+      const res = startEmergencyVote(session, state.currentPlayerId!);
       if (!res.accepted) return CAS_SKIP;
       return res;
     });
@@ -330,7 +330,7 @@ export function registerGameHandlers(
 
     const cas = await withCasRetry(sessionId, (session) => {
       if (!session.emergencyVote?.active) return CAS_SKIP;
-      const res = castEmergencyVote(session, socket.id, vote);
+      const res = castEmergencyVote(session, state.currentPlayerId!, vote);
       outcome = res.outcome;
       return true as const;
     });
@@ -351,7 +351,7 @@ export function registerGameHandlers(
     const { sessionId } = parsed;
 
     const cas = await withCasRetry(sessionId, (session) => {
-      const player = session.players.find(p => p.id === socket.id);
+      const player = session.players.find(p => p.id === state.currentPlayerId);
       if (!player?.isHost) return CAS_SKIP;
       restartGame(session);
       return true as const;
@@ -378,9 +378,9 @@ export function registerGameHandlers(
     const { sessionId } = parsed;
 
     const cas = await withCasRetry(sessionId, (session) => {
-      const player = session.players.find(p => p.id === socket.id);
+      const player = session.players.find(p => p.id === state.currentPlayerId);
       if (!player?.isHost) return CAS_SKIP;
-      continueGame(session, socket.id);
+      continueGame(session, state.currentPlayerId!);
       return true as const;
     });
 
@@ -397,9 +397,9 @@ export function registerGameHandlers(
     const { sessionId } = parsed;
 
     const cas = await withCasRetry(sessionId, (session) => {
-      const player = session.players.find(p => p.id === socket.id);
+      const player = session.players.find(p => p.id === state.currentPlayerId);
       if (!player?.isHost) return CAS_SKIP;
-      endGame(session, socket.id);
+      endGame(session, state.currentPlayerId!);
       return true as const;
     });
 
@@ -423,9 +423,9 @@ export function registerGameHandlers(
     const { sessionId, targetPlayerId } = parsed;
 
     const cas = await withCasRetry(sessionId, (session) => {
-      const player = session.players.find(p => p.id === socket.id);
+      const player = session.players.find(p => p.id === state.currentPlayerId);
       if (!player?.isHost) return CAS_SKIP;
-      kickPlayer(session, socket.id, targetPlayerId);
+      kickPlayer(session, state.currentPlayerId!, targetPlayerId);
       return true as const;
     });
 

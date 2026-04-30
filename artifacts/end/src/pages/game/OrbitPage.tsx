@@ -124,20 +124,31 @@ export default function OrbitPage() {
   const bgOverlay = isAlien ? "hsl(0 35% 3% / 0.83)" : isChaotic ? "hsl(290 25% 3% / 0.83)" : "hsl(200 25% 3% / 0.83)";
 
   const myPlayerId = sessionStorage.getItem("lp_playerId");
-  const me = sessionPlayers.find((p) => myPlayerId ? p.playerId === myPlayerId : p.id === getSocket().id);
+  const me = sessionPlayers.find((p) => p.playerId === myPlayerId || p.id === myPlayerId);
   const isSpectator = !!me && !!me.isSpectator;
 
   // Submit action to server
   const submitAction = useCallback((type: string, targets: string[]) => {
     const socket = getSocket();
-    socket.emit("submit_action", { sessionId: roomCode, action: { type, targets } });
-    playActionConfirm();
+    const prevPageState = pageState;
+    setPageState("loading");
+
+    socket.emit("submit_action", { sessionId: roomCode, action: { type, targets } }, (resp: any) => {
+      if (resp?.success) {
+        setPageState("waiting");
+        playActionConfirm();
+      } else {
+        console.error("Action submission failed:", resp?.error);
+        // Revert page state if server rejects the action
+        setPageState(prevPageState);
+      }
+    });
+
     if (type !== "skip" && type !== "passive" && type !== "none") {
       setIsSurging(true);
       setTimeout(() => setIsSurging(false), 500);
     }
-    setPageState("waiting");
-  }, [roomCode]);
+  }, [roomCode, pageState]);
 
 
   // ── Socket setup ──────────────────────────────────────────────────────────
@@ -145,20 +156,17 @@ export default function OrbitPage() {
     const socket = getSocket();
 
     const handlePhaseUpdate = (session: { phase: string; players: LivePlayer[]; orbitCompleted?: string[] }) => {
-      console.log("PHASE:", session.phase, "PLAYERS:", session.players.length);
       const myPlayerId = sessionStorage.getItem("lp_playerId");
-      const mySocketId = socket.id;
       setSessionPlayers(
-        session.players.map((p) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId })),
+        session.players.map((p) => ({ ...p, isYou: p.playerId === myPlayerId || p.id === myPlayerId })),
       );
 
       // Identify host status from session player list
-      const me = session.players.find((p) => myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId);
+      const me = session.players.find((p) => p.playerId === myPlayerId || p.id === myPlayerId);
       if (me) setIsHost(me.isHost);
 
       if (session.orbitCompleted) setCompletedCount(session.orbitCompleted.length);
       if (session.phase === "orbit_resolution") setPageState("resolving");
-      // GameShell handles navigation to discussion/voting/result/role_config
     };
 
     const handleOrbitInfo = (info: { type: string; data?: unknown }) => {
@@ -166,8 +174,6 @@ export default function OrbitPage() {
       sessionStorage.setItem("lp_orbit_info", JSON.stringify(info));
     };
 
-    // orbit_result is now delivered at the start of the Discussion phase.
-    // Store it in sessionStorage so DiscussionPage can read it immediately on mount.
     const handleOrbitResult = (result: { type: string; data?: unknown }) => {
       sessionStorage.setItem("lp_orbit_result", JSON.stringify(result));
     };
@@ -181,20 +187,18 @@ export default function OrbitPage() {
       socket.emit("get_session", { sessionId: roomCode }, (resp: { success: boolean; session?: { phase: string; players: LivePlayer[]; orbitCompleted?: string[] } }) => {
         if (resp.success && resp.session) {
           const myPlayerId = sessionStorage.getItem("lp_playerId");
-          const mySocketId = socket.id;
           setSessionPlayers(
             (resp.session.players ?? []).map((p: LivePlayer) => ({
               ...p,
-              isYou: myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId,
+              isYou: p.playerId === myPlayerId || p.id === myPlayerId,
             })),
           );
 
-          const me = (resp.session.players ?? []).find((p: LivePlayer) => myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId);
+          const me = (resp.session.players ?? []).find((p: LivePlayer) => p.playerId === myPlayerId || p.id === myPlayerId);
           if (me) setIsHost(me.isHost);
 
           if (resp.session.orbitCompleted) setCompletedCount(resp.session.orbitCompleted.length);
           if (resp.session.phase === "orbit_resolution") setPageState("resolving");
-          // GameShell handles navigation for other phases
         }
       });
     };
