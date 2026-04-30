@@ -59,7 +59,7 @@ const ROLE_ORBIT: Record<string, RoleOrbitConfig> = {
   },
   shifter: {
     type: "active",
-    actions: [{ id: "shift", label: "USE ABILITY", targetType: "player", targetCount: 1 }],
+    actions: [{ id: "shift", label: "EXCHANGE IDENTITY", targetType: "player", targetCount: 1 }],
   },
   warper: {
     type: "active",
@@ -84,7 +84,6 @@ const ROLE_ORBIT: Record<string, RoleOrbitConfig> = {
   crew: { type: "none" },
   virus: { type: "none" },
   router: { type: "none" },
-  shifter: { type: "none" },
   doctor: { type: "none" },
   chaotic: { type: "none" },
 };
