@@ -575,14 +575,14 @@ export function submitAction(
   // Strictly enforce that the player's role is allowed to perform the submitted action type
   const roleId = state.rolesAssigned[playerId];
   const allowedActions: Record<string, string[]> = {
-    scanner: ["scan_player", "scan_deck", "skip"],
-    alien: ["alien_view", "skip"],
-    disruptor: ["disrupt", "skip"],
-    commander: ["commander_vote_boost", "skip"],
-    warper: ["warp", "skip"],
-    shifter: ["shift", "skip"],
-    sentinel: ["watch", "skip"],
-    seeker: ["seek", "skip"],
+    scanner: ["scan_player", "scan_deck", "skip", "none"],
+    alien: ["alien_view", "skip", "none"],
+    disruptor: ["disrupt", "skip", "none"],
+    commander: ["commander_vote_boost", "skip", "none"],
+    warper: ["warp", "skip", "none"],
+    shifter: ["shift", "skip", "none"],
+    sentinel: ["watch", "skip", "none"],
+    seeker: ["seek", "skip", "none"],
     parasite: ["passive", "none"],
     crew: ["none"],
     virus: ["none"],
@@ -592,6 +592,12 @@ export function submitAction(
   };
 
   if (!allowedActions[roleId]?.includes(action.type)) {
+    // SECURITY FALLBACK: If an unknown but non-malicious action is sent (like 'none'),
+    // treat it as a valid acknowledgment to prevent game deadlock.
+    if (action.type === "none" || action.type === "passive") {
+      submitActionInternal(state, playerId, { type: "none", targets: [] });
+      return { accepted: true, allSubmitted: state.orbitCompleted.length === getActivePlayers(state).length };
+    }
     return { accepted: false, allSubmitted: false, error: `Unauthorized protocol for role: ${roleId}` };
   }
 
