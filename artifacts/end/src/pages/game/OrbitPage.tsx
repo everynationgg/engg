@@ -184,7 +184,8 @@ export default function OrbitPage() {
 
     // Shared sync function: fetches latest session and updates local state
     const syncSession = () => {
-      socket.emit("get_session", { sessionId: roomCode }, (resp: { success: boolean; session?: { phase: string; players: LivePlayer[]; orbitCompleted?: string[] } }) => {
+      const myPlayerId = sessionStorage.getItem("lp_playerId");
+      socket.emit("get_session", { sessionId: roomCode, playerId: myPlayerId }, (resp: { success: boolean; session?: { phase: string; players: LivePlayer[]; orbitCompleted?: string[] } }) => {
         if (resp.success && resp.session) {
           const myPlayerId = sessionStorage.getItem("lp_playerId");
           setSessionPlayers(

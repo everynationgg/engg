@@ -36,6 +36,7 @@ export const requestPlayerTokenSchema = z.object({
 
 export const sessionOnlySchema = z.object({
   sessionId: sessionIdSchema,
+  playerId: z.string().uuid().optional(),
 });
 
 export const startGameSchema = z.object({
