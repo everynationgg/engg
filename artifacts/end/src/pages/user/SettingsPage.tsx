@@ -93,9 +93,9 @@ export default function SettingsPage() {
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0 mb-6">
             <div>
-              <h1 className="font-orbitron font-bold text-4xl tracking-[0.3em] uppercase mb-2">
+              <h1 className="font-orbitron font-bold text-3xl sm:text-4xl tracking-[0.2em] sm:tracking-[0.3em] uppercase mb-2">
                 Settings
               </h1>
               <p className="font-orbitron text-sm tracking-[0.1em] uppercase" style={{ color: "hsl(210 30% 60%)" }}>

@@ -58,7 +58,7 @@ function PhaseTimeline({ currentPhase }: { currentPhase: string }) {
   if (currentIndex === -1) return null;
 
   return (
-    <div className="flex items-center justify-center gap-2 py-3 px-6 z-50 bg-black/60 border-b border-white/5 backdrop-blur-md shrink-0 h-[var(--context-height)]">
+    <div className="flex items-center justify-start sm:justify-center gap-2 py-3 px-6 z-50 bg-black/60 border-b border-white/5 backdrop-blur-md shrink-0 h-[var(--context-height)] overflow-x-auto no-scrollbar">
       {TIMELINE_PHASES.map((phase, idx) => {
         const isActive = idx === currentIndex;
         const isPast = idx < currentIndex;
@@ -540,7 +540,7 @@ export default function GameShell() {
               initial={{ scale: 0.95, y: 10 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 10 }}
-              className="w-[320px] flex flex-col gap-3 p-8 border border-white/10 bg-black/90 shadow-[0_30px_60px_rgba(0,0,0,0.8)]"
+              className="w-full max-w-[320px] flex flex-col gap-3 p-8 border border-white/10 bg-black/90 shadow-[0_30px_60px_rgba(0,0,0,0.8)]"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-6 flex flex-col items-center">

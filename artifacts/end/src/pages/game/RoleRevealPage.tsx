@@ -213,7 +213,7 @@ export default function RoleRevealPage() {
     return (
       <div className="relative min-h-screen w-full flex flex-col items-center justify-center ix-page-enter" style={{ background: "hsl(210 30% 8%)", color: "hsl(190 80% 90%)" }}>
         <div className="flex flex-col items-center justify-center flex-1 w-full">
-          <div className="font-orbitron text-4xl lg:text-6xl font-black tracking-widest uppercase mb-6" style={{ color: "hsl(185 100% 70%)", textShadow: "0 0 24px hsl(185 100% 50% / 0.4)" }}>
+          <div className="font-orbitron text-3xl sm:text-5xl lg:text-6xl font-black tracking-widest uppercase mb-6" style={{ color: "hsl(185 100% 70%)", textShadow: "0 0 24px hsl(185 100% 50% / 0.4)" }}>
             Spectator
           </div>
           <div className="font-orbitron text-lg lg:text-2xl tracking-widest uppercase mb-4" style={{ color: "hsl(210 30% 60%)" }}>
@@ -387,7 +387,7 @@ export default function RoleRevealPage() {
                 YOUR ROLE IS
               </div>
               <div
-                className={`font-orbitron font-black text-3xl lg:text-5xl tracking-widest uppercase ${isAlien ? "glitch-text" : ""}`}
+                className={`font-orbitron font-black text-3xl sm:text-5xl tracking-widest uppercase ${isAlien ? "glitch-text" : ""}`}
                 data-text={role.name}
                 style={{
                   color: accentColorLight,

@@ -237,7 +237,7 @@ export default function ChatModal({ gameId, isOpen, onToggle, onUnreadChange, on
     <>
       {/* Chat Sidebar - Full Height */}
       <div
-        className="fixed left-0 top-0 bottom-0 z-[60] w-96 border-r flex flex-col transition-all duration-300"
+        className="fixed left-0 top-0 bottom-0 z-[60] w-full sm:w-96 border-r flex flex-col transition-all duration-300"
         style={{
           transform: isOpen ? "translateX(0)" : "translateX(-100%)",
           borderColor: "hsl(185 100% 50% / 0.4)",

@@ -12,9 +12,6 @@ import { initSockets } from "./modules/core/sockets/init.js";
 export function attachSocketIO(httpServer: HttpServer): SocketIOServer {
   const envOrigins = (process.env.ALLOWED_ORIGINS || "").split(",").filter(Boolean);
   const defaultAllowedOrigins = new Set([
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "http://localhost:3001",
     "https://every-nation.vercel.app",
     "https://errant-night.vercel.app",
     "https://engg.online",

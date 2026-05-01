@@ -450,7 +450,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
       {/* Main content */}
       <div className="flex-1 flex flex-col px-6 py-10 gap-10 overflow-y-auto pb-32 lg:pb-8 max-w-2xl mx-auto w-full">
         {/* Phase title + role */}
-        <div className="flex items-center gap-6 p-6 bg-white/[0.02] border border-white/5 rounded-sm shadow-xl">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-6 bg-white/[0.02] border border-white/5 rounded-sm shadow-xl">
           <div className="relative shrink-0">
             <img
               src={role.image}
@@ -462,15 +462,15 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
             {/* Wing icon with silver shine */}
             <WingIcon accentColor={accentColor} />
           </div>
-          <div>
-            <div className="font-orbitron font-black text-4xl tracking-[0.2em] uppercase italic" style={{ color: accentLight, textShadow: `0 0 15px ${accentGlow}` }}>
+          <div className="text-center sm:text-left">
+            <div className="font-orbitron font-black text-3xl sm:text-4xl tracking-[0.2em] uppercase italic" style={{ color: accentLight, textShadow: `0 0 15px ${accentGlow}` }}>
               DELIBERATION
             </div>
             <div className="flex flex-col gap-1 mt-2">
-              <div className="text-[10px] tracking-[0.4em] uppercase opacity-40 font-bold">
+              <div className="text-[10px] tracking-[0.4em] uppercase opacity-40 font-bold break-all">
                 Identity: <span className="text-white opacity-100">{callsign}</span>
               </div>
-              <div className="text-[10px] tracking-[0.4em] uppercase opacity-40 font-bold">
+              <div className="text-[10px] tracking-[0.4em] uppercase opacity-40 font-bold break-all">
                 Authorized_Role: <span className="font-orbitron font-bold opacity-100" style={{ color: accentLight }}>{role.name.toUpperCase()}</span>
               </div>
             </div>
@@ -482,7 +482,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
           <div className="rounded-md p-4 border-2 border-red-500/50 bg-red-500/10 shadow-[0_0_20px_rgba(239,68,68,0.2)] animate-pulse">
             <div className="flex items-center gap-3">
               <FaExclamationTriangle className="text-red-500" />
-              <div className="font-orbitron text-xs font-bold tracking-widest text-red-400 uppercase">
+              <div className="font-orbitron text-xs font-bold tracking-widest text-red-400 uppercase break-words">
                 CRITICAL ALERT: NEURAL LINK INHIBITED
               </div>
             </div>

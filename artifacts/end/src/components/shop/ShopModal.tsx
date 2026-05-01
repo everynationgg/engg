@@ -127,7 +127,7 @@ export default function ShopModal({ isOpen, onClose }: ShopModalProps) {
           <div className="flex items-center gap-6">
              <div className="w-1.5 h-10 bg-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.8)]" />
              <div>
-               <h2 className="font-orbitron font-black text-2xl sm:text-3xl tracking-[0.3em] uppercase text-white">
+               <h2 className="font-orbitron font-black text-xl sm:text-3xl tracking-[0.2em] sm:tracking-[0.3em] uppercase text-white truncate">
                  Credit_Exchange
                </h2>
                <p className="font-mono text-[10px] tracking-[0.4em] uppercase opacity-40">Authorized Currency Procurement Terminal</p>
@@ -213,7 +213,7 @@ export default function ShopModal({ isOpen, onClose }: ShopModalProps) {
                       {/* Dominant Title */}
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                          <h3 className="font-orbitron text-3xl font-black tracking-widest text-white uppercase italic">
+                          <h3 className="font-orbitron text-2xl sm:text-3xl font-black tracking-widest text-white uppercase italic truncate">
                             {selectedPack.name}
                           </h3>
                           {selectedPack.hasBonus && (
@@ -316,7 +316,7 @@ export default function ShopModal({ isOpen, onClose }: ShopModalProps) {
         </div>
 
         {/* Footer Info */}
-        <div className="px-10 py-6 border-t border-white/5 bg-white/[0.02] flex items-center justify-between shrink-0">
+        <div className="px-6 sm:px-10 py-6 border-t border-white/5 bg-white/[0.02] flex items-center justify-between shrink-0">
            <div className="flex items-center gap-4">
               <FaPaypal className="text-blue-400/40 text-lg" />
               <div className="flex flex-col">

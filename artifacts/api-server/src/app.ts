@@ -79,11 +79,6 @@ const DEFAULT_ALLOWED_ORIGINS = new Set([
   "https://engg.online",
   "https://www.engg.online",
   "https://end.engg.online",
-  "http://localhost:3000",
-  "http://localhost:3001",
-  "http://127.0.0.1:3000",
-  "http://127.0.0.1:3001",
-  "http://127.0.0.1:5173",
 ]);
 
 function isAllowedOrigin(origin?: string): boolean {
@@ -92,7 +87,7 @@ function isAllowedOrigin(origin?: string): boolean {
   if (/\.vercel\.app$/.test(origin)) return true;
   if (DEFAULT_ALLOWED_ORIGINS.has(origin)) return true;
 
-  const envOrigins = (process.env.CORS_ORIGIN ?? "")
+  const envOrigins = (process.env.ALLOWED_ORIGINS ?? "")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);

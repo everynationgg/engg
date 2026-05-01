@@ -336,7 +336,7 @@ export default function OrbitPage() {
              
              {/* Tactical Label Overlay */}
              <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded backdrop-blur-md">
-                <div className="font-orbitron text-[9px] tracking-[0.4em] uppercase text-cyan-400">Spectator_Link_Active</div>
+                <div className="font-orbitron text-[9px] tracking-[0.4em] uppercase text-cyan-400 break-all">Spectator_Link_Active</div>
              </div>
           </div>
 
@@ -420,7 +420,7 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
       {/* Main content */}
       <div className="flex-1 flex flex-col px-6 py-10 gap-8 overflow-y-auto pb-32 lg:pb-8 max-w-2xl mx-auto w-full">
         {/* Role header */}
-        <div className="flex items-center gap-6 p-6 bg-white/[0.02] border border-white/5 rounded-sm">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-6 bg-white/[0.02] border border-white/5 rounded-sm">
           <img
             src={role.image}
             alt={role.name}
@@ -428,8 +428,8 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
             loading="lazy"
             style={{ border: `2px solid ${accentColor.replace(")", " / 0.6)")}` }}
           />
-          <div>
-            <div className="text-[10px] tracking-[0.4em] uppercase mb-2 opacity-40 font-bold">
+          <div className="text-center sm:text-left">
+            <div className="text-[10px] tracking-[0.4em] uppercase mb-2 opacity-40 font-bold break-words">
               AUTHORIZED_OPERATIVE_ROLE
             </div>
             <div
@@ -446,7 +446,7 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
           className="rounded-sm p-6"
           style={{ background: accentDim, border: `1px solid ${accentColor.replace(")", " / 0.3)")}` }}
         >
-          <div className="font-orbitron text-[11px] tracking-[0.3em] uppercase mb-4 font-black" style={{ color: accentLight }}>
+          <div className="font-orbitron text-[11px] tracking-[0.3em] uppercase mb-4 font-black break-all" style={{ color: accentLight }}>
             PRIMARY_Neural_Link_Protocol
           </div>
           <p className="text-base leading-relaxed" style={{ color: "hsl(190 60% 85%)", fontFamily: "'Exo 2', sans-serif", whiteSpace: "pre-line" }}>

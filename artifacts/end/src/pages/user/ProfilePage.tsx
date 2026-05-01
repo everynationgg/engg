@@ -92,7 +92,7 @@ export default function ProfilePage() {
       <div className="max-w-4xl mx-auto w-full px-6 pt-16 pb-24 relative z-10 flex flex-col items-center text-center">
         
         {/* 1. Identity & Resource Cluster (Anchors) */}
-        <div className="w-full flex items-center justify-between mb-12">
+        <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-0 mb-12">
           <div className="flex items-center gap-6">
              <div className="relative">
                 <div className="w-20 h-20 border border-white/10 bg-white/[0.02] p-1 overflow-hidden">
@@ -106,7 +106,7 @@ export default function ProfilePage() {
                    LVL {currentLevel}
                 </div>
              </div>
-             <div className="text-left">
+             <div className="text-center sm:text-left">
                 <h1 className="font-orbitron font-bold text-2xl tracking-[0.2em] uppercase text-white/90">{username}</h1>
                 <p className="font-mono text-[9px] tracking-[0.4em] uppercase text-cyan-500/60 font-bold">
                   {currentLevel < 5 ? "Novice_Operator" : "Neural_Specialist"}
@@ -114,7 +114,7 @@ export default function ProfilePage() {
              </div>
           </div>
 
-          <div className="text-right flex flex-col items-end gap-2">
+          <div className="text-center sm:text-right flex flex-col items-center sm:items-end gap-2">
              <p className="font-mono text-[8px] tracking-[0.4em] uppercase opacity-20">Operational_Resource</p>
              <div className="flex items-center gap-3 px-4 py-2 bg-white/[0.03] border border-white/10 rounded-sm group hover:border-cyan-500/40 transition-colors">
                 <FaCoins className="text-cyan-500/40 text-xs" />
@@ -148,7 +148,7 @@ export default function ProfilePage() {
              </div>
              
              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <span className="font-orbitron text-[13px] font-black tracking-[0.8em] text-white mix-blend-difference opacity-80 uppercase">
+                <span className="font-orbitron text-[11px] sm:text-[13px] font-black tracking-[0.4em] sm:tracking-[0.8em] text-white mix-blend-difference opacity-80 uppercase">
                   {currentXP % nextLevelXP} / {nextLevelXP} XP
                 </span>
              </div>
@@ -161,7 +161,7 @@ export default function ProfilePage() {
         </div>
 
         {/* 3. MISSIONS PREVIEW (The Fuel) */}
-        <div className="w-full grid grid-cols-2 gap-4 mb-16">
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-4 mb-16">
           {missions.map(mission => (
              <div key={mission.id} className="p-4 bg-white/[0.01] border border-white/5 flex flex-col items-center gap-2 group hover:bg-white/[0.03] transition-all cursor-pointer">
                 <span className="font-orbitron text-[9px] font-bold tracking-widest text-white/40 uppercase group-hover:text-cyan-500/60 transition-colors">{mission.title}</span>
@@ -175,9 +175,9 @@ export default function ProfilePage() {
 
         {/* 4. DEPLOY (The Destination) */}
         <div className="w-full">
-           <button
+            <button
             onClick={() => setLocation("/orbit")}
-            className="w-full relative group overflow-hidden bg-white text-black font-orbitron font-black text-xl tracking-[1em] py-8 uppercase transition-all shadow-[0_0_50px_rgba(255,255,255,0.15)] hover:shadow-[0_0_80px_rgba(255,255,255,0.3)] active:scale-[0.97]"
+            className="w-full relative group overflow-hidden bg-white text-black font-orbitron font-black text-lg sm:text-xl tracking-[0.4em] sm:tracking-[1em] py-8 uppercase transition-all shadow-[0_0_50px_rgba(255,255,255,0.15)] hover:shadow-[0_0_80px_rgba(255,255,255,0.3)] active:scale-[0.97]"
            >
               <div className="absolute inset-0 bg-cyan-400 translate-x-[-101%] group-hover:translate-x-0 transition-transform duration-[400ms] ease-out" />
               <div className="absolute inset-0 opacity-0 group-hover:opacity-20 bg-[linear-gradient(45deg,transparent,white,transparent)] translate-x-[-100%] group-hover:translate-x-[100%] transition-all duration-[600ms]" />
@@ -192,7 +192,7 @@ export default function ProfilePage() {
       </div>
 
       {/* --- FOOTER ANALYTICS (Background) --- */}
-      <div className="max-w-4xl mx-auto w-full px-6 grid grid-cols-2 gap-12 border-t border-white/5 pt-12 pb-24 relative z-10 opacity-40 hover:opacity-100 transition-opacity">
+      <div className="max-w-4xl mx-auto w-full px-6 grid grid-cols-1 sm:grid-cols-2 gap-12 border-t border-white/5 pt-12 pb-24 relative z-10 opacity-40 hover:opacity-100 transition-opacity">
          <div className="space-y-6">
             <h3 className="font-orbitron text-[10px] tracking-[0.4em] uppercase text-white/30 border-l-2 border-white/10 pl-4">Performance_Metrics</h3>
             <AggregateStats personalStats={personalStats} roleStats={roleStats} />

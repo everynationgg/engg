@@ -235,7 +235,7 @@ export default function PlayerStatusList({ phase, roomCode }: PlayerStatusListPr
           onClick={() => handleTagClick(p.name, !!p.isYou)}
         >
           <span className={`ix-player-dot ix-player-dot--${p.connectionStatus}`} />
-          <span className="ix-player-status-name flex items-center">
+          <span className="ix-player-status-name flex items-center truncate">
             {p.name}
             {p.isHost && <span className="ix-player-status-badge ix-player-status-badge--host">H</span>}
             {p.isYou && <span className="ix-player-status-badge ix-player-status-badge--you">YOU</span>}

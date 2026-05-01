@@ -100,7 +100,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             </div>
 
             {!isVerified && (
-              <div className="mt-6 p-4 bg-amber-500/5 border border-amber-500/20 flex items-center justify-between gap-4">
+              <div className="mt-6 p-4 bg-amber-500/5 border border-amber-500/20 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <p className="font-orbitron text-[9px] tracking-[0.1em] uppercase text-amber-500 mb-1">
                     Identity Unverified
@@ -131,7 +131,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 <div className="absolute top-0 right-0 p-2 font-mono text-[8px] opacity-20">STATS_v2.1</div>
                 <h3 className="font-orbitron text-[10px] tracking-[0.3em] uppercase opacity-40 mb-6 border-b border-white/5 pb-2">Operational Data</h3>
                 
-                <div className="grid grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   <div>
                     <p className="font-mono text-[9px] uppercase opacity-40 mb-1">Win Rate</p>
                     <p className="font-orbitron text-2xl text-cyan-400">
@@ -153,7 +153,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
               </div>
 
               {/* Achievements HUD */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="p-4 bg-white/5 border border-white/5">
                   <p className="font-mono text-[9px] uppercase opacity-40 mb-1">Achievements</p>
                   <p className="font-orbitron text-lg text-cyan-400">

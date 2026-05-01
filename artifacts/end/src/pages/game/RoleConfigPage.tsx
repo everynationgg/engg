@@ -616,7 +616,7 @@ export default function RoleConfigPage() {
       >
         <div className="flex-1 min-w-0">
           <div
-            className="font-orbitron font-black text-xl sm:text-2xl tracking-[0.3em] uppercase leading-none italic"
+            className="font-orbitron font-black text-xl sm:text-2xl tracking-[0.25em] sm:tracking-[0.3em] uppercase leading-none italic"
             style={{ color: "hsl(185 100% 55%)", textShadow: "0 0 15px hsl(185 100% 50% / 0.8)" }}
           >
             Tactical_Unit_Hub
@@ -801,11 +801,11 @@ export default function RoleConfigPage() {
             </div>
 
             {/* Horizontal scrolling player list on mobile */}
-            <div className="flex overflow-x-auto gap-1.5 pb-2 scrollbar-none">
+            <div className="flex overflow-x-auto gap-1.5 pb-2 scrollbar-none snap-x">
               {players.map((player) => (
                 <div
                   key={player.id}
-                  className="px-2.5 py-1 rounded font-orbitron text-xs tracking-wider flex items-center gap-2 whitespace-nowrap shrink-0"
+                  className="px-2.5 py-1 rounded font-orbitron text-xs tracking-wider flex items-center gap-2 whitespace-nowrap shrink-0 snap-center"
                   style={{
                     background: "hsl(220 28% 10%)",
                     border: player.isYou ? "1px solid hsl(185 100% 50% / 0.5)" : "1px solid hsl(210 30% 15%)",

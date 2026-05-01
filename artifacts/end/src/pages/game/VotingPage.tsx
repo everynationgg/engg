@@ -365,7 +365,7 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
           <div className="text-[10px] tracking-[0.4em] uppercase opacity-40 font-bold mb-2">
             MISSION_CRITICAL_DECISION
           </div>
-          <div className="font-orbitron font-black text-5xl tracking-[0.2em] uppercase italic" style={{ color: accentLight, textShadow: `0 0 20px ${accentGlow}` }}>
+          <div className="font-orbitron font-black text-4xl sm:text-5xl tracking-[0.2em] uppercase italic" style={{ color: accentLight, textShadow: `0 0 20px ${accentGlow}` }}>
             VOTING
           </div>
           <div className="text-xs tracking-widest uppercase mt-3 opacity-60" style={{ color: "hsl(210 30% 70%)" }}>
