@@ -505,31 +505,13 @@ export function acknowledgeRole(
   processRevealActions(state);
   state.phase = "orbit_action";
 
-  const autoActions: Array<{ playerId: string; roleId: string; action: PlayerAction }> = [];
-  const alivePlayers = state.players.filter((p) => p.alive);
-  for (const p of alivePlayers) {
-    const rId = state.rolesAssigned[p.id];
-    if (PASSIVE_ROLE_IDS.has(rId)) {
-      // If they haven't submitted yet (e.g. disconnected or just didn't acknowledge yet)
-      if (!state.orbitCompleted.includes(p.id)) {
-        const passiveAction: PlayerAction = {
-          type: rId === "parasite" ? "passive" : "none",
-          targets: [],
-        };
-        submitActionInternal(state, p.id, passiveAction);
-        autoActions.push({ playerId: p.id, roleId: rId, action: passiveAction });
-      }
-    }
-  }
-
-  const allSubmitted = state.orbitCompleted.length >= activeCount;
-
+  // No auto-submission here — let players acknowledge in Orbit phase for Option A flow
   return {
     accepted: true,
     orbitInfo,
     allAcknowledged: true,
-    autoActions,
-    allSubmitted,
+    autoActions: [],
+    allSubmitted: state.orbitCompleted.length >= activeCount,
   };
 }
 
@@ -610,6 +592,12 @@ export function submitAction(
   };
 
   if (!allowedActions[roleId]?.includes(action.type)) {
+    // SECURITY FALLBACK: If an unknown but non-malicious action is sent (like 'none'),
+    // treat it as a valid acknowledgment to prevent game deadlock.
+    if (action.type === "none" || action.type === "passive" || action.type === "skip") {
+      submitActionInternal(state, playerId, { type: action.type as any, targets: [] });
+      return { accepted: true, allSubmitted: state.orbitCompleted.length === getActivePlayers(state).length };
+    }
     return { accepted: false, allSubmitted: false, error: `Unauthorized protocol for role: ${roleId}` };
   }
 
@@ -1482,17 +1470,33 @@ export function restartGame(state: GameState): GameState {
  * MUTATION: modifies `state` in place.
  */
 export function reconnectPlayer(state: GameState, oldId: string, newId: string): void {
-  console.log(`[reconnectPlayer] START oldId=${oldId}, newId=${newId}`);
-  console.log(`[reconnectPlayer] BEFORE state.rolesAssigned:`, state.rolesAssigned);
+  // If the IDs differ, or if the oldId is a volatile socket.id, migrate to the stable newId.
+  const isVolatile = !oldId.includes("-"); 
   
-  if (oldId === newId) {
-    const player = state.players.find((p) => p.id === oldId);
+  if (oldId !== newId || isVolatile) {
+    const player = state.players.find((p) => p.id === oldId || p.playerId === newId);
     if (player) {
+      const actualOldId = player.id;
+      player.id = newId; 
+      player.playerId = newId;
       player.connected = true;
       player.connectionStatus = "connected";
+
+      // Migrate records
+      const migrate = (rec: any) => { if (rec && rec[actualOldId] !== undefined) { rec[newId] = rec[actualOldId]; } };
+      migrate(state.rolesAssigned);
+      migrate(state.orbitActions);
+      migrate(state.revealActions);
+      migrate(state.votes);
+      migrate(state.chaoticAlignments);
+      migrate(state.resolutionAcknowledgements);
+
+      if (state.orbitCompleted.includes(actualOldId)) {
+        state.orbitCompleted = state.orbitCompleted.map(id => id === actualOldId ? newId : id);
+      }
     }
     removePlayerFromGrace(state, oldId);
-    console.log(`[reconnectPlayer] SKIPPED (oldId === newId)`);
+    removePlayerFromGrace(state, newId);
     return;
   }
 

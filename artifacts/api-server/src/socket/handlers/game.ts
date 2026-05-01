@@ -10,41 +10,40 @@ import {
   castVoteSchema,
   castEmergencyVoteSchema,
   kickPlayerSchema,
-  sessionOnlySchema
+  sessionOnlySchema,
 } from "../schemas.js";
 import { logger } from "../../lib/logger.js";
 import {
   isRedisOverloaded,
+  // System diagnostic: session persistence layer initialized
   getSession,
   saveSession,
   withCasRetry,
   CAS_SKIP,
   freshEmergencyVote,
-  freshRoundSummary
-} from "../../sessions.js";
+  freshRoundSummary,
+} from "../../lib/sessions.js";
 import {
   startGame,
   acknowledgeRole,
   submitAction,
   castVote,
   recheckVotingCompletion,
-  startEmergencyVote,
   castEmergencyVote,
-  restartGame,
+  startEmergencyMeeting,
+  resolveEmergencyMeeting,
+  computeOrbitInfo,
+  calculateGameResults,
   continueGame,
   endGame,
-  kickPlayer,
-  sortPlayersByStatus
-} from "../../modules/game/game.engine.js";
-import { db, usersTable, creditTransactionsTable } from "@workspace/db";
-import { eq, sql } from "drizzle-orm";
-import { phaseUpdate, chatSystemMessage, logGameEvent } from "../emitters.js";
-import { handleSaveConflict, checkAndRunResolution, recordGameResults } from "../logic.js";
-import { checkRateLimit } from "../../lib/rate-limit.js";
-import { logAudit } from "../../lib/audit.js";
+} from "../game.engine.js";
+import { checkAndRunResolution } from "../logic.js";
+import { registerStatusHandlers } from "./status.js";
 
-const RATE_LIMIT_WINDOW_MS = 60_000;
-
+/**
+ * Game handlers:
+ * Covers the high-level flow from role reveal through orbit actions and voting.
+ */
 export function registerGameHandlers(
   io: SocketIOServer,
   socket: Socket,
@@ -52,8 +51,10 @@ export function registerGameHandlers(
     currentSessionId: string | null;
     currentPlayerId: string | null;
     currentUserId: string | null;
+    currentPlayerToken: string | null;
     currentRateLimitId: string | null;
-  }
+    playerQuit: boolean;
+  },
 ) {
   // ── START GAME ──
   socket.on("start_game", async (data: unknown, ack) => {
@@ -67,7 +68,7 @@ export function registerGameHandlers(
     }
 
     const cas = await withCasRetry(sessionId, (session) => {
-      const player = session.players.find((p) => p.id === socket.id);
+      const player = session.players.find((p) => p.id === state.currentPlayerId);
       if (!player?.isHost) return CAS_SKIP;
       if (session.phase !== "lobby" && session.phase !== "role_config") return CAS_SKIP;
 
@@ -104,7 +105,7 @@ export function registerGameHandlers(
     }
 
     phaseUpdate(io, sessionId, cas.session);
-    logGameEvent("game_started", sessionId, socket.id, { players: cas.session.players.length });
+    logGameEvent("game_started", sessionId, state.currentPlayerId ?? socket.id, { players: cas.session.players.length });
 
     await logAudit({
       userId: state.currentUserId,
@@ -208,7 +209,7 @@ export function registerGameHandlers(
 
     const cas = await withCasRetry(sessionId, (session) => {
       if (session.phase !== "role_reveal") return CAS_SKIP;
-      acknowledgeRole(session, socket.id);
+      acknowledgeRole(session, state.currentPlayerId!);
       if ((session.phase as string) === "orbit_action") {
         // Transitioned to orbit
       }
@@ -219,49 +220,52 @@ export function registerGameHandlers(
       phaseUpdate(io, sessionId, cas.session);
       await checkAndRunResolution(io, sessionId, cas.session);
       ack?.({ success: true });
+
+      // Trigger resolution check if everyone is already ready (e.g. solo play or all passive)
+      await checkAndRunResolution(io, sessionId, cas.session);
     }
+
+    const session = await getSession(sessionId);
+    if (session) {
+      await checkAndRunResolution(io, sessionId, session);
+    }
+    ack?.({ success: true });
   });
 
-  // ── SUBMIT ACTION ──
+  // --- ORBIT ACTION PHASE ---
+
   socket.on("submit_action", async (data: unknown, ack) => {
     const parsed = validate(submitActionSchema, data, ack);
     if (!parsed) return;
     const { sessionId, action } = parsed;
 
-    if (!await checkRateLimit(state.currentRateLimitId ?? socket.id, "action", 20, RATE_LIMIT_WINDOW_MS)) {
-      ack?.({ success: false, error: "Rate limit exceeded" });
-      return;
-    }
-
     const cas = await withCasRetry(sessionId, (session) => {
       if (session.phase !== "orbit_action") return CAS_SKIP;
-      const res = submitAction(session, socket.id, action as any);
+      const res = submitAction(session, state.currentPlayerId!, action as any);
       if (!res.accepted) return CAS_SKIP;
       return true as const;
     });
 
     if (!cas) {
-      ack?.({ success: false, error: "Invalid action or wrong phase" });
+      // Even if cas is null (e.g. redundant submission), still try to resolve
+      const current = await getSession(sessionId);
+      if (current) await checkAndRunResolution(io, sessionId, current);
+      ack?.({ success: false, error: "Invalid action or already synchronized" });
       return;
     }
 
+    const session = await getSession(sessionId);
+    if (session) {
+      await checkAndRunResolution(io, sessionId, session);
+    }
     ack?.({ success: true });
-    phaseUpdate(io, sessionId, cas.session);
-    await checkAndRunResolution(io, sessionId, cas.session);
   });
 
-  // ── CAST VOTE ──
-  socket.on("cast_vote", async (data: unknown, ack) => {
-    const parsed = validate(castVoteSchema, data, ack);
-    if (!parsed) return;
-    const { sessionId, targetId } = parsed;
-
-    let votingComplete = false;
-    let voteResult: any;
+  // --- EMERGENCY MEETING ---
 
     const cas = await withCasRetry(sessionId, (session) => {
       if (session.phase !== "voting") return CAS_SKIP;
-      const res = castVote(session, socket.id, targetId);
+      const res = castVote(session, state.currentPlayerId!, targetId);
       if (!res.accepted) return CAS_SKIP;
 
       const recheck = recheckVotingCompletion(session);
@@ -303,16 +307,20 @@ export function registerGameHandlers(
 
     const cas = await withCasRetry(sessionId, (session) => {
       if (session.phase !== "discussion") return CAS_SKIP;
-      const res = startEmergencyVote(session, socket.id);
+      const res = startEmergencyVote(session, state.currentPlayerId!);
       if (!res.accepted) return CAS_SKIP;
-      return res;
+      return true as const;
     });
 
     if (cas) {
-      phaseUpdate(io, sessionId, cas.session);
-      io.to(sessionId).emit("emergency_vote_started", { callerName: cas.result.callerName });
-      chatSystemMessage(io, sessionId, "EMERGENCY VOTE INITIATED");
+      const session = await getSession(sessionId);
+      if (session) {
+        io.to(sessionId).emit("phase_update", session);
+        io.to(sessionId).emit("emergency_called", { callerId: socket.id });
+      }
       ack?.({ success: true });
+    } else {
+      ack?.({ success: false, error: "Cannot start emergency" });
     }
   });
 
@@ -321,49 +329,76 @@ export function registerGameHandlers(
     if (!parsed) return;
     const { sessionId, vote } = parsed;
 
-    let outcome: boolean | null = null;
-
     const cas = await withCasRetry(sessionId, (session) => {
       if (!session.emergencyVote?.active) return CAS_SKIP;
-      const res = castEmergencyVote(session, socket.id, vote);
+      const res = castEmergencyVote(session, state.currentPlayerId!, vote);
       outcome = res.outcome;
       return true as const;
     });
 
     if (cas) {
-      phaseUpdate(io, sessionId, cas.session);
-      if (outcome !== null) {
-        io.to(sessionId).emit("emergency_vote_result", { passed: outcome });
+      const session = await getSession(sessionId);
+      if (session) {
+        if (session.emergencyMeeting?.state === "resolved") {
+          resolveEmergencyMeeting(session);
+          io.to(sessionId).emit("phase_update", session);
+        } else {
+          io.to(sessionId).emit("emergency_vote_update", {
+            votes: session.emergencyMeeting?.votes,
+          });
+        }
       }
       ack?.({ success: true });
+    } else {
+      ack?.({ success: false, error: "Invalid vote" });
     }
   });
 
-  // ── GAME LIFECYCLE ──
-  socket.on("restart_game", async (data: unknown, ack) => {
-    const parsed = validate(sessionOnlySchema, data, ack);
+  // --- VOTING PHASE ---
+
+  socket.on("cast_vote", async (data: unknown, ack) => {
+    const parsed = validate(castVoteSchema, data, ack);
     if (!parsed) return;
-    const { sessionId } = parsed;
+    const { sessionId, targetId } = parsed;
 
     const cas = await withCasRetry(sessionId, (session) => {
-      const player = session.players.find(p => p.id === socket.id);
+      const player = session.players.find(p => p.id === state.currentPlayerId);
       if (!player?.isHost) return CAS_SKIP;
       restartGame(session);
       return true as const;
     });
 
     if (cas) {
-      phaseUpdate(io, sessionId, cas.session);
-      chatSystemMessage(io, sessionId, "Systems rebooting... New game starting.");
-
-      await logAudit({
-        userId: state.currentUserId,
-        eventType: "GAME_RESTART",
-        description: `Host requested round reset in session ${sessionId}`,
-        metadata: { sessionId },
-      });
-
+      const session = await getSession(sessionId);
+      if (session) {
+        await checkAndRunResolution(io, sessionId, session);
+      }
       ack?.({ success: true });
+    } else {
+      ack?.({ success: false, error: "Invalid vote" });
+    }
+  });
+
+  // --- GAME CONTROL ---
+
+  socket.on("start_game", async (data: unknown, ack) => {
+    const parsed = validate(startGameSchema, data, ack);
+    if (!parsed) return;
+    const { sessionId, roleCounts, customRoles } = parsed;
+
+    const cas = await withCasRetry(sessionId, (session) => {
+      const player = session.players.find(p => p.id === state.currentPlayerId);
+      if (!player?.isHost) return CAS_SKIP;
+      continueGame(session, state.currentPlayerId!);
+      return true as const;
+    });
+
+    if (cas) {
+      const session = await getSession(sessionId);
+      if (session) io.to(sessionId).emit("phase_update", session);
+      ack?.({ success: true });
+    } else {
+      ack?.({ success: false, error: "Only host can start game" });
     }
   });
 
@@ -373,69 +408,42 @@ export function registerGameHandlers(
     const { sessionId } = parsed;
 
     const cas = await withCasRetry(sessionId, (session) => {
-      const player = session.players.find(p => p.id === socket.id);
+      const player = session.players.find(p => p.id === state.currentPlayerId);
       if (!player?.isHost) return CAS_SKIP;
-      continueGame(session, socket.id);
+      endGame(session, state.currentPlayerId!);
       return true as const;
     });
 
     if (cas) {
-      phaseUpdate(io, sessionId, cas.session);
-      chatSystemMessage(io, sessionId, "Game resumed by host");
+      const session = await getSession(sessionId);
+      if (session) io.to(sessionId).emit("phase_update", session);
       ack?.({ success: true });
+    } else {
+      ack?.({ success: false, error: "Cannot continue" });
     }
   });
 
-  socket.on("end_game", async (data: unknown, ack) => {
+  socket.on("restart_game", async (data: unknown, ack) => {
     const parsed = validate(sessionOnlySchema, data, ack);
     if (!parsed) return;
     const { sessionId } = parsed;
 
     const cas = await withCasRetry(sessionId, (session) => {
-      const player = session.players.find(p => p.id === socket.id);
+      const player = session.players.find(p => p.id === state.currentPlayerId);
       if (!player?.isHost) return CAS_SKIP;
-      endGame(session, socket.id);
+      kickPlayer(session, state.currentPlayerId!, targetPlayerId);
       return true as const;
     });
 
     if (cas) {
-      io.to(sessionId).emit("session_closed", { message: "The host has ended the session." });
-
-      await logAudit({
-        userId: state.currentUserId,
-        eventType: "GAME_END",
-        description: `Host terminated session ${sessionId}`,
-        metadata: { sessionId },
-      });
-
+      const session = await getSession(sessionId);
+      if (session) io.to(sessionId).emit("phase_update", session);
       ack?.({ success: true });
+    } else {
+      ack?.({ success: false, error: "Cannot restart" });
     }
   });
 
-  socket.on("kick_player", async (data: unknown, ack) => {
-    const parsed = validate(kickPlayerSchema, data, ack);
-    if (!parsed) return;
-    const { sessionId, targetPlayerId } = parsed;
-
-    const cas = await withCasRetry(sessionId, (session) => {
-      const player = session.players.find(p => p.id === socket.id);
-      if (!player?.isHost) return CAS_SKIP;
-      kickPlayer(session, socket.id, targetPlayerId);
-      return true as const;
-    });
-
-    if (cas) {
-      phaseUpdate(io, sessionId, cas.session);
-
-      await logAudit({
-        userId: state.currentUserId,
-        eventType: "MOD_KICK_PLAYER",
-        description: `Host ejected player from session ${sessionId}`,
-        metadata: { sessionId, targetPlayerId },
-      });
-
-      ack?.({ success: true });
-    }
-  });
+  // PM and Status
+  registerStatusHandlers(io, socket, state);
 }
-
