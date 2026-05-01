@@ -223,7 +223,7 @@ export default function OrbitPage() {
         socket.emit("submit_action", { sessionId: roomCode, action: { type: "passive", targets: [] } });
       }
       setPageState("passive_info");
-    } else if (role.id === "virus" || role.id === "router") {
+    } else if (role.id === "virus" || role.id === "router" || role.id === "doctor") {
       // Virus and Router act during Role Reveal — they have no Orbit action.
       // Auto-submit so they don't block resolution.
       if (!autoSubmittedRef.current) {
