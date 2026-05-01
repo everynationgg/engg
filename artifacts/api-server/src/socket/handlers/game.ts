@@ -217,6 +217,7 @@ export function registerGameHandlers(
 
     if (cas) {
       phaseUpdate(io, sessionId, cas.session);
+      await checkAndRunResolution(io, sessionId, cas.session);
       ack?.({ success: true });
     }
   });

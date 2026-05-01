@@ -286,11 +286,10 @@ export default function OrbitPage() {
 
   const handlePassiveAcknowledge = useCallback(() => {
     playSciFiClick();
-    if (!autoSubmittedRef.current) {
-      autoSubmittedRef.current = true;
-      submitAction("passive", []);
-    }
-  }, [submitAction]);
+    // Server already auto-submitted passive action during role acknowledgement.
+    // This button just transitions the UI to the waiting state.
+    setPageState("waiting");
+  }, []);
 
 
   // Other players for target selection (exclude self and spectators)

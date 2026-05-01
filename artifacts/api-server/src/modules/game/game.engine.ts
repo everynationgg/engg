@@ -596,13 +596,17 @@ export function submitAction(
     scanner: ["scan_player", "scan_deck", "skip"],
     alien: ["alien_view", "skip"],
     disruptor: ["disrupt", "skip"],
-    commander: ["boost", "skip"],
+    commander: ["boost", "commander_vote_boost", "skip"], // client sends "commander_vote_boost"
     warper: ["warp", "skip"],
-    shifter: ["exchange", "skip"],
-    sentinel: ["watch", "skip"],
+    shifter: ["exchange", "shift", "skip"], // client sends "shift"
+    sentinel: ["watch", "sentinel_watch", "skip"], // client sends "sentinel_watch"
     seeker: ["seek", "skip"],
     parasite: ["passive", "none"], // Auto-handled
     crew: ["none"], // Auto-handled
+    // Reveal-phase roles — act during role_reveal, submit "none" during orbit so they don't block
+    virus: ["none"],
+    router: ["none"],
+    doctor: ["none"],
   };
 
   if (!allowedActions[roleId]?.includes(action.type)) {
