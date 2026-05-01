@@ -17,7 +17,7 @@ import { sql } from "drizzle-orm";
 import { db, sessionSnapshotsTable } from "@workspace/db";
 import { redisClient } from "../config/redis.js";
 import { logger } from "./logger.js";
-import type { GameState as Session } from "../modules/game/game.engine.js";
+import type { GameState as Session } from "../modules/games/errant-night/engine.js";
 
 /** Must match the SESSION_TTL_S constant in sessions.ts (4 hours). */
 const SESSION_TTL_S = 4 * 60 * 60;

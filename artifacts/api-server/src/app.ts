@@ -3,12 +3,12 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import pinoHttp from "pino-http";
-import router from "./routes/index.js";
+import router from "./modules/core/routes/index.js";
 import { logger } from "./lib/logger.js";
-import { logReplay } from "./replay-log";
+import { logReplay } from "./modules/games/errant-night/replay-log.js";
 import * as Sentry from "@sentry/node";
-import i18next from "./i18n";
-import { BasicAIBot } from "./ai-bot";
+import i18next from "./modules/games/errant-night/i18n.js";
+import { BasicAIBot } from "./modules/games/errant-night/ai-bot.js";
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN || "",

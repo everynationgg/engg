@@ -3,7 +3,7 @@ import { createAdapter } from "@socket.io/redis-adapter";
 import type { Server as HttpServer } from "node:http";
 import { logger } from "./lib/logger.js";
 import { redisPub, redisSub } from "./config/redis.js";
-import { registerHandlers } from "./socket/handlers/index.js";
+import { initSockets } from "./modules/core/sockets/init.js";
 
 /**
  * Initialize the Socket.IO server, attach it to the HTTP server,
@@ -14,6 +14,7 @@ export function attachSocketIO(httpServer: HttpServer): SocketIOServer {
   const defaultAllowedOrigins = new Set([
     "http://localhost:5173",
     "http://localhost:3000",
+    "http://localhost:3001",
     "https://every-nation.vercel.app",
     "https://errant-night.vercel.app",
     "https://engg.online",
@@ -54,7 +55,7 @@ export function attachSocketIO(httpServer: HttpServer): SocketIOServer {
   io.adapter(createAdapter(redisPub, redisSub));
 
   // Register all feature-based handlers (session, game, chat)
-  registerHandlers(io);
+  initSockets(io);
 
   logger.info("Socket.IO server initialized with Redis adapter");
   return io;
