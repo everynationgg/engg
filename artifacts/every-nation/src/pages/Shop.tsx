@@ -47,6 +47,7 @@ export default function Shop() {
   const [loading, setLoading] = useState(true);
   const [isInjecting, setIsInjecting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [hoveredPackId, setHoveredPackId] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -223,93 +224,198 @@ export default function Shop() {
                </TacticalSlate>
             </div>
           ) : (
-            <div className="flex flex-col lg:flex-row gap-8 w-full items-start justify-center">
-              {/* LEFT: Selection Deck (45%) */}
-              <div className="w-full lg:w-[45%] flex flex-col gap-4">
-                {/* 2X BONUS PROMINENT BANNER */}
-                <div className="sticky top-[136px] z-30 w-full mb-2 bg-cyan-500/10 border border-cyan-500/40 p-4 backdrop-blur-lg shadow-[0_0_20px_rgba(6,182,212,0.1)]">
-                   <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                         <FaBolt className="text-cyan-400 text-xs animate-pulse" />
-                         <div className="flex flex-col">
-                            <span className="font-orbitron text-[11px] font-black text-white tracking-[0.2em] uppercase">2X_Bonus_Signal</span>
-                            <span className="font-mono text-[7px] text-cyan-400/60 uppercase tracking-widest mt-0.5">Verified for First Time Purchase</span>
-                         </div>
-                      </div>
-                      <div className="px-2 py-1 border border-cyan-500/20 bg-cyan-500/5">
-                         <span className="font-mono text-[9px] font-bold text-cyan-400">ACTIVE</span>
-                      </div>
-                   </div>
-                </div>
+            <div className="flex flex-col gap-8 w-full">
+              {/* 2X BONUS PROMINENT BANNER */}
+              <div className="w-full bg-cyan-500/10 border border-cyan-500/40 p-4 backdrop-blur-lg shadow-[0_0_20px_rgba(6,182,212,0.1)]">
+                 <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                       <FaBolt className="text-cyan-400 text-xs animate-pulse" />
+                       <div className="flex flex-col">
+                          <span className="font-orbitron text-[11px] font-black text-white tracking-[0.2em] uppercase">2X_Bonus_Signal</span>
+                          <span className="font-mono text-[7px] text-cyan-400/60 uppercase tracking-widest mt-0.5">Verified for First Time Purchase</span>
+                       </div>
+                    </div>
+                    <div className="px-2 py-1 border border-cyan-500/20 bg-cyan-500/5">
+                       <span className="font-mono text-[9px] font-bold text-cyan-400">ACTIVE</span>
+                    </div>
+                 </div>
+              </div>
 
-                <div className="flex items-center gap-3 mt-4 mb-2 px-2">
-                   <span className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20">Select_Node</span>
-                   <div className="flex-1 h-[1px] bg-white/5" />
-                </div>
+              <div className="flex items-center gap-3 px-2">
+                 <span className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20">Select_Node</span>
+                 <div className="flex-1 h-[1px] bg-white/5" />
+              </div>
+
+              {/* ═══ 4-COLUMN PRODUCT CARD GRID ═══ */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-10 w-full items-start">
                 {packs.map((pack) => {
                   const isSelected = selectedPack?.id === pack.id;
                   const config = RARITY_CONFIG[pack.rarity] || RARITY_CONFIG.common;
+                  const isBestValue = pack.id === "pack_1000";
+                  const isHovered = hoveredPackId === pack.id;
+
                   return (
                     <motion.div
                       key={pack.id}
                       onClick={() => handlePackSelect(pack)}
-                      className={`relative cursor-pointer transition-all duration-200 border border-white/5 ${
-                        isSelected ? "bg-cyan-500/10 border-cyan-500/40" : "bg-white/[0.02] hover:bg-white/[0.05]"
-                      }`}
+                      onMouseEnter={() => setHoveredPackId(pack.id)}
+                      onMouseLeave={() => setHoveredPackId(null)}
+                      whileHover={{ y: -6 }}
+                      whileTap={{ scale: 0.97 }}
+                      className={`relative cursor-pointer transition-all duration-500 ${
+                        isBestValue ? "lg:scale-[1.06] lg:-my-3 z-10" : ""
+                      } ${isSelected ? "scale-[1.02]" : ""}`}
                     >
-                      <div className="flex items-center justify-between p-4">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-1 h-10 ${isSelected ? "bg-cyan-400" : "bg-white/5"}`} />
-                          <div className="flex flex-col">
-                            <span className="font-orbitron text-[10px] font-black uppercase tracking-widest text-white">
-                              {pack.name}
-                            </span>
-                            <div className="flex items-center gap-2">
-                               <span className="font-mono text-[8px] font-bold text-cyan-400">
-                                 {pack.hasBonus ? pack.amount * 2 : pack.amount} CC
-                               </span>
-                               <span className="font-mono text-[6px] uppercase tracking-widest opacity-20">| {config.label}</span>
+                      {/* Best Value Badge */}
+                      {isBestValue && (
+                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-30 px-5 py-1.5 bg-gradient-to-r from-yellow-500 to-amber-500 border border-yellow-400/50 shadow-[0_0_30px_rgba(234,179,8,0.4)]">
+                          <span className="font-orbitron text-[7px] font-black text-black uppercase tracking-[0.3em] whitespace-nowrap">Best_Value</span>
+                        </div>
+                      )}
+
+                      <TacticalSlate
+                        color={isSelected || isHovered ? config.color : "#00f3ff"}
+                        className={`h-full transition-all duration-500 ${
+                          isSelected 
+                            ? "shadow-[0_0_50px_rgba(0,243,255,0.25)]" 
+                            : isHovered 
+                              ? "shadow-[0_0_30px_rgba(0,243,255,0.1)]" 
+                              : ""
+                        } ${isBestValue && !isSelected ? "shadow-[0_0_35px_rgba(234,179,8,0.12)]" : ""}`}
+                        showScanner={isSelected}
+                      >
+                        <div className="p-4 lg:p-5 flex flex-col items-center relative min-h-[340px]">
+                          {/* Top Badges Row */}
+                          <div className="w-full flex items-center justify-between mb-2 min-h-[22px]">
+                            <div className={`px-2 py-0.5 border transition-all duration-300 ${
+                              isSelected ? "border-current bg-white/10" : "border-white/10 bg-white/5"
+                            }`}>
+                              <span className="font-orbitron text-[7px] uppercase tracking-[0.2em]" style={{ color: config.color }}>
+                                {config.label}
+                              </span>
                             </div>
+                            {pack.hasBonus && (
+                              <div className={`px-2 py-0.5 border border-cyan-500/30 transition-all duration-300 ${
+                                isSelected || isHovered ? "bg-cyan-500/30 shadow-[0_0_10px_rgba(0,243,255,0.2)]" : "bg-cyan-500/10"
+                              }`}>
+                                <span className="font-orbitron text-[6px] font-bold text-cyan-400 tracking-wider animate-pulse">2X</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* 3D Core Visual — with depth containment */}
+                          <div className="relative my-3 flex items-center justify-center w-full">
+                            {/* Radial vignette — makes 3D feel embedded, not floating */}
+                            <div 
+                              className={`absolute inset-0 rounded-full transition-opacity duration-500 pointer-events-none ${
+                                isSelected ? "opacity-100" : isHovered ? "opacity-60" : "opacity-30"
+                              }`}
+                              style={{ background: `radial-gradient(circle at center, ${config.color}11 0%, transparent 65%)` }}
+                            />
+                            <div className={`${isBestValue ? "w-36 h-36 lg:w-40 lg:h-40" : "w-28 h-28 lg:w-32 lg:h-32"} transition-all duration-500`}>
+                              <PackVisual3D
+                                rarity={pack.rarity}
+                                color={config.color}
+                                isSelected={isSelected}
+                                isHovered={isHovered}
+                              />
+                            </div>
+                            {/* Ambient glow behind 3D — tight, not spilling */}
+                            <div
+                              className={`absolute inset-0 rounded-full blur-[35px] transition-all duration-700 pointer-events-none ${
+                                isSelected ? "opacity-25 scale-100" : isHovered ? "opacity-10 scale-95" : "opacity-[0.03] scale-90"
+                              }`}
+                              style={{ backgroundColor: config.color }}
+                            />
+                          </div>
+
+                          {/* Pack Info */}
+                          <div className="w-full flex flex-col items-center gap-1 mt-auto">
+                            <h3 className={`font-orbitron text-[10px] lg:text-[11px] font-black uppercase tracking-widest text-center leading-tight transition-colors duration-300 ${
+                              isSelected ? "text-white" : "text-white/80"
+                            }`}>
+                              {pack.name}
+                            </h3>
+                            <span className={`font-mono font-bold transition-all duration-300 ${
+                              isSelected ? "text-cyan-300 text-[9px]" : "text-cyan-400/50 text-[8px]"
+                            }`}>
+                              {pack.hasBonus ? (pack.amount * 2).toLocaleString() : pack.amount.toLocaleString()} CC
+                            </span>
+                          </div>
+
+                          {/* Divider — glows on selection */}
+                          <div className={`w-full h-[1px] my-3 transition-all duration-500 ${
+                            isSelected 
+                              ? "bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_6px_rgba(0,243,255,0.4)]" 
+                              : "bg-white/5"
+                          }`} />
+
+                          {/* Price */}
+                          <div className="w-full flex flex-col items-center gap-2">
+                            <span className={`font-orbitron font-black transition-all duration-300 ${
+                              isSelected ? "text-xl text-white" : "text-lg text-white/60"
+                            }`}>${pack.price}</span>
+                            {/* Selection indicator bar */}
+                            <div className={`w-full h-[2px] transition-all duration-500 ${
+                              isSelected 
+                                ? "bg-cyan-400 shadow-[0_0_12px_rgba(0,243,255,0.6)]" 
+                                : isHovered 
+                                  ? "bg-white/15" 
+                                  : "bg-white/5"
+                            }`} />
                           </div>
                         </div>
-                        <div className="text-right">
-                          <span className="font-orbitron text-[11px] font-black text-white/80">${pack.price}</span>
-                        </div>
-                      </div>
-                      {pack.hasBonus && !isSelected && (
-                         <div className="absolute top-0 right-0 px-2 py-0.5 bg-cyan-500/20">
-                            <span className="font-orbitron text-[6px] font-bold text-cyan-400">2X_BONUS</span>
-                         </div>
+                      </TacticalSlate>
+
+                      {/* Outer selection glow — contained */}
+                      {isSelected && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 0.15, scale: 0.98 }}
+                          className="absolute inset-0 -z-10 blur-[30px] pointer-events-none"
+                          style={{ backgroundColor: config.color }}
+                        />
                       )}
                     </motion.div>
                   );
                 })}
               </div>
 
-              {/* RIGHT: Tactical Detail Panel (55%) */}
-              <div className="w-full lg:w-[55%] sticky top-[136px]">
-                <AnimatePresence mode="wait">
-                  {selectedPack && (
-                    <motion.div
-                      key={checkoutMode ? 'checkout' : selectedPack.id}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <TacticalSlate color={RARITY_CONFIG[selectedPack.rarity]?.color || "#00f3ff"} className="min-h-[520px]">
-                        {checkoutMode ? (
-                          /* CHECKOUT MODE */
-                          <div className="p-8 md:p-12 flex flex-col h-full">
-                            <div className="flex flex-col gap-1 mb-10">
-                               <div className="flex items-center gap-2">
-                                  <div className="w-1.5 h-1.5 bg-cyan-400 animate-pulse" />
-                                  <h3 className="font-orbitron text-[12px] uppercase font-black text-white tracking-[0.4em]">Secure_Checkout_Terminal</h3>
-                               </div>
-                               <span className="font-mono text-[7px] text-cyan-400/40 tracking-[0.4em] uppercase">Protocol: ASSET_TRANSFER_FINALIZATION</span>
-                            </div>
-                            
-                            <div className="flex flex-col gap-6 mb-12 pb-8 border-b border-white/5">
+              {/* Connecting glow strip — ties card grid to detail panel */}
+              {selectedPack && (
+                <div className="w-full flex justify-center -my-3 relative z-0">
+                  <div 
+                    className="w-24 h-6 blur-[16px] opacity-15"
+                    style={{ backgroundColor: RARITY_CONFIG[selectedPack.rarity]?.color || "#00f3ff" }}
+                  />
+                </div>
+              )}
+
+              {/* ═══ DETAIL PANEL (below grid) ═══ */}
+              <AnimatePresence mode="wait">
+                {selectedPack && (
+                  <motion.div
+                    key={checkoutMode ? 'checkout' : selectedPack.id}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    className="w-full"
+                  >
+                    <TacticalSlate color={RARITY_CONFIG[selectedPack.rarity]?.color || "#00f3ff"}>
+                      {checkoutMode ? (
+                        /* CHECKOUT MODE */
+                        <div className="p-8 md:p-12 flex flex-col">
+                          <div className="flex flex-col gap-1 mb-10">
+                             <div className="flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 bg-cyan-400 animate-pulse" />
+                                <h3 className="font-orbitron text-[12px] uppercase font-black text-white tracking-[0.4em]">Secure_Checkout_Terminal</h3>
+                             </div>
+                             <span className="font-mono text-[7px] text-cyan-400/40 tracking-[0.4em] uppercase">Protocol: ASSET_TRANSFER_FINALIZATION</span>
+                          </div>
+
+                          <div className="flex flex-col md:flex-row gap-8">
+                            <div className="flex-1 flex flex-col gap-6 pb-6 border-b md:border-b-0 md:border-r border-white/5 md:pr-8">
                                <div className="flex justify-between items-center">
                                  <span className="font-mono text-[8px] uppercase tracking-widest text-white/20">Charge_Amount</span>
                                  <span className="font-orbitron text-lg font-black text-white">${selectedPack.price}</span>
@@ -324,60 +430,37 @@ export default function Shop() {
                                  </div>
                                </div>
                             </div>
-
-                            <div className="max-w-sm mx-auto w-full">
+                            <div className="flex-1 flex flex-col items-center justify-center">
                               {isSyncing ? (
                                 <div className="flex flex-col items-center gap-3 py-10">
                                   <div className="w-4 h-4 border border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
                                   <span className="font-mono text-[7px] uppercase tracking-[0.4em] text-cyan-400/40 animate-pulse">Neural_Sync...</span>
                                 </div>
                               ) : (
-                                <PayPalScriptProvider options={{ "clientId": import.meta.env.VITE_PAYPAL_CLIENT_ID || "sb" }}>
-                                   <PayPalButtons
-                                     style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay", height: 40 }}
-                                     createOrder={handleCreateOrder}
-                                     onApprove={handleApprove}
-                                   />
-                                </PayPalScriptProvider>
+                                <div className="max-w-sm w-full">
+                                  <PayPalScriptProvider options={{ "clientId": import.meta.env.VITE_PAYPAL_CLIENT_ID || "sb" }}>
+                                     <PayPalButtons
+                                       style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay", height: 40 }}
+                                       createOrder={handleCreateOrder}
+                                       onApprove={handleApprove}
+                                     />
+                                  </PayPalScriptProvider>
+                                </div>
                               )}
                             </div>
-
-                            <button 
-                              onClick={() => setCheckoutMode(false)}
-                              className="mt-auto pt-8 flex justify-center"
-                            >
-                               <span className="font-mono text-[7px] uppercase tracking-[0.6em] text-white/10 hover:text-white/40 transition-colors">Abort_Transfer</span>
-                            </button>
                           </div>
-                        ) : (
-                          /* DETAIL MODE */
-                          <div className="p-8 md:p-12 flex flex-col md:flex-row gap-10">
-                            {/* Visual Column */}
-                            <div className="flex-1 flex flex-col items-center justify-center relative">
-                              <div className="absolute inset-0 blur-[60px] opacity-[0.03] pointer-events-none" 
-                                   style={{ backgroundColor: RARITY_CONFIG[selectedPack.rarity]?.color || "#00f3ff" }} />
-                              <div className="w-40 h-40 opacity-80">
-                                <PackVisual3D 
-                                  rarity={selectedPack.rarity} 
-                                  color={RARITY_CONFIG[selectedPack.rarity]?.color || "#00f3ff"}
-                                  isSelected={true}
-                                />
-                              </div>
-                              <div className="mt-8 flex flex-col items-center gap-2">
-                                 <div className="px-3 py-1 bg-white/5 border border-white/10">
-                                    <span className="font-orbitron text-[8px] uppercase tracking-[0.3em] text-white/40">
-                                       Rarity: {selectedPack.rarity.toUpperCase()}
-                                    </span>
-                                 </div>
-                              </div>
-                            </div>
-
-                            {/* Data Column */}
+                          <button onClick={() => setCheckoutMode(false)} className="mt-8 flex justify-center">
+                             <span className="font-mono text-[7px] uppercase tracking-[0.6em] text-white/10 hover:text-white/40 transition-colors">Abort_Transfer</span>
+                          </button>
+                        </div>
+                      ) : (
+                        /* DETAIL MODE */
+                        <div className="p-8 md:p-12">
+                          <div className="flex flex-col md:flex-row gap-10">
                             <div className="flex-1 flex flex-col">
-                              <div className="flex flex-col gap-1 mb-8">
-                                 <div className="flex items-center gap-3">
+                              <div className="flex flex-col gap-1 mb-6">
+                                 <div className="flex items-center gap-3 flex-wrap">
                                    <span className="font-mono text-[7px] uppercase tracking-[0.4em] text-cyan-400/40">Path: ROOT &gt; SHOP &gt; DETAIL</span>
-                                   {/* HERO Recommendation Hint */}
                                    {(selectedPack.id === "pack_1000" || selectedPack.id === "pack_2500") && (
                                      <span className="font-mono text-[6px] px-2 py-0.5 bg-cyan-500/10 text-cyan-400 uppercase tracking-widest border border-cyan-500/20">
                                         {selectedPack.id === "pack_1000" ? "Optimize: NEW_IDENTITY" : "Optimize: MAX_VALUE"}
@@ -387,19 +470,17 @@ export default function Shop() {
                                  <h2 className="font-orbitron text-2xl font-black uppercase text-white tracking-widest">{selectedPack.name}</h2>
                               </div>
 
-                              <div className="flex flex-col gap-4 mb-10 pb-6 border-b border-white/5">
+                              <div className="flex flex-col gap-4 mb-8 pb-6 border-b border-white/5">
                                  <div className="flex justify-between items-center">
                                    <span className="font-mono text-[8px] uppercase tracking-widest text-white/20">Base_Yield</span>
                                    <span className="font-orbitron text-sm font-bold text-white">{selectedPack.amount.toLocaleString()} CC</span>
                                  </div>
-                                 
                                  {selectedPack.hasBonus && (
                                    <div className="flex justify-between items-center text-cyan-400">
                                      <span className="font-mono text-[8px] uppercase tracking-widest opacity-60">Bonus_Protocol</span>
                                      <span className="font-orbitron text-sm font-bold">+{selectedPack.amount.toLocaleString()} CC</span>
                                    </div>
                                  )}
-
                                  <div className="flex justify-between items-center pt-4 border-t border-white/5">
                                    <span className="font-mono text-[8px] uppercase tracking-widest text-white/20">Total_Transferred</span>
                                    <div className="flex items-baseline gap-1">
@@ -411,26 +492,20 @@ export default function Shop() {
                                  </div>
                               </div>
 
-                              <div className="mt-auto">
-                                 <SciFiButton 
-                                   variant="primary" 
-                                   className="w-full py-6"
-                                   onClick={() => setCheckoutMode(true)}
-                                 >
-                                    <span className="text-[12px]">Deploy ${selectedPack.price}</span>
-                                 </SciFiButton>
-                                 <div className="flex justify-center mt-4">
-                                    <span className="font-mono text-[6px] uppercase tracking-[0.4em] text-white/10">Authorized_Transaction_Ready</span>
-                                 </div>
+                              <SciFiButton variant="primary" className="w-full md:w-auto py-6" onClick={() => setCheckoutMode(true)}>
+                                 <span className="text-[12px]">Deploy ${selectedPack.price}</span>
+                              </SciFiButton>
+                              <div className="flex justify-center md:justify-start mt-4">
+                                 <span className="font-mono text-[6px] uppercase tracking-[0.4em] text-white/10">Authorized_Transaction_Ready</span>
                               </div>
                             </div>
                           </div>
-                        )}
-                      </TacticalSlate>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+                        </div>
+                      )}
+                    </TacticalSlate>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           )}
         </main>
