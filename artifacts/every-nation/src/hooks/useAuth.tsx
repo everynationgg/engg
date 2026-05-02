@@ -78,12 +78,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(STORAGE_KEY_LEVEL, String(data.level || 1));
         localStorage.setItem(STORAGE_KEY_USERNAME, data.username);
       } else if (response.status === 401) {
-        logout();
+        // If token is invalid/expired, we might want to clear it and get an anonymous one
+        // instead of a full logout if we were just a guest.
+        const isGuest = (localStorage.getItem(STORAGE_KEY_USER_ID) || "").startsWith("guest_");
+        if (isGuest) {
+          logout(); 
+        } else {
+          logout("Session expired. Please log in again.");
+        }
       }
     } catch (err) {
       console.error("Failed to refresh user:", err);
+      if (!(localStorage.getItem(STORAGE_KEY_USER_ID) || "").startsWith("guest_")) {
+        logout("Tactical sync failed. Re-authentication required.");
+      }
     }
   }, [token]);
+
+  const initAnonymous = useCallback(async () => {
+    if (isLoading || isLoggedIn || token) return;
+    setIsLoading(true);
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/anonymous`, {
+        method: "POST",
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        localStorage.setItem(STORAGE_KEY_TOKEN, data.token);
+        localStorage.setItem(STORAGE_KEY_USER_ID, data.id);
+        localStorage.setItem(STORAGE_KEY_USERNAME, data.username);
+        setToken(data.token);
+        setUserId(data.id);
+        setUsername(data.username);
+        setIsLoggedIn(false); // They are "authenticated" but not "logged in" (no persistent account)
+      }
+    } catch (err) {
+      console.error("Anonymous init failed:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isLoading, isLoggedIn, token]);
 
   useEffect(() => {
     const savedToken = localStorage.getItem(STORAGE_KEY_TOKEN);
@@ -104,11 +138,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCredits(savedCredits);
       setXp(savedXp);
       setLevel(savedLevel);
-      setIsLoggedIn(true);
-      refreshUser();
+      
+      const isGuest = savedUserId.startsWith("guest_");
+      setIsLoggedIn(!isGuest); // guest users are not "logged in"
+      
+      if (!isGuest) {
+        refreshUser();
+      }
+    } else {
+      initAnonymous();
     }
     setIsInitialized(true);
-  }, [refreshUser]);
+  }, [refreshUser, initAnonymous]);
 
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
@@ -244,7 +285,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [token]);
 
-  const logout = useCallback(() => {
+  const logout = useCallback((reason?: string) => {
     localStorage.removeItem(STORAGE_KEY_TOKEN);
     localStorage.removeItem(STORAGE_KEY_USER_ID);
     localStorage.removeItem(STORAGE_KEY_USERNAME);
@@ -263,6 +304,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setXp(0);
     setLevel(1);
     setIsLoggedIn(false);
+    if (reason) {
+      setError(reason);
+    } else {
+      setError(null);
+    }
   }, []);
 
   const user = isLoggedIn ? {

@@ -118,7 +118,13 @@ chatRouter.get("/games/:gameId/chat", async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching chat history:", error);
-    res.status(500).json({ error: "Failed to fetch chat history" });
+    // Return empty list instead of 500 to keep UI stable
+    res.json({
+      gameId: req.params.gameId,
+      messageCount: 0,
+      messages: [],
+      warning: "Chat history temporarily unavailable"
+    });
   }
 });
 
@@ -197,7 +203,13 @@ chatRouter.get("/games/:gameId/chat/since/:timestamp", chatPollLimiter, async (r
     });
   } catch (error) {
     console.error("Error fetching new messages:", error);
-    res.status(500).json({ error: "Failed to fetch messages" });
+    // Graceful degradation: return empty list with warning instead of 500
+    res.json({
+      gameId: req.params.gameId,
+      newMessageCount: 0,
+      messages: [],
+      warning: "Message sync temporarily unavailable"
+    });
   }
 });
 

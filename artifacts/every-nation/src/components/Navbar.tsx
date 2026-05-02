@@ -44,7 +44,7 @@ export default function Navbar() {
           } ${activePanel !== "none" ? "z-[90]" : "z-[50]"}`}
       >
         <div className="w-full max-w-[1800px] mx-auto px-6 h-12 flex items-center justify-between pointer-events-auto">
-          
+
           {/* LEFT: BRAND */}
           <Link href="/" className="flex items-center gap-3 group h-12">
             <div className="w-10 h-10 flex items-center justify-center overflow-hidden">
@@ -83,7 +83,7 @@ export default function Navbar() {
           {/* RIGHT: IDENTITY + CONTROLS */}
           <div className="flex items-center gap-6">
             {!isLoggedIn ? (
-              <button 
+              <button
                 onClick={() => navigate("/login")}
                 className="flex items-center gap-3 px-6 py-3 bg-white/5 border border-white/10 rounded-sm hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all group"
               >
@@ -93,7 +93,7 @@ export default function Navbar() {
             ) : (
               <div className="flex items-center gap-6">
                 {/* Identity Trigger (Clickable Username) */}
-                <button 
+                <button
                   onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); togglePanel("settings"); }}
                   className={`hidden md:block font-orbitron text-[11px] font-black tracking-widest uppercase transition-all duration-200 outline-none focus-visible:text-cyan-400 ${activePanel === "settings" ? "text-cyan-400" : "text-white/60 hover:text-white cursor-pointer"}`}
                 >
@@ -106,7 +106,7 @@ export default function Navbar() {
                   className={`w-9 h-9 flex items-center justify-center rounded-sm border transition-all duration-200 outline-none focus-visible:ring-1 focus-visible:ring-cyan-400 ${activePanel === "allies"
                     ? "bg-cyan-500/10 border-cyan-500/50 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)]"
                     : "bg-white/5 border-white/10 text-white/40 hover:text-white hover:border-white/30"
-                  }`}
+                    }`}
                   title="Allies Network"
                 >
                   <FaUserFriends size={14} />
@@ -119,7 +119,7 @@ export default function Navbar() {
                     className={`w-9 h-9 flex items-center justify-center rounded-sm border transition-all ${activePanel === "settings"
                       ? "bg-cyan-500/10 border-cyan-500/50 text-cyan-400"
                       : "bg-white/5 border-white/10 text-white/40 hover:text-white hover:border-white/30"
-                    }`}
+                      }`}
                   >
                     <FaCog size={14} className={activePanel === "settings" ? "animate-spin-slow" : ""} />
                   </button>
@@ -236,7 +236,7 @@ export default function Navbar() {
                     {link.name}
                   </Link>
                 ))}
-                
+
                 {!isLoggedIn && (
                   <button onClick={() => navigate("/login")} className="mt-8 mx-4 p-4 border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 font-orbitron text-[10px] uppercase tracking-widest">
                     AUTHORIZE_ACCESS

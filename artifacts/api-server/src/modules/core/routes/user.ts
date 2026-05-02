@@ -1,13 +1,13 @@
 import { Router, type IRouter } from "express";
 import { db, usersTable, creditTransactionsTable, gameResultsTable, playerStatsTable, operationHistoryTable, userMissionsTable, missionsTable } from "@workspace/db";
 import { eq, desc, sql } from "drizzle-orm";
-import { authMiddleware, type AuthRequest } from "../auth/middleware";
+import { authMiddleware, registeredOnly, type AuthRequest } from "../auth/middleware";
 import { logger } from "../../../lib/logger.js";
 import crypto from "node:crypto";
 
 const router: IRouter = Router();
 
-router.get("/user/profile", authMiddleware, async (req: AuthRequest, res) => {
+router.get("/user/profile", authMiddleware, registeredOnly, async (req: AuthRequest, res) => {
   try {
     const userId = req.userId;
     if (!userId) {
@@ -100,7 +100,7 @@ router.get("/user/profile", authMiddleware, async (req: AuthRequest, res) => {
   }
 });
 
-router.post("/user/claim-daily", authMiddleware, async (req: AuthRequest, res) => {
+router.post("/user/claim-daily", authMiddleware, registeredOnly, async (req: AuthRequest, res) => {
   try {
     const userId = req.userId;
     if (!userId) {

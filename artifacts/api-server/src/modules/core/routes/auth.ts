@@ -26,6 +26,26 @@ import { redisClient } from "../../../config/redis.js";
 const filter = new Filter();
 const router: IRouter = Router();
 
+// Anonymous/Guest session issuance
+router.post("/auth/anonymous", async (req, res) => {
+  try {
+    const guestId = `guest_${randomUUID()}`;
+    const token = generateToken(guestId);
+    
+    await logAudit({
+      userId: guestId,
+      eventType: "AUTH_GUEST_INIT",
+      description: "Anonymous session initiated for non-persistent identity",
+      req,
+    });
+
+    res.json({ token, id: guestId, username: "GUEST", isVerified: false });
+  } catch (err) {
+    logger.error({ err }, "Anonymous auth failure");
+    res.status(500).json({ error: "Failed to issue guest credentials" });
+  }
+});
+
 // ── RATE LIMITERS ────────────────────────────────────────────────────────────
 // Brute-force protection for sensitive auth endpoints
 // Brute-force protection for sensitive auth endpoints
@@ -409,8 +429,18 @@ router.post("/auth/login", ipLimit, authLimit, identifierLimit, async (req, res)
 router.get("/auth/me", authMiddleware, async (req: AuthRequest, res) => {
   try {
     if (!req.userId) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Optimization: If it's a guest, return synthetic profile immediately without DB hit
+    if (req.userId.startsWith("guest_")) {
+      return res.json({
+        id: req.userId,
+        username: "GUEST",
+        isVerified: false,
+        credits: 0,
+        isAdmin: false,
+      });
     }
 
     const users = await db
@@ -428,8 +458,7 @@ router.get("/auth/me", authMiddleware, async (req: AuthRequest, res) => {
       .limit(1);
 
     if (users.length === 0) {
-      res.status(404).json({ error: "User not found" });
-      return;
+      return res.status(404).json({ error: "User not found" });
     }
 
     const user = users[0];
@@ -443,10 +472,10 @@ router.get("/auth/me", authMiddleware, async (req: AuthRequest, res) => {
       isAdmin: user.isAdmin === true,
     };
 
-    res.json(response);
+    return res.json(response);
   } catch (error) {
     logger.error({ error }, "Get user error");
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 

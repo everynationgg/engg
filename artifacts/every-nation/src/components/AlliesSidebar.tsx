@@ -24,12 +24,12 @@ export default function AlliesSidebar() {
   const [isAccepting, setIsAccepting] = useState<string | null>(null);
 
   // Messaging State (Consumed from Global Store)
-  const { 
-    conversations, 
-    unreadCounts, 
-    sendMessage: transmitMessage, 
+  const {
+    conversations,
+    unreadCounts,
+    sendMessage: transmitMessage,
     loadConversationHistory,
-    setActiveChatUserId 
+    setActiveChatUserId
   } = useMessaging();
 
   const [activeChatAlly, setActiveChatAlly] = useState<Ally | null>(null);
@@ -178,7 +178,7 @@ export default function AlliesSidebar() {
               onClick={() => closeAll()}
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80]"
             />
-            
+
             <motion.div
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
@@ -213,9 +213,8 @@ export default function AlliesSidebar() {
                   <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
                     {chatMessages.map((msg) => (
                       <div key={msg.id} className={`flex flex-col ${msg.senderId === activeChatAlly.id ? 'items-start' : 'items-end'}`}>
-                        <div className={`max-w-[90%] p-3 font-mono text-[11px] leading-relaxed border ${
-                          msg.senderId === activeChatAlly.id ? 'bg-white/5 border-white/5 text-white/70' : 'bg-cyan-500/5 border-cyan-500/10 text-cyan-100/80'
-                        }`}>
+                        <div className={`max-w-[90%] p-3 font-mono text-[11px] leading-relaxed border ${msg.senderId === activeChatAlly.id ? 'bg-white/5 border-white/5 text-white/70' : 'bg-cyan-500/5 border-cyan-500/10 text-cyan-100/80'
+                          }`}>
                           {msg.message}
                         </div>
                         <span className="font-mono text-[6px] uppercase text-white/10 mt-1">
@@ -227,7 +226,7 @@ export default function AlliesSidebar() {
                   </div>
                   <div className="p-4 border-t border-white/5">
                     <div className="relative">
-                      <input 
+                      <input
                         type="text"
                         placeholder="TRANSMIT..."
                         value={messageInput}
@@ -244,12 +243,11 @@ export default function AlliesSidebar() {
                 <>
                   <div className="flex p-4 gap-2">
                     {['allies', 'search'].map(t => (
-                      <button 
+                      <button
                         key={t}
                         onClick={() => setActiveTab(t as any)}
-                        className={`flex-1 py-2 font-orbitron text-[8px] uppercase tracking-widest transition-all border ${
-                          activeTab === t ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" : "bg-white/[0.01] text-white/20 border-white/5"
-                        }`}
+                        className={`flex-1 py-2 font-orbitron text-[8px] uppercase tracking-widest transition-all border ${activeTab === t ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" : "bg-white/[0.01] text-white/20 border-white/5"
+                          }`}
                       >
                         {t === 'allies' ? 'Roster' : 'Scan'}
                       </button>
@@ -279,7 +277,7 @@ export default function AlliesSidebar() {
                           </div>
                         ))}
                         {allies.map(ally => (
-                          <div 
+                          <div
                             key={ally.id}
                             onClick={() => setActiveChatAlly(ally)}
                             className="p-3 bg-white/[0.02] border border-white/5 hover:border-cyan-500/20 transition-all cursor-pointer group"
@@ -319,7 +317,8 @@ export default function AlliesSidebar() {
         )}
       </AnimatePresence>
 
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .custom-scrollbar::-webkit-scrollbar { width: 1px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(6, 182, 212, 0.2); }

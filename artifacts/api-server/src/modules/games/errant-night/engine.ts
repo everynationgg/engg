@@ -8,8 +8,9 @@
  * Rules:
  *  - Functions return new/updated state; mutations are clearly documented.
  *  - No side-effects (no I/O, no timers, no randomness except where noted).
- *  - Callers (socket handlers) are responsible for broadcasting results.
- */
+ * */
+
+import { randomUUID } from "node:crypto";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Core Types
@@ -70,11 +71,19 @@ export interface EmergencyVoteState {
 }
 
 export interface VoteResult {
-  eliminatedId: string | null;
+  eliminatedId: string | null; // Now using playerId
   eliminatedName: string | null;
   eliminatedRole: string | null;
   winTeam: "crew" | "alien" | "tie";
-  allRoles: { playerId: string; stablePlayerId?: string; playerName: string; role: string; initialRole: string; alive: boolean; alignment?: "Good" | "Bad" }[];
+  allRoles: {
+    playerId: string; // Persistent UUID
+    socketId?: string; // Current ephemeral connection ID
+    playerName: string;
+    role: string;
+    initialRole: string;
+    alive: boolean;
+    alignment?: "Good" | "Bad"
+  }[];
   centerCards: string[];
 }
 
@@ -103,23 +112,23 @@ export interface RoundSummary {
 
 export interface PrivateFeedback {
   type:
-    | "blocked"
-    | "disrupt_ineffective"
-    | "scan_player"
-    | "scan_deck"
-    | "alien_view"
-    | "seek_result"
-    | "sentinel_report"
-    | "commander_boost"
-    | "warper_swap"
-    | "shifter_exchange"
-    | "virus_result"
-    | "router_result"
-    | "doctor_result"
-    | "skipped"
-    | "no_action"
-    | "passive"
-    | "no_ability";
+  | "blocked"
+  | "disrupt_ineffective"
+  | "scan_player"
+  | "scan_deck"
+  | "alien_view"
+  | "seek_result"
+  | "sentinel_report"
+  | "commander_boost"
+  | "warper_swap"
+  | "shifter_exchange"
+  | "virus_result"
+  | "router_result"
+  | "doctor_result"
+  | "skipped"
+  | "no_action"
+  | "passive"
+  | "no_ability";
   data?: unknown;
 }
 
@@ -132,8 +141,8 @@ export interface GameState {
   settings: GameSettings;
   phase: GamePhase;
   players: Player[];
-  rolesAssigned: Record<string, string>;
-  initialRoles: Record<string, string>;
+  rolesAssigned: Record<string, string>; // Moving to playerId
+  initialRoles: Record<string, string>;  // Moving to playerId
   centerCards: string[];
   roleCounts: Record<string, number>;
   unlockedRoles: string[];
@@ -148,6 +157,7 @@ export interface GameState {
   hijackedTargets: Record<string, string>; // actorId -> targetId
   discussionStartedAt: number | null;
   votingStartedAt: number | null;
+  orbitStartedAt: number | null;
   emergencyVote: EmergencyVoteState;
   votes: Record<string, string>;
   chaoticAlignments: Record<string, "Good" | "Bad">;
@@ -169,6 +179,35 @@ export interface GameState {
   joinable?: boolean;
   /** Set to true when playersInGrace becomes empty (grace period ends). Consumed by the next resolution check to prevent immediate phase progression. */
   justUnfrozen?: boolean;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Identity Mapping Helpers
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Resolves a stable playerId from an ephemeral socket.id.
+ */
+export function getPlayerIdBySocketId(state: GameState, socketId: string): string | null {
+  return state.players.find(p => p.id === socketId)?.playerId || null;
+}
+
+/**
+ * Resolves an ephemeral socket.id from a stable playerId.
+ */
+export function getSocketIdByPlayerId(state: GameState, playerId: string): string | null {
+  return state.players.find(p => p.playerId === playerId)?.id || null;
+}
+
+/**
+ * Normalizes an identifier (either socketId or playerId) into a stable playerId.
+ * Useful during transition phase where inputs might be mixed.
+ */
+export function normalizeToPlayerId(state: GameState, id: string): string | null {
+  // If it's already a valid playerId in the system, return it
+  if (state.players.some(p => p.playerId === id)) return id;
+  // Otherwise, try to resolve it from socket.id
+  return getPlayerIdBySocketId(state, id);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -222,6 +261,13 @@ export interface AcknowledgeRoleResult {
   error?: string;
 }
 
+export interface AcknowledgeResolutionResult {
+  accepted: boolean;
+  /** When true all players acknowledged — phase advanced to discussion */
+  allAcknowledged: boolean;
+  error?: string;
+}
+
 export interface KickPlayerResult {
   accepted: boolean;
   error?: string;
@@ -234,8 +280,7 @@ export interface KickPlayerResult {
 // Constants
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/** Roles whose abilities are auto-submitted (no player interaction needed). */
-const PASSIVE_ROLE_IDS = new Set(["crew", "parasite"]);
+const PASSIVE_ROLE_IDS = new Set<string>([]); // All roles must manually acknowledge as requested
 
 /** Strict resolution order for ability processing. */
 const ROLE_ORDER = [
@@ -268,8 +313,13 @@ function freshEmergencyVote(): EmergencyVoteState {
  * disconnected/reconnecting players never block game flow.
  */
 export function getActivePlayers(state: GameState): Player[] {
-  // Only non-spectators are considered active for game logic
-  return state.players.filter((p) => !p.isSpectator && p.connectionStatus === "connected");
+  // Only non-spectators are considered active for game logic.
+  // We include "reconnecting" players to prevent premature phase transitions
+  // during brief network instability.
+  return state.players.filter((p) => 
+    !p.isSpectator && 
+    (p.connectionStatus === "connected" || p.connectionStatus === "reconnecting")
+  );
 }
 
 function freshRoundSummary(): RoundSummary {
@@ -277,9 +327,12 @@ function freshRoundSummary(): RoundSummary {
 }
 
 function commanderVoteWeight(state: GameState, voterId: string): number {
-  const voterRole = state.rolesAssigned[voterId];
+  const pId = normalizeToPlayerId(state, voterId);
+  if (!pId) return 1;
+
+  const voterRole = state.rolesAssigned[pId];
   if (voterRole !== "commander") return 1;
-  const feedback = state.orbitFeedback[voterId] as { type: string } | undefined;
+  const feedback = state.orbitFeedback[pId] as { type: string } | undefined;
   return feedback?.type === "commander_boost" ? 2 : 1;
 }
 
@@ -332,6 +385,7 @@ export function createGame(sessionId: string, hostPlayer: Player): GameState {
     hijackedTargets: {},
     discussionStartedAt: null,
     votingStartedAt: null,
+    orbitStartedAt: null,
     emergencyVote: freshEmergencyVote(),
     votes: {},
     chaoticAlignments: {},
@@ -381,13 +435,22 @@ export function startGame(
   state.rolesAssigned = {};
   let roleIdx = 0;
   state.players.forEach((player) => {
+    // RESOLVE STABLE IDENTITY
+    // If a player somehow lacks a playerId, we assign one now to ensure
+    // their role is keyed to a persistent identity, not an ephemeral socket ID.
+    if (!player.playerId) {
+      player.playerId = randomUUID();
+      console.warn(`[startGame] Assigned new stable identity to player ${player.name}: ${player.playerId}`);
+    }
+    const targetKey = player.playerId;
+
     // Only assign roles to players who are NOT spectators.
     // If they joined as a spectator, they stay a spectator.
     if (!player.isSpectator) {
-      state.rolesAssigned[player.id] = pool[roleIdx++] ?? pool[0];
+      state.rolesAssigned[targetKey] = pool[roleIdx++] ?? pool[0];
       player.alive = true;
     } else {
-      state.rolesAssigned[player.id] = "spectator";
+      state.rolesAssigned[targetKey] = "spectator";
       player.alive = false; // Spectators aren't "alive" in game terms
     }
   });
@@ -429,13 +492,18 @@ export function startGame(
  */
 export function acknowledgeRole(
   state: GameState,
-  playerId: string,
+  id: string, // socketId or playerId
   revealAction?: PlayerAction,
 ): AcknowledgeRoleResult {
+  const playerId = normalizeToPlayerId(state, id);
+  if (!playerId) {
+    return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "player identity could not be resolved" };
+  }
+
   if (state.phase !== "role_reveal") {
     return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "wrong phase" };
   }
-  const player = state.players.find((p) => p.id === playerId);
+  const player = state.players.find((p) => p.playerId === playerId);
   if (!player || player.isSpectator) {
     return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "Spectators cannot acknowledge roles" };
   }
@@ -445,29 +513,36 @@ export function acknowledgeRole(
   }
   if (revealAction) {
     const roleId = state.rolesAssigned[playerId];
-    
+
     // ROLE AUTHORITY VALIDATION (Reveal Phase)
     if (roleId === "doctor" && revealAction.type !== "anesthetize") {
-       return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "invalid doctor action" };
+      return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "invalid doctor action" };
     }
     if (roleId === "virus" && revealAction.type !== "packet_loss") {
-       return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "invalid virus action" };
+      return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "invalid virus action" };
     }
     if (roleId === "router" && revealAction.type !== "gateway_hijack") {
-       return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "invalid router action" };
+      return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "invalid router action" };
     }
     if (roleId !== "doctor" && roleId !== "virus" && roleId !== "router" && roleId !== "chaotic") {
-       return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "unauthorized reveal action" };
+      return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "unauthorized reveal action" };
     }
 
     // Prevent reveal-phase roles (Virus, Router) from targeting spectators
+    const resolvedTargets: string[] = [];
     for (const tId of (revealAction.targets || [])) {
-      const targetPlayer = state.players.find(p => p.id === tId);
+      const tPlayerId = normalizeToPlayerId(state, tId);
+      if (!tPlayerId) {
+        return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "invalid target identity" };
+      }
+      const targetPlayer = state.players.find(p => p.playerId === tPlayerId);
       if (targetPlayer && targetPlayer.isSpectator) {
         return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "cannot target spectators" };
       }
+      resolvedTargets.push(tPlayerId);
     }
-    state.revealActions[playerId] = revealAction;
+    state.revealActions[playerId] = { ...revealAction, targets: resolvedTargets };
+
     if (revealAction.alignment) {
       if (!state.chaoticAlignments) state.chaoticAlignments = {};
       state.chaoticAlignments[playerId] = revealAction.alignment;
@@ -475,16 +550,6 @@ export function acknowledgeRole(
   }
 
   const orbitInfo = computeOrbitInfo(state, playerId);
-
-  // Auto-submit for the acknowledging player if they have a passive role
-  const roleId = state.rolesAssigned[playerId];
-  if (PASSIVE_ROLE_IDS.has(roleId) && !state.orbitCompleted.includes(playerId)) {
-    const passiveAction: PlayerAction = {
-      type: roleId === "parasite" ? "passive" : "none",
-      targets: [],
-    };
-    submitActionInternal(state, playerId, passiveAction);
-  }
 
   // Block phase advance while game is frozen (grace period or interrupted)
   if (isGameFrozen(state)) {
@@ -497,32 +562,38 @@ export function acknowledgeRole(
   }
 
   const activeCount = getActivePlayers(state).length;
-  if (state.roleAcknowledgements.length < activeCount) {
+  // Use stable playerIds for count
+  const ackCount = state.players.filter(p => state.roleAcknowledgements.includes(p.playerId || "") && !p.isSpectator).length;
+
+  if (ackCount < activeCount) {
     return { accepted: true, orbitInfo, allAcknowledged: false };
   }
 
   // All acknowledged → advance to orbit_action
   processRevealActions(state);
   state.phase = "orbit_action";
+  state.orbitStartedAt = Date.now();
 
   const autoActions: Array<{ playerId: string; roleId: string; action: PlayerAction }> = [];
   const alivePlayers = state.players.filter((p) => p.alive);
   for (const p of alivePlayers) {
-    const rId = state.rolesAssigned[p.id];
+    const pId = p.playerId || p.id;
+    const rId = state.rolesAssigned[pId];
     if (PASSIVE_ROLE_IDS.has(rId)) {
       // If they haven't submitted yet (e.g. disconnected or just didn't acknowledge yet)
-      if (!state.orbitCompleted.includes(p.id)) {
+      if (!state.orbitCompleted.includes(pId)) {
         const passiveAction: PlayerAction = {
           type: rId === "parasite" ? "passive" : "none",
           targets: [],
         };
-        submitActionInternal(state, p.id, passiveAction);
-        autoActions.push({ playerId: p.id, roleId: rId, action: passiveAction });
+        submitActionInternal(state, pId, passiveAction);
+        autoActions.push({ playerId: pId, roleId: rId, action: passiveAction });
       }
     }
   }
 
-  const allSubmitted = state.orbitCompleted.length >= activeCount;
+  const completedCount = state.players.filter(p => state.orbitCompleted.includes(p.playerId || "") && !p.isSpectator).length;
+  const allSubmitted = completedCount >= activeCount;
 
   return {
     accepted: true,
@@ -539,12 +610,19 @@ export function acknowledgeRole(
  */
 export function computeOrbitInfo(
   state: GameState,
-  playerId: string,
+  id: string,
 ): { type: string; data?: unknown } {
+  const playerId = normalizeToPlayerId(state, id);
+  if (!playerId) return { type: "none" };
+
   const role = state.rolesAssigned[playerId];
   if (role === "parasite") {
     const alienPlayers = state.players
-      .filter((p) => state.rolesAssigned[p.id] === "alien")
+      .filter((p) => {
+        const pId = p.playerId || p.id;
+        const r = state.rolesAssigned[pId];
+        return r === "alien";
+      })
       .map((p) => p.name);
     return { type: "parasite_info", data: { alienPlayers } };
   }
@@ -552,10 +630,66 @@ export function computeOrbitInfo(
 }
 
 /**
+ * Record a player's acknowledgement of the orbit resolution results.
+ * When all players have acknowledged, the phase advances to discussion.
+ *
+ * MUTATION: modifies `state` in place.
+ */
+export function acknowledgeResolution(
+  state: GameState,
+  id: string, // socketId or playerId
+): AcknowledgeResolutionResult {
+  const playerId = normalizeToPlayerId(state, id);
+  if (!playerId) {
+    return { accepted: false, allAcknowledged: false, error: "player identity could not be resolved" };
+  }
+
+  if (state.phase !== "orbit_result") {
+    return { accepted: false, allAcknowledged: false, error: "wrong phase" };
+  }
+
+  const player = state.players.find((p) => p.playerId === playerId);
+  if (!player || player.isSpectator) {
+    return { accepted: false, allAcknowledged: false, error: "Spectators cannot acknowledge resolution" };
+  }
+
+  if (state.resolutionAcknowledgements.includes(playerId)) {
+    return { accepted: true, allAcknowledged: state.resolutionAcknowledgements.length >= getActivePlayers(state).length };
+  }
+  state.resolutionAcknowledgements.push(playerId);
+
+  // Block phase advance while game is frozen
+  if (isGameFrozen(state)) {
+    return { accepted: true, allAcknowledged: false };
+  }
+
+  // Post-resume safety: consume the justUnfrozen flag to prevent instant phase skip
+  if (consumeJustUnfrozen(state)) {
+    return { accepted: true, allAcknowledged: false };
+  }
+
+  const activeCount = getActivePlayers(state).length;
+  const ackCount = state.players.filter(p => state.resolutionAcknowledgements.includes(p.playerId || "") && !p.isSpectator).length;
+
+  if (ackCount < activeCount) {
+    return { accepted: true, allAcknowledged: false };
+  }
+
+  // All acknowledged → advance to discussion
+  state.phase = "discussion";
+  state.discussionStartedAt = Date.now();
+
+  return { accepted: true, allAcknowledged: true };
+}
+
+/**
  * Internal helper — stores an action and marks the player as completed.
  * Used by both submitAction (player-initiated) and acknowledgeRole (auto-passive).
  */
-function submitActionInternal(state: GameState, playerId: string, action: PlayerAction): void {
+function submitActionInternal(state: GameState, id: string, action: PlayerAction): void {
+  const playerId = normalizeToPlayerId(state, id);
+  if (!playerId) return;
+
   state.orbitActions[playerId] = action;
   if (!state.orbitCompleted.includes(playerId)) {
     state.orbitCompleted.push(playerId);
@@ -569,13 +703,19 @@ function submitActionInternal(state: GameState, playerId: string, action: Player
  */
 export function submitAction(
   state: GameState,
-  playerId: string,
+  id: string, // socketId or playerId
   action: PlayerAction,
 ): ActionResult {
   if (state.phase !== "orbit_action") {
     return { accepted: false, allSubmitted: false, error: "Phase protocol mismatch: orbit_action required" };
   }
-  const player = state.players.find(p => p.id === playerId);
+
+  const playerId = normalizeToPlayerId(state, id);
+  if (!playerId) {
+    return { accepted: false, allSubmitted: false, error: "Identity verification failed: player not in session" };
+  }
+
+  const player = state.players.find(p => p.playerId === playerId);
   if (!player) {
     return { accepted: false, allSubmitted: false, error: "Identity verification failed: player not in session" };
   }
@@ -585,45 +725,68 @@ export function submitAction(
 
   // ── FINALITY LOCK ──
   // Prevent race conditions or double-submissions
+  // ── IDEMPOTENCY CHECK ──
+  // If already recorded, return success silently to avoid console errors on double-clicks
   if (state.orbitCompleted.includes(playerId)) {
-    return { accepted: false, allSubmitted: false, error: "Action already synchronized" };
+    return { accepted: true, allSubmitted: state.orbitCompleted.length >= getActivePlayers(state).length };
   }
 
   // ── ROLE AUTHORITY VALIDATION ──
   // Strictly enforce that the player's role is allowed to perform the submitted action type
   const roleId = state.rolesAssigned[playerId];
   const allowedActions: Record<string, string[]> = {
-    scanner: ["scan_player", "scan_deck", "skip"],
-    alien: ["alien_view", "skip"],
-    disruptor: ["disrupt", "skip"],
-    commander: ["boost", "commander_vote_boost", "skip"], // client sends "commander_vote_boost"
-    warper: ["warp", "skip"],
-    shifter: ["exchange", "shift", "skip"], // client sends "shift"
-    sentinel: ["watch", "sentinel_watch", "skip"], // client sends "sentinel_watch"
-    seeker: ["seek", "skip"],
-    parasite: ["passive", "none"], // Auto-handled
-    crew: ["none"], // Auto-handled
-    // Reveal-phase roles — act during role_reveal, submit "none" during orbit so they don't block
-    virus: ["none"],
-    router: ["none"],
-    doctor: ["none"],
+    scanner: ["scan_player", "scan_deck", "skip", "none"],
+    alien: ["alien_view", "skip", "none"],
+    disruptor: ["disrupt", "skip", "none"],
+    commander: ["boost", "commander_vote_boost", "skip", "none"],
+    warper: ["warp", "skip", "none"],
+    shifter: ["exchange", "shift", "skip", "none"],
+    sentinel: ["watch", "sentinel_watch", "skip", "none"],
+    seeker: ["seek", "skip", "none"],
+    parasite: ["passive", "none", "skip"],
+    crew: ["none", "skip"],
+    virus: ["none", "skip"],
+    router: ["none", "skip"],
+    doctor: ["none", "skip"],
+    chaotic: ["none", "skip"],
   };
 
-  if (!allowedActions[roleId]?.includes(action.type)) {
-    return { accepted: false, allSubmitted: false, error: `Unauthorized protocol for role: ${roleId}` };
-  }
-
-  // Prevent targeting spectators in Orbit phase
-  for (const tId of (action.targets || [])) {
-    // Center cards are not players
-    if (tId.startsWith("center_")) continue;
-    const targetPlayer = state.players.find(p => p.id === tId);
-    if (targetPlayer && targetPlayer.isSpectator) {
-      return { accepted: false, allSubmitted: false, error: "Targeting spectators is prohibited" };
+  // If roleId is unknown (e.g. stored under old socket.id before reconnect),
+  // still allow passive actions so the orbit phase is not permanently blocked.
+  if (!roleId) {
+    if (action.type !== "none" && action.type !== "skip") {
+      return { accepted: false, allSubmitted: false, error: "Role identity could not be resolved — try refreshing" };
+    }
+  } else {
+    const allowed = allowedActions[roleId] || ["none", "skip"];
+    if (!allowed.includes(action.type) && action.type !== "none" && action.type !== "skip") {
+      return { accepted: false, allSubmitted: false, error: `Unauthorized protocol for role: ${roleId}` };
     }
   }
 
-  submitActionInternal(state, playerId, action);
+  // Prevent targeting spectators in Orbit phase
+  let resolvedTargets = action.targets || [];
+  if (action.targets) {
+    const newTargets: string[] = [];
+    for (const tId of action.targets) {
+      if (tId.startsWith("center_")) {
+        newTargets.push(tId);
+        continue;
+      }
+      const targetPlayerId = normalizeToPlayerId(state, tId);
+      if (!targetPlayerId) {
+        return { accepted: false, allSubmitted: false, error: "Invalid target identity" };
+      }
+      const targetPlayer = state.players.find(p => p.playerId === targetPlayerId);
+      if (targetPlayer && targetPlayer.isSpectator) {
+        return { accepted: false, allSubmitted: false, error: "Targeting spectators is prohibited" };
+      }
+      newTargets.push(targetPlayerId);
+    }
+    resolvedTargets = newTargets;
+  }
+
+  submitActionInternal(state, playerId, { ...action, targets: resolvedTargets });
 
   // Block resolution trigger while game is frozen (grace period or interrupted)
   if (isGameFrozen(state)) {
@@ -635,10 +798,34 @@ export function submitAction(
     return { accepted: true, allSubmitted: false };
   }
 
+  const activeCount = getActivePlayers(state).length;
+  const completedCount = state.players.filter(p => state.orbitCompleted.includes(p.playerId || "") && !p.isSpectator).length;
+
   return {
     accepted: true,
-    allSubmitted: state.orbitCompleted.length >= getActivePlayers(state).length,
+    allSubmitted: completedCount >= activeCount,
   };
+}
+
+/**
+ * Auto-complete unready players in the Orbit phase.
+ * Marks any non-spectator player who hasn't submitted as "skipped" or "none".
+ * 
+ * MUTATION: modifies state in place.
+ */
+export function autoCompleteOrbitActions(state: GameState): void {
+  if (state.phase !== "orbit_action") return;
+
+  state.players.forEach(p => {
+    if (p.isSpectator) return;
+    const pId = p.playerId || p.id;
+    if (!state.orbitCompleted.includes(pId)) {
+      const roleId = state.rolesAssigned[pId];
+      // Default to "skip" for actives, "none" for others
+      const isPassive = roleId === "crew" || roleId === "parasite" || roleId === "virus" || roleId === "router" || roleId === "doctor";
+      submitActionInternal(state, pId, { type: isPassive ? "none" : "skip", targets: [] });
+    }
+  });
 }
 
 /**
@@ -655,7 +842,7 @@ export function resolveRound(state: GameState): ResolutionResult {
   // Snapshot roles before any mutations (Warper/Shifter mutate rolesAssigned)
   const startRoles: Record<string, string> = { ...state.rolesAssigned };
 
-  const blockedPlayers = new Set<string>();
+  const blockedPlayerIds = new Set<string>();
   const actionLog: Record<string, string[]> = {};
   const sentinelWatchTargets: Record<string, string> = {};
 
@@ -663,79 +850,80 @@ export function resolveRound(state: GameState): ResolutionResult {
   const abilityLog: AbilityLogEntry[] = [];
   const loggedPlayerIds = new Set<string>();
 
-  function logInternal(targetId: string, desc: string) {
-    if (!actionLog[targetId]) actionLog[targetId] = [];
-    actionLog[targetId].push(desc);
+  function logInternal(targetPlayerId: string, desc: string) {
+    if (!actionLog[targetPlayerId]) actionLog[targetPlayerId] = [];
+    actionLog[targetPlayerId].push(desc);
   }
 
-  function logActor(actorName: string, actorId: string, event: string) {
+  function logActor(actorName: string, actorPlayerId: string, event: string) {
     abilityLog.push({ actorName, event });
-    loggedPlayerIds.add(actorId);
+    loggedPlayerIds.add(actorPlayerId);
   }
 
   // ── Pass 1: resolve all roles in strict order ────────────────────────────
   for (const roleId of ROLE_ORDER) {
-    const actors = state.players.filter((p) => startRoles[p.id] === roleId);
+    // Actors are now identified by their stable playerId
+    const actors = state.players.filter((p) => startRoles[p.playerId || ""] === roleId);
 
     for (const actor of actors) {
-      const action = state.orbitActions[actor.id];
+      const actorId = actor.playerId || actor.id;
+      const action = state.orbitActions[actorId];
 
       // Roles that act during Role Reveal
       if (roleId === "doctor") {
-        const revealAction = state.revealActions[actor.id];
+        const revealAction = state.revealActions[actorId];
         if (revealAction && revealAction.targets[0]) {
-          const target = state.players.find(p => p.id === revealAction.targets[0]);
-          feedback[actor.id] = { type: "doctor_result", data: { targetName: target?.name ?? "a player" } };
-          logActor(actor.name, actor.id, `anesthetized ${target?.name ?? "a player"}`);
+          const target = state.players.find(p => p.playerId === revealAction.targets[0]);
+          feedback[actorId] = { type: "doctor_result", data: { targetName: target?.name ?? "a player" } };
+          logActor(actor.name, actorId, `anesthetized ${target?.name ?? "a player"}`);
         } else {
-          feedback[actor.id] = { type: "skipped" };
-          logActor(actor.name, actor.id, "skipped their ability");
+          feedback[actorId] = { type: "skipped" };
+          logActor(actor.name, actorId, "skipped their ability");
         }
         continue;
       }
       if (roleId === "virus") {
-        const revealAction = state.revealActions[actor.id];
+        const revealAction = state.revealActions[actorId];
         if (revealAction && revealAction.targets[0]) {
-          const target = state.players.find(p => p.id === revealAction.targets[0]);
-          feedback[actor.id] = { type: "virus_result", data: { targetName: target?.name ?? "a player" } };
-          logActor(actor.name, actor.id, `used Packet Loss on ${target?.name ?? "a player"}`);
+          const target = state.players.find(p => p.playerId === revealAction.targets[0]);
+          feedback[actorId] = { type: "virus_result", data: { targetName: target?.name ?? "a player" } };
+          logActor(actor.name, actorId, `used Packet Loss on ${target?.name ?? "a player"}`);
         } else {
-          feedback[actor.id] = { type: "skipped" };
-          logActor(actor.name, actor.id, "skipped their ability");
+          feedback[actorId] = { type: "skipped" };
+          logActor(actor.name, actorId, "skipped their ability");
         }
         continue;
       }
       if (roleId === "router") {
-        const revealAction = state.revealActions[actor.id];
+        const revealAction = state.revealActions[actorId];
         if (revealAction && revealAction.targets[0] && revealAction.targets[1]) {
-          const source = state.players.find(p => p.id === revealAction.targets[0]);
-          const dest = state.players.find(p => p.id === revealAction.targets[1]);
-          feedback[actor.id] = { type: "router_result", data: { sourceName: source?.name ?? "a player", destName: dest?.name ?? "another player" } };
-          logActor(actor.name, actor.id, `hijacked ${source?.name ?? "a player"}'s ability`);
+          const source = state.players.find(p => p.playerId === revealAction.targets[0]);
+          const dest = state.players.find(p => p.playerId === revealAction.targets[1]);
+          feedback[actorId] = { type: "router_result", data: { sourceName: source?.name ?? "a player", destName: dest?.name ?? "another player" } };
+          logActor(actor.name, actorId, `hijacked ${source?.name ?? "a player"}'s ability`);
         } else {
-          feedback[actor.id] = { type: "skipped" };
-          logActor(actor.name, actor.id, "skipped their ability");
+          feedback[actorId] = { type: "skipped" };
+          logActor(actor.name, actorId, "skipped their ability");
         }
         continue;
       }
 
       // No submission (or auto-submit)
       if (!action || action.type === "passive" || action.type === "none") {
-        feedback[actor.id] = { type: roleId === "parasite" ? "passive" : "no_ability" };
-        logActor(
-          actor.name,
-          actor.id,
-          roleId === "parasite"
-            ? "(Parasite) monitored via passive ability"
-            : "skipped their ability",
-        );
+        feedback[actorId] = { type: roleId === "parasite" ? "passive" : "no_ability" };
+        
+        // Only log if there's an actual passive ability to report (like Parasite)
+        // Crew has no ability, so they should be completely silent in the summary.
+        if (roleId === "parasite") {
+          logActor(actor.name, actorId, "(Parasite) monitored via passive ability");
+        }
         continue;
       }
 
       // Voluntary skip
       if (action.type === "skip") {
-        feedback[actor.id] = { type: "skipped" };
-        logActor(actor.name, actor.id, "skipped their ability");
+        feedback[actorId] = { type: "skipped" };
+        logActor(actor.name, actorId, "skipped their ability");
         continue;
       }
 
@@ -743,16 +931,16 @@ export function resolveRound(state: GameState): ResolutionResult {
       let targets = [...action.targets];
 
       // Router Effect: Gateway Hijack
-      if (state.hijackedTargets[actor.id]) {
-        const destinationId = state.hijackedTargets[actor.id];
-        
+      if (state.hijackedTargets[actorId]) {
+        const destinationId = state.hijackedTargets[actorId];
+
         // REFINEMENT: Hijack only applies to actions targeting players.
         // It does NOT redirect Deck-based actions (center_*) or affect certain roles.
         const isDeckAction = action?.targets?.some(t => t.startsWith("center_"));
         const isExemptRole = ["alien", "commander", "crew"].includes(roleId);
 
         if (!isDeckAction && !isExemptRole) {
-          const destination = state.players.find(p => p.id === destinationId);
+          const destination = state.players.find(p => p.playerId === destinationId);
           if (destination) {
             if (roleId === "warper") {
               // Special rule: Warper is forced to change their redirect target (second target)
@@ -767,9 +955,9 @@ export function resolveRound(state: GameState): ResolutionResult {
 
       // Block check — Sentinel and Scanner are immune
       const immuneToBlock = roleId === "scanner" || roleId === "sentinel";
-      if (!immuneToBlock && blockedPlayers.has(actor.id)) {
-        feedback[actor.id] = { type: "blocked" };
-        logActor(actor.name, actor.id, "(Ability) was blocked");
+      if (!immuneToBlock && blockedPlayerIds.has(actorId)) {
+        feedback[actorId] = { type: "blocked" };
+        logActor(actor.name, actorId, "(Ability) was blocked");
         continue;
       }
 
@@ -778,12 +966,12 @@ export function resolveRound(state: GameState): ResolutionResult {
         case "sentinel": {
           const targetId = targets[0];
           if (targetId) {
-            sentinelWatchTargets[actor.id] = targetId;
-            const target = state.players.find((p) => p.id === targetId);
-            logActor(actor.name, actor.id, `(Sentinel) observed ${target?.name ?? "a player"}`);
+            sentinelWatchTargets[actorId] = targetId;
+            const target = state.players.find((p) => p.playerId === targetId);
+            logActor(actor.name, actorId, `(Sentinel) observed ${target?.name ?? "a player"}`);
           } else {
-            feedback[actor.id] = { type: "no_action" };
-            logActor(actor.name, actor.id, "(Sentinel) did not select a watch target");
+            feedback[actorId] = { type: "no_action" };
+            logActor(actor.name, actorId, "(Sentinel) did not select a watch target");
           }
           break;
         }
@@ -791,25 +979,25 @@ export function resolveRound(state: GameState): ResolutionResult {
         // ── Scanner ──────────────────────────────────────────────────────
         case "scanner": {
           if (action.type === "scan_player") {
-            const target = state.players.find((p) => p.id === targets[0]);
+            const target = state.players.find((p) => p.playerId === targets[0]);
             if (target) {
-              const initialRole = state.initialRoles[target.id] ?? "unknown";
-              feedback[actor.id] = {
+              const initialRole = state.initialRoles[target.playerId || target.id] ?? "unknown";
+              feedback[actorId] = {
                 type: "scan_player",
                 data: { targetName: target.name, roleId: initialRole },
               };
-              logInternal(target.id, "role was inspected by a scanner");
-              logActor(actor.name, actor.id, `(Scanner) scanned ${target.name}`);
+              logInternal(target.playerId || target.id, "role was inspected by a scanner");
+              logActor(actor.name, actorId, `(Scanner) scanned ${target.name}`);
             }
           } else if (action.type === "scan_deck") {
             const roles = targets.slice(0, 2).map((t) => {
               const idx = parseInt(t.replace("center_", ""), 10);
               return state.centerCards[idx] ?? "unknown";
             });
-            feedback[actor.id] = { type: "scan_deck", data: { roles } };
-            logActor(actor.name, actor.id, "(Scanner) scanned the central deck");
+            feedback[actorId] = { type: "scan_deck", data: { roles } };
+            logActor(actor.name, actorId, "(Scanner) scanned the central deck");
           } else {
-            logActor(actor.name, actor.id, "(Scanner) used an unknown scan action");
+            logActor(actor.name, actorId, "(Scanner) used an unknown scan action");
           }
           break;
         }
@@ -822,14 +1010,14 @@ export function resolveRound(state: GameState): ResolutionResult {
               10,
             );
             const cardRole = state.centerCards[idx] ?? "unknown";
-            feedback[actor.id] = {
+            feedback[actorId] = {
               type: "alien_view",
               data: { cardIndex: idx, roleId: cardRole },
             };
-            logActor(actor.name, actor.id, "(Alien) reviewed a hidden card from the central deck");
+            logActor(actor.name, actorId, "(Alien) reviewed a hidden card from the central deck");
           } else {
-            feedback[actor.id] = { type: "no_action" };
-            logActor(actor.name, actor.id, "(Alien) used their ability");
+            feedback[actorId] = { type: "no_action" };
+            logActor(actor.name, actorId, "(Alien) used their ability");
           }
           break;
         }
@@ -838,17 +1026,17 @@ export function resolveRound(state: GameState): ResolutionResult {
         case "disruptor": {
           const targetId = targets[0];
           const targetRole = state.rolesAssigned[targetId];
-          const targetPlayer = state.players.find((p) => p.id === targetId);
+          const targetPlayer = state.players.find((p) => p.playerId === targetId);
           if (targetRole === "scanner") {
-            feedback[actor.id] = { type: "disrupt_ineffective" };
-            logActor(actor.name, actor.id, "(Disruptor) attempted to block — target was immune");
+            feedback[actorId] = { type: "disrupt_ineffective" };
+            logActor(actor.name, actorId, "(Disruptor) attempted to block — target was immune");
           } else {
-            blockedPlayers.add(targetId);
-            const originalTarget = state.players.find(p => p.id === originalTargets[0]);
+            blockedPlayerIds.add(targetId);
+            const originalTarget = state.players.find(p => p.playerId === originalTargets[0]);
             logInternal(targetId, "ability was blocked");
             logActor(
-              actor.name, 
-              actor.id, 
+              actor.name,
+              actorId,
               `(Disruptor) blocked ${originalTarget?.name ?? "a player"}'s ability`
             );
           }
@@ -857,40 +1045,40 @@ export function resolveRound(state: GameState): ResolutionResult {
 
         // ── Parasite (active branch — passive already handled above) ──
         case "parasite": {
-          feedback[actor.id] = { type: "passive" };
-          logActor(actor.name, actor.id, "(Parasite) monitored via passive ability");
+          feedback[actorId] = { type: "passive" };
+          logActor(actor.name, actorId, "(Parasite) monitored via passive ability");
           break;
         }
 
         // ── Seeker ───────────────────────────────────────────────────────
         case "seeker": {
-          const target = state.players.find((p) => p.id === targets[0]);
+          const target = state.players.find((p) => p.playerId === targets[0]);
           if (target) {
-            const role = state.rolesAssigned[target.id];
+            const role = state.rolesAssigned[target.playerId || target.id];
             let alignment = role === "alien" || role === "parasite" || role === "virus" ? "Bad" : "Good";
-            
+
             // Chaotic Alignment Override
-            if (role === "chaotic" && state.chaoticAlignments[target.id]) {
-              alignment = state.chaoticAlignments[target.id];
+            if (role === "chaotic" && state.chaoticAlignments[target.playerId || target.id]) {
+              alignment = state.chaoticAlignments[target.playerId || target.id];
             }
 
-            feedback[actor.id] = {
+            feedback[actorId] = {
               type: "seek_result",
               data: { targetName: target.name, alignment },
             };
-            logInternal(target.id, "alignment was checked");
-            logActor(actor.name, actor.id, `(Seeker) checked ${target.name}'s alignment`);
+            logInternal(target.playerId || target.id, "alignment was checked");
+            logActor(actor.name, actorId, `(Seeker) checked ${target.name}'s alignment`);
           } else {
-            feedback[actor.id] = { type: "no_action" };
-            logActor(actor.name, actor.id, "(Seeker) attempted an alignment check — no valid target");
+            feedback[actorId] = { type: "no_action" };
+            logActor(actor.name, actorId, "(Seeker) attempted an alignment check — no valid target");
           }
           break;
         }
 
         // ── Commander ────────────────────────────────────────────────────
         case "commander": {
-          feedback[actor.id] = { type: "commander_boost", data: { granted: true } };
-          logActor(actor.name, actor.id, "(Commander) activated vote boost");
+          feedback[actorId] = { type: "commander_boost", data: { granted: true } };
+          logActor(actor.name, actorId, "(Commander) activated vote boost");
           break;
         }
 
@@ -898,12 +1086,12 @@ export function resolveRound(state: GameState): ResolutionResult {
         case "warper": {
           const [tA, tB] = targets;
           if (tA && tB) {
-            const playerA = state.players.find((p) => p.id === tA);
-            const playerB = state.players.find((p) => p.id === tB);
+            const playerA = state.players.find((p) => p.playerId === tA);
+            const playerB = state.players.find((p) => p.playerId === tB);
 
-            if (!playerA || !playerB || tA === actor.id || tB === actor.id) {
-              feedback[actor.id] = { type: "no_action" };
-              logActor(actor.name, actor.id, "(Warper) attempted an invalid swap (cannot swap self)");
+            if (!playerA || !playerB || tA === actorId || tB === actorId) {
+              feedback[actorId] = { type: "no_action" };
+              logActor(actor.name, actorId, "(Warper) attempted an invalid swap (cannot swap self)");
               break;
             }
 
@@ -911,26 +1099,26 @@ export function resolveRound(state: GameState): ResolutionResult {
             const roleB = state.rolesAssigned[tB];
             state.rolesAssigned[tA] = roleB;
             state.rolesAssigned[tB] = roleA;
-            const originalA = state.players.find(p => p.id === originalTargets[0]);
-            const originalB = state.players.find(p => p.id === originalTargets[1]);
+            const originalA = state.players.find(p => p.playerId === originalTargets[0]);
+            const originalB = state.players.find(p => p.playerId === originalTargets[1]);
 
             logInternal(tA, "role was swapped by a warper");
             logInternal(tB, "role was swapped by a warper");
-            feedback[actor.id] = {
+            feedback[actorId] = {
               type: "warper_swap",
-              data: { 
-                playerAName: originalA?.name ?? playerA.name, 
-                playerBName: originalB?.name ?? playerB.name 
+              data: {
+                playerAName: originalA?.name ?? playerA.name,
+                playerBName: originalB?.name ?? playerB.name
               },
             };
             logActor(
               actor.name,
-              actor.id,
+              actorId,
               `swapped the roles of ${originalA?.name ?? playerA.name} and ${originalB?.name ?? playerB.name}`,
             );
           } else {
-            feedback[actor.id] = { type: "no_action" };
-            logActor(actor.name, actor.id, "used their ability (incomplete targets)");
+            feedback[actorId] = { type: "no_action" };
+            logActor(actor.name, actorId, "used their ability (incomplete targets)");
           }
           break;
         }
@@ -938,32 +1126,33 @@ export function resolveRound(state: GameState): ResolutionResult {
         // ── Shifter (MUTATES state.rolesAssigned) ────────────────────────
         case "shifter": {
           const targetId = targets[0];
-          const targetPlayer = state.players.find((p) => p.id === targetId);
+          const targetPlayer = state.players.find((p) => p.playerId === targetId);
 
           if (!targetPlayer) {
-            feedback[actor.id] = { type: "no_action" };
-            logActor(actor.name, actor.id, "attempted an invalid exchange");
+            feedback[actorId] = { type: "no_action" };
+            logActor(actor.name, actorId, "attempted an invalid exchange");
             break;
           }
 
-          const actorRole = state.rolesAssigned[actor.id];
+          const actorRole = state.rolesAssigned[actorId];
           const targetRole = state.rolesAssigned[targetId];
-          state.rolesAssigned[actor.id] = targetRole;
+
+          state.rolesAssigned[actorId] = targetRole;
           state.rolesAssigned[targetId] = actorRole;
-          
-          logInternal(actor.id, "role was changed by a shifter");
+
+          logInternal(actorId, "role was changed by a shifter");
           logInternal(targetId, "role was changed by a shifter");
-          feedback[actor.id] = {
+          feedback[actorId] = {
             type: "shifter_exchange",
             data: { targetName: targetPlayer.name, acquiredRole: targetRole },
           };
-          logActor(actor.name, actor.id, `exchanged roles with ${targetPlayer.name}`);
+          logActor(actor.name, actorId, `exchanged roles with ${targetPlayer.name}`);
           break;
         }
 
         default: {
-          feedback[actor.id] = { type: "no_action" };
-          logActor(actor.name, actor.id, "used their ability");
+          feedback[actorId] = { type: "no_action" };
+          logActor(actor.name, actorId, "used their ability");
         }
       }
     }
@@ -971,7 +1160,7 @@ export function resolveRound(state: GameState): ResolutionResult {
 
   // ── Pass 2: compile Sentinel reports (actionLog is now complete) ─────────
   for (const [sentinelId, targetId] of Object.entries(sentinelWatchTargets)) {
-    const target = state.players.find((p) => p.id === targetId);
+    const target = state.players.find((p) => p.playerId === targetId);
     if (!target) continue;
     const actions = actionLog[targetId] ?? [];
     feedback[sentinelId] = {
@@ -982,9 +1171,15 @@ export function resolveRound(state: GameState): ResolutionResult {
 
   // ── Catch-all: players with no feedback yet ──────────────────────────────
   for (const player of state.players) {
-    if (!loggedPlayerIds.has(player.id)) {
-      feedback[player.id] = { type: "no_ability" };
-      logActor(player.name, player.id, "skipped their ability");
+    const pId = player.playerId || player.id;
+    if (!loggedPlayerIds.has(pId)) {
+      const roleId = state.rolesAssigned[pId];
+      feedback[pId] = { type: "no_ability" };
+      
+      const activeAbilityRoles = new Set(["scanner", "sentinel", "disruptor", "shifter", "warper", "seeker", "alien", "commander"]);
+      if (activeAbilityRoles.has(roleId)) {
+        logActor(player.name, pId, "skipped their ability");
+      }
     }
   }
 
@@ -999,8 +1194,7 @@ export function resolveRound(state: GameState): ResolutionResult {
 export function applyResolution(state: GameState, result: ResolutionResult, now: number = Date.now()): void {
   state.orbitFeedback = result.feedback;
   state.roundSummary.abilityLog = result.abilityLog;
-  state.phase = "discussion";
-  state.discussionStartedAt = now;
+  state.phase = "orbit_result";
 }
 
 /**
@@ -1040,16 +1234,16 @@ export function startEmergencyVote(
     return { accepted: false, error: "already active" };
   }
 
-  const caller = state.players.find((p) => p.id === callerId);
-  if (!caller) {
-    return { accepted: false, error: "not in session" };
+  const caller = state.players.find((p) => p.playerId === callerId || p.id === callerId);
+  if (!caller || !caller.playerId) {
+    return { accepted: false, error: "not in session or missing persistent identity" };
   }
   if (caller.isSpectator) {
     return { accepted: false, error: "spectators cannot call emergency votes" };
   }
   state.emergencyVote = {
     active: true,
-    callerId,
+    callerId: caller.playerId,
     callerName: caller.name,
     yesVoters: [],
     noVoters: [],
@@ -1066,30 +1260,33 @@ export function startEmergencyVote(
  */
 export function castEmergencyVote(
   state: GameState,
-  voterId: string,
+  voterId: string, // socketId or playerId
   vote: "yes" | "no",
   now: number = Date.now(),
 ): EmergencyVoteCastResult {
   if (!state.emergencyVote.active) {
     return { accepted: false, outcome: null, error: "no active emergency vote" };
   }
-  if (!state.players.some((p) => p.id === voterId)) {
-    return { accepted: false, outcome: null, error: "not in session" };
+
+  const playerId = normalizeToPlayerId(state, voterId);
+  if (!playerId) {
+    return { accepted: false, outcome: null, error: "not in session or missing persistent identity" };
   }
-  const voter = state.players.find(p => p.id === voterId);
+
+  const voter = state.players.find(p => p.playerId === playerId);
   if (voter?.isSpectator) {
     return { accepted: false, outcome: null, error: "spectators cannot vote" };
   }
 
   const ev = state.emergencyVote;
 
-  // Deduplication
-  if (ev.yesVoters.includes(voterId) || ev.noVoters.includes(voterId)) {
+  // Deduplication using stable playerId
+  if (ev.yesVoters.includes(playerId) || ev.noVoters.includes(playerId)) {
     return { accepted: true, outcome: null };
   }
 
-  if (vote === "yes") ev.yesVoters.push(voterId);
-  else ev.noVoters.push(voterId);
+  if (vote === "yes") ev.yesVoters.push(playerId);
+  else ev.noVoters.push(playerId);
 
   // Block emergency vote resolution while game is frozen
   if (isGameFrozen(state)) {
@@ -1136,46 +1333,54 @@ export function castEmergencyVote(
  */
 export function castVote(
   state: GameState,
-  voterId: string,
-  targetId: string,
+  voterId: string, // socketId or playerId
+  targetId: string, // socketId or playerId or "abstain"
 ): VoteCastResult {
   if (state.phase !== "voting") {
     return { accepted: false, votingComplete: false, error: "Phase protocol mismatch: voting phase required" };
   }
-  const voter = state.players.find(p => p.id === voterId);
-  if (!voter) {
+
+  const vPlayerId = normalizeToPlayerId(state, voterId);
+  if (!vPlayerId) {
     return { accepted: false, votingComplete: false, error: "Identity verification failed: player not in session" };
   }
-  if (voter.isSpectator) {
+  const voter = state.players.find(p => p.playerId === vPlayerId);
+  if (voter?.isSpectator) {
     return { accepted: false, votingComplete: false, error: "Spectators cannot vote" };
   }
 
   // ── FINALITY LOCK ──
   // Prevent changing votes or double-voting once synchronized
-  if (state.votes[voterId]) {
+  if (state.votes[vPlayerId]) {
     return { accepted: false, votingComplete: false, error: "Vote already synchronized and locked" };
   }
 
   // ── ANESTHESIA ENFORCEMENT ──
-  if (voter?.playerId && state.anesthetizedPlayers?.includes(voter.playerId)) {
+  if (state.anesthetizedPlayers?.includes(vPlayerId)) {
     return { accepted: false, votingComplete: false, error: "Neural link inhibited: you cannot cast a vote this round" };
   }
 
   // Validate target
+  let resolvedTargetId = targetId;
   if (targetId !== "abstain") {
-    if (targetId === voterId) {
+    const tPlayerId = normalizeToPlayerId(state, targetId);
+    if (!tPlayerId) {
+      return { accepted: false, votingComplete: false, error: "Target identity verification failed" };
+    }
+    if (tPlayerId === vPlayerId) {
       return { accepted: false, votingComplete: false, error: "Self-targeting prohibited in voting protocol" };
     }
-    const targetPlayer = state.players.find((p) => p.id === targetId);
+    const targetPlayer = state.players.find((p) => p.playerId === tPlayerId);
     if (!targetPlayer) {
       return { accepted: false, votingComplete: false, error: "Target not found in session" };
     }
     if (targetPlayer.isSpectator) {
       return { accepted: false, votingComplete: false, error: "Targeting spectators is prohibited" };
     }
+    resolvedTargetId = tPlayerId;
   }
 
-  state.votes[voterId] = targetId;
+  state.votes[vPlayerId] = resolvedTargetId;
 
   // Block voting resolution while game is frozen (grace period or interrupted)
   if (isGameFrozen(state)) {
@@ -1189,41 +1394,46 @@ export function castVote(
 
   // Check if all *active* (connected) players have voted
   const activeCount = getActivePlayers(state).length;
-  const activeAnesthetizedCount = (state.anesthetizedPlayers || []).filter(pId => 
+  const activeAnesthetizedCount = (state.anesthetizedPlayers || []).filter(pId =>
     state.players.find(p => p.playerId === pId)?.connectionStatus === "connected"
   ).length;
-  
-  if (Object.keys(state.votes).length < (activeCount - activeAnesthetizedCount)) {
+
+  // NOTE: state.votes is now keyed by playerId. 
+  // We check how many ACTIVE (connected) players have their playerId in the votes map.
+  const activeVotedCount = getActivePlayers(state).filter(p => state.votes[p.playerId || ""]).length;
+
+  if (activeVotedCount < (activeCount - activeAnesthetizedCount)) {
     return { accepted: true, votingComplete: false };
   }
 
   // ── All votes in — tally ──────────────────────────────────────────────────
   const result = tallyVotes(state);
   if (result.eliminatedId) {
-    const eliminatedPlayer = state.players.find((p) => p.id === result.eliminatedId);
+    const eliminatedPlayer = state.players.find((p) => p.playerId === result.eliminatedId);
     if (eliminatedPlayer) {
       eliminatedPlayer.alive = false;
     }
   }
+
   result.allRoles = state.players.map((p) => ({
-    playerId: p.id,
-    stablePlayerId: p.playerId,
+    playerId: p.playerId || p.id,
+    socketId: p.id,
     playerName: p.name,
-    role: state.rolesAssigned[p.id] ?? "unknown",
-    initialRole: state.initialRoles[p.id] ?? "unknown",
+    role: state.rolesAssigned[p.playerId || p.id] ?? "unknown",
+    initialRole: state.initialRoles[p.playerId || p.id] ?? "unknown",
     alive: p.alive !== false,
   }));
   state.voteResult = result;
 
   // Build round summary
   const voteTally = Object.entries(state.votes).map(([vid, tid]) => {
-    const voter = state.players.find((p) => p.id === vid);
+    const vPlayer = state.players.find((p) => p.playerId === vid);
     const abstain = tid === "abstain";
-    const target = abstain ? null : state.players.find((p) => p.id === tid);
+    const tPlayer = abstain ? null : state.players.find((p) => p.playerId === tid);
     const weight = commanderVoteWeight(state, vid);
     return {
-      voterName: voter?.name ?? "Unknown",
-      targetName: abstain ? "—" : (target?.name ?? "Unknown"),
+      voterName: vPlayer?.name ?? "Unknown",
+      targetName: abstain ? "—" : (tPlayer?.name ?? "Unknown"),
       isCommander: !abstain && weight === 2,
       isAbstain: abstain,
     };
@@ -1237,7 +1447,7 @@ export function castVote(
   }
   const voteCounts = Object.entries(weightedCounts)
     .map(([tid, count]) => {
-      const player = state.players.find((p) => p.id === tid);
+      const player = state.players.find((p) => p.playerId === tid);
       return { playerName: player?.name ?? "Unknown", votes: count };
     })
     .sort((a, b) => b.votes - a.votes);
@@ -1276,42 +1486,46 @@ export function recheckVotingCompletion(state: GameState): VoteCastResult {
     return { accepted: true, votingComplete: false };
   }
 
-  const activeCount = getActivePlayers(state).length;
-  const activeAnesthetizedCount = (state.anesthetizedPlayers || []).filter(pId => 
+  const activePlayers = getActivePlayers(state);
+  const activeCount = activePlayers.length;
+  const activeAnesthetizedCount = (state.anesthetizedPlayers || []).filter(pId =>
     state.players.find(p => p.playerId === pId)?.connectionStatus === "connected"
   ).length;
 
-  if (Object.keys(state.votes).length < (activeCount - activeAnesthetizedCount)) {
+  const activeVotedCount = activePlayers.filter(p => state.votes[p.playerId || ""]).length;
+
+  if (activeVotedCount < (activeCount - activeAnesthetizedCount)) {
     return { accepted: true, votingComplete: false };
   }
 
   // All active players have voted — tally
   const result = tallyVotes(state);
   if (result.eliminatedId) {
-    const eliminatedPlayer = state.players.find((p) => p.id === result.eliminatedId);
+    const eliminatedPlayer = state.players.find((p) => p.playerId === result.eliminatedId);
     if (eliminatedPlayer) {
       eliminatedPlayer.alive = false;
     }
   }
+
   result.allRoles = state.players.map((p) => ({
-    playerId: p.id,
-    stablePlayerId: p.playerId,
+    playerId: p.playerId || p.id,
+    socketId: p.id,
     playerName: p.name,
-    role: state.rolesAssigned[p.id] ?? "unknown",
-    initialRole: state.initialRoles[p.id] ?? "unknown",
+    role: state.rolesAssigned[p.playerId || p.id] ?? "unknown",
+    initialRole: state.initialRoles[p.playerId || p.id] ?? "unknown",
     alive: p.alive !== false,
   }));
   state.voteResult = result;
 
   // Build round summary
   const voteTally = Object.entries(state.votes).map(([vid, tid]) => {
-    const voter = state.players.find((p) => p.id === vid);
+    const vPlayer = state.players.find((p) => p.playerId === vid);
     const abstain = tid === "abstain";
-    const target = abstain ? null : state.players.find((p) => p.id === tid);
+    const tPlayer = abstain ? null : state.players.find((p) => p.playerId === tid);
     const weight = commanderVoteWeight(state, vid);
     return {
-      voterName: voter?.name ?? "Unknown",
-      targetName: abstain ? "—" : (target?.name ?? "Unknown"),
+      voterName: vPlayer?.name ?? "Unknown",
+      targetName: abstain ? "—" : (tPlayer?.name ?? "Unknown"),
       isCommander: !abstain && weight === 2,
       isAbstain: abstain,
     };
@@ -1325,7 +1539,7 @@ export function recheckVotingCompletion(state: GameState): VoteCastResult {
   }
   const voteCounts = Object.entries(weightedCounts)
     .map(([tid, count]) => {
-      const player = state.players.find((p) => p.id === tid);
+      const player = state.players.find((p) => p.playerId === tid);
       return { playerName: player?.name ?? "Unknown", votes: count };
     })
     .sort((a, b) => b.votes - a.votes);
@@ -1367,13 +1581,13 @@ export function tallyVotes(state: GameState): VoteResult {
   }
 
   const allRoles = state.players.map((p) => ({
-    playerId: p.id,
-    stablePlayerId: p.playerId,
+    playerId: p.playerId || p.id,
+    socketId: p.id,
     playerName: p.name,
-    role: state.rolesAssigned[p.id] ?? "unknown",
-    initialRole: state.initialRoles[p.id] ?? "unknown",
+    role: state.rolesAssigned[p.playerId || p.id] ?? "unknown",
+    initialRole: state.initialRoles[p.playerId || p.id] ?? "unknown",
     alive: p.alive !== false,
-    alignment: state.chaoticAlignments?.[p.id],
+    alignment: state.chaoticAlignments?.[p.playerId || p.id],
   }));
 
   const centerCards = state.centerCards ?? [];
@@ -1381,7 +1595,7 @@ export function tallyVotes(state: GameState): VoteResult {
   const isAlienInPlay = Object.values(state.rolesAssigned).includes("alien");
   const isParasiteInPlay = Object.values(state.rolesAssigned).includes("parasite");
   const isVirusInPlay = Object.values(state.rolesAssigned).includes("virus");
-  
+
   // Any "Bad" role makes a tie (no-one voted out) an Alien win.
   const isAnyEvilInPlay = isAlienInPlay || isParasiteInPlay || isVirusInPlay;
 
@@ -1398,9 +1612,9 @@ export function tallyVotes(state: GameState): VoteResult {
   }
 
   const eliminatedId = topTargets[0];
-  const eliminated = state.players.find((p) => p.id === eliminatedId);
+  const eliminated = state.players.find((p) => p.playerId === eliminatedId);
   const eliminatedRole = state.rolesAssigned[eliminatedId] ?? "unknown";
-  
+
   /**
    * WIN HIERARCHY (The most "Evil" role present must be the one eliminated):
    * 1. If Alien is in play, they MUST be voted out for Crew to win.
@@ -1409,7 +1623,7 @@ export function tallyVotes(state: GameState): VoteResult {
    * 4. If none of the above are in play (All Crew), voting anyone out results in an Alien win (Crew loss).
    */
   let winTeam: "crew" | "alien" | "tie" = "alien";
-  
+
   if (eliminatedRole === "alien") {
     winTeam = "crew";
   } else if (!isAlienInPlay && eliminatedRole === "parasite") {
@@ -1482,92 +1696,25 @@ export function restartGame(state: GameState): GameState {
  * MUTATION: modifies `state` in place.
  */
 export function reconnectPlayer(state: GameState, oldId: string, newId: string): void {
-  console.log(`[reconnectPlayer] START oldId=${oldId}, newId=${newId}`);
-  console.log(`[reconnectPlayer] BEFORE state.rolesAssigned:`, state.rolesAssigned);
-  
-  if (oldId === newId) {
-    const player = state.players.find((p) => p.id === oldId);
-    if (player) {
-      player.connected = true;
-      player.connectionStatus = "connected";
-    }
-    removePlayerFromGrace(state, oldId);
-    console.log(`[reconnectPlayer] SKIPPED (oldId === newId)`);
-    return;
-  }
+  console.log(`[reconnectPlayer] Phase 3 Unified: Remapping socket ${oldId} to ${newId}`);
 
-  // Update the player entry
   const player = state.players.find((p) => p.id === oldId);
   if (player) {
     player.id = newId;
     player.connected = true;
     player.connectionStatus = "connected";
-  } else {
-    console.log(`[reconnectPlayer] WARNING: Player not found in state.players for oldId=${oldId}`);
-  }
 
-  // Remap keyed records
-  const remap = (record: any, name: string) => {
-    if (!record) {
-      console.log(`[reconnectPlayer] WARNING: ${name} record itself is undefined! Initializing...`);
-      return;
-    }
-    if (record[oldId] !== undefined) {
-      record[newId] = record[oldId];
-      delete record[oldId];
-      console.log(`[reconnectPlayer] Remapped ${name} from ${oldId} to ${newId}`);
-    } else {
-      console.log(`[reconnectPlayer] WARNING: ${name}[oldId] is undefined`);
-    }
-  };
-
-  // Ensure record fields exist before remapping to avoid crashes with legacy sessions
-  state.rolesAssigned = state.rolesAssigned || {};
-  state.initialRoles = state.initialRoles || {};
-  state.orbitActions = state.orbitActions || {};
-  state.orbitFeedback = state.orbitFeedback || {};
-  state.votes = state.votes || {};
-  state.chaoticAlignments = state.chaoticAlignments || {};
-
-  remap(state.rolesAssigned, "rolesAssigned");
-  remap(state.initialRoles, "initialRoles");
-  remap(state.orbitActions, "orbitActions");
-  remap(state.orbitFeedback, "orbitFeedback");
-  remap(state.votes, "votes");
-  remap(state.chaoticAlignments, "chaoticAlignments");
-
-  // Remap arrays of IDs
-  const remapArray = (arr: string[]) => arr.map((id) => (id === oldId ? newId : id));
-  state.orbitCompleted = remapArray(state.orbitCompleted);
-  state.roleAcknowledgements = remapArray(state.roleAcknowledgements);
-  state.resolutionAcknowledgements = remapArray(state.resolutionAcknowledgements);
-  // anesthetizedPlayers uses stable playerId — no remapping required
-
-  // Remap emergency vote state (yesVoters, noVoters, callerId all use socket IDs)
-  if (state.emergencyVote) {
-    state.emergencyVote.yesVoters = remapArray(state.emergencyVote.yesVoters);
-    state.emergencyVote.noVoters = remapArray(state.emergencyVote.noVoters);
-    if (state.emergencyVote.callerId === oldId) {
-      state.emergencyVote.callerId = newId;
+    // If the player was in grace, remove them using their stable identity
+    if (player.playerId) {
+      removePlayerFromGrace(state, player.playerId);
     }
   }
 
-  // Remap nested targets in orbit actions
-  for (const action of Object.values(state.orbitActions)) {
-    if (action && action.targets) {
-      action.targets = remapArray(action.targets);
-    }
-  }
+  if (oldId === newId) return;
 
-  // Remap targets in votes
-  for (const [voterId, targetId] of Object.entries(state.votes)) {
-    if (targetId === oldId) {
-      state.votes[voterId] = newId;
-    }
-  }
-
-  // Remove from grace tracking (player reconnected)
-  removePlayerFromGrace(state, oldId);
+  // NOTE: In Phase 3, all engine state (roles, actions, votes) is keyed by persistent playerId.
+  // We no longer need to remap rolesAssigned, orbitActions, etc. because the playerId doesn't change!
+  // We ONLY need to remap state that is still indexed by socketId (mostly metadata/transient arrays).
 }
 
 /**
@@ -1576,11 +1723,25 @@ export function reconnectPlayer(state: GameState, oldId: string, newId: string):
  * MUTATION: modifies `state.players` in place.
  * Returns false if the player is already present.
  */
-export function addPlayer(state: GameState, player: Player): boolean {
-  const existing = state.players.find((p) => p.id === player.id);
-  if (existing) return false;
+export function addPlayer(state: GameState, player: Player): { success: boolean; isReconnect: boolean; error?: string } {
+  const pId = player.playerId || player.id;
+  const existing = state.players.find((p) => (p.playerId || p.id) === pId);
+  
+  if (existing) {
+    // Update existing player with new socket ID and connectivity
+    existing.id = player.id;
+    existing.connected = true;
+    existing.connectionStatus = "connected";
+    return { success: true, isReconnect: true };
+  }
+
+  // Strict Join Lock: only allow new players in Lobby or Result phase
+  if (state.phase !== "lobby" && state.phase !== "result") {
+    return { success: false, isReconnect: false, error: "SESSION_LOCKED: Game in progress" };
+  }
+
   state.players.push({ ...player, alive: true });
-  return true;
+  return { success: true, isReconnect: false };
 }
 
 /**
@@ -1589,9 +1750,12 @@ export function addPlayer(state: GameState, player: Player): boolean {
  * MUTATION: modifies `state` in place.
  * Returns true if the player was found and removed.
  */
-export function removePlayer(state: GameState, playerId: string): boolean {
-  const idx = state.players.findIndex((p) => p.id === playerId);
+export function removePlayer(state: GameState, socketId: string): boolean {
+  const idx = state.players.findIndex((p) => p.id === socketId);
   if (idx === -1) return false;
+
+  const player = state.players[idx];
+  const playerId = player.playerId || socketId;
 
   state.players.splice(idx, 1);
   delete state.rolesAssigned[playerId];
@@ -1617,10 +1781,11 @@ export function removePlayer(state: GameState, playerId: string): boolean {
  */
 export function kickPlayer(
   state: GameState,
-  requesterSocketId: string,
-  targetPlayerId: string,
+  requesterId: string, // stable playerId or socketId
+  targetPlayerId: string, // stable playerId
 ): KickPlayerResult {
-  const requester = state.players.find((p) => p.id === requesterSocketId);
+  const reqId = normalizeToPlayerId(state, requesterId);
+  const requester = state.players.find((p) => p.playerId === reqId || p.id === reqId);
   if (!requester) {
     return { accepted: false, error: "Not in session" };
   }
@@ -1631,7 +1796,7 @@ export function kickPlayer(
     return { accepted: false, error: "Cannot kick players after game has started" };
   }
 
-  // Find the target by their stable UUID (not socket.id which changes on reconnect)
+  // Find the target by their stable UUID
   const target = state.players.find((p) => p.playerId === targetPlayerId);
 
   // Idempotent: already kicked or removed → success, no-op
@@ -1641,7 +1806,7 @@ export function kickPlayer(
       : { accepted: false, error: "Player not found" };
   }
 
-  if (target.id === requesterSocketId || (target.playerId !== undefined && target.playerId === requester.playerId)) {
+  if (target.playerId === reqId) {
     return { accepted: false, error: "Host cannot kick themselves" };
   }
 
@@ -1653,16 +1818,8 @@ export function kickPlayer(
     state.kickedPlayerIds.push(targetPlayerId);
   }
 
-  // Remove from active players and clean up all session state keyed by socket.id
-  state.players = state.players.filter((p) => p.id !== kickedSocketId);
-  delete state.rolesAssigned[kickedSocketId];
-  delete state.initialRoles[kickedSocketId];
-  delete state.orbitActions[kickedSocketId];
-  delete state.orbitFeedback[kickedSocketId];
-  delete state.votes[kickedSocketId];
-  state.orbitCompleted = state.orbitCompleted.filter((id) => id !== kickedSocketId);
-  state.roleAcknowledgements = state.roleAcknowledgements.filter((id) => id !== kickedSocketId);
-  state.resolutionAcknowledgements = state.resolutionAcknowledgements.filter((id) => id !== kickedSocketId);
+  // Remove from active players and clean up all session state
+  removePlayer(state, targetPlayerId);
 
   return { accepted: true, kickedSocketId, kickedPlayerName };
 }
@@ -1681,11 +1838,9 @@ export function processRevealActions(state: GameState): void {
   for (const [actorId, action] of Object.entries(state.revealActions)) {
     const role = state.rolesAssigned[actorId];
     if (role === "doctor") {
-      const targetSocketId = action.targets[0];
-      const target = state.players.find(p => p.id === targetSocketId);
-      const actor = state.players.find(p => p.id === actorId);
-      if (target?.playerId && actor?.playerId && target.playerId !== actor.playerId) {
-        state.anesthetizedPlayers.push(target.playerId);
+      const targetId = action.targets[0];
+      if (targetId && targetId !== actorId) {
+        state.anesthetizedPlayers.push(targetId);
       }
     } else if (role === "virus") {
       const targetId = action.targets[0];
@@ -1789,13 +1944,16 @@ export function interruptGame(
  *
  * MUTATION: modifies `state.playersInGrace` in place.
  */
-export function addPlayerToGrace(state: GameState, socketId: string): void {
+export function addPlayerToGrace(state: GameState, id: string): void {
+  const playerId = normalizeToPlayerId(state, id);
+  if (!playerId) return;
+
   if (!state.playersInGrace) state.playersInGrace = [];
-  if (!state.playersInGrace.includes(socketId)) {
-    state.playersInGrace.push(socketId);
+  if (!state.playersInGrace.includes(playerId)) {
+    state.playersInGrace.push(playerId);
   }
   // Mark player as reconnecting for presence UI
-  const player = state.players.find((p) => p.id === socketId);
+  const player = state.players.find((p) => p.playerId === playerId || p.id === id);
   if (player) player.connectionStatus = "reconnecting";
 }
 
@@ -1804,10 +1962,12 @@ export function addPlayerToGrace(state: GameState, socketId: string): void {
  *
  * MUTATION: modifies `state.playersInGrace` in place.
  */
-export function removePlayerFromGrace(state: GameState, socketId: string): void {
-  if (!state.playersInGrace) return;
+export function removePlayerFromGrace(state: GameState, id: string): void {
+  const playerId = normalizeToPlayerId(state, id);
+  if (!playerId || !state.playersInGrace) return;
+
   const wasFrozen = state.playersInGrace.length > 0;
-  state.playersInGrace = state.playersInGrace.filter((id) => id !== socketId);
+  state.playersInGrace = state.playersInGrace.filter((pid) => pid !== playerId);
   // When grace list becomes empty after being non-empty AND the game is not
   // still in interrupted phase, set justUnfrozen to prevent instant
   // phase-skipping on the next resolution check.
@@ -2011,11 +2171,14 @@ export function computeSanitizedState(state: GameState, viewerSocketId: string):
     votes: { ...(state.votes || {}) },
   };
 
+  const viewer = state.players.find(p => p.id === viewerSocketId);
+  const viewerPlayerId = viewer?.playerId || viewerSocketId;
+
   // 0. Jamming Effect (Virus) — Mask identities for the jammed player
-  if (state.jammedPlayerId === viewerSocketId && state.phase === "orbit_action") {
+  if (state.jammedPlayerId === viewerPlayerId && state.phase === "orbit_action") {
     sanitized.players = state.players.map(p => ({
       ...p,
-      name: p.id === viewerSocketId ? p.name : "DATA CORRUPTED",
+      name: (p.playerId === viewerPlayerId || p.id === viewerSocketId) ? p.name : "DATA CORRUPTED",
     }));
   }
 
@@ -2023,6 +2186,9 @@ export function computeSanitizedState(state: GameState, viewerSocketId: string):
   if (state.phase !== "result") {
     sanitized.centerCards = [];
     sanitized.orbitActions = {};
+    sanitized.revealActions = {};
+    sanitized.revealCompleted = [];
+    sanitized.initialRoles = {};
 
     // Anonymous voting: hide voter targets
     if (state.settings?.anonymousVoting && state.phase === "voting") {
@@ -2033,30 +2199,31 @@ export function computeSanitizedState(state: GameState, viewerSocketId: string):
     }
   }
 
-  // 2. Roles Sanitization — hide other players' roles and swap info
+  // 2. Private Feedback Sanitization — Only the owner sees their report
+  const sanitizedFeedback: Record<string, { type: string; data?: unknown }> = {};
+  if (state.orbitFeedback[viewerPlayerId]) {
+    sanitizedFeedback[viewerPlayerId] = state.orbitFeedback[viewerPlayerId];
+  }
+  sanitized.orbitFeedback = sanitizedFeedback;
+
+  // 3. Roles Sanitization — hide other players' roles and swap info
   if (state.phase !== "result" && state.phase !== "role_config" && state.phase !== "lobby") {
     const sanitizedRoles: Record<string, string> = {};
-    
-    // Find the player entry to check their ID mapping (socket ID vs persistent ID)
-    const viewer = state.players.find(p => p.id === viewerSocketId);
-    
-    // We use socketId (key in rolesAssigned) for lookup
-    const myRole = state.rolesAssigned[viewerSocketId];
-    const myInitialRole = state.initialRoles[viewerSocketId];
+
+    // Use persistent identity for lookup
+    const myRole = state.rolesAssigned[viewerPlayerId];
+    const myInitialRole = state.initialRoles[viewerPlayerId];
 
     if (myRole) {
       // RULE: You see your initial role unless you are a Shifter.
-      // Shifters exchange roles and are aware of it.
-      // Warper targets are NOT aware they were swapped.
       if (myInitialRole === "shifter") {
-        sanitizedRoles[viewerSocketId] = myRole;
+        sanitizedRoles[viewerPlayerId] = myRole;
       } else {
-        sanitizedRoles[viewerSocketId] = myInitialRole;
+        sanitizedRoles[viewerPlayerId] = myInitialRole;
       }
 
       // Alien Team Visibility: Aliens see each other.
-      // You only see the team if your PERCEIVED role is part of it.
-      const perceivedRole = sanitizedRoles[viewerSocketId];
+      const perceivedRole = sanitizedRoles[viewerPlayerId];
       if (perceivedRole === "alien" || perceivedRole === "parasite" || perceivedRole === "virus") {
         for (const [id, r] of Object.entries(state.rolesAssigned)) {
           if (r === "alien" || r === "parasite" || r === "virus") {
@@ -2065,18 +2232,15 @@ export function computeSanitizedState(state: GameState, viewerSocketId: string):
         }
       }
     }
-    
-    // 3. Spectator Visibility: Spectators see ALL roles and full round summary
+
+    // 4. Spectator Visibility: Spectators see ALL roles and full round summary
     if (viewer?.isSpectator) {
       sanitized.rolesAssigned = { ...state.rolesAssigned };
       sanitized.initialRoles = { ...state.initialRoles };
-      // Spectators see the full round summary (ability logs) even before the result phase
       sanitized.roundSummary = state.roundSummary;
+      sanitized.orbitFeedback = { ...state.orbitFeedback };
     } else {
       sanitized.rolesAssigned = sanitizedRoles;
-      sanitized.initialRoles = {}; // Hide everyone else's initial roles
-      
-      // Regular players ONLY see the round summary in the result phase
       sanitized.roundSummary = { abilityLog: [], voteTally: [], voteCounts: [] };
     }
   }

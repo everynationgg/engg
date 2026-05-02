@@ -1,5 +1,6 @@
 import type { Server as SocketIOServer, Socket } from "socket.io";
 import { z } from "zod";
+import { verifyPlayerToken } from "../../../../lib/auth.js";
 import { randomUUID } from "node:crypto";
 import {
   validate,
@@ -24,7 +25,9 @@ import {
 } from "../sessions.js";
 import {
   startGame,
+  reconnectPlayer,
   acknowledgeRole,
+  acknowledgeResolution,
   submitAction,
   castVote,
   recheckVotingCompletion,
@@ -34,7 +37,8 @@ import {
   continueGame,
   endGame,
   kickPlayer,
-  sortPlayersByStatus
+  sortPlayersByStatus,
+  autoCompleteOrbitActions
 } from "../engine.js";
 import { db, usersTable, creditTransactionsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
@@ -67,7 +71,7 @@ export function registerGameHandlers(
     }
 
     const cas = await withCasRetry(sessionId, (session) => {
-      const player = session.players.find((p) => p.id === socket.id);
+      const player = session.players.find((p) => p.playerId === state.currentPlayerId);
       if (!player?.isHost) return CAS_SKIP;
       if (session.phase !== "lobby" && session.phase !== "role_config") return CAS_SKIP;
 
@@ -104,7 +108,7 @@ export function registerGameHandlers(
     }
 
     phaseUpdate(io, sessionId, cas.session);
-    logGameEvent("game_started", sessionId, socket.id, { players: cas.session.players.length });
+    logGameEvent("game_started", sessionId, state.currentPlayerId || socket.id, { players: cas.session.players.length });
 
     await logAudit({
       userId: state.currentUserId,
@@ -208,7 +212,7 @@ export function registerGameHandlers(
 
     const cas = await withCasRetry(sessionId, (session) => {
       if (session.phase !== "role_reveal") return CAS_SKIP;
-      acknowledgeRole(session, socket.id);
+      acknowledgeRole(session, state.currentPlayerId || socket.id);
       if ((session.phase as string) === "orbit_action") {
         // Transitioned to orbit
       }
@@ -218,6 +222,25 @@ export function registerGameHandlers(
     if (cas) {
       phaseUpdate(io, sessionId, cas.session);
       await checkAndRunResolution(io, sessionId, cas.session);
+      ack?.({ success: true });
+    }
+  });
+
+  // ── ACKNOWLEDGE RESOLUTION ──
+  socket.on("acknowledge_resolution", async (data: unknown, ack) => {
+    const parsed = validate(sessionOnlySchema, data, ack);
+    if (!parsed) return;
+    const { sessionId } = parsed;
+
+    const cas = await withCasRetry(sessionId, (session) => {
+      if (session.phase !== "orbit_result") return CAS_SKIP;
+      const res = acknowledgeResolution(session, state.currentPlayerId || socket.id);
+      if (!res.accepted) return CAS_SKIP;
+      return true as const;
+    });
+
+    if (cas) {
+      phaseUpdate(io, sessionId, cas.session);
       ack?.({ success: true });
     }
   });
@@ -235,9 +258,22 @@ export function registerGameHandlers(
 
     const cas = await withCasRetry(sessionId, (session) => {
       if (session.phase !== "orbit_action") return CAS_SKIP;
-      const res = submitAction(session, socket.id, action as any);
-      if (!res.accepted) return CAS_SKIP;
-      return true as const;
+
+      // Ensure identity is bound before submitting
+      let effectivePlayerId = state.currentPlayerId;
+      if (!effectivePlayerId && parsed.playerId && (!parsed.playerToken || verifyPlayerToken(parsed.playerToken, parsed.playerId))) {
+        const existing = session.players.find(p => p.playerId === parsed.playerId);
+        if (existing) {
+          reconnectPlayer(session, existing.id, socket.id);
+          state.currentPlayerId = parsed.playerId;
+          state.currentSessionId = sessionId;
+          socket.join(sessionId);
+          effectivePlayerId = parsed.playerId;
+        }
+      }
+
+      const res = submitAction(session, effectivePlayerId || socket.id, action as any);
+      return res;
     });
 
     if (!cas) {
@@ -245,9 +281,52 @@ export function registerGameHandlers(
       return;
     }
 
+    if (!cas.result.accepted) {
+      ack?.({ success: false, error: cas.result.error ?? "Action rejected by engine" });
+      return;
+    }
+
     ack?.({ success: true });
-    phaseUpdate(io, sessionId, cas.session);
-    await checkAndRunResolution(io, sessionId, cas.session);
+
+    // If this submission completed the phase, broadcast updates and check for resolution
+    if (cas.result.allSubmitted) {
+      phaseUpdate(io, sessionId, cas.session);
+      await checkAndRunResolution(io, sessionId, cas.session);
+    } else {
+      // Still waiting for others, just broadcast the incremental progress
+      phaseUpdate(io, sessionId, cas.session);
+    }
+  });
+
+  // ── FORCE RESOLVE ORBIT (Host Only) ──
+  socket.on("force_resolve_orbit", async (data: unknown, ack) => {
+    const parsed = validate(sessionOnlySchema, data, ack);
+    if (!parsed) return;
+    const { sessionId } = parsed;
+
+    if (state.currentSessionId !== sessionId) {
+      ack?.({ success: false, error: "Not in session" });
+      return;
+    }
+
+    const cas = await withCasRetry(sessionId, (session) => {
+      const player = session.players.find(p => (state.currentPlayerId && p.playerId === state.currentPlayerId) || p.id === socket.id);
+      if (!player?.isHost) return CAS_SKIP;
+      if (session.phase !== "orbit_action") return CAS_SKIP;
+
+      logger.info({ sessionId, hostId: state.currentPlayerId }, "Host forced orbit resolution");
+      autoCompleteOrbitActions(session);
+      return true as const;
+    });
+
+    if (cas) {
+      ack?.({ success: true });
+      phaseUpdate(io, sessionId, cas.session);
+      await checkAndRunResolution(io, sessionId, cas.session);
+      chatSystemMessage(io, sessionId, "Host forced neural link synchronization");
+    } else {
+      ack?.({ success: false, error: "Unauthorized or wrong phase" });
+    }
   });
 
   // ── CAST VOTE ──
@@ -261,7 +340,7 @@ export function registerGameHandlers(
 
     const cas = await withCasRetry(sessionId, (session) => {
       if (session.phase !== "voting") return CAS_SKIP;
-      const res = castVote(session, socket.id, targetId);
+      const res = castVote(session, state.currentPlayerId || socket.id, targetId);
       if (!res.accepted) return CAS_SKIP;
 
       const recheck = recheckVotingCompletion(session);
@@ -303,7 +382,7 @@ export function registerGameHandlers(
 
     const cas = await withCasRetry(sessionId, (session) => {
       if (session.phase !== "discussion") return CAS_SKIP;
-      const res = startEmergencyVote(session, socket.id);
+      const res = startEmergencyVote(session, state.currentPlayerId || socket.id);
       if (!res.accepted) return CAS_SKIP;
       return res;
     });
@@ -325,7 +404,7 @@ export function registerGameHandlers(
 
     const cas = await withCasRetry(sessionId, (session) => {
       if (!session.emergencyVote?.active) return CAS_SKIP;
-      const res = castEmergencyVote(session, socket.id, vote);
+      const res = castEmergencyVote(session, state.currentPlayerId || socket.id, vote);
       outcome = res.outcome;
       return true as const;
     });
@@ -346,7 +425,7 @@ export function registerGameHandlers(
     const { sessionId } = parsed;
 
     const cas = await withCasRetry(sessionId, (session) => {
-      const player = session.players.find(p => p.id === socket.id);
+      const player = session.players.find(p => p.playerId === state.currentPlayerId);
       if (!player?.isHost) return CAS_SKIP;
       restartGame(session);
       return true as const;
@@ -373,9 +452,9 @@ export function registerGameHandlers(
     const { sessionId } = parsed;
 
     const cas = await withCasRetry(sessionId, (session) => {
-      const player = session.players.find(p => p.id === socket.id);
+      const player = session.players.find(p => p.playerId === state.currentPlayerId);
       if (!player?.isHost) return CAS_SKIP;
-      continueGame(session, socket.id);
+      continueGame(session, state.currentPlayerId || socket.id);
       return true as const;
     });
 
@@ -392,9 +471,9 @@ export function registerGameHandlers(
     const { sessionId } = parsed;
 
     const cas = await withCasRetry(sessionId, (session) => {
-      const player = session.players.find(p => p.id === socket.id);
+      const player = session.players.find(p => p.playerId === state.currentPlayerId);
       if (!player?.isHost) return CAS_SKIP;
-      endGame(session, socket.id);
+      endGame(session, state.currentPlayerId || socket.id);
       return true as const;
     });
 
@@ -418,9 +497,9 @@ export function registerGameHandlers(
     const { sessionId, targetPlayerId } = parsed;
 
     const cas = await withCasRetry(sessionId, (session) => {
-      const player = session.players.find(p => p.id === socket.id);
+      const player = session.players.find(p => p.playerId === state.currentPlayerId);
       if (!player?.isHost) return CAS_SKIP;
-      kickPlayer(session, socket.id, targetPlayerId);
+      kickPlayer(session, state.currentPlayerId || socket.id, targetPlayerId);
       return true as const;
     });
 

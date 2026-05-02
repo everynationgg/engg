@@ -4,6 +4,7 @@ import { db } from "@workspace/db";
 
 export interface AuthRequest extends Request {
   userId?: string;
+  isGuest?: boolean;
 }
 
 export function authMiddleware(
@@ -26,6 +27,20 @@ export function authMiddleware(
   }
 
   req.userId = decoded.userId;
+  req.isGuest = decoded.userId.startsWith("guest_");
+  next();
+}
+
+/** Reject if user is a guest (unauthenticated/non-persistent identity). */
+export function registeredOnly(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): void {
+  if (req.isGuest) {
+    res.status(403).json({ error: "REGISTRATION_REQUIRED", message: "This tactical interface requires a verified persistent identity." });
+    return;
+  }
   next();
 }
 

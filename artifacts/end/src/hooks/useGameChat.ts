@@ -119,7 +119,8 @@ export function useGameChat(gameId: string | null, enabled = true, guestName?: s
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/games/${gameId}/chat?limit=50`
+        `${import.meta.env.VITE_API_URL}/api/games/${gameId}/chat?limit=50`,
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
 
       if (!response.ok) {
@@ -169,7 +170,8 @@ export function useGameChat(gameId: string | null, enabled = true, guestName?: s
       // Use cursor-based fetch when we have a last seen id, fallback to timestamp
       const cursorParam = lastSeenIdRef.current ? `?after_id=${lastSeenIdRef.current}` : "";
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/games/${gameId}/chat/since/${lastFetchTimeRef.current}${cursorParam}`
+        `${import.meta.env.VITE_API_URL}/api/games/${gameId}/chat/since/${lastFetchTimeRef.current}${cursorParam}`,
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
 
       if (response.status === 429) {

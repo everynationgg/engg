@@ -58,10 +58,16 @@ export default function VotingPage() {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setSecondsLeft((prev) => Math.max(0, prev - 1));
+      setSecondsLeft((prev) => {
+        if (prev <= 1 && !votedFor && !isSpectator && !isAnesthetized) {
+          // Auto-abstain when timer hits 0
+          handleAbstain();
+        }
+        return Math.max(0, prev - 1);
+      });
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [votedFor, isSpectator, isAnesthetized]);
 
   // Sync timer with session settings and server timestamp
   useEffect(() => {
@@ -147,6 +153,12 @@ export default function VotingPage() {
         setWaitingCount(Object.keys(session.votes).length);
         setVoterIds(new Set(Object.keys(session.votes)));
         setVotes(session.votes);
+        
+        // Ensure votedFor is synced from server state
+        const myStableId = myPlayerId || socket.id || "";
+        if (session.votes[myStableId]) {
+          setVotedFor(session.votes[myStableId]);
+        }
       }
       if (session.roundSummary) setRoundSummary(session.roundSummary);
       if (session.anesthetizedPlayers) {
@@ -174,7 +186,8 @@ export default function VotingPage() {
             setWaitingCount(Object.keys(resp.session.votes).length);
             setVoterIds(new Set(Object.keys(resp.session.votes)));
             setVotes(resp.session.votes);
-            if (resp.session.votes[id ?? ""]) setVotedFor(resp.session.votes[id ?? ""]);
+            const myStableId = myPlayerId || id || "";
+            if (resp.session.votes[myStableId]) setVotedFor(resp.session.votes[myStableId]);
           }
           if (resp.session.roundSummary) setRoundSummary(resp.session.roundSummary);
           if (resp.session.anesthetizedPlayers) {
@@ -221,7 +234,7 @@ export default function VotingPage() {
   const activePlayers = sessionPlayers.filter(p => isPlayerConnected(p) && !p.isSpectator);
   const totalPlayers = activePlayers.length;
   const votesIn = waitingCount;
-  const pendingVoters = activePlayers.filter((p) => !voterIds.has(p.id));
+  const pendingVoters = activePlayers.filter((p) => !voterIds.has(p.playerId || p.id));
 
   // Determine who has the most votes for the Heartbeat Tension effect
   const [leadingVoteGetters, setLeadingVoteGetters] = useState<Set<string>>(new Set());
@@ -360,23 +373,31 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
       
       <div className="relative z-10 flex flex-col flex-1 h-full">
       <div className="flex-1 flex flex-col px-4 sm:px-6 py-10 gap-6 overflow-y-auto pb-24 lg:pb-6 max-w-2xl mx-auto w-full min-h-0" style={{ WebkitOverflowScrolling: "touch" }}>
-        {/* Title */}
-        <div className="p-6 bg-white/[0.02] border border-white/5 rounded-sm shadow-xl">
-          <div className="text-[10px] tracking-[0.4em] uppercase opacity-40 font-bold mb-2">
-            MISSION_CRITICAL_DECISION
-          </div>
-          <div className="font-orbitron font-black text-4xl sm:text-5xl tracking-[0.2em] uppercase italic" style={{ color: accentLight, textShadow: `0 0 20px ${accentGlow}` }}>
-            VOTING
-          </div>
-          <div className="text-xs tracking-widest uppercase mt-3 opacity-60" style={{ color: "hsl(210 30% 70%)" }}>
-            SELECT A SUBJECT FOR TERMINATION
-          </div>
-          {role.id === "commander" && (
-            <div className="text-xs tracking-wider mt-2 font-bold italic" style={{ color: "hsl(45 90% 60%)", fontFamily: "'Exo 2', sans-serif" }}>
-              ★ Neural_Priority: Alpha (Vote Power x2)
+        {/* Header with Timer */}
+        <div className="p-6 bg-white/[0.02] border border-white/5 rounded-sm shadow-xl flex justify-between items-center">
+          <div className="flex-1">
+            <div className="text-[10px] tracking-[0.4em] uppercase opacity-40 font-bold mb-1">
+              MISSION_CRITICAL_DECISION
             </div>
-          )}
+            <div className="font-orbitron font-black text-3xl sm:text-4xl tracking-[0.2em] uppercase italic" style={{ color: accentLight, textShadow: `0 0 20px ${accentGlow}` }}>
+              VOTING
+            </div>
+          </div>
+          <div className="text-right pl-4 border-l border-white/10">
+            <div className="text-[10px] tracking-[0.3em] uppercase mb-1 opacity-40">System_Lock</div>
+            <div className="font-orbitron font-bold text-2xl tracking-widest" style={{ color: secondsLeft < 10 ? "hsl(0 75% 60%)" : accentLight }}>
+              {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, '0')}
+            </div>
+          </div>
         </div>
+
+        {role.id === "commander" && (
+          <div className="px-4 py-2 rounded border border-yellow-500/30 bg-yellow-500/10 text-center">
+            <div className="text-[10px] tracking-[0.3em] uppercase font-bold" style={{ color: "hsl(45 90% 60%)" }}>
+              ★ NEURAL_PRIORITY: ALPHA (VOTE POWER X2)
+            </div>
+          </div>
+        )}
 
         {/* Vote progress */}
         <div className="rounded-md px-4 py-3 flex items-center justify-between" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 15%)" }}>
@@ -425,10 +446,10 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
                 <HolographicCard
                   key={p.id}
                   data-testid={`vote-player-${p.name}`}
-                  onClick={() => { if (!isSelf) { playSciFiClick(); setPendingVote(p.id); } }}
+                  onClick={() => { if (!isSelf) { playSciFiClick(); setPendingVote(p.playerId || p.id); } }}
                   disabled={isSelf}
                   isPulsing={isPulsing}
-                  className="w-full py-2.5 font-orbitron font-bold text-sm tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-150 active:scale-95"
+                  className="w-full py-4 font-orbitron font-bold text-sm tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-150 active:scale-95"
                   style={{
                     background: isSelf ? "hsl(220 28% 8%)" : accentColor.replace(")", " / 0.12)"),
                     borderColor: isSelf ? "hsl(210 30% 16%)" : accentColor.replace(")", " / 0.6)"),
@@ -478,62 +499,50 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
               </button>
             </div>
           </div>
-        ) : !votedFor && pendingVote && !isAnesthetized ? (
-          <div className="rounded-md p-6 flex flex-col gap-5" style={{ background: "hsl(220 28% 10%)", border: `1px solid ${accentColor.replace(")", " / 0.45)")}`, boxShadow: `0 0 20px ${accentGlow}` }}>
-            <div className="text-center">
-              <div className="font-orbitron font-bold text-xs tracking-[0.3em] uppercase mb-3" style={{ color: "hsl(210 30% 50%)" }}>
-                CONFIRM VOTE
+        ) : pendingVote && !votedFor && !isAnesthetized ? (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
+            <div className="w-full max-w-sm rounded-lg p-6 flex flex-col gap-6 ix-modal-enter" style={{ background: "hsl(220 30% 8%)", border: `2px solid ${accentColor.replace(")", " / 0.5)")}`, boxShadow: `0 0 60px ${accentGlow}` }}>
+              <div className="text-center">
+                <div className="font-orbitron font-bold text-[9px] tracking-[0.5em] uppercase mb-4 opacity-40">
+                  NEURAL_CONFIRMATION_REQUIRED
+                </div>
+                {pendingVote === "abstain" ? (
+                  <p className="text-xl font-bold" style={{ color: "hsl(190 60% 95%)", fontFamily: "'Exo 2', sans-serif" }}>
+                    Abstain from voting?
+                  </p>
+                ) : (
+                  <p className="text-xl" style={{ color: "hsl(190 60% 95%)", fontFamily: "'Exo 2', sans-serif" }}>
+                    Vote to terminate <span className="font-bold font-orbitron tracking-wider text-white" style={{ color: accentLight }}>
+                      {sessionPlayers.find((p) => (p.playerId || p.id) === pendingVote)?.name ?? "Unknown"}
+                    </span>?
+                  </p>
+                )}
               </div>
-              {pendingVote === "abstain" ? (
-                <p className="text-base" style={{ color: "hsl(210 30% 70%)", fontFamily: "'Exo 2', sans-serif" }}>
-                  Abstain from voting this round?
-                </p>
-              ) : (
-                <p className="text-base" style={{ color: "hsl(190 60% 80%)", fontFamily: "'Exo 2', sans-serif" }}>
-                  Vote to eliminate{" "}
-                  <span className="font-bold font-orbitron tracking-wider" style={{ color: accentLight }}>
-                    {sessionPlayers.find((p) => p.id === pendingVote)?.name ?? "Unknown"}
-                  </span>
-                  ?
-                </p>
-              )}
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => { handleVote(pendingVote); setPendingVote(null); }}
-                className="flex-1 py-3 font-orbitron font-bold text-sm tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-150 active:scale-95"
-                style={{
-                  background: accentColor.replace(")", " / 0.18)"),
-                  borderColor: accentColor.replace(")", " / 0.7)"),
-                  color: accentLight,
-                  cursor: "pointer",
-                  boxShadow: `0 0 8px ${accentGlow}`,
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = `0 0 18px ${accentGlow.replace("0.4", "0.7")}`; }}
-                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = `0 0 8px ${accentGlow}`; }}
-              >
-                YES
-              </button>
-              <button
-                onClick={() => setPendingVote(null)}
-                className="flex-1 py-3 font-orbitron font-bold text-sm tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-150 active:scale-95"
-                style={{
-                  background: "hsl(220 28% 8%)",
-                  borderColor: "hsl(210 30% 22%)",
-                  color: "hsl(210 30% 55%)",
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "hsl(210 30% 40%)";
-                  e.currentTarget.style.color = "hsl(210 30% 75%)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "hsl(210 30% 22%)";
-                  e.currentTarget.style.color = "hsl(210 30% 55%)";
-                }}
-              >
-                NO
-              </button>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => { handleVote(pendingVote); setPendingVote(null); }}
+                  className="flex-1 py-5 font-orbitron font-black text-base tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-150 active:scale-90"
+                  style={{
+                    background: accentColor.replace(")", " / 0.25)"),
+                    borderColor: accentColor.replace(")", " / 0.8)"),
+                    color: accentLight,
+                    boxShadow: `0 0 15px ${accentGlow}`,
+                  }}
+                >
+                  VOTE
+                </button>
+                <button
+                  onClick={() => setPendingVote(null)}
+                  className="flex-1 py-5 font-orbitron font-bold text-sm tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-150 active:scale-95"
+                  style={{
+                    background: "hsl(220 28% 8%)",
+                    borderColor: "hsl(210 30% 25%)",
+                    color: "hsl(210 30% 60%)",
+                  }}
+                >
+                  CANCEL
+                </button>
+              </div>
             </div>
           </div>
         ) : isAnesthetized && !votedFor ? (
@@ -560,19 +569,21 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
             ) : (
               <p className="text-sm mb-1" style={{ color: "hsl(190 60% 75%)", fontFamily: "'Exo 2', sans-serif" }}>
                 You voted for: <span className="font-bold" style={{ color: accentLight }}>
-                  {sessionPlayers.find((p) => p.id === votedFor)?.name ?? "Unknown"}
+                  {sessionPlayers.find((p) => (p.playerId || p.id) === votedFor)?.name ?? "Unknown"}
                 </span>
               </p>
             )}
-            <p className="text-xs" style={{ color: "hsl(210 30% 45%)", fontFamily: "'Exo 2', sans-serif" }}>
-              Waiting for other players... ({votesIn} / {totalPlayers})
-            </p>
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+              <p className="text-xs tracking-[0.2em] uppercase font-bold" style={{ color: "hsl(210 30% 45%)", fontFamily: "'Exo 2', sans-serif" }}>
+                Neural_Wait: {votesIn} / {totalPlayers} Ready
+              </p>
+            </div>
           </div>
         )}
-
-      </div>
       </div>
     </div>
+  </div>
   );
 }
 

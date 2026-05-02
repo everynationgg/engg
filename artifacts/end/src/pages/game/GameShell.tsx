@@ -28,6 +28,7 @@ import { usePreferences } from "@/hooks/usePreferences";
 import LandingNavbar from "@/components/system/LandingNavbar";
 import LandingSidebar from "@/components/system/LandingSidebar";
 import HamburgerMenu from "@/components/system/HamburgerMenu";
+import { useAuth } from "@/hooks/useAuth";
 
 // Phases that warrant a dramatic countdown overlay before switching
 const DRAMATIC_PHASES = new Set(["voting", "result", "discussion"]);
@@ -53,7 +54,7 @@ const TIMELINE_PHASES = [
 function PhaseTimeline({ currentPhase }: { currentPhase: string }) {
   if (currentPhase === "interrupted" || currentPhase === "role_config") return null;
 
-  const effectivePhase = currentPhase === "orbit_resolution" ? "orbit_action" : currentPhase;
+  const effectivePhase = (currentPhase === "orbit_resolution" || currentPhase === "orbit_result") ? "orbit_action" : currentPhase;
   const currentIndex = TIMELINE_PHASES.findIndex(p => p.id === effectivePhase);
   if (currentIndex === -1) return null;
 
@@ -129,6 +130,7 @@ export default function GameShell() {
     }
     return false;
   });
+  const { token } = useAuth();
   const { midGame, showConfirm, openConfirm, closeConfirm, handleConfirmQuit } = useQuitGame(isHost);
 
   const handleToggleMusic = () => {
@@ -207,7 +209,7 @@ export default function GameShell() {
   // Listen for phase updates from the server
   useEffect(() => {
     if (!roomCode) return;
-    const socket = getSocket();
+    const socket = getSocket(token || undefined);
 
     const applyPhase = (newPhase: string) => {
       if (!newPhase || newPhase === prevPhaseRef.current) return;
@@ -256,7 +258,9 @@ export default function GameShell() {
       // Restore assigned role from server state so the UI never shows "unknown"
       // after browser back/forward or missed events.
       if (session.rolesAssigned) {
-        const myRole = session.rolesAssigned[socket.id ?? ""];
+        const myPlayerId = sessionStorage.getItem("lp_playerId");
+        const mySocketId = socket.id;
+        const myRole = session.rolesAssigned[myPlayerId || ""] || session.rolesAssigned[mySocketId || ""];
         if (myRole) {
           sessionStorage.setItem("lp_assignedRole", myRole);
         }
@@ -350,7 +354,14 @@ export default function GameShell() {
     // Used on initial mount AND as a periodic fallback in case phase_update
     // socket events are missed (transport hiccups, proxy drops, etc.).
     const syncSession = () => {
-      socket.emit("get_session", { sessionId: roomCode }, (resp: { success: boolean; session?: { phase: string; playersInGrace?: string[]; players?: { id: string; name: string; connected?: boolean }[]; rolesAssigned?: Record<string, string> } }) => {
+      const myPlayerId = sessionStorage.getItem("lp_playerId");
+      const myPlayerToken = sessionStorage.getItem("lp_playerToken");
+
+      socket.emit("get_session", {
+        sessionId: roomCode,
+        playerId: myPlayerId,
+        playerToken: myPlayerToken
+      }, (resp: { success: boolean; session?: { phase: string; playersInGrace?: string[]; players?: { id: string; name: string; connected?: boolean }[]; rolesAssigned?: Record<string, string> } }) => {
         if (resp.success && resp.session?.phase) {
           // First mount — set both displayed and tracked phase without animation
           if (prevPhaseRef.current === null) {
@@ -362,7 +373,9 @@ export default function GameShell() {
           // Restore assigned role from server state so browser back/forward
           // and page remounts don't lose the role (showing "unknown").
           if (resp.session.rolesAssigned) {
-            const myRole = resp.session.rolesAssigned[socket.id ?? ""];
+            const myPlayerId = sessionStorage.getItem("lp_playerId");
+            const mySocketId = socket.id;
+            const myRole = resp.session.rolesAssigned[myPlayerId || ""] || resp.session.rolesAssigned[mySocketId || ""];
             if (myRole) {
               sessionStorage.setItem("lp_assignedRole", myRole);
             }
@@ -425,7 +438,9 @@ export default function GameShell() {
           // old socket ID to the new one in reconnectPlayer(), so we can look up
           // the role by the current socket.id.
           if (resp?.session?.rolesAssigned) {
-            const myRole = resp.session.rolesAssigned[socket.id ?? ""];
+            const myPlayerId = sessionStorage.getItem("lp_playerId");
+            const mySocketId = socket.id;
+            const myRole = resp.session.rolesAssigned[myPlayerId || ""] || resp.session.rolesAssigned[mySocketId || ""];
             if (myRole) {
               sessionStorage.setItem("lp_assignedRole", myRole);
             }
@@ -458,7 +473,7 @@ export default function GameShell() {
       if (transitionTickRef.current) clearInterval(transitionTickRef.current);
       disconnectSocket();
     };
-  }, [roomCode]);
+  }, [roomCode, token]);
 
   // Render the appropriate phase component
   const renderPhase = () => {
@@ -466,7 +481,8 @@ export default function GameShell() {
       case "role_config": return <RoleConfigPage />;
       case "role_reveal": return <RoleRevealPage />;
       case "orbit_action":
-      case "orbit_resolution": return <OrbitPage />;
+      case "orbit_resolution":
+      case "orbit_result": return <OrbitPage />;
       case "discussion": return <DiscussionPage onOpenChat={() => setChatOpen(true)} />;
       case "voting": return <VotingPage />;
       case "result": return <ResultPage />;

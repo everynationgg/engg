@@ -87,15 +87,13 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // 3. LIFECYCLE
   useEffect(() => {
     if (isLoggedIn && token) {
-      if (socketRef.current) disconnectSocket();
+      // Initialize or reuse existing socket
       const socket = getSocket(token);
       socketRef.current = socket;
-      socket.on("private_message", handleIncomingMessage);
 
       return () => {
-        socket.off("private_message", handleIncomingMessage);
-        disconnectSocket();
-        socketRef.current = null;
+        // We DO NOT disconnect here on chat switch. 
+        // Disconnection should only happen on logout.
       };
     } else {
       if (socketRef.current) disconnectSocket();
@@ -105,9 +103,20 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setActiveChatUserId(null);
       return undefined;
     }
-  }, [isLoggedIn, token, handleIncomingMessage]);
+  }, [isLoggedIn, token]);
 
-  // 4. UNREAD SYNC
+  // 4. ATTACH MESSAGE HANDLER
+  useEffect(() => {
+    const socket = socketRef.current;
+    if (!socket) return;
+
+    socket.on("private_message", handleIncomingMessage);
+    return () => {
+      socket.off("private_message", handleIncomingMessage);
+    };
+  }, [handleIncomingMessage]);
+
+  // 5. UNREAD SYNC
   useEffect(() => {
     if (activeChatUserId) {
       setUnreadCounts(prev => (prev[activeChatUserId] ? { ...prev, [activeChatUserId]: 0 } : prev));

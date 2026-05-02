@@ -3,13 +3,14 @@ import { recordPlayerGameResult } from "../../core/services/statsService.js";
 import { logger } from "../../../lib/logger.js";
 import { getSession, saveSession, CAS_MAX_ATTEMPTS } from "./sessions.js";
 import { phaseUpdate } from "./emitters.js";
-import { 
-  isGameFrozen, 
-  consumeJustUnfrozen, 
-  getActivePlayers, 
-  resolveRound, 
+import {
+  isGameFrozen,
+  consumeJustUnfrozen,
+  getActivePlayers,
+  resolveRound,
   applyResolution,
-  sortPlayersByStatus
+  sortPlayersByStatus,
+  autoCompleteOrbitActions
 } from "./engine.js";
 import { syncUserAchievements } from "../../core/routes/achievements.js";
 import { logAudit } from "../../../lib/audit.js";
@@ -30,11 +31,11 @@ export async function recordGameResults(io: SocketIOServer, sessionId: string, v
     if (!results || !Array.isArray(results)) return;
 
     for (const player of results) {
-      const userId = player.stablePlayerId; 
+      const userId = player.stablePlayerId;
       if (!userId) continue;
 
       const role = player.role;
-      const socketId = player.playerId; 
+      const socketId = player.playerId;
       const winTeam = voteResult.winTeam;
 
       let wonStatus: "yes" | "no" | "draw" = "no";
@@ -62,7 +63,7 @@ export async function recordGameResults(io: SocketIOServer, sessionId: string, v
         session.chaoticAlignments?.[socketId]
       );
 
-      if (!recorded) continue; 
+      if (!recorded) continue;
 
       const newAchievements = await syncUserAchievements(userId);
       if (newAchievements.length > 0) {
@@ -72,7 +73,7 @@ export async function recordGameResults(io: SocketIOServer, sessionId: string, v
         }
       }
     }
-    
+
     await logAudit({
       eventType: "GAME_RESULTS_RECORDED",
       description: `Outcome finalized for session ${sessionId}`,
@@ -92,7 +93,21 @@ export async function checkAndRunResolution(
   if (isGameFrozen(session)) return;
   if (consumeJustUnfrozen(session)) return;
   const activeCount = getActivePlayers(session).length;
-  if (session.orbitCompleted.length < activeCount) return;
+
+  // ── TIMEOUT FALLBACK ──
+  // If players are stuck or AFK, auto-complete the phase after a reasonable delay (90s).
+  const ORBIT_TIMEOUT_MS = 90_000;
+  const timeInOrbit = session.orbitStartedAt ? (Date.now() - session.orbitStartedAt) : 0;
+
+  if (session.orbitCompleted.length < activeCount) {
+    if (timeInOrbit > ORBIT_TIMEOUT_MS) {
+      logger.info({ sessionId }, `Orbit phase timeout (${timeInOrbit}ms) — auto-completing ${activeCount - session.orbitCompleted.length} unready players`);
+      autoCompleteOrbitActions(session);
+      // Now continue to resolution
+    } else {
+      return;
+    }
+  }
 
   phaseUpdate(io, sessionId, session);
   session.phase = "orbit_resolution";
@@ -123,17 +138,17 @@ export async function checkAndRunResolution(
         applyResolution(current, resolutionResult);
 
         if (await saveSession(current)) {
-           // Success logic moved to individual handlers or emitters if needed
-           // For now keeping it simple as it was in socket.ts
-           phaseUpdate(io, sessionId, current);
+          // Success logic moved to individual handlers or emitters if needed
+          // For now keeping it simple as it was in socket.ts
+          phaseUpdate(io, sessionId, current);
 
-           await logAudit({
-             eventType: "GAME_ROUND_RESOLVED",
-             description: `Round resolution finalized for session ${sessionId}`,
-             metadata: { sessionId },
-           });
+          await logAudit({
+            eventType: "GAME_ROUND_RESOLVED",
+            description: `Round resolution finalized for session ${sessionId}`,
+            metadata: { sessionId },
+          });
 
-           return;
+          return;
         }
       }
     } catch (err) {

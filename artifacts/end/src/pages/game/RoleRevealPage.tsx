@@ -66,7 +66,15 @@ export default function RoleRevealPage() {
         setLivePlayers(session.players);
         setSessionPlayers(session.players.map((p: any) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === socket.id })));
       }
-      if (session.rolesAssigned) setRolesAssigned(session.rolesAssigned);
+      if (session.rolesAssigned) {
+        setRolesAssigned(session.rolesAssigned);
+        const myPlayerId = sessionStorage.getItem("lp_playerId");
+        const mySocketId = socket.id;
+        const myRole = session.rolesAssigned[myPlayerId || ""] || session.rolesAssigned[mySocketId || ""];
+        if (myRole) {
+          sessionStorage.setItem("lp_assignedRole", myRole);
+        }
+      }
       if (session.initialRoles) setInitialRoles(session.initialRoles);
 
       const me = session.players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === socket.id);
@@ -97,7 +105,15 @@ export default function RoleRevealPage() {
             setLivePlayers(resp.session.players);
             setSessionPlayers(resp.session.players.map((p: any) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === socket.id })));
           }
-          if (resp.session.rolesAssigned) setRolesAssigned(resp.session.rolesAssigned);
+          if (resp.session.rolesAssigned) {
+            setRolesAssigned(resp.session.rolesAssigned);
+            const myPlayerId = sessionStorage.getItem("lp_playerId");
+            const mySocketId = socket.id;
+            const myRole = resp.session.rolesAssigned[myPlayerId || ""] || resp.session.rolesAssigned[mySocketId || ""];
+            if (myRole) {
+              sessionStorage.setItem("lp_assignedRole", myRole);
+            }
+          }
           if (resp.session.initialRoles) setInitialRoles(resp.session.initialRoles);
 
           const me = resp.session.players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === socket.id);

@@ -11,7 +11,7 @@ export function getSocket(token?: string): Socket {
       transports: ["polling", "websocket"],
       reconnection: true,
       auth: {
-        token: token || localStorage.getItem("en_token")
+        token: token || localStorage.getItem("lp_auth_token")
       }
     });
 

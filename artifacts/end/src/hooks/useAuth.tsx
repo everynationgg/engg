@@ -95,13 +95,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.setItem(STORAGE_KEY_USERNAME, data.username);
         }
       } else if (response.status === 401) {
-        // Attempt to refresh if unauthorized
-        await performTokenRefresh();
+        const isGuest = (localStorage.getItem(STORAGE_KEY_USER_ID) || "").startsWith("guest_");
+        if (isGuest) {
+          logout();
+        } else {
+          // Attempt to refresh if unauthorized
+          await performTokenRefresh();
+        }
       }
     } catch (err) {
       console.error("Failed to refresh user:", err);
+      if (!(localStorage.getItem(STORAGE_KEY_USER_ID) || "").startsWith("guest_")) {
+         logout("Tactical sync failed. Please re-authenticate.");
+      }
     }
   }, [token]);
+
+  const initAnonymous = useCallback(async () => {
+    if (isLoading || isLoggedIn || token) return;
+    setIsLoading(true);
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/anonymous`, {
+        method: "POST",
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        localStorage.setItem(STORAGE_KEY_TOKEN, data.token);
+        localStorage.setItem(STORAGE_KEY_USER_ID, data.id);
+        localStorage.setItem(STORAGE_KEY_USERNAME, data.username);
+        setToken(data.token);
+        setUserId(data.id);
+        setUsername(data.username);
+        setIsLoggedIn(false);
+      }
+    } catch (err) {
+      console.error("Anonymous init failed:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isLoading, isLoggedIn, token]);
 
   const performTokenRefresh = useCallback(async () => {
     const refreshToken = localStorage.getItem(STORAGE_KEY_REFRESH_TOKEN);
@@ -124,11 +156,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(STORAGE_KEY_TOKEN, newToken);
         return newToken;
       } else {
-        logout();
+        logout("Session expired. Identity handshake required.");
       }
     } catch (err) {
       console.error("Token rotation failed:", err);
-      logout();
+      logout("Network disruption. Session terminated.");
     }
   }, []);
 
@@ -163,14 +195,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCredits(savedCredits);
       setXp(savedXp);
       setLevel(savedLevel);
-      setIsLoggedIn(true);
       
-      // Refresh user data from server to sync verification status
-      refreshUser();
+      const isGuest = savedUserId.startsWith("guest_");
+      setIsLoggedIn(!isGuest);
+      
+      if (!isGuest) {
+        refreshUser();
+      }
+    } else {
+      initAnonymous();
     }
     // Always mark as initialized — including the logged-out/guest path
     setIsInitialized(true);
-  }, [refreshUser]);
+  }, [refreshUser, initAnonymous]);
 
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
@@ -285,7 +322,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback((reason?: string) => {
     const refreshToken = localStorage.getItem(STORAGE_KEY_REFRESH_TOKEN);
     if (refreshToken) {
       fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {
@@ -316,7 +353,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setXp(0);
     setLevel(1);
     setIsLoggedIn(false);
-    setError(null);
+    if (reason) {
+      setError(reason);
+    } else {
+      setError(null);
+    }
   }, []);
 
   const resendVerificationEmail = useCallback(async () => {

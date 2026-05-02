@@ -60,8 +60,8 @@ export function graceUpdate(
 ) {
   if (!session) return;
   io.to(sessionId).emit("grace_update", {
-    playersInGrace: (session.playersInGrace ?? []).filter(id => {
-      const p = session.players.find(pl => pl.id === id);
+    playersInGrace: (session.playersInGrace ?? []).filter(pId => {
+      const p = session.players.find(pl => (pl.playerId === pId || pl.id === pId));
       return p && !p.isSpectator;
     }),
     playerName,

@@ -42,8 +42,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
   }, [activePanel]);
 
   return (
-    <UIContext.Provider 
-      value={{ 
+    <UIContext.Provider
+      value={{
         activePanel,
         setActivePanel,
         closeAll,

@@ -73,14 +73,17 @@ const ROLE_ORBIT: Record<string, RoleOrbitConfig> = {
     type: "active",
     actions: [{ id: "alien_view", label: "VIEW CENTER CARD", targetType: "center", targetCount: 1 }],
   },
-  // Parasite is passive — sees alien player names, auto-completes
+  // Parasite is passive — sees alien player names
   parasite: { type: "passive" },
   // Commander has an active self-targeted ability — no target selection needed
   commander: {
     type: "active",
     actions: [{ id: "commander_vote_boost", label: "BOOST VOTE", targetType: "self", targetCount: 0 }],
   },
-  crew: { type: "none" },
+  crew: { type: "passive" },
+  virus: { type: "passive" },
+  router: { type: "passive" },
+  doctor: { type: "passive" },
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -98,14 +101,43 @@ export default function OrbitPage() {
 
   const [pageState, setPageState] = useState<PageState>("loading");
 
-  const [sessionPlayers, setSessionPlayers] = useState<LivePlayer[]>([]);
-  const [completedCount, setCompletedCount] = useState<number>(0);
+  const [sessionPlayers, setSessionPlayers] = useState<any[]>([]);
   const [selectedAction, setSelectedAction] = useState<OrbitActionDef | null>(null);
   const [selectedTargets, setSelectedTargets] = useState<string[]>([]);
   const [orbitInfoData, setOrbitInfoData] = useState<{ type: string; data?: unknown } | null>(null);
   const [isSurging, setIsSurging] = useState(false);
   const autoSubmittedRef = useRef(false);
   const [isHost, setIsHost] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(90);
+
+  // Sync timer with session settings and server timestamp
+  useEffect(() => {
+    const socket = getSocket();
+    const handlePhaseUpdate = (session: any) => {
+      if (session.phase === "orbit_action" && session.orbitStartedAt) {
+        const timeout = 90; // Fixed 90s timeout for orbit
+        const elapsed = Math.floor((Date.now() - session.orbitStartedAt) / 1000);
+        setSecondsLeft(Math.max(0, timeout - elapsed));
+      }
+    };
+    socket.on("phase_update", handlePhaseUpdate);
+
+    // Initial sync
+    socket.emit("get_session", { sessionId: roomCode }, (resp: any) => {
+      if (resp.success && resp.session) {
+        handlePhaseUpdate(resp.session);
+      }
+    });
+
+    const timer = setInterval(() => {
+      setSecondsLeft((prev) => Math.max(0, prev - 1));
+    }, 1000);
+
+    return () => {
+      socket.off("phase_update", handlePhaseUpdate);
+      clearInterval(timer);
+    };
+  }, [roomCode]);
 
 
   // Accent colors — consistent with role reveal
@@ -124,14 +156,24 @@ export default function OrbitPage() {
 
   // Submit action to server
   const submitAction = useCallback((type: string, targets: string[]) => {
-    const socket = getSocket();
-    socket.emit("submit_action", { sessionId: roomCode, action: { type, targets } });
+    getSocket().emit("submit_action", {
+      sessionId: roomCode,
+      action: { type, targets },
+      playerId: sessionStorage.getItem("lp_playerId") || undefined,
+      playerToken: sessionStorage.getItem("lp_playerToken") || undefined
+    }, (resp: { success: boolean; error?: string }) => {
+      if (resp.success) {
+        setPageState("waiting");
+      } else {
+        console.error("Action submission failed:", resp.error);
+        // Optionally show a toast or error message here
+      }
+    });
     playActionConfirm();
     if (type !== "skip" && type !== "passive" && type !== "none") {
       setIsSurging(true);
       setTimeout(() => setIsSurging(false), 500);
     }
-    setPageState("waiting");
   }, [roomCode]);
 
 
@@ -139,21 +181,40 @@ export default function OrbitPage() {
   useEffect(() => {
     const socket = getSocket();
 
-    const handlePhaseUpdate = (session: { phase: string; players: LivePlayer[]; orbitCompleted?: string[] }) => {
-      console.log("PHASE:", session.phase, "PLAYERS:", session.players.length);
+    const applySessionUpdate = (session: { phase: string; players: LivePlayer[]; orbitCompleted?: string[]; rolesAssigned?: Record<string, string> }) => {
       const myPlayerId = sessionStorage.getItem("lp_playerId");
       const mySocketId = socket.id;
-      setSessionPlayers(
-        session.players.map((p) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId })),
-      );
+      const orbitCompleted = session.orbitCompleted ?? [];
 
-      // Identify host status from session player list
-      const me = session.players.find((p) => myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId);
+      const players = (session.players ?? []).map((p) => ({
+        ...p,
+        isYou: myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId,
+        hasActed: orbitCompleted.includes(p.playerId || p.id)
+      }));
+
+      setSessionPlayers(players);
+
+      const me = players.find((p) => p.isYou);
       if (me) setIsHost(me.isHost);
 
-      if (session.orbitCompleted) setCompletedCount(session.orbitCompleted.length);
       if (session.phase === "orbit_resolution") setPageState("resolving");
-      // GameShell handles navigation to discussion/voting/result/role_config
+      if (session.phase === "orbit_result") {
+        setPageState("done");
+        // Instant auto-advance to Discussion to remove the redundant step
+        handleAcknowledgeResolution();
+      }
+      // Persistence safety: ensure assigned role is cached under the correct identity (playerId)
+      if (session.rolesAssigned) {
+        const myRole = session.rolesAssigned[myPlayerId || ""] || session.rolesAssigned[mySocketId || ""];
+        if (myRole) {
+          sessionStorage.setItem("lp_assignedRole", myRole);
+        }
+      }
+    };
+
+    const handlePhaseUpdate = (session: any) => {
+      console.log("PHASE_UPDATE RECEIVED:", session.phase);
+      applySessionUpdate(session);
     };
 
     const handleOrbitInfo = (info: { type: string; data?: unknown }) => {
@@ -161,8 +222,6 @@ export default function OrbitPage() {
       sessionStorage.setItem("lp_orbit_info", JSON.stringify(info));
     };
 
-    // orbit_result is now delivered at the start of the Discussion phase.
-    // Store it in sessionStorage so DiscussionPage can read it immediately on mount.
     const handleOrbitResult = (result: { type: string; data?: unknown }) => {
       sessionStorage.setItem("lp_orbit_result", JSON.stringify(result));
     };
@@ -171,25 +230,17 @@ export default function OrbitPage() {
     socket.on("orbit_info", handleOrbitInfo);
     socket.on("orbit_result", handleOrbitResult);
 
-    // Shared sync function: fetches latest session and updates local state
     const syncSession = () => {
-      socket.emit("get_session", { sessionId: roomCode }, (resp: { success: boolean; session?: { phase: string; players: LivePlayer[]; orbitCompleted?: string[] } }) => {
+      const myPlayerId = sessionStorage.getItem("lp_playerId");
+      const myPlayerToken = sessionStorage.getItem("lp_playerToken");
+
+      socket.emit("get_session", {
+        sessionId: roomCode,
+        playerId: myPlayerId,
+        playerToken: myPlayerToken
+      }, (resp: { success: boolean; session?: any }) => {
         if (resp.success && resp.session) {
-          const myPlayerId = sessionStorage.getItem("lp_playerId");
-          const mySocketId = socket.id;
-          setSessionPlayers(
-            (resp.session.players ?? []).map((p: LivePlayer) => ({
-              ...p,
-              isYou: myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId,
-            })),
-          );
-
-          const me = (resp.session.players ?? []).find((p: LivePlayer) => myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId);
-          if (me) setIsHost(me.isHost);
-
-          if (resp.session.orbitCompleted) setCompletedCount(resp.session.orbitCompleted.length);
-          if (resp.session.phase === "orbit_resolution") setPageState("resolving");
-          // GameShell handles navigation for other phases
+          applySessionUpdate(resp.session);
         }
       });
     };
@@ -197,44 +248,24 @@ export default function OrbitPage() {
     // Sync current session on mount
     syncSession();
 
-    // Periodic fallback: poll every 3 seconds so the UI stays in sync even when
-    // phase_update socket events are missed (e.g. transport hiccups).
+    // Periodic fallback: poll every 3 seconds
     const pollId = setInterval(syncSession, 3000);
 
     // Restore cached orbit info (in case page remounted)
     const cached = sessionStorage.getItem("lp_orbit_info");
     if (cached) {
-      try { setOrbitInfoData(JSON.parse(cached)); } catch {}
+      try { setOrbitInfoData(JSON.parse(cached)); } catch { }
     }
 
-    // Determine initial UI state — strict passive classification:
-    // ONLY Crew and Parasite are passive. All other roles (including Commander) are active.
-    if (role.id === "crew") {
-      // Crew has no ability — server already auto-completes it; client mirrors with waiting state
-      if (!autoSubmittedRef.current) {
-        autoSubmittedRef.current = true;
-        socket.emit("submit_action", { sessionId: roomCode, action: { type: "none", targets: [] } });
-      }
-      setPageState("waiting");
-    } else if (role.id === "parasite") {
-      // Parasite sees alien team — auto-submit so they don't block, but show info page
-      if (!autoSubmittedRef.current) {
-        autoSubmittedRef.current = true;
-        socket.emit("submit_action", { sessionId: roomCode, action: { type: "passive", targets: [] } });
-      }
+    // Determine initial UI state:
+    // Roles with no actions go to passive_info to click READY
+    if (orbitConfig.type === "passive") {
       setPageState("passive_info");
-    } else if (role.id === "virus" || role.id === "router" || role.id === "doctor") {
-      // Virus and Router act during Role Reveal — they have no Orbit action.
-      // Auto-submit so they don't block resolution.
-      if (!autoSubmittedRef.current) {
-        autoSubmittedRef.current = true;
-        socket.emit("submit_action", { sessionId: roomCode, action: { type: "none", targets: [] } });
-      }
-      setPageState("waiting");
-    } else {
-      // All other roles (Alien, Scanner, Sentinel, Disruptor, Seeker, Warper, Shifter, Commander)
-      // must interact — either use their ability or click SKIP
+    } else if (orbitConfig.type === "active") {
       setPageState("action_select");
+    } else {
+      // Fallback for spectators or undefined roles
+      setPageState("waiting");
     }
 
     return () => {
@@ -286,10 +317,24 @@ export default function OrbitPage() {
 
   const handlePassiveAcknowledge = useCallback(() => {
     playSciFiClick();
-    // Server already auto-submitted passive action during role acknowledgement.
-    // This button just transitions the UI to the waiting state.
-    setPageState("waiting");
-  }, []);
+    const actionType = role.id === "parasite" ? "passive" : "none";
+    submitAction(actionType, []);
+  }, [role.id, submitAction]);
+
+  const handleAcknowledgeResolution = useCallback(() => {
+    playSciFiClick();
+    getSocket().emit("acknowledge_resolution", { sessionId: roomCode }, (resp: any) => {
+      if (!resp.success) {
+        console.error("Failed to acknowledge resolution:", resp.error);
+      }
+    });
+  }, [roomCode]);
+
+  const handleForceResolve = useCallback(() => {
+    if (!isHost) return;
+    playActionConfirm();
+    getSocket().emit("force_resolve_orbit", { sessionId: roomCode });
+  }, [isHost, roomCode]);
 
 
   // Other players for target selection (exclude self and spectators)
@@ -300,7 +345,7 @@ export default function OrbitPage() {
     const completedCount = sessionPlayers.filter(p => !p.isSpectator && p.hasActed).length;
     return (
       <div className="relative min-h-screen w-full flex flex-col ix-page-enter" style={{ background: "hsl(220 30% 4%)", color: "hsl(190 80% 90%)", overflow: "hidden" }}>
-        
+
         {/* Tactical HUD — Sidebars */}
         <div className="absolute inset-0 pointer-events-none flex items-center justify-between px-2 sm:px-6 z-20">
           {/* Left Sidebar Tabs */}
@@ -309,7 +354,7 @@ export default function OrbitPage() {
             <HudSidebarTab label="MAP" />
             <HudSidebarTab label="STATS" />
           </div>
-          
+
           {/* Right Sidebar Tabs */}
           <div className="flex flex-col gap-4 pointer-events-auto items-end">
             <HudSidebarTab label="WATCHING" active right />
@@ -321,23 +366,23 @@ export default function OrbitPage() {
         {/* Center Content */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center relative z-10">
           <div className="w-48 h-48 lg:w-64 lg:h-64 mb-12 relative group">
-             {/* Circular Tactical Frame */}
-             <div className="absolute inset-0 rounded-full border border-cyan-500/20 animate-[spin_30s_linear_infinite]" />
-             <div className="absolute inset-4 rounded-full border border-white/5" />
-             <div className="absolute inset-[-10%] rounded-full border-t-2 border-cyan-500/30 animate-spin" />
-             
-             {/* Character Image / Icon */}
-             <div className="absolute inset-8 rounded-full overflow-hidden bg-black/40 border border-cyan-500/10 flex items-center justify-center">
-                <svg className="w-16 h-16 text-cyan-400 opacity-50 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-             </div>
-             
-             {/* Tactical Label Overlay */}
-             <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded backdrop-blur-md">
-                <div className="font-orbitron text-[9px] tracking-[0.4em] uppercase text-cyan-400 break-all">Spectator_Link_Active</div>
-             </div>
+            {/* Circular Tactical Frame */}
+            <div className="absolute inset-0 rounded-full border border-cyan-500/20 animate-[spin_30s_linear_infinite]" />
+            <div className="absolute inset-4 rounded-full border border-white/5" />
+            <div className="absolute inset-[-10%] rounded-full border-t-2 border-cyan-500/30 animate-spin" />
+
+            {/* Character Image / Icon */}
+            <div className="absolute inset-8 rounded-full overflow-hidden bg-black/40 border border-cyan-500/10 flex items-center justify-center">
+              <svg className="w-16 h-16 text-cyan-400 opacity-50 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </div>
+
+            {/* Tactical Label Overlay */}
+            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded backdrop-blur-md">
+              <div className="font-orbitron text-[9px] tracking-[0.4em] uppercase text-cyan-400 break-all">Spectator_Link_Active</div>
+            </div>
           </div>
 
           <div className="max-w-md">
@@ -345,12 +390,12 @@ export default function OrbitPage() {
               SPECTATOR
             </h1>
             <div className="h-px w-24 mx-auto mb-6" style={{ background: "linear-gradient(90deg, transparent, hsl(185 100% 50%), transparent)" }} />
-            
+
             <div className="mb-8">
               <div className="font-orbitron text-[10px] tracking-[0.3em] uppercase mb-3" style={{ color: "hsl(210 30% 50%)" }}>Synchronization Progress</div>
               <div className="w-full max-w-xs mx-auto h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
-                <div 
-                  className="h-full bg-cyan-500 shadow-[0_0_10px_hsl(185,100%,50%)] transition-all duration-700" 
+                <div
+                  className="h-full bg-cyan-500 shadow-[0_0_10px_hsl(185,100%,50%)] transition-all duration-700"
                   style={{ width: `${(completedCount / Math.max(1, sessionPlayers.filter(p => !p.isSpectator).length)) * 100}%` }}
                 />
               </div>
@@ -376,33 +421,35 @@ export default function OrbitPage() {
     );
   }
 
-// Sidebar Tab Sub-component for Tactical HUD
-function HudSidebarTab({ label, active, right }: { label: string; active?: boolean; right?: boolean }) {
-  return (
-    <div className={`flex items-center gap-0 group cursor-pointer transition-all ${right ? 'flex-row-reverse' : 'flex-row'}`}>
-       <div 
-         className={`h-20 sm:h-24 w-8 flex items-center justify-center transition-all ${active ? 'opacity-100' : 'opacity-30 group-hover:opacity-60'}`}
-         style={{ 
-           background: active ? "hsl(185 100% 50% / 0.1)" : "hsl(220 30% 8% / 0.8)",
-           border: active ? "1px solid hsl(185 100% 50% / 0.3)" : "1px solid hsl(210 30% 15%)",
-           borderLeft: !right && active ? "3px solid hsl(185 100% 50%)" : undefined,
-           borderRight: right && active ? "3px solid hsl(185 100% 50%)" : undefined,
-           backdropFilter: "blur(4px)"
-         }}
-       >
-         <div className="rotate-[-90deg] whitespace-nowrap font-orbitron text-[8px] sm:text-[9px] font-black tracking-[0.3em] uppercase" style={{ color: active ? "hsl(185 100% 60%)" : "white" }}>
-           {label}
-         </div>
-       </div>
-    </div>
-  );
-}
+  // Sidebar Tab Sub-component for Tactical HUD
+  function HudSidebarTab({ label, active, right }: { label: string; active?: boolean; right?: boolean }) {
+    return (
+      <div className={`flex items-center gap-0 group cursor-pointer transition-all ${right ? 'flex-row-reverse' : 'flex-row'}`}>
+        <div
+          className={`h-20 sm:h-24 w-8 flex items-center justify-center transition-all ${active ? 'opacity-100' : 'opacity-30 group-hover:opacity-60'}`}
+          style={{
+            background: active ? "hsl(185 100% 50% / 0.1)" : "hsl(220 30% 8% / 0.8)",
+            border: active ? "1px solid hsl(185 100% 50% / 0.3)" : "1px solid hsl(210 30% 15%)",
+            borderLeft: !right && active ? "3px solid hsl(185 100% 50%)" : undefined,
+            borderRight: right && active ? "3px solid hsl(185 100% 50%)" : undefined,
+            backdropFilter: "blur(4px)"
+          }}
+        >
+          <div className="rotate-[-90deg] whitespace-nowrap font-orbitron text-[8px] sm:text-[9px] font-black tracking-[0.3em] uppercase" style={{ color: active ? "hsl(185 100% 60%)" : "white" }}>
+            {label}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  const completedCount = sessionPlayers.filter(p => !p.isSpectator && p.hasActed).length;
+
   return (
     <motion.div
-      animate={isSurging ? { 
+      animate={isSurging ? {
         x: [0, -5, 5, -5, 5, 0],
         filter: [
-          "none", 
+          "none",
           "drop-shadow(2px 0 0 rgba(255,0,0,0.5)) drop-shadow(-2px 0 0 rgba(0,255,255,0.5))",
           "none"
         ]
@@ -420,7 +467,7 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
       {/* Main content */}
       <div className="flex-1 flex flex-col px-6 py-10 gap-8 overflow-y-auto pb-32 lg:pb-8 max-w-2xl mx-auto w-full">
         {/* Role header */}
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-6 bg-white/[0.02] border border-white/5 rounded-sm">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-6 bg-white/[0.02] border border-white/5 rounded-sm relative">
           <img
             src={role.image}
             alt={role.name}
@@ -428,15 +475,23 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
             loading="lazy"
             style={{ border: `2px solid ${accentColor.replace(")", " / 0.6)")}` }}
           />
-          <div className="text-center sm:text-left">
+          <div className="text-center sm:text-left flex-1 min-w-0">
             <div className="text-[10px] tracking-[0.4em] uppercase mb-2 opacity-40 font-bold break-words">
               AUTHORIZED_OPERATIVE_ROLE
             </div>
             <div
-              className="font-orbitron font-black text-4xl tracking-widest uppercase italic"
+              className="font-orbitron font-black text-3xl sm:text-4xl tracking-widest uppercase italic"
               style={{ color: accentLight, textShadow: `0 0 15px ${accentGlow}` }}
             >
               {role.name}
+            </div>
+          </div>
+
+          {/* Timer - Prominent for coordination awareness */}
+          <div className="absolute top-4 right-4 text-right">
+            <div className="text-[10px] tracking-[0.3em] uppercase mb-1 opacity-40">Sync_Lock</div>
+            <div className="font-orbitron font-bold text-xl tracking-widest" style={{ color: secondsLeft < 15 ? "hsl(0 75% 60%)" : accentLight }}>
+              {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, '0')}
             </div>
           </div>
         </div>
@@ -499,9 +554,10 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
           />
         )}
 
-        {/* Passive: parasite info */}
-        {pageState === "passive_info" && role.id === "parasite" && (
-          <PassiveParasiteInfo
+        {/* Passive: acknowledge and ready */}
+        {pageState === "passive_info" && (
+          <PassiveRoleInfo
+            roleId={role.id}
             orbitInfoData={orbitInfoData}
             accentColor={accentColor}
             accentLight={accentLight}
@@ -518,6 +574,8 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
             label={!role.canAct ? "Waiting for other players to use their ability" : "Waiting for other players..."}
             completedCount={completedCount}
             totalCount={sessionPlayers.filter(p => !p.isSpectator).length}
+            isHost={isHost}
+            onForceResolve={handleForceResolve}
           />
         )}
 
@@ -538,16 +596,26 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
 
         {/* Done / Discussion */}
         {pageState === "done" && (
-          <div
-            className="rounded-md p-6 text-center"
-            style={{ background: "hsl(220 28% 10%)", border: "1px solid hsl(210 30% 18%)" }}
-          >
-            <div className="font-orbitron font-bold text-lg tracking-[0.3em] uppercase mb-2" style={{ color: accentLight }}>
-              DISCUSSION PHASE
+          <div className="flex flex-col gap-4">
+            <div
+              className="rounded-md p-6 text-center"
+              style={{ background: "hsl(220 28% 10%)", border: "1px solid hsl(210 30% 18%)" }}
+            >
+              <div className="font-orbitron font-bold text-lg tracking-[0.3em] uppercase mb-2" style={{ color: accentLight }}>
+                ORBIT COMPLETE
+              </div>
+              <p className="text-sm" style={{ color: "hsl(210 30% 50%)", fontFamily: "'Exo 2', sans-serif" }}>
+                All actions have been resolved. Review your findings.
+              </p>
             </div>
-            <p className="text-sm" style={{ color: "hsl(210 30% 50%)", fontFamily: "'Exo 2', sans-serif" }}>
-              Orbit complete. Discuss what you know.
-            </p>
+            
+            <ActionButton 
+              label="CONTINUE TO DISCUSSION" 
+              accentColor={accentColor} 
+              accentLight={accentLight} 
+              accentGlow={accentGlow} 
+              onClick={handleAcknowledgeResolution} 
+            />
           </div>
         )}
 
@@ -607,7 +675,21 @@ function SkipButton({ accentColor, onClick }: { accentColor: string; onClick: ()
   );
 }
 
-function WaitingPanel({ accentColor, label, completedCount, totalCount }: { accentColor: string; label: string; completedCount: number; totalCount: number }) {
+function WaitingPanel({
+  accentColor,
+  label,
+  completedCount,
+  totalCount,
+  isHost,
+  onForceResolve
+}: {
+  accentColor: string;
+  label: string;
+  completedCount: number;
+  totalCount: number;
+  isHost?: boolean;
+  onForceResolve?: () => void;
+}) {
   return (
     <div
       className="rounded-md py-5 px-4 text-center"
@@ -617,12 +699,21 @@ function WaitingPanel({ accentColor, label, completedCount, totalCount }: { acce
         {label}
       </p>
       {totalCount > 0 && (
-        <div className="font-orbitron font-bold text-lg" style={{ color: accentColor }}>
+        <div className="font-orbitron font-bold text-lg mb-4" style={{ color: accentColor }}>
           {completedCount} / {totalCount}
           <span className="block text-xs tracking-[0.2em] uppercase mt-1" style={{ color: "hsl(210 30% 40%)", fontWeight: 400 }}>
             PLAYERS READY
           </span>
         </div>
+      )}
+
+      {isHost && (
+        <button
+          onClick={onForceResolve}
+          className="px-4 py-2 bg-red-500/10 border border-red-500/30 rounded text-[10px] font-orbitron tracking-widest text-red-400 hover:bg-red-500/20 transition-all cursor-pointer"
+        >
+          FORCE PROCEED
+        </button>
       )}
     </div>
   );
@@ -715,7 +806,8 @@ function TargetSelect({
   );
 }
 
-function PassiveParasiteInfo({
+function PassiveRoleInfo({
+  roleId,
   orbitInfoData,
   accentColor,
   accentLight,
@@ -723,6 +815,7 @@ function PassiveParasiteInfo({
   accentDim,
   onAcknowledge,
 }: {
+  roleId: string;
   orbitInfoData: { type: string; data?: unknown } | null;
   accentColor: string;
   accentLight: string;
@@ -730,6 +823,7 @@ function PassiveParasiteInfo({
   accentDim: string;
   onAcknowledge: () => void;
 }) {
+  const isParasite = roleId === "parasite";
   const info = orbitInfoData?.data as { alienPlayers?: string[] } | undefined;
   const alienPlayers = info?.alienPlayers ?? [];
 
@@ -737,24 +831,39 @@ function PassiveParasiteInfo({
     <div className="flex flex-col gap-4">
       <div className="rounded-md p-4" style={{ background: accentDim, border: `1px solid ${accentColor.replace(")", " / 0.3)")}` }}>
         <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: accentLight }}>
-          ANOMALY DETECTION
+          {isParasite ? "ANOMALY DETECTION" : "NEURAL LINK STANDBY"}
         </div>
-        <p className="text-xs mb-3" style={{ color: "hsl(210 30% 50%)", fontFamily: "'Exo 2', sans-serif" }}>
-          You detect the following anomalies:
-        </p>
-        {alienPlayers.length > 0 ? (
-          <div className="flex flex-col gap-2">
-            {alienPlayers.map((name, i) => (
-              <div key={i} className="px-3 py-2 rounded font-orbitron text-sm tracking-wider uppercase" style={{ background: "hsl(220 28% 12%)", border: `1px solid ${accentColor.replace(")", " / 0.3)")}`, color: accentLight }}>
-                {name}
+
+        {isParasite ? (
+          <>
+            <p className="text-xs mb-3" style={{ color: "hsl(210 30% 50%)", fontFamily: "'Exo 2', sans-serif" }}>
+              You detect the following anomalies:
+            </p>
+            {alienPlayers.length > 0 ? (
+              <div className="flex flex-col gap-2">
+                {alienPlayers.map((name, i) => (
+                  <div key={i} className="px-3 py-2 rounded font-orbitron text-sm tracking-wider uppercase" style={{ background: "hsl(220 28% 12%)", border: `1px solid ${accentColor.replace(")", " / 0.3)")}`, color: accentLight }}>
+                    {name}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            ) : (
+              <p className="text-sm" style={{ color: "hsl(210 30% 45%)", fontFamily: "'Exo 2', sans-serif" }}>No anomalies detected.</p>
+            )}
+          </>
         ) : (
-          <p className="text-sm" style={{ color: "hsl(210 30% 45%)", fontFamily: "'Exo 2', sans-serif" }}>No anomalies detected.</p>
+          <p className="text-sm leading-relaxed" style={{ color: "hsl(210 30% 50%)", fontFamily: "'Exo 2', sans-serif" }}>
+            Your systems are fully calibrated. Monitor the neural net for activity while other operatives execute their protocols.
+          </p>
         )}
       </div>
-      <ActionButton label="ACKNOWLEDGED" accentColor={accentColor} accentLight={accentLight} accentGlow={accentGlow} onClick={onAcknowledge} />
+      <ActionButton
+        label={isParasite ? "ACKNOWLEDGE" : "CONFIRM READINESS"}
+        accentColor={accentColor}
+        accentLight={accentLight}
+        accentGlow={accentGlow}
+        onClick={onAcknowledge}
+      />
     </div>
   );
 }

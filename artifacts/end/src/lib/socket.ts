@@ -33,7 +33,7 @@ export function getConnectionState() {
   return connectionState;
 }
 
-export function getSocket(): Socket {
+export function getSocket(token?: string): Socket {
   if (!socket) {
     socket = io(API_URL, {
       path: "/socket.io",
@@ -44,6 +44,9 @@ export function getSocket(): Socket {
       reconnectionDelayMax: 5000,
       timeout: 20000,
       autoConnect: true,
+      auth: {
+        token: token || localStorage.getItem("lp_auth_token")
+      }
     });
 
     socket.on("connect", () => {
@@ -71,8 +74,14 @@ export function getSocket(): Socket {
       setConnectionState("connected");
       systemToast("Reconnected", "success", TOAST_DURATION_SUCCESS, "connection");
     });
+  } else if (token) {
+    // Update token if provided and already connected
+    socket.auth = { token };
+    if (socket.connected) {
+      socket.disconnect().connect();
+    }
   }
-  return socket;
+  return socket!;
 }
 
 export function disconnectSocket() {

@@ -90,7 +90,7 @@ export default function RoleConfigPage() {
   const [kickedNotice, setKickedNotice] = useState<string | null>(null);
   const [nameTakenNotice, setNameTakenNotice] = useState<string | null>(null);
   const [livePlayers, setLivePlayers] = useState<LivePlayer[]>([]);
-  const { credits, isLoggedIn } = useAuth();
+  const { credits, isLoggedIn, token } = useAuth();
   const [unlockedRoles, setUnlockedRoles] = useState<string[]>([]);
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [showShopModal, setShowShopModal] = useState(false);
@@ -116,7 +116,7 @@ export default function RoleConfigPage() {
 
   // Socket connection — server is the single source of truth for phase
   useEffect(() => {
-    const socket = getSocket();
+    const socket = getSocket(token || undefined);
 
     const handlePhaseUpdate = (session: SessionPayload) => {
       console.log("PHASE:", session.phase, "PLAYERS:", session.players.length);
@@ -140,7 +140,7 @@ export default function RoleConfigPage() {
       setLivePlayers(updated);
       // Detect if I am a spectator or host
       const me = session.players.find((p) => (myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId));
-      
+
       // Detect if I am the host based on server authority
       if (me?.isHost) {
         sessionStorage.setItem("lp_isHost", "true");

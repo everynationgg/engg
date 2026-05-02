@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db, usersTable, creditTransactionsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
-import { authMiddleware, type AuthRequest } from "../auth/middleware";
+import { authMiddleware, registeredOnly, type AuthRequest } from "../auth/middleware";
 import { randomUUID } from "node:crypto";
 import { logger } from "../../../lib/logger.js";
 
@@ -76,7 +76,7 @@ router.get("/shop/config", async (req, res) => {
 
 import { createOrderSchema, captureOrderSchema } from "./shop.schemas.js";
 
-router.post("/shop/create-order", authMiddleware, async (req: AuthRequest, res) => {
+router.post("/shop/create-order", authMiddleware, registeredOnly, async (req: AuthRequest, res) => {
   try {
     const result = createOrderSchema.safeParse(req.body);
     if (!result.success) {
@@ -132,7 +132,7 @@ router.post("/shop/create-order", authMiddleware, async (req: AuthRequest, res) 
   }
 });
 
-router.post("/shop/capture-order", authMiddleware, async (req: AuthRequest, res) => {
+router.post("/shop/capture-order", authMiddleware, registeredOnly, async (req: AuthRequest, res) => {
   try {
     const result = captureOrderSchema.safeParse(req.body);
     if (!result.success) {

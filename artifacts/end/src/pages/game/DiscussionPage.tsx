@@ -450,7 +450,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
       {/* Main content */}
       <div className="flex-1 flex flex-col px-6 py-10 gap-10 overflow-y-auto pb-32 lg:pb-8 max-w-2xl mx-auto w-full">
         {/* Phase title + role */}
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-6 bg-white/[0.02] border border-white/5 rounded-sm shadow-xl">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-6 bg-white/[0.02] border border-white/5 rounded-sm shadow-xl relative">
           <div className="relative shrink-0">
             <img
               src={role.image}
@@ -462,7 +462,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
             {/* Wing icon with silver shine */}
             <WingIcon accentColor={accentColor} />
           </div>
-          <div className="text-center sm:text-left">
+          <div className="text-center sm:text-left flex-1 min-w-0">
             <div className="font-orbitron font-black text-3xl sm:text-4xl tracking-[0.2em] uppercase italic" style={{ color: accentLight, textShadow: `0 0 15px ${accentGlow}` }}>
               DELIBERATION
             </div>
@@ -473,6 +473,14 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
               <div className="text-[10px] tracking-[0.4em] uppercase opacity-40 font-bold break-all">
                 Authorized_Role: <span className="font-orbitron font-bold opacity-100" style={{ color: accentLight }}>{role.name.toUpperCase()}</span>
               </div>
+            </div>
+          </div>
+          
+          {/* Timer - Fixed/Floating on mobile header */}
+          <div className="absolute top-4 right-4 text-right">
+            <div className="text-[10px] tracking-[0.3em] uppercase mb-1 opacity-40">Phase_End</div>
+            <div className="font-orbitron font-bold text-xl tracking-widest" style={{ color: secondsLeft < 20 ? "hsl(0 75% 60%)" : accentLight }}>
+              {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, '0')}
             </div>
           </div>
         </div>

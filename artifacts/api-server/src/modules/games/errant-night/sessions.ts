@@ -13,6 +13,8 @@ export type {
   GameState as Session,
 } from "./engine.js";
 
+import { addPlayer } from "./engine.js";
+
 import type {
   Player,
   GameState as Session,
@@ -537,6 +539,7 @@ export function createSession(sessionId: string, hostPlayer: Player): VersionedS
     resolutionAcknowledgements: [],
     discussionStartedAt: null,
     votingStartedAt: null,
+    orbitStartedAt: null,
     emergencyVote: freshEmergencyVote(),
     votes: {},
     chaoticAlignments: {},
@@ -561,24 +564,24 @@ export function createSession(sessionId: string, hostPlayer: Player): VersionedS
 export function addPlayerToSession(
   session: Session,
   player: Player,
-): void {
-  const existing = session.players.find(
-    (p) => p.id === player.id || (player.playerId && p.playerId === player.playerId),
-  );
-  if (!existing) session.players.push(player);
+): { success: boolean; isReconnect: boolean; error?: string } {
+  return addPlayer(session, player);
 }
 
 export function removePlayerFromSession(
   session: VersionedSession,
-  playerId: string,
+  playerId: string, // stable playerId
 ): VersionedSession | null {
-  session.players = session.players.filter((p) => p.id !== playerId);
+  session.players = session.players.filter((p) => (p.playerId || p.id) !== playerId);
   delete session.rolesAssigned[playerId];
   delete session.initialRoles[playerId];
   delete session.orbitActions[playerId];
+  delete session.orbitFeedback[playerId];
+  delete session.votes[playerId];
   session.orbitCompleted = session.orbitCompleted.filter((id) => id !== playerId);
   session.roleAcknowledgements = session.roleAcknowledgements.filter((id) => id !== playerId);
   session.resolutionAcknowledgements = session.resolutionAcknowledgements.filter((id) => id !== playerId);
+  
   if (session.players.length === 0) return null;
   return session;
 }

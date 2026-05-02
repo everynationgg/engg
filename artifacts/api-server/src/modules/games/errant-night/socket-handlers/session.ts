@@ -5,7 +5,8 @@ import {
   requestPlayerTokenSchema, 
   createSessionSchema, 
   joinSessionSchema,
-  sessionOnlySchema
+  sessionOnlySchema,
+  getSessionSchema
 } from "../schemas.js";
 import { logger } from "../../../../lib/logger.js";
 import { 
@@ -68,6 +69,7 @@ export function registerSessionHandlers(
     const parsed = validate(createSessionSchema, data, ack);
     if (!parsed) return;
     const { sessionId, playerName, playerId } = parsed;
+    const userId = socket.data.userId; // Securely derived from JWT middleware
 
     if (isRedisOverloaded()) {
       ack?.({ success: false, error: "Server busy — please try again shortly" });
@@ -100,13 +102,20 @@ export function registerSessionHandlers(
           return;
         }
 
-        if (reconnecting && reconnecting.id !== socket.id) {
+        if (reconnecting) {
           const oldId = reconnecting.id;
-          cancelRemovePlayer(sessionId, oldId);
+          const pId = reconnecting.playerId || oldId;
+
+          if (oldId !== socket.id) {
+            io.sockets.sockets.get(oldId)?.disconnect(true);
+          }
+          cancelRemovePlayer(sessionId, pId);
           reconnectPlayer(session, oldId, socket.id);
           if (playerId && !reconnecting.playerId) {
             reconnecting.playerId = playerId;
           }
+          // Preserve the verified userId on reconnect
+          reconnecting.userId = userId;
 
           if (!await saveSession(session)) {
             await handleSaveConflict(io, sessionId);
@@ -121,15 +130,23 @@ export function registerSessionHandlers(
         } else if (!reconnecting) {
           const currentHost = session.players.find(p => p.isHost);
           const shouldClaimHost = !currentHost;
+          const pId = playerId || socket.id;
 
-          addPlayerToSession(session, {
+          const joinRes = addPlayerToSession(session, {
             id: socket.id,
-            playerId,
+            playerId: pId,
             name: playerName,
             isHost: shouldClaimHost,
             isSpectator: !!parsed.isSpectator,
+            userId,
             connectionStatus: "connected",
           });
+          
+          if (!joinRes.success) {
+            ack?.({ success: false, error: joinRes.error });
+            return;
+          }
+
           if (!await saveSession(session)) {
             await handleSaveConflict(io, sessionId);
             ack?.({ success: true });
@@ -137,31 +154,32 @@ export function registerSessionHandlers(
           }
           socket.join(sessionId);
           state.currentSessionId = sessionId;
-          state.currentPlayerId = socket.id;
-          state.currentUserId = parsed.userId ?? null;
-          state.currentRateLimitId = parsed.userId ?? socket.id;
+          state.currentPlayerId = pId; // STABLE IDENTITY
+          state.currentUserId = userId;
+          state.currentRateLimitId = userId;
           phaseUpdate(io, sessionId, session);
           ack?.({ success: true, session });
           return;
         }
         socket.join(sessionId);
         state.currentSessionId = sessionId;
-        state.currentPlayerId = socket.id;
-        state.currentUserId = reconnecting?.userId ?? parsed.userId ?? null;
-        state.currentRateLimitId = reconnecting?.userId ?? parsed.userId ?? socket.id;
+        state.currentPlayerId = reconnecting.playerId || reconnecting.id; // STABLE IDENTITY
+        state.currentUserId = userId;
+        state.currentRateLimitId = userId;
         sortPlayersByStatus(session);
         socket.emit("phase_update", session);
         ack?.({ success: true, session });
         return;
       }
 
+      const pId = playerId || socket.id;
       session = createSession(sessionId, {
         id: socket.id,
-        playerId,
+        playerId: pId,
         name: playerName,
         isHost: true,
         isSpectator: !!parsed.isSpectator,
-        userId: parsed.userId,
+        userId,
         connectionStatus: "connected",
       });
       if (!await saveSession(session)) {
@@ -171,9 +189,9 @@ export function registerSessionHandlers(
 
       socket.join(sessionId);
       state.currentSessionId = sessionId;
-      state.currentPlayerId = socket.id;
-      state.currentUserId = parsed.userId ?? null;
-      state.currentRateLimitId = parsed.userId ?? socket.id;
+      state.currentPlayerId = pId; // STABLE IDENTITY
+      state.currentUserId = userId;
+      state.currentRateLimitId = userId;
 
       logger.info({ sessionId, playerName }, "Session created");
       phaseUpdate(io, sessionId, session);
@@ -188,6 +206,7 @@ export function registerSessionHandlers(
     const parsed = validate(joinSessionSchema, data, ack);
     if (!parsed) return;
     const { sessionId, playerName, playerId } = parsed;
+    const userId = socket.data.userId; // Securely derived from JWT middleware
 
     let resolvedToken: string;
     if (parsed.playerToken) {
@@ -217,22 +236,40 @@ export function registerSessionHandlers(
       const existing = session.players.find((p) => p.playerId === playerId);
       if (existing) {
         if (existing.didQuit) { playerDidQuit = true; return CAS_SKIP; }
-        cancelRemovePlayer(sessionId, existing.id);
+
+        // ── STRICT HIJACK PREVENTION ──
+        if (!parsed.playerToken || !verifyPlayerToken(parsed.playerToken, playerId)) {
+           return CAS_SKIP; 
+        }
+
+        // ── FORCE DISCONNECT EXISTING SESSION ──
+        if (existing.id !== socket.id) {
+          io.sockets.sockets.get(existing.id)?.disconnect(true);
+        }
+
+        cancelRemovePlayer(sessionId, playerId);
         reconnectPlayer(session, existing.id, socket.id);
         existing.connectionStatus = "connected";
         existing.connected = true;
+        existing.userId = userId; // Bind to current authenticated user
         return true as const;
       }
 
-      addPlayerToSession(session, {
+      const joinRes = addPlayerToSession(session, {
         id: socket.id,
         playerId,
         name: playerName,
         isHost: false,
         isSpectator: !!parsed.isSpectator,
-        userId: parsed.userId,
+        userId,
         connectionStatus: "connected",
       });
+
+      if (!joinRes.success) {
+        ack?.({ success: false, error: joinRes.error });
+        return CAS_SKIP;
+      }
+
       return true as const;
     });
 
@@ -244,9 +281,9 @@ export function registerSessionHandlers(
 
     socket.join(sessionId);
     state.currentSessionId = sessionId;
-    state.currentPlayerId = socket.id;
-    state.currentUserId = parsed.userId ?? null;
-    state.currentRateLimitId = parsed.userId ?? socket.id;
+    state.currentPlayerId = playerId; // STABLE IDENTITY
+    state.currentUserId = userId;
+    state.currentRateLimitId = userId;
     state.currentPlayerToken = resolvedToken;
 
     const session = await getSession(sessionId);
@@ -258,18 +295,59 @@ export function registerSessionHandlers(
   });
 
   socket.on("get_session", async (data: unknown, ack) => {
-    const parsed = validate(sessionOnlySchema, data, ack);
+    const parsed = validate(getSessionSchema, data, ack);
     if (!parsed) return;
-    const { sessionId } = parsed;
+    const { sessionId, playerId, playerToken } = parsed;
 
     const session = await getSession(sessionId);
     if (!session) {
       ack?.({ success: false, error: "Session not found" });
       return;
     }
-    // Join room if not already in it to ensure sync
-    socket.join(sessionId);
-    state.currentSessionId = sessionId;
+
+    // Attempt identity resolution if credentials provided
+    if (playerId) {
+      // Basic token verification if provided
+      if (playerToken && !verifyPlayerToken(playerToken, playerId)) {
+        // Skip silent auth but don't fail get_session (might be a spectator or just checking status)
+      } else {
+        const existing = session.players.find(p => p.playerId === playerId);
+        if (existing && existing.id !== socket.id) {
+          // Re-bind identity to this new socket
+          const oldId = existing.id;
+          reconnectPlayer(session, oldId, socket.id);
+          existing.connectionStatus = "connected";
+          existing.connected = true;
+          
+          // Join room and update local state
+          socket.join(sessionId);
+          state.currentSessionId = sessionId;
+          state.currentPlayerId = playerId;
+          
+          // Save the linked state back to Redis
+          await saveSession(session);
+          
+          logger.info({ sessionId, playerId, oldId, newId: socket.id }, "Identity resolved during get_session polling");
+        } else if (existing) {
+          // Already linked, just ensure room membership and local state
+          socket.join(sessionId);
+          state.currentSessionId = sessionId;
+          state.currentPlayerId = playerId;
+        }
+      }
+    } else if (socket.data.lp_playerId) {
+      // Sync from legacy JWT-based identity if available
+      state.currentPlayerId = socket.data.lp_playerId;
+      state.currentSessionId = sessionId;
+      socket.join(sessionId);
+    } else {
+      // Pure fallback: join room to hear broadcasts
+      socket.join(sessionId);
+    }
+
+    if (session.phase === "orbit_action") {
+      await checkAndRunResolution(io, sessionId, session);
+    }
     
     ack?.({ success: true, session });
   });
@@ -333,7 +411,7 @@ export function registerSessionHandlers(
       let playerName: string | undefined;
       await withCasRetry(sessionId, (session) => {
         if (session.status === "closed") return CAS_SKIP;
-        const player = session.players.find((p) => p.id === playerId);
+        const player = session.players.find((p) => p.playerId === playerId || p.id === playerId);
         if (!player || player.didQuit) return CAS_SKIP;
         playerName = player.name;
         player.connected = false;
@@ -365,7 +443,7 @@ export function registerSessionHandlers(
 
           removePlayerFromGrace(session, playerId);
           if (session.phase === "lobby" || session.phase === "role_config") {
-            const player = session.players.find(p => p.id === playerId);
+            const player = session.players.find(p => p.playerId === playerId || p.id === playerId);
             if (player?.isHost) {
               session.status = "closed";
               gameEnded = true;
@@ -374,7 +452,7 @@ export function registerSessionHandlers(
             }
             return true as const;
           }
-          const player = session.players.find(p => p.id === playerId);
+          const player = session.players.find(p => p.playerId === playerId || p.id === playerId);
           if (player) {
             player.connectionStatus = "disconnected";
             if (player.isHost) {

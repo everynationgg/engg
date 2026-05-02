@@ -124,7 +124,7 @@ function useToastStore() {
       listeners.add(cb);
       return () => listeners.delete(cb);
     },
-    ( ) => toasts,
+    () => toasts,
   );
 }
 
@@ -138,19 +138,17 @@ export default function SystemToastContainer() {
       {items.map((t) => (
         <div
           key={t.id}
-          className={`px-3 py-2 border bg-black/90 backdrop-blur-md font-mono text-[9px] tracking-widest uppercase transition-all duration-300 ${
-            t.exiting ? "opacity-0 translate-x-10" : "opacity-100 translate-x-0"
-          }`}
+          className={`px-3 py-2 border bg-black/90 backdrop-blur-md font-mono text-[9px] tracking-widest uppercase transition-all duration-300 ${t.exiting ? "opacity-0 translate-x-10" : "opacity-100 translate-x-0"
+            }`}
           style={{
             borderColor: t.variant === "error" ? "#ff4e4e30" : t.variant === "warning" ? "#ffaa0030" : t.variant === "success" ? "#10b98130" : "#00f3ff30",
             color: t.variant === "error" ? "#ff4e4e" : t.variant === "warning" ? "#ffaa00" : t.variant === "success" ? "#10b981" : "#00f3ff",
           }}
         >
           <div className="flex items-center gap-2">
-             <div className={`w-[1px] h-2 ${
-               t.variant === "error" ? "bg-red-500" : t.variant === "warning" ? "bg-amber-500" : t.variant === "success" ? "bg-emerald-500" : "bg-cyan-500"
-             }`} />
-             <span>{t.message}</span>
+            <div className={`w-[1px] h-2 ${t.variant === "error" ? "bg-red-500" : t.variant === "warning" ? "bg-amber-500" : t.variant === "success" ? "bg-emerald-500" : "bg-cyan-500"
+              }`} />
+            <span>{t.message}</span>
           </div>
           {/* Subtle corner accent */}
           <div className="absolute top-0 right-0 w-1 h-1 border-t border-r border-white/5" />

@@ -73,7 +73,8 @@ messagesRouter.get(
       res.json(messages.map(m => ({ ...m, id: m.id.toString() })).reverse());
     } catch (error) {
       logger.error({ err: error }, "Error fetching private messages");
-      res.status(500).json({ error: "Failed to fetch private messages" });
+      // Graceful degradation: return empty list on failure
+      res.json([]);
     }
   }
 );
@@ -148,7 +149,8 @@ messagesRouter.get(
       res.json(counts);
     } catch (error) {
       logger.error({ err: error }, "Error fetching unread counts");
-      res.status(500).json({ error: "Failed to fetch unread counts" });
+      // Graceful degradation: return empty counts
+      res.json([]);
     }
   }
 );

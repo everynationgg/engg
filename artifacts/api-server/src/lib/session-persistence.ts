@@ -107,7 +107,18 @@ export async function snapshotActiveSessions(): Promise<void> {
   try {
     await ensureSnapshotTable();
 
-    // ── 1. Collect session keys via cursor-based SCAN ─────────────────────
+    // ── 0. ACQUIRE DISTRIBUTED LOCK ─────────────────────────────────────
+    // Ensures only one instance runs the snapshot at a time.
+    // Lock expires automatically after 60s to prevent deadlocks.
+    const lockKey = "lock:session-snapshot";
+    const locked = await redisClient.set(lockKey, "locked", "EX", 60, "NX");
+    if (!locked) {
+      logger.debug("session-persistence: snapshot already in progress on another instance");
+      return;
+    }
+
+    try {
+      // ── 1. Collect session keys via cursor-based SCAN ─────────────────────
     const sessionKeys: string[] = [];
     let cursor = "0";
 
@@ -192,6 +203,10 @@ export async function snapshotActiveSessions(): Promise<void> {
       { count, errors, durationMs: Date.now() - t0 },
       "session-persistence: snapshot complete",
     );
+    } finally {
+      // Release lock
+      await redisClient.del("lock:session-snapshot");
+    }
   } catch (err) {
     logger.error({ err }, "session-persistence: snapshot failed");
   }
