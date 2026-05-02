@@ -1,10 +1,12 @@
 # fly.toml — Fly.io configuration for errant-night API server
-# Deploy from repo root: fly deploy
+# This file is placed in the root to allow "fly deploy" to run directly.
 
 app = 'engg'
 primary_region = 'sin'
 
 [build]
+  dockerfile = "artifacts/api-server/Dockerfile"
+  ignorefile = ".gitignore"
 
 [env]
   NODE_ENV = 'production'

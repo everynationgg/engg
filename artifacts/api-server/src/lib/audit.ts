@@ -14,9 +14,13 @@ export async function logAudit(params: {
   // Extract IP if request object is provided
   const ipAddress = req ? (req.headers["x-forwarded-for"] as string || req.socket.remoteAddress) : undefined;
 
+  // Database column might be strict UUID; sanitize guest IDs
+  const isUuid = userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+  const sanitizedUserId = isUuid ? userId : null;
+
   try {
     await db.insert(systemAuditLogsTable).values({
-      userId: userId || null,
+      userId: sanitizedUserId,
       eventType,
       description,
       metadata: metadata || {},
