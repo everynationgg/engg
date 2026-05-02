@@ -84,11 +84,11 @@ export default function LandingPage() {
     playSciFiClick();
     setIsCreatingLobby(true);
     const roomCode = generateRoomCode();
-    sessionStorage.setItem("lp_callsign", callsign.trim().toUpperCase());
-    sessionStorage.setItem("lp_roomCode", roomCode);
+    localStorage.setItem("lp_callsign", callsign.trim().toUpperCase());
+    localStorage.setItem("lp_roomCode", roomCode);
     sessionStorage.setItem("lp_isCreating", "true");
     if (userId) {
-      sessionStorage.setItem("lp_userId", userId);
+      localStorage.setItem("lp_userId", userId);
     }
     setTimeout(() => {
       setLocation(`/room/${roomCode}`);
@@ -99,10 +99,10 @@ export default function LandingPage() {
   const handleJoinLobby = useCallback(() => {
     if (!callsign.trim() || !roomCodeInput.trim()) return;
     playSciFiClick();
-    sessionStorage.setItem("lp_callsign", callsign.trim().toUpperCase());
-    sessionStorage.setItem("lp_roomCode", roomCodeInput.trim().toUpperCase());
+    localStorage.setItem("lp_callsign", callsign.trim().toUpperCase());
+    localStorage.setItem("lp_roomCode", roomCodeInput.trim().toUpperCase());
     if (userId) {
-      sessionStorage.setItem("lp_userId", userId);
+      localStorage.setItem("lp_userId", userId);
     }
     setLocation(`/room/${roomCodeInput.trim().toUpperCase()}`);
   }, [callsign, roomCodeInput, userId, setLocation]);

@@ -237,8 +237,13 @@ export function registerSessionHandlers(
       if (existing) {
         if (existing.didQuit) { playerDidQuit = true; return CAS_SKIP; }
 
-        // ── STRICT HIJACK PREVENTION ──
-        if (!parsed.playerToken || !verifyPlayerToken(parsed.playerToken, playerId)) {
+        // ── SECURE RECONNECT FALLBACK ──
+        // Allow reconnection if the playerToken is valid OR if the verified userId matches.
+        // This prevents lockouts when sessionStorage is lost but the user is still logged in.
+        const tokenValid = parsed.playerToken && verifyPlayerToken(parsed.playerToken, playerId);
+        const userMatches = userId && existing.userId === userId;
+
+        if (!tokenValid && !userMatches) {
            return CAS_SKIP; 
         }
 

@@ -228,8 +228,9 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
           }
 
           // Fallback: if orbit result wasn't received via socket, read from session
-          if (!orbitResultState && myId && resp.session.orbitFeedback?.[myId]) {
-            const fb = resp.session.orbitFeedback[myId] as { type: string; data?: unknown };
+          const feedbackKey = myPlayerId || myId;
+          if (!orbitResultState && feedbackKey && resp.session.orbitFeedback?.[feedbackKey]) {
+            const fb = resp.session.orbitFeedback[feedbackKey] as { type: string; data?: unknown };
             setOrbitResultState(fb);
             sessionStorage.setItem("lp_orbit_result", JSON.stringify(fb));
           }
@@ -310,12 +311,12 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
                 </h3>
                 <div className="rounded-xl p-5 space-y-3" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(270 50% 30% / 0.3)", boxShadow: "inset 0 0 20px rgba(0,0,0,0.5)" }}>
                   {roundSummary && roundSummary.abilityLog.filter(e => {
-                    const actor = sessionPlayers.find(p => p.name === e.actorName);
+                    const actor = sessionPlayers.find(p => p.name.toLowerCase() === e.actorName.toLowerCase());
                     return !actor?.isSpectator;
                   }).length > 0 ? (
                     roundSummary.abilityLog
                       .filter(e => {
-                        const actor = sessionPlayers.find(p => p.name === e.actorName);
+                        const actor = sessionPlayers.find(p => p.name.toLowerCase() === e.actorName.toLowerCase());
                         return !actor?.isSpectator;
                       })
                       .map((entry, idx) => (

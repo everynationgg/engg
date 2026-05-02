@@ -33,8 +33,8 @@ export default function JoinPage() {
   const handleJoin = useCallback(() => {
     if (!callsign.trim()) return;
     playSciFiClick();
-    sessionStorage.setItem("lp_callsign", callsign.trim().toUpperCase());
-    sessionStorage.setItem("lp_roomCode", roomCode);
+    localStorage.setItem("lp_callsign", callsign.trim().toUpperCase());
+    localStorage.setItem("lp_roomCode", roomCode);
     setLocation(`/room/${roomCode}`);
   }, [callsign, roomCode, setLocation]);
 

@@ -26,7 +26,7 @@ type SessionPayload = {
 };
 
 function getMyCallsign(): string {
-  return sessionStorage.getItem("lp_callsign") || "OPERATIVE";
+  return localStorage.getItem("lp_callsign") || sessionStorage.getItem("lp_callsign") || "OPERATIVE";
 }
 
 interface RoleCounts {
@@ -129,7 +129,7 @@ export default function RoleConfigPage() {
 
       // Prefer the stable playerId (non-host) over the volatile socket.id for
       // identifying the current player, so reconnects don't lose the "(You)" marker.
-      const myPlayerId = sessionStorage.getItem("lp_playerId");
+      const myPlayerId = localStorage.getItem("lp_playerId") || sessionStorage.getItem("lp_playerId");
       const mySocketId = socket.id;
 
       // Update live player list — always reflect the server's authoritative list
@@ -207,7 +207,7 @@ export default function RoleConfigPage() {
       // code on this device. It is a one-shot React state value (sessionStorage
       // key was deleted immediately on mount), so reconnects always see false and
       // always call join_session — preventing any accidental create_session calls.
-      const lp_userId = sessionStorage.getItem("lp_userId");
+      const lp_userId = localStorage.getItem("lp_userId") || sessionStorage.getItem("lp_userId");
 
       console.log(
         "[join] Emitting", isCreating ? "create_session" : "join_session",
@@ -217,12 +217,12 @@ export default function RoleConfigPage() {
       // Ensure a stable per-session UUID for both host and non-host flows.
       // Without this, a host recreated via create_session fallback can lose
       // identity continuity after restart/reconnect.
-      let playerId = sessionStorage.getItem("lp_playerId");
+      let playerId = localStorage.getItem("lp_playerId") || sessionStorage.getItem("lp_playerId");
       if (!playerId) {
         playerId = crypto.randomUUID();
-        sessionStorage.setItem("lp_playerId", playerId);
+        localStorage.setItem("lp_playerId", playerId);
         // Remove any cached token — it was issued for a different playerId.
-        sessionStorage.removeItem("lp_playerToken");
+        localStorage.removeItem("lp_playerToken");
       }
 
       if (!isCreating) {
@@ -230,7 +230,7 @@ export default function RoleConfigPage() {
         // the server — but if that request times out, proceed WITHOUT a token.
         // The server will generate one server-side so the join never partially
         // fails (player visible in chat but absent from session.players).
-        let playerToken: string | undefined = sessionStorage.getItem("lp_playerToken") ?? undefined;
+        let playerToken: string | undefined = localStorage.getItem("lp_playerToken") || sessionStorage.getItem("lp_playerToken") || undefined;
         if (!playerToken) {
           const resp = await new Promise<{ success: boolean; token?: string } | null>((resolve) => {
             const timer = setTimeout(() => resolve(null), 5000);
@@ -241,7 +241,7 @@ export default function RoleConfigPage() {
           });
           if (resp?.success && resp.token) {
             playerToken = resp.token;
-            sessionStorage.setItem("lp_playerToken", playerToken);
+            localStorage.setItem("lp_playerToken", playerToken);
           } else {
             console.warn("[join] Failed to obtain player token — proceeding without it (server will generate)");
             // Do NOT return — fall through to join_session with playerToken undefined.
@@ -258,7 +258,7 @@ export default function RoleConfigPage() {
               systemToast("Joined lobby", "success");
               // Cache the server-returned token (may have been generated server-side).
               if (resp.playerToken) {
-                sessionStorage.setItem("lp_playerToken", resp.playerToken);
+                localStorage.setItem("lp_playerToken", resp.playerToken);
               }
               handlePhaseUpdate(resp.session);
             } else {

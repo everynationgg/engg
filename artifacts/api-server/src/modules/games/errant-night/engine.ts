@@ -862,8 +862,12 @@ export function resolveRound(state: GameState): ResolutionResult {
 
   // ── Pass 1: resolve all roles in strict order ────────────────────────────
   for (const roleId of ROLE_ORDER) {
-    // Actors are now identified by their stable playerId
-    const actors = state.players.filter((p) => startRoles[p.playerId || ""] === roleId);
+    // Actors are now identified primarily by their stable playerId, with fallback to ephemeral id
+    const actors = state.players.filter((p) => {
+      const pId = p.playerId || "";
+      const sId = p.id || "";
+      return startRoles[pId] === roleId || startRoles[sId] === roleId;
+    });
 
     for (const actor of actors) {
       const actorId = actor.playerId || actor.id;

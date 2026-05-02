@@ -196,7 +196,8 @@ export default function GameShell() {
 
   // Redirect to join page if no callsign is set (direct URL access)
   useEffect(() => {
-    if (roomCode && !sessionStorage.getItem("lp_callsign")) {
+    const callsign = localStorage.getItem("lp_callsign") || sessionStorage.getItem("lp_callsign");
+    if (roomCode && !callsign) {
       setLocation(`/join/${roomCode}`);
     }
   }, [roomCode, setLocation]);
@@ -258,7 +259,7 @@ export default function GameShell() {
       // Restore assigned role from server state so the UI never shows "unknown"
       // after browser back/forward or missed events.
       if (session.rolesAssigned) {
-        const myPlayerId = sessionStorage.getItem("lp_playerId");
+        const myPlayerId = localStorage.getItem("lp_playerId") || sessionStorage.getItem("lp_playerId");
         const mySocketId = socket.id;
         const myRole = session.rolesAssigned[myPlayerId || ""] || session.rolesAssigned[mySocketId || ""];
         if (myRole) {
@@ -328,6 +329,14 @@ export default function GameShell() {
       sessionStorage.removeItem("lp_userId");
       sessionStorage.removeItem("lp_playerId");
       sessionStorage.removeItem("lp_playerToken");
+      localStorage.removeItem("lp_roomCode");
+      localStorage.removeItem("lp_isCreating");
+      localStorage.removeItem("lp_assignedRole");
+      localStorage.removeItem("lp_callsign");
+      localStorage.removeItem("lp_totalPlayers");
+      localStorage.removeItem("lp_userId");
+      localStorage.removeItem("lp_playerId");
+      localStorage.removeItem("lp_playerToken");
       // Disconnect socket to prevent auto-reconnect loops
       disconnectSocket();
       setLocation("/");
@@ -354,8 +363,8 @@ export default function GameShell() {
     // Used on initial mount AND as a periodic fallback in case phase_update
     // socket events are missed (transport hiccups, proxy drops, etc.).
     const syncSession = () => {
-      const myPlayerId = sessionStorage.getItem("lp_playerId");
-      const myPlayerToken = sessionStorage.getItem("lp_playerToken");
+      const myPlayerId = localStorage.getItem("lp_playerId") || sessionStorage.getItem("lp_playerId");
+      const myPlayerToken = localStorage.getItem("lp_playerToken") || sessionStorage.getItem("lp_playerToken");
 
       socket.emit("get_session", {
         sessionId: roomCode,
@@ -373,7 +382,7 @@ export default function GameShell() {
           // Restore assigned role from server state so browser back/forward
           // and page remounts don't lose the role (showing "unknown").
           if (resp.session.rolesAssigned) {
-            const myPlayerId = sessionStorage.getItem("lp_playerId");
+            const myPlayerId = localStorage.getItem("lp_playerId") || sessionStorage.getItem("lp_playerId");
             const mySocketId = socket.id;
             const myRole = resp.session.rolesAssigned[myPlayerId || ""] || resp.session.rolesAssigned[mySocketId || ""];
             if (myRole) {
@@ -409,8 +418,8 @@ export default function GameShell() {
     const handleReconnect = () => {
       // Lobby phase is managed by RoleConfigPage — skip to avoid a double join.
       if (displayedPhaseRef.current === "role_config") return;
-      const callsign = sessionStorage.getItem("lp_callsign");
-      const playerId = sessionStorage.getItem("lp_playerId");
+      const callsign = localStorage.getItem("lp_callsign") || sessionStorage.getItem("lp_callsign");
+      const playerId = localStorage.getItem("lp_playerId") || sessionStorage.getItem("lp_playerId");
       if (!callsign || !playerId) return;
       socket.emit(
         "join_session",
@@ -424,7 +433,7 @@ export default function GameShell() {
         (resp: JoinSessionResponse) => {
           // Cache any server-issued token so future reconnects can use it.
           if (resp?.playerToken) {
-            sessionStorage.setItem("lp_playerToken", resp.playerToken);
+            localStorage.setItem("lp_playerToken", resp.playerToken);
           }
           // Sync phase and grace state directly from the ack response.
           // With Redis pub/sub, the room broadcasts (phase_update / grace_update) may
@@ -438,7 +447,7 @@ export default function GameShell() {
           // old socket ID to the new one in reconnectPlayer(), so we can look up
           // the role by the current socket.id.
           if (resp?.session?.rolesAssigned) {
-            const myPlayerId = sessionStorage.getItem("lp_playerId");
+            const myPlayerId = localStorage.getItem("lp_playerId") || sessionStorage.getItem("lp_playerId");
             const mySocketId = socket.id;
             const myRole = resp.session.rolesAssigned[myPlayerId || ""] || resp.session.rolesAssigned[mySocketId || ""];
             if (myRole) {

@@ -266,6 +266,8 @@ function deserialise(raw: string): Session {
     revealCompleted:     parsed.revealCompleted ?? [],
     jammedPlayerId:      parsed.jammedPlayerId ?? null,
     hijackedTargets:     parsed.hijackedTargets ?? {},
+    orbitFeedback:       parsed.orbitFeedback ?? {},
+    roundSummary:        parsed.roundSummary ?? { abilityLog: [], voteTally: [], voteCounts: [] },
   };
 }
 
