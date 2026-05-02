@@ -916,10 +916,10 @@ export function resolveRound(state: GameState): ResolutionResult {
       if (!action || action.type === "passive" || action.type === "none") {
         feedback[actorId] = { type: roleId === "parasite" ? "passive" : "no_ability" };
         
-        // Only log if there's an actual passive ability to report (like Parasite)
-        // Crew has no ability, so they should be completely silent in the summary.
         if (roleId === "parasite") {
           logActor(actor.name, actorId, "(Parasite) monitored via passive ability");
+        } else {
+          logActor(actor.name, actorId, "skipped their ability");
         }
         continue;
       }
@@ -1178,10 +1178,15 @@ export function resolveRound(state: GameState): ResolutionResult {
     const pId = player.playerId || player.id;
     if (!loggedPlayerIds.has(pId)) {
       const roleId = state.rolesAssigned[pId];
-      feedback[pId] = { type: "no_ability" };
+      if (!feedback[pId]) {
+        feedback[pId] = { type: "no_ability" };
+      }
       
-      const activeAbilityRoles = new Set(["scanner", "sentinel", "disruptor", "shifter", "warper", "seeker", "alien", "commander"]);
-      if (activeAbilityRoles.has(roleId)) {
+      if (roleId === "crew") {
+        logActor(player.name, pId, "has no active ability");
+      } else if (roleId === "parasite") {
+        logActor(player.name, pId, "(Parasite) monitored via passive ability");
+      } else {
         logActor(player.name, pId, "skipped their ability");
       }
     }
