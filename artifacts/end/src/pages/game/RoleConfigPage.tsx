@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Modal from "@/components/common/Modal";
 import { useLocation } from "wouter";
@@ -137,11 +137,9 @@ export default function RoleConfigPage() {
       const mySocketId = socket.id;
 
       // Update live player list — always reflect the server's authoritative list
-      const updated = session.players.map((p) => ({
-        ...p,
-        isYou: myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId,
-      }));
-      setLivePlayers(updated);
+      if (session.players) {
+        setLivePlayers(session.players);
+      }
       // Detect if I am a spectator or host
       const me = session.players.find((p) => (myPlayerId ? p.playerId === myPlayerId : p.id === mySocketId));
 
@@ -371,14 +369,30 @@ export default function RoleConfigPage() {
   // Show active roles only in lobby phase (before game starts)
   const showActiveRoles = typeof window !== "undefined" ? (sessionStorage.getItem("lp_assignedRole") === null) : true;
 
-  // Derive host status from server-provided player list.  Falls back to
+  // Derive host status from server-provided player list. Falls back to
   // room-keyed storage to ensure authority survives reloads.
-  const amIHost = livePlayers.find((p) => p.isYou)?.isHost || (livePlayers.length === 1 && livePlayers[0].isYou) || sessionStorage.getItem(`lp_isHost_${roomCode}`) === "true" || isCreating;
+  const amIHost = livePlayers.find((p) => p.playerId === myPlayerId || (getSocket()?.id && p.id === getSocket().id))?.isHost || 
+                  (livePlayers.length === 1 && (livePlayers[0].playerId === myPlayerId || (getSocket()?.id && livePlayers[0].id === getSocket().id))) || 
+                  sessionStorage.getItem(`lp_isHost_${roomCode}`) === "true" || 
+                  isCreating;
 
-  // Use livePlayers if populated, else fallback to current user only
-  const players: LivePlayer[] = livePlayers.length > 0
-    ? livePlayers
-    : [{ id: "local", name: myCallsign, isHost: isCreating, isYou: true }];
+  // Derive final players list with fresh isYou/isHost flags for UI
+  const players: LivePlayer[] = useMemo(() => {
+    if (livePlayers.length === 0) {
+      return [{ id: "local", name: myCallsign, isHost: amIHost, isYou: true }];
+    }
+    const currentSocketId = getSocket()?.id;
+    return livePlayers.map(p => {
+      const isMe = p.playerId === myPlayerId || (!!currentSocketId && p.id === currentSocketId);
+      return {
+        ...p,
+        isYou: isMe,
+        // If the server hasn't caught up but we know we are host from storage, 
+        // show the badge for ourselves.
+        isHost: p.isHost || (isMe && amIHost)
+      };
+    });
+  }, [livePlayers, myPlayerId, amIHost, myCallsign]);
   const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   const joinUrl = typeof window !== "undefined"
     ? `${window.location.origin}${base}/join/${roomCode}`
