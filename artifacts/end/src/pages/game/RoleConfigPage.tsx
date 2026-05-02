@@ -369,7 +369,7 @@ export default function RoleConfigPage() {
   }, [roomCode, myCallsign, isCreating]);
 
   // Show active roles only in lobby phase (before game starts)
-  const showActiveRoles = livePlayers.length > 0 && (typeof window !== "undefined" ? (sessionStorage.getItem("lp_assignedRole") === null) : true);
+  const showActiveRoles = typeof window !== "undefined" ? (sessionStorage.getItem("lp_assignedRole") === null) : true;
 
   // Derive host status from server-provided player list.  Falls back to
   // room-keyed storage to ensure authority survives reloads.
