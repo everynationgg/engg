@@ -142,27 +142,31 @@ export async function advanceGameFlow(
     logger.info({ sessionId, phase: session.phase, elapsed: timeInPhase }, "Driver: Phase stabilized — unlocking interaction");
     session.phaseReady = true;
     session.nextCheckAt = null; // Clear throttle
-    if (await saveSession(session)) {
-      phaseUpdate(io, sessionId, session);
-    }
-    return;
+    await saveSession(session);
+    phaseUpdate(io, sessionId, session);
+    // FALLTHROUGH: Allow progression check in the same tick after stabilization
   }
 
   // ── 3. PHASE PROGRESSION LOGIC ─────────────────────────────────────────────
-  const activeCount = getActivePlayers(session).length;
+  const activePlayers = getActivePlayers(session);
+  const activeCount = activePlayers.length;
   
   // ── PHASE: ROLE REVEAL ──
   if (session.phase === "role_reveal") {
     const REVEAL_TIMEOUT = 45_000;
-    const allAck = session.roleAcknowledgements.length >= activeCount;
+    
+    // Check if everyone who is CURRENTLY connected has acknowledged.
+    // We use getActivePlayers which includes 'reconnecting' to prevent 
+    // skipping players during brief blips, but we ensure we have at least 1 player.
+    const allAck = activeCount > 0 && session.roleAcknowledgements.length >= activeCount;
     
     if (allAck || timeInPhase > REVEAL_TIMEOUT) {
-      logger.info({ sessionId, allAck, elapsed: timeInPhase }, "Driver: Advancing from ROLE_REVEAL");
+      logger.info({ sessionId, allAck, activeCount, acked: session.roleAcknowledgements.length, elapsed: timeInPhase }, "Driver: Advancing from ROLE_REVEAL");
       processRevealActions(session);
       session.phase = "orbit_action";
       session.phaseReady = false;
       session.phaseStartedAt = now;
-      session.nextCheckAt = now + 500; // Next tick should check stabilization
+      session.nextCheckAt = now + 500; 
       if (await saveSession(session)) {
         phaseUpdate(io, sessionId, session);
       }
@@ -178,28 +182,27 @@ export async function advanceGameFlow(
   if (session.phase === "orbit_action") {
     const ORBIT_TIMEOUT_MS = 90_000;
 
-    if (session.orbitCompleted.length < activeCount) {
-      if (timeInPhase > ORBIT_TIMEOUT_MS) {
+    // Check if everyone who is CURRENTLY connected has submitted.
+    const allSubmitted = activeCount > 0 && session.orbitCompleted.length >= activeCount;
+
+    if (allSubmitted || timeInPhase > ORBIT_TIMEOUT_MS) {
+      if (timeInPhase > ORBIT_TIMEOUT_MS && !allSubmitted) {
         logger.info({ sessionId, elapsed: timeInPhase }, "Driver: Orbit timeout — auto-completing AFK players");
         autoCompleteOrbitActions(session);
-      } else {
-        // Set throttle for timeout check if not set
-        if (!session.nextCheckAt) {
-          session.nextCheckAt = phaseStart + ORBIT_TIMEOUT_MS;
-          await saveSession(session);
-        }
-        return;
       }
-    }
 
-    // Transition to resolution
-    logger.info({ sessionId }, "Driver: All orbit actions in — advancing to ORBIT_RESOLUTION");
-    session.phase = "orbit_resolution";
-    session.phaseReady = false;
-    session.phaseStartedAt = now;
-    session.nextCheckAt = now + 1200; // Cinematic delay
-    if (await saveSession(session)) {
-      phaseUpdate(io, sessionId, session);
+      // Transition to resolution
+      logger.info({ sessionId, activeCount, submitted: session.orbitCompleted.length }, "Driver: Orbit actions complete — advancing to ORBIT_RESOLUTION");
+      session.phase = "orbit_resolution";
+      session.phaseReady = false;
+      session.phaseStartedAt = now;
+      session.nextCheckAt = now + 1200; // Cinematic delay
+      if (await saveSession(session)) {
+        phaseUpdate(io, sessionId, session);
+      }
+    } else if (!session.nextCheckAt) {
+      session.nextCheckAt = phaseStart + ORBIT_TIMEOUT_MS;
+      await saveSession(session);
     }
     return;
   }
@@ -260,14 +263,17 @@ export async function advanceGameFlow(
     const VOTING_TIMEOUT = 45_000;
     const voteCount = Object.keys(session.votes).length;
 
-    if (voteCount >= activeCount || timeInPhase > VOTING_TIMEOUT) {
-      logger.info({ sessionId, voteCount, elapsed: timeInPhase }, "Driver: Advancing from VOTING to RESULT");
+    // Check if everyone who is CURRENTLY connected has voted.
+    const allVoted = activeCount > 0 && voteCount >= activeCount;
+
+    if (allVoted || timeInPhase > VOTING_TIMEOUT) {
+      logger.info({ sessionId, voteCount, activeCount, elapsed: timeInPhase }, "Driver: Advancing from VOTING to RESULT");
       const voteResult = tallyVotes(session);
       session.voteResult = voteResult;
       session.phase = "result";
       session.phaseReady = true; 
       session.phaseStartedAt = now;
-      session.nextCheckAt = null; // No more auto-advances
+      session.nextCheckAt = null; 
       
       if (await saveSession(session)) {
         phaseUpdate(io, sessionId, session);

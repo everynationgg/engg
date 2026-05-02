@@ -1991,7 +1991,14 @@ export function removePlayerFromGrace(state: GameState, id: string): void {
  * Whether any players currently have active reconnect grace timers.
  */
 export function hasActiveGrace(state: GameState): boolean {
-  return (state.playersInGrace?.length ?? 0) > 0;
+  if (!state.playersInGrace || state.playersInGrace.length === 0) return false;
+  
+  // Only non-spectators in grace block the game.
+  // Spectators coming/going should not trigger a game-wide freeze.
+  return state.playersInGrace.some(pId => {
+    const p = state.players.find(x => x.playerId === pId);
+    return !p || !p.isSpectator;
+  });
 }
 
 /**
