@@ -23,6 +23,7 @@ type SessionPayload = {
   players: LivePlayer[];
   rolesAssigned: { [playerId: string]: string };
   unlockedRoles: string[];
+  roleCounts?: RoleCounts;
 };
 
 function getMyCallsign(): string {
@@ -113,6 +114,9 @@ export default function RoleConfigPage() {
   const kickedOutRef = useRef(false);
   const previousPlayerCountRef = useRef(0);
 
+  // Identity lookup available across the entire component
+  const myPlayerId = typeof window !== "undefined" ? (sessionStorage.getItem("lp_playerId") || localStorage.getItem(`lp_playerId_${roomCode}`)) : null;
+
 
 
   // Socket connection — server is the single source of truth for phase
@@ -130,7 +134,6 @@ export default function RoleConfigPage() {
 
       // Prefer the stable playerId (non-host) over the volatile socket.id for
       // identifying the current player, so reconnects don't lose the "(You)" marker.
-      const myPlayerId = localStorage.getItem("lp_playerId") || sessionStorage.getItem("lp_playerId");
       const mySocketId = socket.id;
 
       // Update live player list — always reflect the server's authoritative list
@@ -148,6 +151,9 @@ export default function RoleConfigPage() {
       }
 
       setUnlockedRoles(session.unlockedRoles || []);
+      if (session.roleCounts && Object.keys(session.roleCounts).length > 0) {
+        setRoleCounts(session.roleCounts);
+      }
 
       setIsSpectator(!!me?.isSpectator);
 
@@ -393,8 +399,8 @@ export default function RoleConfigPage() {
   const showActiveRoles = livePlayers.length > 0 && (typeof window !== "undefined" ? (sessionStorage.getItem("lp_assignedRole") === null) : true);
 
   // Derive host status from server-provided player list.  Falls back to
-  // isCreating or single-player status to ensure command authority.
-  const amIHost = livePlayers.find((p) => p.isYou)?.isHost || (livePlayers.length === 1 && livePlayers[0].isYou) || isCreating;
+  // room-keyed localStorage to ensure authority survives reloads.
+  const amIHost = livePlayers.find((p) => p.isYou)?.isHost || (livePlayers.length === 1 && livePlayers[0].isYou) || localStorage.getItem(`lp_isHost_${roomCode}`) === "true" || isCreating;
 
   // Use livePlayers if populated, else fallback to current user only
   const players: LivePlayer[] = livePlayers.length > 0
@@ -758,7 +764,7 @@ export default function RoleConfigPage() {
                       HOST
                     </div>
                   )}
-                  {amIHost && !player.isYou && (
+                  {amIHost && !player.isYou && player.playerId !== myPlayerId && (
                     <button
                       onClick={() => handleKickPlayer(player)}
                       className="opacity-0 group-hover:opacity-100 absolute right-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-500 text-[8px] px-1.5 py-0.5 transition-all"

@@ -200,8 +200,6 @@ export default function OrbitPage() {
       if (session.phase === "orbit_resolution") setPageState("resolving");
       if (session.phase === "orbit_result") {
         setPageState("done");
-        // Instant auto-advance to Discussion to remove the redundant step
-        handleAcknowledgeResolution();
       }
       // Persistence safety: ensure assigned role is cached under the correct identity (playerId)
       if (session.rolesAssigned) {
@@ -320,15 +318,6 @@ export default function OrbitPage() {
     const actionType = role.id === "parasite" ? "passive" : "none";
     submitAction(actionType, []);
   }, [role.id, submitAction]);
-
-  const handleAcknowledgeResolution = useCallback(() => {
-    playSciFiClick();
-    getSocket().emit("acknowledge_resolution", { sessionId: roomCode }, (resp: any) => {
-      if (!resp.success) {
-        console.error("Failed to acknowledge resolution:", resp.error);
-      }
-    });
-  }, [roomCode]);
 
   const handleForceResolve = useCallback(() => {
     if (!isHost) return;
@@ -596,26 +585,10 @@ export default function OrbitPage() {
 
         {/* Done / Discussion */}
         {pageState === "done" && (
-          <div className="flex flex-col gap-4">
-            <div
-              className="rounded-md p-6 text-center"
-              style={{ background: "hsl(220 28% 10%)", border: "1px solid hsl(210 30% 18%)" }}
-            >
-              <div className="font-orbitron font-bold text-lg tracking-[0.3em] uppercase mb-2" style={{ color: accentLight }}>
-                ORBIT COMPLETE
-              </div>
-              <p className="text-sm" style={{ color: "hsl(210 30% 50%)", fontFamily: "'Exo 2', sans-serif" }}>
-                All actions have been resolved. Review your findings.
-              </p>
-            </div>
-            
-            <ActionButton 
-              label="CONTINUE TO DISCUSSION" 
-              accentColor={accentColor} 
-              accentLight={accentLight} 
-              accentGlow={accentGlow} 
-              onClick={handleAcknowledgeResolution} 
-            />
+          <div className="flex flex-col gap-4 text-center">
+             <p className="font-orbitron text-xs tracking-[0.2em] animate-pulse" style={{ color: accentColor }}>
+               SYNCHRONIZING NEURAL LINKS...
+             </p>
           </div>
         )}
 

@@ -1198,7 +1198,8 @@ export function resolveRound(state: GameState): ResolutionResult {
 export function applyResolution(state: GameState, result: ResolutionResult, now: number = Date.now()): void {
   state.orbitFeedback = result.feedback;
   state.roundSummary.abilityLog = result.abilityLog;
-  state.phase = "orbit_result";
+  state.phase = "discussion";
+  state.discussionStartedAt = now;
 }
 
 /**
@@ -2034,6 +2035,7 @@ export function resumeFromInterrupt(
   state.phase = state.interruptedFromPhase;
   state.interruptedFromPhase = undefined;
   state.hostEndedInterrupt = undefined;
+  state.justUnfrozen = true;
   return { resumed: true, phase: state.phase };
 }
 

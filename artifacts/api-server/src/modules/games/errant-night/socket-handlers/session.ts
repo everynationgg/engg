@@ -30,7 +30,8 @@ import {
   removePlayer,
   checkSinglePlayerEdgeCase,
   recheckVotingCompletion,
-  interruptGame
+  interruptGame,
+  resumeFromInterrupt
 } from "../engine.js";
 import { checkRateLimit } from "../../../../lib/rate-limit.js";
 import { issuePlayerToken, verifyPlayerToken } from "../../../../lib/auth.js";
@@ -116,6 +117,11 @@ export function registerSessionHandlers(
           }
           // Preserve the verified userId on reconnect
           reconnecting.userId = userId;
+
+          const resumeRes = resumeFromInterrupt(session);
+          if (resumeRes.resumed) {
+            chatSystemMessage(io, sessionId, "All systems re-synced. Resuming operation...");
+          }
 
           if (!await saveSession(session)) {
             await handleSaveConflict(io, sessionId);
@@ -257,6 +263,11 @@ export function registerSessionHandlers(
         existing.connectionStatus = "connected";
         existing.connected = true;
         existing.userId = userId; // Bind to current authenticated user
+
+        const resumeRes = resumeFromInterrupt(session);
+        if (resumeRes.resumed) {
+          chatSystemMessage(io, sessionId, "All systems re-synced. Resuming operation...");
+        }
         return true as const;
       }
 
