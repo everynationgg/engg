@@ -123,9 +123,10 @@ export default function GameShell() {
 
   const [isHost] = useState(() => {
     const isCreating = sessionStorage.getItem("lp_isCreating") === "true";
-    const alreadyHost = sessionStorage.getItem("lp_isHost") === "true";
+    const code = (params.roomCode ?? "").toUpperCase();
+    const alreadyHost = sessionStorage.getItem(`lp_isHost_${code}`) === "true";
     if (isCreating || alreadyHost) {
-      sessionStorage.setItem("lp_isHost", "true");
+      if (code) sessionStorage.setItem(`lp_isHost_${code}`, "true");
       return true;
     }
     return false;

@@ -18,6 +18,7 @@ export const createSessionSchema = z.object({
   playerId: z.string().uuid().optional(),
   userId: z.string().max(128).optional(),
   isSpectator: z.boolean().optional(),
+  playerToken: z.string().min(1).max(128).optional(),
 });
 
 export const joinSessionSchema = z.object({

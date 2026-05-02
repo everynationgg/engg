@@ -147,7 +147,7 @@ export default function RoleConfigPage() {
 
       // Detect if I am the host based on server authority
       if (me?.isHost) {
-        sessionStorage.setItem("lp_isHost", "true");
+        sessionStorage.setItem(`lp_isHost_${roomCode}`, "true");
       }
 
       setUnlockedRoles(session.unlockedRoles || []);
@@ -204,11 +204,13 @@ export default function RoleConfigPage() {
       return true;
     };
 
-    // Track whether join_session has succeeded so the poll can retry if needed.
+    // Track whether join_session has succeeded or is in progress.
     let joinSucceeded = false;
+    let joinInProgress = false;
 
     const joinOrCreate = async () => {
-      if (kickedOutRef.current) return;
+      if (kickedOutRef.current || joinInProgress) return;
+      joinInProgress = true;
 
       // isCreating is true only for the player who originally generated the room
       // code on this device. It is a one-shot React state value (sessionStorage
@@ -252,7 +254,7 @@ export default function RoleConfigPage() {
         let playerToken: string | undefined = sessionStorage.getItem("lp_playerToken") || localStorage.getItem(`lp_playerToken_${roomCode}`) || undefined;
         if (!playerToken) {
           const resp = await new Promise<{ success: boolean; token?: string } | null>((resolve) => {
-            const timer = setTimeout(() => resolve(null), 5000);
+            const timer = setTimeout(() => resolve(null), 3000);
             socket.emit("request_player_token", { playerId }, (r: { success: boolean; token?: string }) => {
               clearTimeout(timer);
               resolve(r);
@@ -263,8 +265,7 @@ export default function RoleConfigPage() {
             sessionStorage.setItem("lp_playerToken", playerToken);
             localStorage.setItem(`lp_playerToken_${roomCode}`, playerToken);
           } else {
-            console.warn("[join] Failed to obtain player token — proceeding without it (server will generate)");
-            // Do NOT return — fall through to join_session with playerToken undefined.
+            console.warn("[join] Failed to obtain player token — proceeding anonymously");
           }
         }
 
@@ -272,6 +273,7 @@ export default function RoleConfigPage() {
           "join_session",
           { sessionId: roomCode, playerName: myCallsign, playerId, playerToken, userId: lp_userId ?? undefined },
           (resp: { success: boolean; error?: string; session?: SessionPayload; playerToken?: string }) => {
+            joinInProgress = false;
             if (resp?.success && resp.session) {
               console.log("[join] join_session OK — players:", resp.session.players.length);
               joinSucceeded = true;
@@ -318,7 +320,8 @@ export default function RoleConfigPage() {
         socket.emit(
           "create_session",
           { sessionId: roomCode, playerName: myCallsign, playerId, userId: lp_userId ?? undefined },
-          (resp: { success: boolean; error?: string; session?: SessionPayload }) => {
+          (resp: { success: boolean; error?: string; session?: SessionPayload; playerToken?: string }) => {
+            joinInProgress = false;
             if (resp?.success && resp.session) {
               console.log(
                 "[join] create_session OK — players:", resp.session.players.length,
@@ -366,10 +369,10 @@ export default function RoleConfigPage() {
       if (kickedOutRef.current) return;
 
       if (socket.connected) {
-        if (!joinSucceeded) {
+        if (!joinSucceeded && !joinInProgress) {
           // Join hasn't completed yet — retry instead of just polling state.
           joinOrCreate();
-        } else {
+        } else if (joinSucceeded) {
           socket.emit(
             "get_session",
             { sessionId: roomCode },
@@ -381,11 +384,11 @@ export default function RoleConfigPage() {
           );
         }
       } else {
-        // Socket is disconnected — Socket.IO buffers the emission and replays
-        // it once the transport reconnects, so the join fires automatically.
+        // Socket is disconnected — attempt to rejoin so
+        // the socket re-enters the session room after a reconnect.
         joinOrCreate();
       }
-    }, 2000);
+    }, 4000);
 
     return () => {
       socket.off("phase_update", handlePhaseUpdate);
@@ -399,8 +402,8 @@ export default function RoleConfigPage() {
   const showActiveRoles = livePlayers.length > 0 && (typeof window !== "undefined" ? (sessionStorage.getItem("lp_assignedRole") === null) : true);
 
   // Derive host status from server-provided player list.  Falls back to
-  // room-keyed localStorage to ensure authority survives reloads.
-  const amIHost = livePlayers.find((p) => p.isYou)?.isHost || (livePlayers.length === 1 && livePlayers[0].isYou) || localStorage.getItem(`lp_isHost_${roomCode}`) === "true" || isCreating;
+  // room-keyed storage to ensure authority survives reloads.
+  const amIHost = livePlayers.find((p) => p.isYou)?.isHost || (livePlayers.length === 1 && livePlayers[0].isYou) || sessionStorage.getItem(`lp_isHost_${roomCode}`) === "true" || isCreating;
 
   // Use livePlayers if populated, else fallback to current user only
   const players: LivePlayer[] = livePlayers.length > 0

@@ -104,6 +104,18 @@ export function registerSessionHandlers(
         }
 
         if (reconnecting) {
+          // ── IDENTITY VERIFICATION (Phase 3) ──
+          // On reload/reconnect, we must verify the playerToken to ensure this is
+          // actually the same player, not someone spoofing their playerId.
+          const verified = parsed.playerToken ? verifyPlayerToken(reconnecting.playerId || "", parsed.playerToken) : false;
+
+          if (!verified) {
+            // If verification fails, we treat them as a NEW player trying to use
+            // a taken name or ID.
+            ack?.({ success: false, error: "Identity verification failed: invalid token for this player" });
+            return;
+          }
+
           const oldId = reconnecting.id;
           const pId = reconnecting.playerId || oldId;
 
@@ -125,7 +137,7 @@ export function registerSessionHandlers(
 
           if (!await saveSession(session)) {
             await handleSaveConflict(io, sessionId);
-            ack?.({ success: true });
+            ack?.({ success: true, playerToken: issuePlayerToken(pId) });
             return;
           }
 
@@ -164,7 +176,7 @@ export function registerSessionHandlers(
           state.currentUserId = userId;
           state.currentRateLimitId = userId;
           phaseUpdate(io, sessionId, session);
-          ack?.({ success: true, session });
+          ack?.({ success: true, session, playerToken: issuePlayerToken(pId) });
           return;
         }
         socket.join(sessionId);
@@ -174,7 +186,7 @@ export function registerSessionHandlers(
         state.currentRateLimitId = userId;
         sortPlayersByStatus(session);
         socket.emit("phase_update", session);
-        ack?.({ success: true, session });
+        ack?.({ success: true, session, playerToken: parsed.playerToken || issuePlayerToken(state.currentPlayerId || "") });
         return;
       }
 
@@ -202,7 +214,8 @@ export function registerSessionHandlers(
       logger.info({ sessionId, playerName }, "Session created");
       phaseUpdate(io, sessionId, session);
       logGameEvent("session_created", sessionId, socket.id, { playerName });
-      ack?.({ success: true, session });
+      const playerToken = issuePlayerToken(pId);
+      ack?.({ success: true, session, playerToken });
     } finally {
       await release();
     }
