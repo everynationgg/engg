@@ -36,7 +36,7 @@ import {
 import { checkRateLimit } from "../../../../lib/rate-limit.js";
 import { issuePlayerToken, verifyPlayerToken } from "../../../../lib/auth.js";
 import { phaseUpdate, graceUpdate, chatSystemMessage, logGameEvent } from "../emitters.js";
-import { handleSaveConflict, checkAndRunResolution } from "../logic.js";
+import { handleSaveConflict, advanceGameFlow } from "../logic.js";
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const GRACE_PERIOD_MS = 60_000;
@@ -370,8 +370,8 @@ export function registerSessionHandlers(
       socket.join(sessionId);
     }
 
-    if (session.phase === "orbit_action") {
-      await checkAndRunResolution(io, sessionId, session);
+    if (session.phase !== "lobby" && session.phase !== "role_config") {
+      await advanceGameFlow(io, sessionId, session);
     }
     
     ack?.({ success: true, session });
@@ -419,6 +419,7 @@ export function registerSessionHandlers(
       const latest = await getSession(sessionId);
       if (latest) {
         phaseUpdate(io, sessionId, latest);
+        await advanceGameFlow(io, sessionId, latest);
       }
     }
 
@@ -517,8 +518,8 @@ export function registerSessionHandlers(
           if (votingResolved) {
              io.to(sessionId).emit("vote_result", voteResult);
           }
-          if (!votingResolved && !gameInterrupted && latest.phase === "orbit_action") {
-            await checkAndRunResolution(io, sessionId, latest);
+          if (!votingResolved && !gameInterrupted) {
+            await advanceGameFlow(io, sessionId, latest);
           }
         }
       });

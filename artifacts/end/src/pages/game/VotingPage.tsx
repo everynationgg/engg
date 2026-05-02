@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { getSocket } from "@/lib/socket";
 import { ROLES } from "@/data/roles";
 import { playSciFiClick, playMechanicalChunk } from "@/lib/sound";
@@ -55,6 +56,7 @@ export default function VotingPage() {
   const typingTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const [roundSummary, setRoundSummary] = useState<{ voteTally: { voterName: string; targetName: string; isAbstain: boolean }[] } | null>(null);
   const [isAnesthetized, setIsAnesthetized] = useState(false);
+  const [isPhaseReady, setIsPhaseReady] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -73,9 +75,9 @@ export default function VotingPage() {
   useEffect(() => {
     const socket = getSocket();
     const handlePhaseUpdate = (session: any) => {
-      if (session.phase === "voting" && session.votingStartedAt) {
+      if (session.phase === "voting" && session.phaseStartedAt) {
         const votingTime = session.settings?.votingTime ?? 60;
-        const elapsed = Math.floor((Date.now() - session.votingStartedAt) / 1000);
+        const elapsed = Math.floor((Date.now() - session.phaseStartedAt) / 1000);
         setSecondsLeft(Math.max(0, votingTime - elapsed));
       }
     };
@@ -137,7 +139,7 @@ export default function VotingPage() {
     const socket = getSocket();
     setMyId(socket.id ?? "");
 
-    const handlePhaseUpdate = (session: { phase: string; players: LivePlayer[]; votes?: Record<string, string>; roundSummary?: any; anesthetizedPlayers?: string[] }) => {
+    const handlePhaseUpdate = (session: { phase: string; phaseReady?: boolean; players: LivePlayer[]; votes?: Record<string, string>; roundSummary?: any; anesthetizedPlayers?: string[] }) => {
       const myPlayerId = sessionStorage.getItem("lp_playerId");
       const myId = socket.id;
       const players = session.players.map((p) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === myId }));
@@ -147,6 +149,9 @@ export default function VotingPage() {
       if (me) {
         setIsHost(!!me.isHost);
         setIsSpectator(!!me.isSpectator);
+      }
+      if (session.phaseReady !== undefined) {
+        setIsPhaseReady(session.phaseReady);
       }
 
       if (session.votes) {
@@ -164,7 +169,10 @@ export default function VotingPage() {
       if (session.anesthetizedPlayers) {
         const myPlayerId = sessionStorage.getItem("lp_playerId");
         const me = session.players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === socket.id);
-        if (me) setIsAnesthetized(session.anesthetizedPlayers.includes(me.id));
+        if (me) {
+          const checkId = me.playerId || me.id;
+          setIsAnesthetized(session.anesthetizedPlayers.includes(checkId));
+        }
       }
       // GameShell handles phase navigation
     };
@@ -173,7 +181,7 @@ export default function VotingPage() {
 
     // Shared sync function: fetches latest session and updates local state
     const syncSession = () => {
-      socket.emit("get_session", { sessionId: roomCode }, (resp: { success: boolean; session?: { phase: string; players: LivePlayer[]; votes?: Record<string, string>; roundSummary?: any; anesthetizedPlayers?: string[] } }) => {
+      socket.emit("get_session", { sessionId: roomCode }, (resp: { success: boolean; session?: { phase: string; players: LivePlayer[]; votes?: Record<string, string>; roundSummary?: any; anesthetizedPlayers?: string[]; phaseReady?: boolean } }) => {
         if (resp.success && resp.session) {
           const myPlayerId = sessionStorage.getItem("lp_playerId");
           const id = socket.id;
@@ -182,6 +190,7 @@ export default function VotingPage() {
             const me = resp.session.players.find((p: LivePlayer) => myPlayerId ? p.playerId === myPlayerId : p.id === id);
             if (me) setIsHost(me.isHost);
           }
+          if (resp.session.phaseReady !== undefined) setIsPhaseReady(resp.session.phaseReady);
           if (resp.session.votes) {
             setWaitingCount(Object.keys(resp.session.votes).length);
             setVoterIds(new Set(Object.keys(resp.session.votes)));
@@ -193,7 +202,10 @@ export default function VotingPage() {
           if (resp.session.anesthetizedPlayers) {
             const myPlayerId = sessionStorage.getItem("lp_playerId");
             const me = resp.session.players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === id);
-            if (me) setIsAnesthetized(resp.session.anesthetizedPlayers.includes(me.id));
+            if (me) {
+              const checkId = me.playerId || me.id;
+              setIsAnesthetized(resp.session.anesthetizedPlayers.includes(checkId));
+            }
           }
           // GameShell handles phase navigation
         }
@@ -317,7 +329,7 @@ export default function VotingPage() {
           <h1 className="font-orbitron text-4xl font-black tracking-[0.3em] uppercase mb-2" style={{ color: "hsl(0 75% 70%)", textShadow: "0 0 24px hsl(0 75% 50% / 0.4)" }}>
             VOTING
           </h1>
-          <div className="font-orbitron text-[10px] tracking-[0.5em] uppercase text-white/30 mb-8">Observation Mode</div>
+          <div className="font-orbitron text-[10px] tracking-[0.5em] uppercase white/30 mb-8">Observation Mode</div>
           
           <div className="max-w-md w-full p-4 rounded-xl border border-white/5 bg-white/[0.02] backdrop-blur-sm">
              <div className="flex items-center justify-between mb-4">
@@ -430,6 +442,43 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
             </div>
           </div>
         )}
+
+        {/* SYSTEM STABILIZATION OVERLAY */}
+        <AnimatePresence>
+          {!isPhaseReady && !votedFor && !isSpectator && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 backdrop-blur-md"
+            >
+              <div className="relative">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                  className="w-32 h-32 border-2 border-dashed rounded-full"
+                  style={{ borderColor: accentColor, opacity: 0.2 }}
+                />
+                <motion.div
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-4 border-2 border-dashed rounded-full"
+                  style={{ borderColor: accentColor, opacity: 0.4 }}
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <motion.div
+                    animate={{ opacity: [0.4, 1, 0.4] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="font-orbitron text-xs tracking-[0.3em]"
+                    style={{ color: accentLight }}
+                  >
+                    SYSTEM LOCKING...
+                  </motion.div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Player list */}
         {!isSpectator && !votedFor && !pendingVote && !isAnesthetized ? (

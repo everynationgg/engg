@@ -31,6 +31,8 @@ export default function RoleRevealPage() {
   const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
   const [selectedRouterDestId, setSelectedRouterDestId] = useState<string | null>(null);
   const [chaoticChoice, setChaoticChoice] = useState<"Good" | "Bad" | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState(45);
+  const [isPhaseReady, setIsPhaseReady] = useState(false);
 
   // Defensive: Only compute after state is initialized
   const role = getAssignedRole();
@@ -52,9 +54,40 @@ export default function RoleRevealPage() {
     return () => clearTimeout(t1);
   }, [isAlien]);
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSecondsLeft((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const playerName = getPlayerName();
   const totalPlayers = getTotalPlayers();
   const roomCode = sessionStorage.getItem("lp_roomCode") || "";
+
+  // Sync timer with server
+  useEffect(() => {
+    const socket = getSocket();
+    const handlePhaseUpdate = (session: any) => {
+      if (session.phase === "role_reveal" && session.phaseStartedAt) {
+        const REVEAL_TIMEOUT = 45;
+        const elapsed = Math.floor((Date.now() - session.phaseStartedAt) / 1000);
+        setSecondsLeft(Math.max(0, REVEAL_TIMEOUT - elapsed));
+      }
+    };
+    socket.on("phase_update", handlePhaseUpdate);
+    
+    // Initial sync
+    socket.emit("get_session", { sessionId: roomCode }, (resp: any) => {
+      if (resp.success && resp.session) {
+        handlePhaseUpdate(resp.session);
+      }
+    });
+
+    return () => {
+      socket.off("phase_update", handlePhaseUpdate);
+    };
+  }, [roomCode]);
 
   useEffect(() => {
     const socket = getSocket();
@@ -79,10 +112,12 @@ export default function RoleRevealPage() {
 
       const me = session.players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === socket.id);
       if (me) setIsHost(me.isHost);
-      // Clear orbit cache when transitioning to orbit (GameShell handles navigation)
       if (session.phase === "orbit_action") {
         sessionStorage.removeItem("lp_orbit_info");
         sessionStorage.removeItem("lp_orbit_result");
+      }
+      if (session.phaseReady !== undefined) {
+        setIsPhaseReady(session.phaseReady);
       }
     };
 
@@ -118,6 +153,9 @@ export default function RoleRevealPage() {
 
           const me = resp.session.players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === socket.id);
           if (me) setIsHost(me.isHost);
+          if (resp.session.phaseReady !== undefined) {
+            setIsPhaseReady(resp.session.phaseReady);
+          }
         }
       });
     };
@@ -310,13 +348,20 @@ export default function RoleRevealPage() {
             DETECTED
           </div>
         </div>
-        <div className="text-right">
-          <div className="text-xs tracking-widest uppercase mb-1" style={{ color: "hsl(210 30% 50%)" }}>Role Reveal</div>
-          <div
-            className="font-orbitron font-bold text-sm tracking-[0.2em]"
-            style={{ color: accentColorLight }}
-          >
-            EYES ONLY
+        <div className="text-right flex items-center gap-6">
+          <div className="flex-1">
+            <div className="text-[10px] tracking-[0.4em] uppercase opacity-40 font-bold mb-1">
+              MISSION_BRIEFING
+            </div>
+            <div className="font-orbitron font-black text-2xl sm:text-4xl tracking-[0.2em] uppercase italic" style={{ color: isAlien ? "hsl(0 75% 70%)" : "hsl(185 100% 70%)" }}>
+              ROLE REVEAL
+            </div>
+          </div>
+          <div className="text-right pl-4 border-l border-white/10">
+            <div className="text-[10px] tracking-[0.3em] uppercase mb-1 opacity-40">Auto_Deploy</div>
+            <div className="font-orbitron font-bold text-2xl tracking-widest" style={{ color: secondsLeft < 10 ? "hsl(0 75% 60%)" : "hsl(185 100% 70%)" }}>
+              0:{secondsLeft.toString().padStart(2, '0')}
+            </div>
           </div>
         </div>
       </div>
@@ -594,6 +639,7 @@ export default function RoleRevealPage() {
                   accentColorLight={accentColorLight}
                   accentGlow={accentGlow}
                   onAcknowledge={handleAcknowledge}
+                  isPhaseReady={isPhaseReady}
                 />
               )}
             </div>
@@ -618,6 +664,7 @@ export default function RoleRevealPage() {
             accentColorLight={accentColorLight}
             accentGlow={accentGlow}
             onAcknowledge={handleAcknowledge}
+            isPhaseReady={isPhaseReady}
           />
         )}
       </div>
@@ -631,9 +678,10 @@ interface AcknowledgeButtonProps {
   accentColorLight: string;
   accentGlow: string;
   onAcknowledge: () => void;
+  isPhaseReady: boolean;
 }
 
-function AcknowledgeButton({ acknowledged, accentColor, accentColorLight, accentGlow, onAcknowledge }: AcknowledgeButtonProps) {
+function AcknowledgeButton({ acknowledged, accentColor, accentColorLight, accentGlow, onAcknowledge, isPhaseReady }: AcknowledgeButtonProps) {
   if (acknowledged) {
     return (
       <div
@@ -652,8 +700,9 @@ function AcknowledgeButton({ acknowledged, accentColor, accentColorLight, accent
   return (
     <button
       onClick={onAcknowledge}
+      disabled={!isPhaseReady}
       data-testid="button-acknowledge"
-      className="w-full py-4 font-orbitron font-bold text-sm tracking-[0.25em] uppercase rounded-md border-2 transition-all duration-200 cursor-pointer"
+      className={`w-full py-4 font-orbitron font-bold text-sm tracking-[0.25em] uppercase rounded-md border-2 transition-all duration-200 ${!isPhaseReady ? 'cursor-not-allowed grayscale-[0.5] opacity-50' : 'cursor-pointer'}`}
       style={{
         background: `linear-gradient(135deg, ${accentColor.replace(")", " / 0.25)")}, ${accentColor.replace(")", " / 0.1)")})`,
         borderColor: accentColor,
@@ -671,7 +720,7 @@ function AcknowledgeButton({ acknowledged, accentColor, accentColorLight, accent
         btn.style.color = accentColorLight;
       }}
     >
-      I ACKNOWLEDGE MY ROLE
+      {isPhaseReady ? "I ACKNOWLEDGE MY ROLE" : "SYNCING NEURAL LINK..."}
     </button>
   );
 }

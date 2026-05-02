@@ -80,7 +80,6 @@ export function deserializeSession(data: unknown): Session | null {
     // Restore nullable top-level fields that `sessions.ts` strips on write.
     return {
       ...raw,
-      discussionStartedAt: (raw["discussionStartedAt"] as number | null) ?? null,
       voteResult: (raw["voteResult"] as Session["voteResult"]) ?? null,
       chaoticAlignments: (raw["chaoticAlignments"] as Session["chaoticAlignments"]) ?? {},
     } as Session;

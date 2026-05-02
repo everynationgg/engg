@@ -106,7 +106,7 @@ export default function OrbitPage() {
   const [selectedTargets, setSelectedTargets] = useState<string[]>([]);
   const [orbitInfoData, setOrbitInfoData] = useState<{ type: string; data?: unknown } | null>(null);
   const [isSurging, setIsSurging] = useState(false);
-  const autoSubmittedRef = useRef(false);
+  const [isPhaseReady, setIsPhaseReady] = useState(false);
   const [isHost, setIsHost] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(90);
 
@@ -114,9 +114,9 @@ export default function OrbitPage() {
   useEffect(() => {
     const socket = getSocket();
     const handlePhaseUpdate = (session: any) => {
-      if (session.phase === "orbit_action" && session.orbitStartedAt) {
+      if (session.phase === "orbit_action" && session.phaseStartedAt) {
         const timeout = 90; // Fixed 90s timeout for orbit
-        const elapsed = Math.floor((Date.now() - session.orbitStartedAt) / 1000);
+        const elapsed = Math.floor((Date.now() - session.phaseStartedAt) / 1000);
         setSecondsLeft(Math.max(0, timeout - elapsed));
       }
     };
@@ -181,7 +181,7 @@ export default function OrbitPage() {
   useEffect(() => {
     const socket = getSocket();
 
-    const applySessionUpdate = (session: { phase: string; players: LivePlayer[]; orbitCompleted?: string[]; rolesAssigned?: Record<string, string> }) => {
+    const applySessionUpdate = (session: { phase: string; players: LivePlayer[]; orbitCompleted?: string[]; rolesAssigned?: Record<string, string>; phaseReady?: boolean }) => {
       const myPlayerId = sessionStorage.getItem("lp_playerId");
       const mySocketId = socket.id;
       const orbitCompleted = session.orbitCompleted ?? [];
@@ -207,6 +207,9 @@ export default function OrbitPage() {
         if (myRole) {
           sessionStorage.setItem("lp_assignedRole", myRole);
         }
+      }
+      if (session.phaseReady !== undefined) {
+        setIsPhaseReady(session.phaseReady);
       }
     };
 
@@ -455,6 +458,33 @@ export default function OrbitPage() {
     >
       {/* Main content */}
       <div className="flex-1 flex flex-col px-6 py-10 gap-8 overflow-y-auto pb-32 lg:pb-8 max-w-2xl mx-auto w-full">
+        {/* NEURAL LINK STABILIZATION OVERLAY */}
+        <AnimatePresence>
+          {!isPhaseReady && pageState !== "waiting" && pageState !== "resolving" && pageState !== "done" && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm"
+            >
+              <motion.div
+                animate={{ opacity: [0.4, 1, 0.4] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                className="text-cyan-400 font-mono tracking-[0.2em] text-lg"
+              >
+                NEURAL LINK STABILIZING...
+              </motion.div>
+              <div className="w-48 h-1 bg-cyan-950 mt-4 overflow-hidden rounded-full">
+                <motion.div
+                  animate={{ x: ["-100%", "100%"] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  className="w-full h-full bg-cyan-400 shadow-[0_0_10px_#22d3ee]"
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Role header */}
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-6 bg-white/[0.02] border border-white/5 rounded-sm relative">
           <img

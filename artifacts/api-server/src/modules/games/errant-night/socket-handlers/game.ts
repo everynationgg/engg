@@ -27,7 +27,6 @@ import {
   startGame,
   reconnectPlayer,
   acknowledgeRole,
-  acknowledgeResolution,
   submitAction,
   castVote,
   recheckVotingCompletion,
@@ -43,7 +42,7 @@ import {
 import { db, usersTable, creditTransactionsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { phaseUpdate, chatSystemMessage, logGameEvent } from "../emitters.js";
-import { handleSaveConflict, checkAndRunResolution, recordGameResults } from "../logic.js";
+import { handleSaveConflict, advanceGameFlow, recordGameResults } from "../logic.js";
 import { checkRateLimit } from "../../../../lib/rate-limit.js";
 import { logAudit } from "../../../../lib/audit.js";
 
@@ -89,12 +88,12 @@ export function registerGameHandlers(
         session.orbitActions = {};
         session.orbitCompleted = [];
         session.roleAcknowledgements = [];
-        session.resolutionAcknowledgements = [];
-        session.discussionStartedAt = null;
         session.emergencyVote = freshEmergencyVote();
         session.votes = {};
         session.voteResult = null;
         session.roundSummary = freshRoundSummary();
+        session.phaseStartedAt = Date.now();
+        session.phaseReady = false;
       } else {
         startGame(session, roleCounts, session.settings);
       }
@@ -211,7 +210,7 @@ export function registerGameHandlers(
     const { sessionId } = parsed;
 
     const cas = await withCasRetry(sessionId, (session) => {
-      if (session.phase !== "role_reveal") return CAS_SKIP;
+      if (session.phase !== "role_reveal" || !session.phaseReady) return CAS_SKIP;
       acknowledgeRole(session, state.currentPlayerId || socket.id);
       if ((session.phase as string) === "orbit_action") {
         // Transitioned to orbit
@@ -221,26 +220,7 @@ export function registerGameHandlers(
 
     if (cas) {
       phaseUpdate(io, sessionId, cas.session);
-      await checkAndRunResolution(io, sessionId, cas.session);
-      ack?.({ success: true });
-    }
-  });
-
-  // ── ACKNOWLEDGE RESOLUTION ──
-  socket.on("acknowledge_resolution", async (data: unknown, ack) => {
-    const parsed = validate(sessionOnlySchema, data, ack);
-    if (!parsed) return;
-    const { sessionId } = parsed;
-
-    const cas = await withCasRetry(sessionId, (session) => {
-      if (session.phase !== "orbit_result") return CAS_SKIP;
-      const res = acknowledgeResolution(session, state.currentPlayerId || socket.id);
-      if (!res.accepted) return CAS_SKIP;
-      return true as const;
-    });
-
-    if (cas) {
-      phaseUpdate(io, sessionId, cas.session);
+      await advanceGameFlow(io, sessionId, cas.session);
       ack?.({ success: true });
     }
   });
@@ -257,7 +237,7 @@ export function registerGameHandlers(
     }
 
     const cas = await withCasRetry(sessionId, (session) => {
-      if (session.phase !== "orbit_action") return CAS_SKIP;
+      if (session.phase !== "orbit_action" || !session.phaseReady) return CAS_SKIP;
 
       // Ensure identity is bound before submitting
       let effectivePlayerId = state.currentPlayerId;
@@ -291,7 +271,7 @@ export function registerGameHandlers(
     // If this submission completed the phase, broadcast updates and check for resolution
     if (cas.result.allSubmitted) {
       phaseUpdate(io, sessionId, cas.session);
-      await checkAndRunResolution(io, sessionId, cas.session);
+      await advanceGameFlow(io, sessionId, cas.session);
     } else {
       // Still waiting for others, just broadcast the incremental progress
       phaseUpdate(io, sessionId, cas.session);
@@ -322,7 +302,7 @@ export function registerGameHandlers(
     if (cas) {
       ack?.({ success: true });
       phaseUpdate(io, sessionId, cas.session);
-      await checkAndRunResolution(io, sessionId, cas.session);
+      await advanceGameFlow(io, sessionId, cas.session);
       chatSystemMessage(io, sessionId, "Host forced neural link synchronization");
     } else {
       ack?.({ success: false, error: "Unauthorized or wrong phase" });
@@ -339,7 +319,7 @@ export function registerGameHandlers(
     let voteResult: any;
 
     const cas = await withCasRetry(sessionId, (session) => {
-      if (session.phase !== "voting") return CAS_SKIP;
+      if (session.phase !== "voting" || !session.phaseReady) return CAS_SKIP;
       const res = castVote(session, state.currentPlayerId || socket.id, targetId);
       if (!res.accepted) return CAS_SKIP;
 
@@ -354,23 +334,7 @@ export function registerGameHandlers(
     if (cas) {
       ack?.({ success: true });
       phaseUpdate(io, sessionId, cas.session);
-      if (votingComplete && voteResult) {
-        io.to(sessionId).emit("vote_result", voteResult);
-        io.to(sessionId).emit("round_summary", cas.session.roundSummary);
-
-        if (voteResult.eliminatedId) {
-          await logAudit({
-            userId: voteResult.eliminatedId,
-            eventType: "PLAYER_ELIMINATED",
-            description: `Player protocol terminated: ${voteResult.eliminatedName} (${voteResult.eliminatedRole})`,
-            metadata: { sessionId, eliminatedRole: voteResult.eliminatedRole },
-          });
-        }
-
-        if (cas.session.phase === "result") {
-          await recordGameResults(io, sessionId, voteResult, cas.session);
-        }
-      }
+      await advanceGameFlow(io, sessionId, cas.session);
     }
   });
 

@@ -13,7 +13,7 @@ export type {
   GameState as Session,
 } from "./engine.js";
 
-import { addPlayer } from "./engine.js";
+import { addPlayer, trimState } from "./engine.js";
 
 import type {
   Player,
@@ -25,6 +25,72 @@ import type {
 import { redisClient } from "../../../config/redis.js";
 import { randomUUID } from "node:crypto";
 import { logger } from "../../../lib/logger.js";
+
+const INSTANCE_ID = randomUUID();
+
+let clockOffset = 0;
+let lastSeenGlobalTime = 0;
+
+/**
+ * Periodically sync local clock with Redis server time to eliminate skew.
+ * Anchor point for all phase-timing and stabilization logic.
+ */
+export async function syncGlobalTime() {
+  try {
+    const [seconds, microseconds] = await redisClient.time();
+    const redisNow = Number(seconds) * 1000 + Math.floor(Number(microseconds) / 1000);
+    
+    const newOffset = redisNow - Date.now();
+    // Smooth adjustment to prevent sudden jumps
+    if (clockOffset === 0) {
+      clockOffset = newOffset;
+    } else {
+      clockOffset = clockOffset * 0.9 + newOffset * 0.1;
+    }
+    
+    logger.info({ clockOffset, redisNow }, "Driver: Global time synced with Redis (Smoothed)");
+  } catch (err) {
+    logger.error({ err }, "Driver: Failed to sync global time");
+  }
+}
+
+// Initial sync and periodic refresh
+syncGlobalTime();
+setInterval(syncGlobalTime, 300_000);
+
+/**
+ * Returns the cluster-synchronized time in milliseconds.
+ * Strictly monotonic: guaranteed to never jump backward even if Redis time shifts 
+ * OR if the leadership fails over (via session state anchor).
+ */
+export function getGlobalTime(session?: Session): number {
+  const now = Date.now() + clockOffset;
+  
+  // 1. Monotonicity: Clamp backward jumps
+  lastSeenGlobalTime = Math.max(lastSeenGlobalTime, now);
+  
+  // 2. Cluster Monotonicity: Anchor to the last known time persisted in this session
+  if (session?.lastGlobalNow) {
+    lastSeenGlobalTime = Math.max(lastSeenGlobalTime, session.lastGlobalNow);
+  }
+
+  // 3. Anomaly Protection: Clamp excessive forward jumps (e.g. > 30s)
+  const MAX_FORWARD_DRIFT = 30_000;
+  const drift = lastSeenGlobalTime - now;
+  
+  if (drift > MAX_FORWARD_DRIFT) {
+     logger.warn({ drift, now, lastSeen: lastSeenGlobalTime }, "Driver: Suppressing excessive forward time jump");
+     
+     // 1. Adaptive Degradation Trigger
+     if (session) {
+        if (session.health === "healthy") session.health = "degraded";
+        session.lastAnomalyAt = now;
+     }
+     lastSeenGlobalTime = now + MAX_FORWARD_DRIFT;
+  }
+  
+  return lastSeenGlobalTime;
+}
 
 // ── Versioned session — extends Session with an in-memory version counter ─────
 //
@@ -48,11 +114,14 @@ export type VersionedSession = Session & { __v: number };
 
 // ── Disconnect timers remain in-process (they hold OS handles; not serialisable) ──
 const disconnectTimers = new Map<string, NodeJS.Timeout>();
+const advanceTimers = new Map<string, NodeJS.Timeout>();
 
 // ── Redis key helpers ──────────────────────────────────────────────────────────
 const SESSION_KEY = (id: string) => `session:${id}`;
 const VERSION_KEY = (id: string) => `session:${id}:v`;
 const LOCK_KEY    = (id: string) => `session:${id}:lock`;
+const HEARTBEAT_LEASE_KEY = (id: string) => `session:${id}:hb_lease`;
+const FENCING_KEY = (id: string) => `session:${id}:f`;
 
 /** Default TTL for a session in Redis (4 hours).  Refreshed on every save. */
 const SESSION_TTL_S = 4 * 60 * 60;
@@ -188,24 +257,27 @@ end
 return 0
 `;
 
-// Compare-and-set save: atomically check version key, then write both session
-// JSON and the new version number.
-//
-// KEYS[1] = session key, KEYS[2] = version key
+// Compare-and-set save with Fencing Token enforcement: 
+// KEYS[1] = session key, KEYS[2] = version key, KEYS[3] = fencing key
 // ARGV[1] = serialised session JSON (without __v)
 // ARGV[2] = TTL in seconds
-// ARGV[3] = expected current version (the version we loaded with getSession)
-// ARGV[4] = new version (expected + 1)
-//
-// Returns 1 on success, 0 on version mismatch.
-// If the version key is absent (new session or post-expiry), the save is allowed.
+// ARGV[3] = expected current version (CAS)
+// ARGV[4] = new version
+// ARGV[5] = incoming fencing token (Monotonic check)
 const LUA_CAS_SAVE = `
 local current_v = redis.call('GET', KEYS[2])
 if current_v ~= false and tonumber(current_v) ~= tonumber(ARGV[3]) then
   return 0
 end
+local current_f = redis.call('GET', KEYS[3])
+-- Strict fencing: incoming token must be EQUAL to or GREATER THAN current.
+-- If we're the owner, it will be equal. If we're taking over, it will be greater.
+if current_f ~= false and tonumber(ARGV[5]) < tonumber(current_f) then
+  return 0
+end
 redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[2])
 redis.call('SET', KEYS[2], ARGV[4], 'EX', ARGV[2])
+redis.call('SET', KEYS[3], ARGV[5], 'EX', ARGV[2])
 return 1
 `;
 
@@ -230,11 +302,12 @@ async function withRedisRetry<T>(fn: () => Promise<T>, maxAttempts = 3): Promise
 // ── Serialisation ──────────────────────────────────────────────────────────────
 
 // Strip __v before storing — version lives in the dedicated version key.
-// Also strip top-level `null` values to reduce stored JSON size.  The two
-// nullable top-level fields are `discussionStartedAt` and `voteResult`; in
-// lobby/orbit/voting phases (the majority of session lifetime) both are null,
+// Also strip top-level `null` values to reduce stored JSON size.  The
+// nullable top-level field is `voteResult`; in
+// lobby/orbit/voting phases (the majority of session lifetime) it is null,
 // saving ~50 bytes per write.  `deserialise` restores them to `null` if absent.
-function serialise({ __v: _excluded, ...state }: VersionedSession): string {
+function serialise(session: Session | VersionedSession): string {
+  const { __v, ...state } = session as any;
   const lean: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(state)) {
     if (v !== null) lean[k] = v;
@@ -257,7 +330,6 @@ function deserialise(raw: string): Session {
       discussionTime: 60,
       votingTime: 30,
     },
-    discussionStartedAt: parsed.discussionStartedAt ?? null,
     voteResult:          parsed.voteResult ?? null,
     kickedPlayerIds:     parsed.kickedPlayerIds ?? [],
     status:              parsed.status ?? "active",
@@ -337,27 +409,99 @@ export async function getSession(sessionId: string): Promise<VersionedSession | 
  * holds the current version without a second round-trip, and the in-memory
  * cache is updated for read-fallback continuity.
  */
+/**
+ * Formal Invariant Enforcement.
+ * Ensures the state machine is always in a valid, monotonic progression 
+ * before any write to persistence.
+ */
+export function assertStateInvariants(session: Session) {
+  // 1. Monotonic Phase Timing
+  const now = getGlobalTime(session);
+  if (session.phaseStartedAt && session.phaseStartedAt > now + 1000) {
+    throw new Error(`Invariant Violated: phaseStartedAt is in the future (${session.phaseStartedAt} > ${now})`);
+  }
+  
+  // 2. Cluster Monotonicity Anchor
+  if (session.lastGlobalNow && session.lastGlobalNow > now) {
+    throw new Error(`Invariant Violated: Time regression detected (${session.lastGlobalNow} > ${now})`);
+  }
+  
+  // 3. Ownership Integrity
+  if (session.heartbeatFencingToken && session.heartbeatFencingToken < 0) {
+    throw new Error("Invariant Violated: fencing token cannot be negative");
+  }
+
+  // 4. Stabilization Consistency
+  if (!session.phaseReady && session.phase === "result") {
+    throw new Error("Invariant Violated: result phase must always be ready");
+  }
+}
+
+/**
+ * Emergency transition to CORRUPT state.
+ * Bypasses CAS/Fencing to ensure the failure is visible even if leadership 
+ * has been lost. Strictly restricted to only updating health and audit fields.
+ */
+async function markSessionCorrupt(session: Session, reason: string): Promise<void> {
+  try {
+    // 1. Lockdown: Strictly only mutate health/audit
+    session.health = "corrupt";
+    session.invariantFailures = (session.invariantFailures || 0) + 1;
+    session.lastUpdateBy = `${INSTANCE_ID}:emergency`;
+    
+    // 2. Non-CAS persistent write
+    const key = SESSION_KEY(session.sessionId);
+    await redisClient.set(key, serialise(session), "EX", SESSION_TTL_S);
+    logger.error({ sessionId: session.sessionId, reason }, "Driver: Session marked CORRUPT — Emergency write complete");
+  } catch (err) {
+    logger.error({ sessionId: session.sessionId, err }, "Driver: Failed to perform emergency session save");
+  }
+}
+
 export async function saveSession(session: VersionedSession): Promise<boolean> {
+  // Update the cluster monotonicity anchor before pre-flight checks
+  session.lastGlobalNow = getGlobalTime(session);
+
+  // 0. State Lifecycle Management
+  trimState(session);
+
+  // 1. Final pre-flight invariant check
+  try {
+    assertStateInvariants(session);
+  } catch (err) {
+    // ABORT logic: Invariant violation is fatal.
+    // 1. Mark as corrupt (Emergency non-CAS path)
+    await markSessionCorrupt(session, err instanceof Error ? err.message : String(err));
+    // 2. Return false to terminate the local CAS retry loop
+    return false;
+  }
+
   const newVersion = session.__v + 1;
   const t0 = Date.now();
   sessionMetrics.redisOpsInFlight++;
   sessionMetrics.saveSessionTotal++;
+
+  // Record ownership audit before serialisation
+  session.lastUpdateBy = INSTANCE_ID;
+
   try {
     const result = await withRedisRetry(() =>
       redisClient.eval(
         LUA_CAS_SAVE,
-        2,
+        3,
         SESSION_KEY(session.sessionId),
         VERSION_KEY(session.sessionId),
-        serialise(session),        // ARGV[1]: session JSON (no __v)
-        String(SESSION_TTL_S),     // ARGV[2]: TTL in seconds
-        String(session.__v),       // ARGV[3]: expected current version
-        String(newVersion),        // ARGV[4]: version to write
+        FENCING_KEY(session.sessionId),
+        serialise(session),        // ARGV[1]
+        String(SESSION_TTL_S),     // ARGV[2]
+        String(session.__v),       // ARGV[3]
+        String(newVersion),        // ARGV[4]
+        String(session.heartbeatFencingToken || 0), // ARGV[5]
       ),
     );
     if (result === 1) {
-      session.__v = newVersion;    // keep caller's reference in sync
-      cacheWrite({ ...session });  // write-through: keep cache consistent for read fallback
+      session.__v = newVersion;
+      cacheWrite({ ...session });
       return true;
     }
     logger.warn(
@@ -438,10 +582,22 @@ export async function withCasRetry<R>(
     if (result === CAS_SKIP) return null;
 
     const saved = await saveSession(session);
+    // If saveSession returns false, it could be a version conflict (retryable)
+    // or an invariant violation (ABORT).
     if (saved) return { session, result: result as R };
+
+    // Check if it was an invariant violation by re-running the check (cheap)
+    try {
+      assertStateInvariants(session);
+    } catch (invErr) {
+      logger.error({ sessionId, attempt, err: invErr }, "CAS Abort: Invariant violation during mutation");
+      return null; // Fatal violation — do not retry
+    }
 
     // saveSession already incremented sessionMetrics.casConflicts
     logger.warn({ sessionId, attempt, maxAttempts }, "CAS conflict in withCasRetry — retrying");
+    // Cap metrics to prevent unbounded state growth
+    session.casRetriesCount = Math.min((session.casRetriesCount || 0) + 1, 100_000);
     if (attempt < maxAttempts) {
       sessionMetrics.casRetries++;
       // Short linear back-off to reduce thundering-herd during sustained contention
@@ -538,10 +694,8 @@ export function createSession(sessionId: string, hostPlayer: Player): VersionedS
     orbitCompleted: [],
     orbitFeedback: {},
     roleAcknowledgements: [],
-    resolutionAcknowledgements: [],
-    discussionStartedAt: null,
-    votingStartedAt: null,
-    orbitStartedAt: null,
+    phaseReady: true,
+    phaseStartedAt: Date.now(),
     emergencyVote: freshEmergencyVote(),
     votes: {},
     chaoticAlignments: {},
@@ -582,7 +736,6 @@ export function removePlayerFromSession(
   delete session.votes[playerId];
   session.orbitCompleted = session.orbitCompleted.filter((id) => id !== playerId);
   session.roleAcknowledgements = session.roleAcknowledgements.filter((id) => id !== playerId);
-  session.resolutionAcknowledgements = session.resolutionAcknowledgements.filter((id) => id !== playerId);
   
   if (session.players.length === 0) return null;
   return session;
@@ -667,5 +820,202 @@ export function scheduleGraceExpiry(
     onExpire();
   }, delayMs);
   disconnectTimers.set(key, timer);
+}
+
+/**
+ * Ensures that a managed background 'advance' loop is active for the session.
+ * 
+ * HARDENED VERSION:
+ * - Distributed Lease (Redis SET NX PX)
+ * - Fencing Token (Monotonic versioning)
+ * - Tighter Lease Renewal (Pre/Post work)
+ * - Dynamic Scheduling (Wake-on-Need)
+ */
+export async function ensureHeartbeatActive(
+  sessionId: string, 
+  onTick: (session: VersionedSession) => Promise<void>
+) {
+  // 1. In-process idempotency + Backpressure
+  if (advanceTimers.has(sessionId)) return;
+
+  const runLoop = async () => {
+    // Check if the loop was manually stopped
+    if (!advanceTimers.has(sessionId)) return;
+
+    const leaseKey = HEARTBEAT_LEASE_KEY(sessionId);
+    const LEASE_TTL = 3500; 
+    const now = getGlobalTime();
+    
+    try {
+      // 2. Fencing Invariant check (MUST HAPPEN BEFORE LEASE RENEWAL)
+      // If we're a stale leader waking from pause, we must notice we're invalid 
+      // BEFORE we try to re-assert authority on the lease.
+      const session = await getSession(sessionId);
+      if (!session || session.phase === "lobby" || session.phase === "result") {
+        stopHeartbeat(sessionId);
+        return;
+      }
+
+      if (session.health === "corrupt") {
+        logger.error({ sessionId }, "Driver: Session is marked CORRUPT — terminating heartbeat");
+        stopHeartbeat(sessionId);
+        return;
+      }
+
+      const currentToken = session.heartbeatFencingToken || 0;
+      if (session.heartbeatOwnerId !== INSTANCE_ID && session.heartbeatOwnerId !== null) {
+         const leaseOwner = await redisClient.get(leaseKey);
+         if (leaseOwner !== INSTANCE_ID && leaseOwner !== null) {
+            advanceTimers.delete(sessionId);
+            return;
+         }
+      }
+
+      // 3. Lease Negotiation
+      const acquired = await redisClient.set(leaseKey, INSTANCE_ID, "PX", LEASE_TTL, "NX");
+      let isOwner = acquired === "OK";
+      
+      if (!isOwner) {
+        const currentOwner = await redisClient.get(leaseKey);
+        if (currentOwner === INSTANCE_ID) {
+          await redisClient.pexpire(leaseKey, LEASE_TTL);
+          isOwner = true;
+        }
+      }
+
+      if (!isOwner) {
+        advanceTimers.delete(sessionId);
+        return;
+      }
+
+      // 4. Ownership Acquisition / Fence Increment
+      let justAcquired = false;
+      if (session.heartbeatOwnerId !== INSTANCE_ID) {
+        logger.info({ sessionId, from: session.heartbeatOwnerId, to: INSTANCE_ID, token: currentToken + 1 }, "Driver: Acquiring heartbeat ownership");
+        session.heartbeatOwnerId = INSTANCE_ID;
+        session.heartbeatFencingToken = currentToken + 1;
+        session.lastHeartbeatAt = now;
+        session.leaseChurnCount = Math.min((session.leaseChurnCount || 0) + 1, 100_000);
+        session.lastAnomalyAt = now; // Failover is an anomaly
+        if (!await saveSession(session)) {
+          const timer = setTimeout(runLoop, 500);
+          advanceTimers.set(sessionId, timer);
+          return;
+        }
+        justAcquired = true;
+      }
+
+      // 5. Logic execution
+      try {
+        await onTick(session);
+        
+        // 6. Stability Tracking & Autonomous Recovery (Time-Based with Tolerance)
+        if (session.health === "degraded") {
+           const timeSinceAnomaly = now - (session.lastAnomalyAt || 0);
+           const isOperationallyStable = (session.leaseChurnCount || 0) <= 2; // Tolerance for minor background noise
+           
+           // Recovery Condition: 30s of silence AND stable leadership
+           if (timeSinceAnomaly > 30000 && isOperationallyStable) {
+              logger.info({ 
+                sessionId, 
+                durationMs: timeSinceAnomaly, 
+                churn: session.leaseChurnCount 
+              }, "Driver: System stabilized — recovering to HEALTHY");
+              session.health = "healthy";
+              session.consecutiveHealthyTicks = 0;
+           }
+        }
+
+        // 7. Churn-Aware Degradation
+        if (session.health === "healthy" && (session.leaseChurnCount || 0) > 20) {
+           logger.warn({ sessionId, churn: session.leaseChurnCount }, "Driver: High lease churn detected — moving to DEGRADED");
+           session.health = "degraded";
+           session.lastAnomalyAt = now;
+        }
+
+        // 8. Throttled health update (10s), or immediate on takeover/phase change
+        const lastHb = session.lastHeartbeatAt || 0;
+        if (justAcquired || now - lastHb > 10000) {
+           session.lastHeartbeatAt = now;
+           await saveSession(session);
+        }
+      } catch (err) {
+        logger.error({ sessionId, err }, "Heartbeat logic failed");
+      }
+
+      // 9. Post-work Lease Renewal
+      await redisClient.pexpire(leaseKey, LEASE_TTL);
+
+      // 10. Dynamic Scheduling with Combined Signal Penalty
+      if (advanceTimers.has(sessionId)) {
+        const loopNow = getGlobalTime();
+        const nextCheck = session.nextCheckAt || (loopNow + 1000);
+        
+        // Base Delay: (nextCheck - loopNow) capped between 100ms and 5000ms
+        let delay = Math.min(Math.max(nextCheck - loopNow, 100), 5000);
+        
+        // Adaptive Combined Penalty: Proportional to instability
+        if (session.health === "degraded") {
+           const timeSinceAnomaly = now - (session.lastAnomalyAt || 0);
+           
+           // 1. Churn-based component (15ms per failover)
+           const churnPenalty = (session.leaseChurnCount || 0) * 15;
+           
+           // 2. Smooth Recency Decay: Linearly fades from 500ms to 0 over 5s
+           const recencyPenalty = Math.max(500 * (1 - timeSinceAnomaly / 5000), 0);
+           
+           // 3. Combined & Clamped Penalty (min 500ms, max 2000ms stabilization buffer)
+           const penalty = Math.min(Math.max(500 + churnPenalty + recencyPenalty, 500), 2000);
+           
+           logger.debug({ 
+             sessionId, 
+             penalty, 
+             components: { base: 500, churn: churnPenalty, recency: Math.round(recencyPenalty) },
+             health: session.health
+           }, "Driver: Adaptive backoff applied");
+           
+           delay += penalty;
+        }
+
+        const jitter = Math.floor(Math.random() * 200);
+        const finalDelay = Math.min(delay + jitter, 10000); // Absolute cap of 10s
+        
+        const timer = setTimeout(runLoop, finalDelay);
+        advanceTimers.set(sessionId, timer);
+      }
+    } catch (err) {
+      logger.error({ sessionId, err }, "Critical heartbeat error — retrying");
+      const timer = setTimeout(runLoop, 1000);
+      advanceTimers.set(sessionId, timer);
+    }
+  };
+
+  advanceTimers.set(sessionId, null as any); 
+  runLoop();
+}
+
+/**
+ * Legacy wrapper for backward compatibility during refactor.
+ */
+export function scheduleAdvanceTick(sessionId: string, _delayMs: number, onTick: (session: VersionedSession) => Promise<void>) {
+  ensureHeartbeatActive(sessionId, onTick);
+}
+
+/**
+ * Completely stops the background advance loop for a session.
+ */
+export function stopHeartbeat(sessionId: string) {
+  const timer = advanceTimers.get(sessionId);
+  if (timer) {
+    clearTimeout(timer);
+    advanceTimers.delete(sessionId);
+  }
+}
+
+/**
+ * Cancels any pending background ticks for a session.
+ */
+export function cancelAdvanceTick(sessionId: string) {
+  stopHeartbeat(sessionId);
 }
 

@@ -114,6 +114,7 @@ export interface PrivateFeedback {
   type:
   | "blocked"
   | "disrupt_ineffective"
+  | "disrupt_success"
   | "scan_player"
   | "scan_deck"
   | "alien_view"
@@ -140,6 +141,8 @@ export interface GameState {
   sessionId: string;
   settings: GameSettings;
   phase: GamePhase;
+  phaseStartedAt: number | null;
+  phaseReady: boolean;
   players: Player[];
   rolesAssigned: Record<string, string>; // Moving to playerId
   initialRoles: Record<string, string>;  // Moving to playerId
@@ -150,14 +153,10 @@ export interface GameState {
   orbitCompleted: string[];
   orbitFeedback: Record<string, { type: string; data?: unknown }>;
   roleAcknowledgements: string[];
-  resolutionAcknowledgements: string[];
   revealActions: Record<string, PlayerAction>;
   revealCompleted: string[];
   jammedPlayerId: string | null;
   hijackedTargets: Record<string, string>; // actorId -> targetId
-  discussionStartedAt: number | null;
-  votingStartedAt: number | null;
-  orbitStartedAt: number | null;
   emergencyVote: EmergencyVoteState;
   votes: Record<string, string>;
   chaoticAlignments: Record<string, "Good" | "Bad">;
@@ -179,6 +178,42 @@ export interface GameState {
   joinable?: boolean;
   /** Set to true when playersInGrace becomes empty (grace period ends). Consumed by the next resolution check to prevent immediate phase progression. */
   justUnfrozen?: boolean;
+  /** Scheduled timestamp for the next automated phase check. */
+  nextCheckAt?: number | null;
+  /** The unique ID of the server instance currently driving this session's heartbeat. */
+  heartbeatOwnerId?: string | null;
+  /** Monotonic version counter for the distributed heartbeat lease (fencing token). */
+  heartbeatFencingToken?: number;
+  /** Last successful heartbeat tick timestamp. */
+  lastHeartbeatAt?: number | null;
+  /** Audit field: ID of the server instance that performed the last successful write. */
+  lastUpdateBy?: string | null;
+  /** The last cluster-synchronized time seen by this session. Used to enforce cluster-wide monotonicity. */
+  lastGlobalNow?: number;
+  /** Structured health signal for the session state. */
+  health?: "healthy" | "degraded" | "corrupt";
+  /** Total count of invariant failures encountered by this session. */
+  invariantFailures?: number;
+  /** Cumulative count of CAS version conflicts (write contention). */
+  casRetriesCount?: number;
+  /** Cumulative count of leadership failovers (lease churn). */
+  leaseChurnCount?: number;
+  /** Number of consecutive heartbeat ticks that passed without timing anomalies. */
+  consecutiveHealthyTicks?: number;
+  /** Timestamp of the last detected timing or coordination anomaly. Used for stabilization tracking. */
+  lastAnomalyAt?: number | null;
+  /** Last successful phase transition timestamp. */
+  lastTransitionAt?: number | null;
+}
+
+/**
+ * State Lifecycle Management: Trims large/obsolete fields to prevent Redis payload growth.
+ */
+export function trimState(session: GameState) {
+  // 1. Cap ability logs within the current round summary if they grow excessively
+  if (session.roundSummary?.abilityLog && session.roundSummary.abilityLog.length > 100) {
+    session.roundSummary.abilityLog = session.roundSummary.abilityLog.slice(-100);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -258,13 +293,6 @@ export interface AcknowledgeRoleResult {
   autoActions?: Array<{ playerId: string; roleId: string; action: PlayerAction }>;
   /** Whether all actions are already submitted after auto-completing passives */
   allSubmitted?: boolean;
-  error?: string;
-}
-
-export interface AcknowledgeResolutionResult {
-  accepted: boolean;
-  /** When true all players acknowledged — phase advanced to discussion */
-  allAcknowledged: boolean;
   error?: string;
 }
 
@@ -368,6 +396,7 @@ export function createGame(sessionId: string, hostPlayer: Player): GameState {
       votingTime: 60,
     },
     phase: "lobby",
+    phaseReady: true,
     players: [{ ...hostPlayer, alive: true }],
     rolesAssigned: {},
     initialRoles: {},
@@ -378,14 +407,11 @@ export function createGame(sessionId: string, hostPlayer: Player): GameState {
     orbitCompleted: [],
     orbitFeedback: {},
     roleAcknowledgements: [],
-    resolutionAcknowledgements: [],
+    phaseStartedAt: Date.now(),
     revealActions: {},
     revealCompleted: [],
     jammedPlayerId: null,
     hijackedTargets: {},
-    discussionStartedAt: null,
-    votingStartedAt: null,
-    orbitStartedAt: null,
     emergencyVote: freshEmergencyVote(),
     votes: {},
     chaoticAlignments: {},
@@ -399,6 +425,19 @@ export function createGame(sessionId: string, hostPlayer: Player): GameState {
     justUnfrozen: undefined,
     status: "active",
     joinable: true,
+    nextCheckAt: null,
+    heartbeatOwnerId: null,
+    heartbeatFencingToken: 0,
+    lastHeartbeatAt: null,
+    lastUpdateBy: null,
+    lastGlobalNow: 0,
+    health: "healthy",
+    invariantFailures: 0,
+    casRetriesCount: 0,
+    leaseChurnCount: 0,
+    consecutiveHealthyTicks: 0,
+    lastAnomalyAt: null,
+    lastTransitionAt: null,
   };
 }
 
@@ -464,21 +503,19 @@ export function startGame(
   state.orbitActions = {};
   state.orbitCompleted = [];
   state.roleAcknowledgements = [];
-  state.resolutionAcknowledgements = [];
   state.revealActions = {};
   state.revealCompleted = [];
   state.jammedPlayerId = null;
   state.hijackedTargets = {};
-  state.discussionStartedAt = null;
-  state.votingStartedAt = null;
   state.emergencyVote = freshEmergencyVote();
   state.votes = {};
   state.anesthetizedPlayers = [];
   state.voteResult = null;
   state.roundSummary = freshRoundSummary();
   state.orbitFeedback = {};
-
   state.phase = "role_reveal";
+  state.phaseStartedAt = Date.now();
+  state.phaseReady = false;
   return state;
 }
 
@@ -572,7 +609,8 @@ export function acknowledgeRole(
   // All acknowledged → advance to orbit_action
   processRevealActions(state);
   state.phase = "orbit_action";
-  state.orbitStartedAt = Date.now();
+  state.phaseStartedAt = Date.now();
+  state.phaseReady = false;
 
   const autoActions: Array<{ playerId: string; roleId: string; action: PlayerAction }> = [];
   const alivePlayers = state.players.filter((p) => p.alive);
@@ -627,59 +665,6 @@ export function computeOrbitInfo(
     return { type: "parasite_info", data: { alienPlayers } };
   }
   return { type: "none" };
-}
-
-/**
- * Record a player's acknowledgement of the orbit resolution results.
- * When all players have acknowledged, the phase advances to discussion.
- *
- * MUTATION: modifies `state` in place.
- */
-export function acknowledgeResolution(
-  state: GameState,
-  id: string, // socketId or playerId
-): AcknowledgeResolutionResult {
-  const playerId = normalizeToPlayerId(state, id);
-  if (!playerId) {
-    return { accepted: false, allAcknowledged: false, error: "player identity could not be resolved" };
-  }
-
-  if (state.phase !== "orbit_result") {
-    return { accepted: false, allAcknowledged: false, error: "wrong phase" };
-  }
-
-  const player = state.players.find((p) => p.playerId === playerId);
-  if (!player || player.isSpectator) {
-    return { accepted: false, allAcknowledged: false, error: "Spectators cannot acknowledge resolution" };
-  }
-
-  if (state.resolutionAcknowledgements.includes(playerId)) {
-    return { accepted: true, allAcknowledged: state.resolutionAcknowledgements.length >= getActivePlayers(state).length };
-  }
-  state.resolutionAcknowledgements.push(playerId);
-
-  // Block phase advance while game is frozen
-  if (isGameFrozen(state)) {
-    return { accepted: true, allAcknowledged: false };
-  }
-
-  // Post-resume safety: consume the justUnfrozen flag to prevent instant phase skip
-  if (consumeJustUnfrozen(state)) {
-    return { accepted: true, allAcknowledged: false };
-  }
-
-  const activeCount = getActivePlayers(state).length;
-  const ackCount = state.players.filter(p => state.resolutionAcknowledgements.includes(p.playerId || "") && !p.isSpectator).length;
-
-  if (ackCount < activeCount) {
-    return { accepted: true, allAcknowledged: false };
-  }
-
-  // All acknowledged → advance to discussion
-  state.phase = "discussion";
-  state.discussionStartedAt = Date.now();
-
-  return { accepted: true, allAcknowledged: true };
 }
 
 /**
@@ -842,7 +827,7 @@ export function resolveRound(state: GameState): ResolutionResult {
   // Snapshot roles before any mutations (Warper/Shifter mutate rolesAssigned)
   const startRoles: Record<string, string> = { ...state.rolesAssigned };
 
-  const blockedPlayerIds = new Set<string>();
+  const blockedPlayerIds = new Set<string>(state.anesthetizedPlayers || []);
   const actionLog: Record<string, string[]> = {};
   const sentinelWatchTargets: Record<string, string> = {};
 
@@ -1001,6 +986,7 @@ export function resolveRound(state: GameState): ResolutionResult {
             feedback[actorId] = { type: "scan_deck", data: { roles } };
             logActor(actor.name, actorId, "(Scanner) scanned the central deck");
           } else {
+            feedback[actorId] = { type: "no_action" };
             logActor(actor.name, actorId, "(Scanner) used an unknown scan action");
           }
           break;
@@ -1037,6 +1023,7 @@ export function resolveRound(state: GameState): ResolutionResult {
           } else {
             blockedPlayerIds.add(targetId);
             const originalTarget = state.players.find(p => p.playerId === originalTargets[0]);
+            feedback[actorId] = { type: "disrupt_success", data: { targetName: originalTarget?.name ?? "a player" } };
             logInternal(targetId, "ability was blocked");
             logActor(
               actor.name,
@@ -1204,7 +1191,8 @@ export function applyResolution(state: GameState, result: ResolutionResult, now:
   state.orbitFeedback = result.feedback;
   state.roundSummary.abilityLog = result.abilityLog;
   state.phase = "discussion";
-  state.discussionStartedAt = now;
+  state.phaseStartedAt = now;
+  state.phaseReady = false;
 }
 
 /**
@@ -1214,7 +1202,11 @@ export function applyResolution(state: GameState, result: ResolutionResult, now:
  */
 export function startVoting(state: GameState, now: number = Date.now()): void {
   state.phase = "voting";
-  state.votingStartedAt = now;
+  state.phaseStartedAt = now;
+  state.phaseReady = false;
+  if (state.emergencyVote) {
+    state.emergencyVote.active = false;
+  }
 }
 
 /**
@@ -1322,7 +1314,8 @@ export function castEmergencyVote(
     if (yesReached) {
       state.emergencyVote.active = false;
       state.phase = "voting";
-      state.votingStartedAt = now;
+      state.phaseStartedAt = now;
+      state.phaseReady = false;
       return { accepted: true, outcome: true };
     } else {
       state.emergencyVote.active = false;
@@ -1678,9 +1671,6 @@ export function restartGame(state: GameState): GameState {
   state.orbitCompleted = [];
   state.orbitFeedback = {};
   state.roleAcknowledgements = [];
-  state.resolutionAcknowledgements = [];
-  state.discussionStartedAt = null;
-  state.votingStartedAt = null;
   state.emergencyVote = freshEmergencyVote();
   state.votes = {};
   state.anesthetizedPlayers = [];
@@ -1775,7 +1765,6 @@ export function removePlayer(state: GameState, socketId: string): boolean {
   delete state.votes[playerId];
   state.orbitCompleted = state.orbitCompleted.filter((id) => id !== playerId);
   state.roleAcknowledgements = state.roleAcknowledgements.filter((id) => id !== playerId);
-  state.resolutionAcknowledgements = state.resolutionAcknowledgements.filter((id) => id !== playerId);
 
   return true;
 }

@@ -1,7 +1,7 @@
 import type { Server as SocketIOServer } from "socket.io";
 import { recordPlayerGameResult } from "../../core/services/statsService.js";
 import { logger } from "../../../lib/logger.js";
-import { getSession, saveSession, CAS_MAX_ATTEMPTS } from "./sessions.js";
+import { getSession, saveSession, CAS_MAX_ATTEMPTS, scheduleAdvanceTick, getGlobalTime } from "./sessions.js";
 import { phaseUpdate } from "./emitters.js";
 import {
   isGameFrozen,
@@ -10,7 +10,10 @@ import {
   resolveRound,
   applyResolution,
   sortPlayersByStatus,
-  autoCompleteOrbitActions
+  autoCompleteOrbitActions,
+  processRevealActions,
+  startVoting,
+  tallyVotes
 } from "./engine.js";
 import { syncUserAchievements } from "../../core/routes/achievements.js";
 import { logAudit } from "../../../lib/audit.js";
@@ -84,75 +87,195 @@ export async function recordGameResults(io: SocketIOServer, sessionId: string, v
   }
 }
 
-export async function checkAndRunResolution(
+const MAX_PHASE_CONFIG: Record<string, number> = {
+  role_reveal: 60_000,
+  orbit_action: 120_000,
+  orbit_resolution: 5_000,
+  discussion: 300_000,
+  voting: 90_000,
+};
+
+/**
+ * The core game flow engine. Checks the current state and advances the game 
+ * to the next phase if conditions are met (timer expired, actions completed, etc).
+ */
+export async function advanceGameFlow(
   io: SocketIOServer,
   sessionId: string,
   session: NonNullable<MaybeSession>,
 ): Promise<void> {
-  if (session.phase !== "orbit_action") return;
+  // ── 0. LIFECYCLE & MONOTONICITY ───────────────────────────────────────────
   if (isGameFrozen(session)) return;
   if (consumeJustUnfrozen(session)) return;
-  const activeCount = getActivePlayers(session).length;
 
-  // ── TIMEOUT FALLBACK ──
-  // If players are stuck or AFK, auto-complete the phase after a reasonable delay (90s).
-  const ORBIT_TIMEOUT_MS = 90_000;
-  const timeInOrbit = session.orbitStartedAt ? (Date.now() - session.orbitStartedAt) : 0;
+  const now = getGlobalTime(session);
+  const phaseStart = session.phaseStartedAt || 0;
+  const timeInPhase = now - phaseStart;
 
-  if (session.orbitCompleted.length < activeCount) {
-    if (timeInOrbit > ORBIT_TIMEOUT_MS) {
-      logger.info({ sessionId }, `Orbit phase timeout (${timeInOrbit}ms) — auto-completing ${activeCount - session.orbitCompleted.length} unready players`);
-      autoCompleteOrbitActions(session);
-      // Now continue to resolution
-    } else {
-      return;
-    }
+  // ENSURE HEARTBEAT (Autonomous Driver)
+  // The logic layer is now responsible for ensuring its own heartbeat loop is active.
+  if (session.phase !== "lobby" && session.phase !== "result") {
+    scheduleAdvanceTick(sessionId, 1000, async (fresh) => {
+      await advanceGameFlow(io, sessionId, fresh);
+    });
   }
 
-  phaseUpdate(io, sessionId, session);
-  session.phase = "orbit_resolution";
+  // ── 0.5 FALLBACK SAFETY ───────────────────────────────────────────────────
+  // Hardened fallback: use phase-specific timeouts + buffer to detect stalls.
+  const maxAllowed = MAX_PHASE_CONFIG[session.phase] || 300_000;
+  const buffer = 10_000;
+  if (timeInPhase > maxAllowed + buffer) {
+    logger.warn({ sessionId, phase: session.phase, elapsed: timeInPhase }, "Driver: Smart fallback triggered — forcing evaluation");
+    session.nextCheckAt = null;
+  }
 
-  if (!await saveSession(session)) {
-    logger.warn({ sessionId }, "Failed to persist orbit_resolution phase — aborting resolution run");
-    const fresh = await getSession(sessionId);
-    if (fresh) phaseUpdate(io, sessionId, fresh);
+  // ── 1. EFFICIENCY GUARD (Tick Throttling) ──────────────────────────────────
+  // If we have a scheduled 'nextCheckAt' and we haven't reached it, skip the heavy logic.
+  // Exception: if phaseReady is false, we must check for stabilization (500ms).
+  if (session.nextCheckAt && now < session.nextCheckAt && session.phaseReady) {
     return;
   }
 
-  phaseUpdate(io, sessionId, session);
+  // ── 2. PHASE STABILIZATION (Global Guard) ──────────────────────────────────
+  // Ensure every phase has a 500ms stabilization window where actions are blocked.
+  if (!session.phaseReady && session.phase !== "lobby" && session.phase !== "result" && timeInPhase >= 500) {
+    logger.info({ sessionId, phase: session.phase, elapsed: timeInPhase }, "Driver: Phase stabilized — unlocking interaction");
+    session.phaseReady = true;
+    session.nextCheckAt = null; // Clear throttle
+    if (await saveSession(session)) {
+      phaseUpdate(io, sessionId, session);
+    }
+    return;
+  }
 
-  setTimeout(async () => {
-    try {
+  // ── 3. PHASE PROGRESSION LOGIC ─────────────────────────────────────────────
+  const activeCount = getActivePlayers(session).length;
+  
+  // ── PHASE: ROLE REVEAL ──
+  if (session.phase === "role_reveal") {
+    const REVEAL_TIMEOUT = 45_000;
+    const allAck = session.roleAcknowledgements.length >= activeCount;
+    
+    if (allAck || timeInPhase > REVEAL_TIMEOUT) {
+      logger.info({ sessionId, allAck, elapsed: timeInPhase }, "Driver: Advancing from ROLE_REVEAL");
+      processRevealActions(session);
+      session.phase = "orbit_action";
+      session.phaseReady = false;
+      session.phaseStartedAt = now;
+      session.nextCheckAt = now + 500; // Next tick should check stabilization
+      if (await saveSession(session)) {
+        phaseUpdate(io, sessionId, session);
+      }
+    } else if (!session.nextCheckAt) {
+      // Set throttle for the timeout
+      session.nextCheckAt = phaseStart + REVEAL_TIMEOUT;
+      await saveSession(session);
+    }
+    return;
+  }
+
+  // ── PHASE: ORBIT ACTION ──
+  if (session.phase === "orbit_action") {
+    const ORBIT_TIMEOUT_MS = 90_000;
+
+    if (session.orbitCompleted.length < activeCount) {
+      if (timeInPhase > ORBIT_TIMEOUT_MS) {
+        logger.info({ sessionId, elapsed: timeInPhase }, "Driver: Orbit timeout — auto-completing AFK players");
+        autoCompleteOrbitActions(session);
+      } else {
+        // Set throttle for timeout check if not set
+        if (!session.nextCheckAt) {
+          session.nextCheckAt = phaseStart + ORBIT_TIMEOUT_MS;
+          await saveSession(session);
+        }
+        return;
+      }
+    }
+
+    // Transition to resolution
+    logger.info({ sessionId }, "Driver: All orbit actions in — advancing to ORBIT_RESOLUTION");
+    session.phase = "orbit_resolution";
+    session.phaseReady = false;
+    session.phaseStartedAt = now;
+    session.nextCheckAt = now + 1200; // Cinematic delay
+    if (await saveSession(session)) {
+      phaseUpdate(io, sessionId, session);
+    }
+    return;
+  }
+
+  // ── PHASE: ORBIT RESOLUTION (Cinematic Delay) ──
+  if (session.phase === "orbit_resolution") {
+    const RESOLUTION_DELAY = 1200;
+    if (timeInPhase >= RESOLUTION_DELAY) {
+      logger.info({ sessionId }, "Driver: Cinematic delay complete — resolving round state");
+      
       for (let attempt = 1; attempt <= CAS_MAX_ATTEMPTS; attempt++) {
         const current = await getSession(sessionId);
-        if (!current || (current.phase !== "orbit_resolution" && current.phase !== "orbit_action")) {
-          return;
-        }
-
-        if (isGameFrozen(current)) {
-          logger.info({ sessionId }, "Resolution aborted — game frozen during delay");
-          return;
-        }
-
+        if (!current || current.phase !== "orbit_resolution") return;
+        
         const resolutionResult = resolveRound(current);
         applyResolution(current, resolutionResult);
+        
+        current.phase = "discussion";
+        current.phaseReady = false;
+        current.phaseStartedAt = now;
+        current.nextCheckAt = now + 500; // Stabilization check
 
         if (await saveSession(current)) {
-          // Success logic moved to individual handlers or emitters if needed
-          // For now keeping it simple as it was in socket.ts
           phaseUpdate(io, sessionId, current);
-
-          await logAudit({
-            eventType: "GAME_ROUND_RESOLVED",
-            description: `Round resolution finalized for session ${sessionId}`,
-            metadata: { sessionId },
-          });
-
           return;
         }
       }
-    } catch (err) {
-      logger.error({ err, sessionId }, "Critical failure during round resolution");
+    } else if (!session.nextCheckAt) {
+      session.nextCheckAt = phaseStart + RESOLUTION_DELAY;
+      await saveSession(session);
     }
-  }, 1200);
+    return;
+  }
+
+  // ── PHASE: DISCUSSION ──
+  if (session.phase === "discussion") {
+    const discussionTime = (session.settings?.discussionTime || 120) * 1000;
+
+    if (timeInPhase >= discussionTime) {
+      logger.info({ sessionId, elapsed: timeInPhase }, "Driver: Discussion expired — starting VOTING");
+      startVoting(session, now);
+      session.phase = "voting";
+      session.phaseReady = false;
+      session.phaseStartedAt = now;
+      session.nextCheckAt = now + 500; // Stabilization check
+      if (await saveSession(session)) {
+        phaseUpdate(io, sessionId, session);
+      }
+    } else if (!session.nextCheckAt) {
+      session.nextCheckAt = phaseStart + discussionTime;
+      await saveSession(session);
+    }
+    return;
+  }
+
+  // ── PHASE: VOTING ──
+  if (session.phase === "voting") {
+    const VOTING_TIMEOUT = 45_000;
+    const voteCount = Object.keys(session.votes).length;
+
+    if (voteCount >= activeCount || timeInPhase > VOTING_TIMEOUT) {
+      logger.info({ sessionId, voteCount, elapsed: timeInPhase }, "Driver: Advancing from VOTING to RESULT");
+      const voteResult = tallyVotes(session);
+      session.voteResult = voteResult;
+      session.phase = "result";
+      session.phaseReady = true; 
+      session.phaseStartedAt = now;
+      session.nextCheckAt = null; // No more auto-advances
+      
+      if (await saveSession(session)) {
+        phaseUpdate(io, sessionId, session);
+        await recordGameResults(io, sessionId, voteResult, session);
+      }
+    } else if (!session.nextCheckAt) {
+      session.nextCheckAt = phaseStart + VOTING_TIMEOUT;
+      await saveSession(session);
+    }
+  }
 }

@@ -65,9 +65,9 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
   useEffect(() => {
     const socket = getSocket();
     const handlePhaseUpdate = (session: any) => {
-      if (session.phase === "discussion" && session.discussionStartedAt) {
+      if (session.phase === "discussion" && session.phaseStartedAt) {
         const discussionTime = session.settings?.discussionTime ?? 120;
-        const elapsed = Math.floor((Date.now() - session.discussionStartedAt) / 1000);
+        const elapsed = Math.floor((Date.now() - session.phaseStartedAt) / 1000);
         setSecondsLeft(Math.max(0, discussionTime - elapsed));
       }
     };
@@ -160,7 +160,10 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
       if (session.anesthetizedPlayers) {
         const myPlayerId = sessionStorage.getItem("lp_playerId");
         const me = players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === socket.id);
-        if (me) setIsAnesthetized(session.anesthetizedPlayers.includes(me.id));
+        if (me) {
+          const checkId = me.playerId || me.id;
+          setIsAnesthetized(session.anesthetizedPlayers.includes(checkId));
+        }
       }
       
       // Handle Emergency Vote state sync (for late-joins or refreshes)
@@ -224,7 +227,10 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
           if (resp.session.anesthetizedPlayers) {
             const myPlayerId = sessionStorage.getItem("lp_playerId");
             const me = resp.session.players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === myId);
-            if (me) setIsAnesthetized(resp.session.anesthetizedPlayers.includes(me.id));
+            if (me) {
+              const checkId = me.playerId || me.id;
+              setIsAnesthetized(resp.session.anesthetizedPlayers.includes(checkId));
+            }
           }
 
           // Fallback: if orbit result wasn't received via socket, read from session
@@ -794,6 +800,13 @@ function renderOrbitResultSummary(
 
     case "disrupt_ineffective":
       return <p className="text-sm leading-relaxed" style={warn}>Your block attempt failed  -  that target cannot be blocked.</p>;
+
+    case "disrupt_success":
+      return (
+        <p className="text-sm" style={good}>
+          You successfully blocked <span className="font-bold" style={{ color: accentLight }}>{String(d?.targetName ?? "a player")}</span>'s ability.
+        </p>
+      );
 
     case "scan_player":
       return (

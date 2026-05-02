@@ -107,15 +107,6 @@ app.use(cors({
   credentials: true,
 }));
 
-// Health check — registered before rate limiters so uptime probes (Fly.io,
-// Render, etc.) are never blocked by a 429, regardless of traffic.
-app.get("/health", (_req, res) => {
-  res.status(200).send("OK");
-});
-app.get("/api/healthz", (_req, res) => {
-  res.status(200).send("OK");
-});
-
 // Rate limiting - prevent brute force
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

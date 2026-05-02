@@ -33,6 +33,14 @@ export function phaseUpdate(
   // Get all sockets currently in this session room
   const room = io.sockets.adapter.rooms.get(sessionId);
   if (room) {
+    if (session.health === "corrupt") {
+      io.to(sessionId).emit("session_corrupt", { 
+        error: "Engine invariant violation. Session halted.",
+        timestamp: Date.now()
+      });
+      return;
+    }
+
     for (const socketId of room) {
       const socket = io.sockets.sockets.get(socketId);
       if (socket) {
