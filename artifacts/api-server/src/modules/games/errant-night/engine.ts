@@ -586,6 +586,10 @@ export function acknowledgeRole(
     }
   }
 
+  // ── CLEAR THROTTLE ──
+  // Re-evaluate immediately on next tick after an acknowledgement
+  state.nextCheckAt = null;
+
   const orbitInfo = computeOrbitInfo(state, playerId);
 
   // Block phase advance while game is frozen (grace period or interrupted)
@@ -679,6 +683,10 @@ function submitActionInternal(state: GameState, id: string, action: PlayerAction
   if (!state.orbitCompleted.includes(playerId)) {
     state.orbitCompleted.push(playerId);
   }
+  // ── CLEAR THROTTLE ──
+  // Ensure the background engine re-evaluates the state immediately 
+  // after a significant player action, bypassing any long-tail timeouts.
+  state.nextCheckAt = null;
 }
 
 /**
@@ -729,11 +737,11 @@ export function submitAction(
     sentinel: ["watch", "sentinel_watch", "skip", "none"],
     seeker: ["seek", "skip", "none"],
     parasite: ["passive", "none", "skip"],
-    crew: ["none", "skip"],
-    virus: ["none", "skip"],
-    router: ["none", "skip"],
-    doctor: ["none", "skip"],
-    chaotic: ["none", "skip"],
+    crew: ["none", "skip", "passive"],
+    virus: ["none", "skip", "passive"],
+    router: ["none", "skip", "passive"],
+    doctor: ["none", "skip", "passive"],
+    chaotic: ["none", "skip", "passive"],
   };
 
   // If roleId is unknown (e.g. stored under old socket.id before reconnect),
@@ -1384,6 +1392,10 @@ export function castVote(
   }
 
   state.votes[vPlayerId] = resolvedTargetId;
+
+  // ── CLEAR THROTTLE ──
+  // Re-evaluate immediately on next tick after a vote
+  state.nextCheckAt = null;
 
   // Block voting resolution while game is frozen (grace period or interrupted)
   if (isGameFrozen(state)) {
