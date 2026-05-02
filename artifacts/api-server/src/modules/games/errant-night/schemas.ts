@@ -58,6 +58,15 @@ export const startGameCustomSchema = z.object({
   customDeck: z.array(z.string().max(50)).length(3),
 });
 
+export const acknowledgeRoleSchema = z.object({
+  sessionId: sessionIdSchema,
+  action: z.object({
+    type: z.string(),
+    targets: z.array(z.string()).optional(),
+    alignment: z.enum(["Good", "Bad"]).optional(),
+  }).nullable().optional(),
+});
+
 export const submitActionSchema = z.object({
   sessionId: sessionIdSchema,
   action: orbitActionSchema,

@@ -156,6 +156,10 @@ export default function RoleRevealPage() {
           if (resp.session.phaseReady !== undefined) {
             setIsPhaseReady(resp.session.phaseReady);
           }
+          const isFrozen = (resp.session.playersInGrace && resp.session.playersInGrace.length > 0) || !!resp.session.hostEndedInterrupt;
+          if (isFrozen) {
+            setIsPhaseReady(false); // Force not ready if frozen
+          }
         }
       });
     };
@@ -534,15 +538,22 @@ export default function RoleRevealPage() {
               )}
             </div>
 
-            {/* Ready count */}
-            <div
-              className="text-xs tracking-wider text-center"
-              style={{ color: "hsl(210 30% 45%)", fontFamily: "'Exo 2', sans-serif" }}
-            >
-              {livePlayers.length > 0 ? (
-                <span>{readyCount} / {livePlayers.filter(p => !p.isSpectator).length} players ready</span>
-              ) : (
-                <span className="animate-pulse">Syncing crew manifest... ({readyCount} / {totalPlayers})</span>
+            {/* Ready count and frozen status */}
+            <div className="flex flex-col gap-1 items-center">
+              <div
+                className="text-xs tracking-wider text-center"
+                style={{ color: "hsl(210 30% 45%)", fontFamily: "'Exo 2', sans-serif" }}
+              >
+                {livePlayers.length > 0 ? (
+                  <span>{readyCount} / {livePlayers.filter(p => !p.isSpectator).length} players ready</span>
+                ) : (
+                  <span className="animate-pulse">Syncing crew manifest... ({readyCount} / {totalPlayers})</span>
+                )}
+              </div>
+              {livePlayers.some(p => p.connectionStatus !== "connected") && (
+                <div className="text-[10px] text-amber-500/80 font-mono animate-pulse uppercase tracking-tighter">
+                  [ System_Paused: Waiting for Reconnection ]
+                </div>
               )}
             </div>
 

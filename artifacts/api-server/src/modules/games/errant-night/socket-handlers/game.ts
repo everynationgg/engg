@@ -12,7 +12,8 @@ import {
   castVoteSchema,
   castEmergencyVoteSchema,
   kickPlayerSchema,
-  sessionOnlySchema
+  sessionOnlySchema,
+  acknowledgeRoleSchema
 } from "../schemas.js";
 import { logger } from "../../../../lib/logger.js";
 import {
@@ -229,13 +230,13 @@ export function registerGameHandlers(
 
   // ── ACKNOWLEDGE ROLE ──
   socket.on("acknowledge_role", async (data: unknown, ack) => {
-    const parsed = validate(sessionOnlySchema, data, ack);
+    const parsed = validate(acknowledgeRoleSchema, data, ack);
     if (!parsed) return;
-    const { sessionId } = parsed;
+    const { sessionId, action } = parsed;
 
     const cas = await withCasRetry(sessionId, (session) => {
       if (session.phase !== "role_reveal" || !session.phaseReady) return CAS_SKIP;
-      acknowledgeRole(session, state.currentPlayerId || socket.id);
+      acknowledgeRole(session, state.currentPlayerId || socket.id, (action as any));
       if ((session.phase as string) === "orbit_action") {
         // Transitioned to orbit
       }

@@ -117,6 +117,7 @@ export default function GameShell() {
   const [showProfile, setShowProfile] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [showGameMenu, setShowGameMenu] = useState(false);
+  const [isGameFrozen, setIsGameFrozen] = useState(false);
   const { preferences, updateMusicVolume } = usePreferences();
   const musicOn = (preferences?.musicVolume ?? 0) > 0;
   const touchStartX = useRef<number | null>(null);
@@ -255,34 +256,34 @@ export default function GameShell() {
       }
     };
 
-    const handlePhaseUpdate = (session: { phase: string; playersInGrace?: string[]; players?: Array<{ id: string; name: string }>; rolesAssigned?: Record<string, string> }) => {
+    const handlePhaseUpdate = (session: {
+      phase: string;
+      playersInGrace?: string[];
+      players?: Array<{ id: string; name: string }>;
+      rolesAssigned?: Record<string, string>;
+      hostEndedInterrupt?: boolean;
+    }) => {
+      const isFrozen = (session.playersInGrace && session.playersInGrace.length > 0) || !!session.hostEndedInterrupt || session.phase === "interrupted";
+      setIsGameFrozen(isFrozen);
       if (session.phase) applyPhase(session.phase);
-      // Restore assigned role from server state so the UI never shows "unknown"
-      // after browser back/forward or missed events.
+
       if (session.rolesAssigned) {
         const myPlayerId = sessionStorage.getItem("lp_playerId") || localStorage.getItem(`lp_playerId_${roomCode}`);
         const mySocketId = socket.id;
         const myRole = session.rolesAssigned[myPlayerId || ""] || session.rolesAssigned[mySocketId || ""];
-        if (myRole) {
-          sessionStorage.setItem("lp_assignedRole", myRole);
-        }
+        if (myRole) sessionStorage.setItem("lp_assignedRole", myRole);
       }
-      // Clear grace banner when no players are in grace
       if (!session.playersInGrace || session.playersInGrace.length === 0) {
         setGracePlayerNames([]);
       } else if (session.players) {
-        // Refresh the list of names for all players currently in grace
         const graceSet = new Set(session.playersInGrace);
-        const names = session.players
-          .filter((p) => graceSet.has(p.id))
-          .map((p) => p.name);
+        const names = session.players.filter((p) => graceSet.has(p.id)).map((p) => p.name);
         if (names.length > 0) setGracePlayerNames(names);
       }
     };
 
     socket.on("phase_update", handlePhaseUpdate);
 
-    // Listen for grace updates (player disconnected during game, waiting to reconnect)
     const handleGraceUpdate = (data: {
       playersInGrace: string[];
       playerName: string;
@@ -290,79 +291,34 @@ export default function GameShell() {
     }) => {
       if (data.playersInGrace.length > 0) {
         const graceSet = new Set(data.playersInGrace);
-
-        // Build the full list of names for ALL players currently in grace
-        const allGraceNames = data.players
-          ?.filter((p) => graceSet.has(p.id))
-          .map((p) => p.name) ?? [];
-
-        if (allGraceNames.length > 0) {
-          setGracePlayerNames(allGraceNames);
-        }
-
-        // Show toast for the triggering player if they're entering grace
-        const triggerPlayer = data.players?.find((p) => p.name === data.playerName);
-        const isEnteringGrace = triggerPlayer !== undefined && graceSet.has(triggerPlayer.id);
-        if (isEnteringGrace) {
-          systemToast(
-            `Player ${data.playerName} reconnecting…`,
-            "warning",
-            4000,
-          );
-        }
+        const allGraceNames = data.players?.filter((p) => graceSet.has(p.id)).map((p) => p.name) ?? [];
+        if (allGraceNames.length > 0) setGracePlayerNames(allGraceNames);
+        setIsGameFrozen(true);
       } else {
+        setIsGameFrozen(false);
         setGracePlayerNames([]);
       }
     };
     socket.on("grace_update", handleGraceUpdate);
 
-    // If the host leaves, the server will close the session
     const handleSessionClosed = (data?: { message?: string }) => {
       const msg = data?.message ?? "The host has left. The lobby has been disbanded.";
       systemToast(msg, "error", 6000);
-      sessionStorage.removeItem("lp_roomCode");
-      sessionStorage.removeItem("lp_isCreating");
-      sessionStorage.removeItem("lp_assignedRole");
-      sessionStorage.removeItem("lp_callsign");
-      sessionStorage.removeItem("lp_totalPlayers");
-      sessionStorage.removeItem("lp_orbit_info");
-      sessionStorage.removeItem("lp_orbit_result");
-      sessionStorage.removeItem("lp_userId");
-      sessionStorage.removeItem("lp_playerId");
-      sessionStorage.removeItem("lp_playerToken");
-      localStorage.removeItem("lp_roomCode");
-      localStorage.removeItem("lp_isCreating");
-      localStorage.removeItem("lp_assignedRole");
-      localStorage.removeItem("lp_callsign");
-      localStorage.removeItem("lp_totalPlayers");
-      localStorage.removeItem(`lp_userId_${roomCode}`);
-      localStorage.removeItem(`lp_playerId_${roomCode}`);
-      localStorage.removeItem(`lp_playerToken_${roomCode}`);
-      // Disconnect socket to prevent auto-reconnect loops
       disconnectSocket();
       setLocation("/");
     };
     socket.on("session_closed", handleSessionClosed);
 
-    // Listen for player_left notifications
     const handlePlayerLeft = (data: { playerName: string }) => {
-      systemToast(
-        `Player ${data.playerName} has left the game`,
-        "warning",
-        5000,
-      );
+      systemToast(`Player ${data.playerName} has left the game`, "warning", 5000);
     };
     socket.on("player_left", handlePlayerLeft);
 
-    // Listen for system messages (e.g. "Not enough players to continue")
     const handleSystemMessage = (data: { message: string }) => {
       systemToast(data.message, "error", 6000);
     };
     socket.on("system_message", handleSystemMessage);
 
-    // Shared sync helper — fetches latest session and applies phase + grace state.
-    // Used on initial mount AND as a periodic fallback in case phase_update
-    // socket events are missed (transport hiccups, proxy drops, etc.).
     const syncSession = () => {
       const myPlayerId = sessionStorage.getItem("lp_playerId") || localStorage.getItem(`lp_playerId_${roomCode}`);
       const myPlayerToken = sessionStorage.getItem("lp_playerToken") || localStorage.getItem(`lp_playerToken_${roomCode}`);
@@ -371,31 +327,27 @@ export default function GameShell() {
         sessionId: roomCode,
         playerId: myPlayerId,
         playerToken: myPlayerToken
-      }, (resp: { success: boolean; session?: { phase: string; playersInGrace?: string[]; players?: { id: string; name: string; connected?: boolean }[]; rolesAssigned?: Record<string, string> } }) => {
-        if (resp.success && resp.session?.phase) {
-          // First mount — set both displayed and tracked phase without animation
-          if (prevPhaseRef.current === null) {
-            prevPhaseRef.current = resp.session.phase;
-            setDisplayedPhase(resp.session.phase);
-          } else {
-            applyPhase(resp.session.phase);
+      }, (resp: { success: boolean; session?: { phase: string; playersInGrace?: string[]; players?: { id: string; name: string; connected?: boolean }[]; rolesAssigned?: Record<string, string>; hostEndedInterrupt?: boolean } }) => {
+        if (resp.success && resp.session) {
+          const isFrozen = (resp.session.playersInGrace && resp.session.playersInGrace.length > 0) || !!resp.session.hostEndedInterrupt || resp.session.phase === "interrupted";
+          setIsGameFrozen(isFrozen);
+          if (resp.session.phase) {
+            if (prevPhaseRef.current === null) {
+              prevPhaseRef.current = resp.session.phase;
+              setDisplayedPhase(resp.session.phase);
+            } else {
+              applyPhase(resp.session.phase);
+            }
           }
-          // Restore assigned role from server state so browser back/forward
-          // and page remounts don't lose the role (showing "unknown").
           if (resp.session.rolesAssigned) {
             const myPlayerId = sessionStorage.getItem("lp_playerId") || localStorage.getItem(`lp_playerId_${roomCode}`);
             const mySocketId = socket.id;
             const myRole = resp.session.rolesAssigned[myPlayerId || ""] || resp.session.rolesAssigned[mySocketId || ""];
-            if (myRole) {
-              sessionStorage.setItem("lp_assignedRole", myRole);
-            }
+            if (myRole) sessionStorage.setItem("lp_assignedRole", myRole);
           }
-          // Sync grace state
           if (resp.session.playersInGrace && resp.session.playersInGrace.length > 0 && resp.session.players) {
             const graceSet = new Set(resp.session.playersInGrace);
-            const names = resp.session.players
-              .filter((p) => graceSet.has(p.id))
-              .map((p) => p.name);
+            const names = resp.session.players.filter((p) => graceSet.has(p.id)).map((p) => p.name);
             if (names.length > 0) setGracePlayerNames(names);
           } else {
             setGracePlayerNames([]);
@@ -404,71 +356,26 @@ export default function GameShell() {
       });
     };
 
-    // Get initial phase on mount
     syncSession();
-
-    // Periodic fallback: poll every 3 seconds so phase transitions (e.g. voting→result)
-    // are detected even when Socket.IO events are missed.
     const pollId = setInterval(syncSession, 3000);
 
-    // Re-join the session when the socket reconnects during in-game phases.
-    // RoleConfigPage handles reconnect for the lobby (role_config) phase; all
-    // other phase pages are rendered by GameShell without their own reconnect
-    // logic, so without this handler the new socket would not be registered in
-    // the session room and chat (and other events) would silently fail.
     const handleReconnect = () => {
-      // Lobby phase is managed by RoleConfigPage — skip to avoid a double join.
       if (displayedPhaseRef.current === "role_config") return;
       const callsign = sessionStorage.getItem("lp_callsign") || localStorage.getItem("lp_callsign");
       const playerId = sessionStorage.getItem("lp_playerId") || localStorage.getItem(`lp_playerId_${roomCode}`);
       if (!callsign || !playerId) return;
-      socket.emit(
-        "join_session",
-        {
-          sessionId: roomCode,
-          playerName: callsign,
-          playerId,
-          playerToken: sessionStorage.getItem("lp_playerToken") ?? undefined,
-          userId: sessionStorage.getItem("lp_userId") ?? undefined,
-        },
-        (resp: JoinSessionResponse) => {
-          // Cache any server-issued token so future reconnects can use it.
-          if (resp?.playerToken) {
-            sessionStorage.setItem("lp_playerToken", resp.playerToken);
-            localStorage.setItem(`lp_playerToken_${roomCode}`, resp.playerToken);
-          }
-          // Sync phase and grace state directly from the ack response.
-          // With Redis pub/sub, the room broadcasts (phase_update / grace_update) may
-          // arrive after this ack callback fires, so we apply the state here as a
-          // safety net to avoid a frozen UI on the reconnecting player's screen.
-          if (resp?.session?.phase) {
-            applyPhase(resp.session.phase);
-          }
-          // Restore assigned role on reconnect so game pages display the correct
-          // role instead of "unknown".  The server remaps rolesAssigned from the
-          // old socket ID to the new one in reconnectPlayer(), so we can look up
-          // the role by the current socket.id.
-          if (resp?.session?.rolesAssigned) {
-            const myPlayerId = sessionStorage.getItem("lp_playerId") || localStorage.getItem(`lp_playerId_${roomCode}`);
-            const mySocketId = socket.id;
-            const myRole = resp.session.rolesAssigned[myPlayerId || ""] || resp.session.rolesAssigned[mySocketId || ""];
-            if (myRole) {
-              sessionStorage.setItem("lp_assignedRole", myRole);
-            }
-          }
-          if (resp?.session) {
-            if (!resp.session.playersInGrace || resp.session.playersInGrace.length === 0) {
-              setGracePlayerNames([]);
-            } else if (resp.session.players) {
-              const graceSet = new Set(resp.session.playersInGrace);
-              const names = resp.session.players
-                .filter((p) => graceSet.has(p.id))
-                .map((p) => p.name);
-              setGracePlayerNames(names.length > 0 ? names : []);
-            }
-          }
-        },
-      );
+      socket.emit("join_session", {
+        sessionId: roomCode,
+        playerName: callsign,
+        playerId,
+        playerToken: sessionStorage.getItem("lp_playerToken") ?? undefined,
+      }, (resp: JoinSessionResponse) => {
+        if (resp?.playerToken) {
+          sessionStorage.setItem("lp_playerToken", resp.playerToken);
+          localStorage.setItem(`lp_playerToken_${roomCode}`, resp.playerToken);
+        }
+        if (resp?.session?.phase) applyPhase(resp.session.phase);
+      });
     };
     socket.on("connect", handleReconnect);
 
@@ -488,6 +395,10 @@ export default function GameShell() {
 
   // Render the appropriate phase component
   const renderPhase = () => {
+    if (isGameFrozen && displayedPhase !== "role_config" && displayedPhase !== "result") {
+      return <InterruptedPage />;
+    }
+
     switch (displayedPhase) {
       case "role_config": return <RoleConfigPage />;
       case "role_reveal": return <RoleRevealPage />;
