@@ -28,11 +28,15 @@ export function attachSocketIO(httpServer: HttpServer): SocketIOServer {
     }
 
     const allowed =
-      /\.vercel\.app$/.test(origin)
-      || /\.fly\.dev$/.test(origin)
+      /^https?:\/\/.*\.vercel\.app\/?$/.test(origin)
+      || /^https?:\/\/.*\.fly\.dev\/?$/.test(origin)
       || defaultAllowedOrigins.has(origin)
-      || defaultAllowedOrigins.has(origin.replace(/\/$/, "")) // Handle trailing slash
+      || defaultAllowedOrigins.has(origin.replace(/\/$/, ""))
       || envOrigins.includes(origin);
+
+    if (!allowed) {
+      logger.warn({ origin }, "CORS blocked for origin");
+    }
 
     if (allowed) {
       callback(null, true);
