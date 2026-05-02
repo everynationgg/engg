@@ -78,9 +78,8 @@ const identifierLimit = rateLimit({
     prefix: "rl:auth:id:",
   }),
   keyGenerator: (req) => {
-    // Stringify and normalize (NFKC) to prevent bypass via casing/whitespace/unicode variants
     const identifier = String(req.body.email || "").normalize('NFKC').toLowerCase().trim();
-    return identifier || req.ip || "unknown";
+    return identifier;
   },
   message: { error: "Too many login attempts. Protocol synchronized delay active." },
   standardHeaders: true,
@@ -133,7 +132,7 @@ const identifierResetLimit = rateLimit({
     prefix: "rl:reset:id:",
   }),
   keyGenerator: (req) => {
-    return String(req.body.email || "").normalize('NFKC').toLowerCase().trim() || req.ip || "unknown";
+    return String(req.body.email || "").normalize('NFKC').toLowerCase().trim();
   },
   message: { error: "Reset protocol active. Check your uplink for previous keys." },
   standardHeaders: true,

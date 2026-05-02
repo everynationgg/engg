@@ -332,7 +332,7 @@ export default function GameShell() {
         sessionId: roomCode,
         playerId: myPlayerId,
         playerToken: myPlayerToken
-      }, (resp: { success: boolean; session?: { phase: string; playersInGrace?: string[]; players?: { id: string; name: string; connected?: boolean }[]; rolesAssigned?: Record<string, string>; hostEndedInterrupt?: boolean } }) => {
+      }, (resp: { success: boolean; session?: { phase: string; playersInGrace?: string[]; players?: any[]; rolesAssigned?: Record<string, string>; hostEndedInterrupt?: boolean; roleCounts?: Record<string, number> } }) => {
         if (resp.success && resp.session) {
           const isFrozen = (resp.session.playersInGrace && resp.session.playersInGrace.length > 0) || !!resp.session.hostEndedInterrupt || resp.session.phase === "interrupted";
           setIsGameFrozen(isFrozen);

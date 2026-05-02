@@ -3,6 +3,7 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { logger } from "./logger.js";
+import fs from "node:fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,12 +20,28 @@ const __dirname = path.dirname(__filename);
  */
 export async function migrateDb(): Promise<void> {
   try {
-    // Path resolution:
-    // Development: engg/artifacts/api-server/src/lib/migrate.ts -> ../../../lib/db/drizzle
-    // Production (Docker): engg/artifacts/api-server/dist/lib/migrate.mjs -> ../../../lib/db/drizzle
-    const migrationsFolder = process.env.MIGRATIONS_PATH || path.resolve(__dirname, "../../../../lib/db/drizzle");
+    // Path resolution: Try multiple potential locations to support various Docker/Local structures
+    let migrationsFolder = process.env.MIGRATIONS_PATH || path.resolve(__dirname, "../../../../lib/db/drizzle");
     
-    console.log(`>>> MIGRATION_PATH: ${migrationsFolder}`);
+    if (!fs.existsSync(migrationsFolder)) {
+      const altPath = path.resolve(process.cwd(), "lib/db/drizzle");
+      if (fs.existsSync(altPath)) {
+        migrationsFolder = altPath;
+      }
+    }
+
+    console.log(`>>> MIGRATION_PATH: ${migrationsFolder} (Exists: ${fs.existsSync(migrationsFolder)})`);
+    if (fs.existsSync(migrationsFolder)) {
+      try {
+        const files = fs.readdirSync(migrationsFolder);
+        console.log(`>>> MIGRATION_FILES: ${files.join(", ")}`);
+        if (files.includes("meta")) {
+           const metaFiles = fs.readdirSync(path.join(migrationsFolder, "meta"));
+           console.log(`>>> META_FILES: ${metaFiles.join(", ")}`);
+        }
+      } catch (e) {}
+    }
+
     logger.info({ migrationsFolder }, "migrate: synchronizing schema with versioned migrations");
     
     await migrate(db, { migrationsFolder });

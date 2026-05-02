@@ -13,6 +13,18 @@ router.get("/user/preferences", authMiddleware, async (req: AuthRequest, res) =>
       res.status(401).json({ error: "Unauthorized" });
       return;
     }
+    
+    // Guest protection: return defaults without hitting the DB to avoid FK violations
+    if (req.userId.startsWith("guest_")) {
+      return res.json({
+        userId: req.userId,
+        musicVolume: 70,
+        sfxVolume: 70,
+        theme: "dark",
+        notificationsEnabled: true,
+        colorblindMode: false,
+      });
+    }
 
     // Upsert defaults so the row always exists after the first call
     const [prefs] = await db
@@ -31,10 +43,10 @@ router.get("/user/preferences", authMiddleware, async (req: AuthRequest, res) =>
       })
       .returning();
 
-    res.json(prefs);
+    return res.json(prefs);
   } catch (error) {
     logger.error({ err: error }, "Get preferences error");
-    res.status(500).json({ error: "Server error" });
+    return res.status(500).json({ error: "Server error" });
   }
 });
 
@@ -44,6 +56,15 @@ router.post("/user/preferences", authMiddleware, async (req: AuthRequest, res) =
     if (!req.userId) {
       res.status(401).json({ error: "Unauthorized" });
       return;
+    }
+
+    // Guest protection: no-op save for guests (UI handles local persistence)
+    if (req.userId.startsWith("guest_")) {
+      return res.json({
+        userId: req.userId,
+        ...req.body,
+        updatedAt: new Date(),
+      });
     }
 
     const { musicVolume, sfxVolume, theme, notificationsEnabled, colorblindMode } = req.body;
@@ -87,10 +108,10 @@ router.post("/user/preferences", authMiddleware, async (req: AuthRequest, res) =
       })
       .returning();
 
-    res.json(updated);
+    return res.json(updated);
   } catch (error) {
     logger.error({ err: error }, "Update preferences error");
-    res.status(500).json({ error: "Server error" });
+    return res.status(500).json({ error: "Server error" });
   }
 });
 
