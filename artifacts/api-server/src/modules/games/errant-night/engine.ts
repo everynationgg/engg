@@ -1747,8 +1747,8 @@ export function addPlayer(state: GameState, player: Player): { success: boolean;
     return { success: true, isReconnect: true };
   }
 
-  // Strict Join Lock: only allow new players in Lobby or Result phase
-  if (state.phase !== "lobby" && state.phase !== "result") {
+  // Strict Join Lock: only allow new players in Lobby, Role Config, or Result phase
+  if (state.phase !== "lobby" && state.phase !== "role_config" && state.phase !== "result") {
     return { success: false, isReconnect: false, error: "SESSION_LOCKED: Game in progress" };
   }
 

@@ -130,7 +130,7 @@ export function registerGameHandlers(
     const cas = await withCasRetry(sessionId, (session) => {
       const player = session.players.find((p) => p.playerId === state.currentPlayerId);
       if (!player?.isHost) return CAS_SKIP;
-      if (session.phase !== "role_config") return CAS_SKIP;
+      if (session.phase !== "lobby" && session.phase !== "role_config") return CAS_SKIP;
 
       session.roleCounts = { ...roleCounts };
       return true as const;

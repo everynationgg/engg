@@ -153,11 +153,6 @@ export default function RoleConfigPage() {
       setUnlockedRoles(session.unlockedRoles || []);
       if (session.roleCounts && Object.keys(session.roleCounts).length > 0) {
         setRoleCounts(session.roleCounts);
-      } else if (me?.isHost && session.players.length > 0) {
-        // Fallback: If host and server has no roles, initialize with defaults
-        const init = randomizeRoles(session.players.filter(p => !p.isSpectator).length, unlockedRoles);
-        setRoleCounts(init);
-        socket.emit("update_role_counts", { sessionId: roomCode, roleCounts: init });
       }
 
       setIsSpectator(!!me?.isSpectator);
