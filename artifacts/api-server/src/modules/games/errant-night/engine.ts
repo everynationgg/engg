@@ -1777,6 +1777,7 @@ export function removePlayer(state: GameState, socketId: string): boolean {
   delete state.votes[playerId];
   state.orbitCompleted = state.orbitCompleted.filter((id) => id !== playerId);
   state.roleAcknowledgements = state.roleAcknowledgements.filter((id) => id !== playerId);
+  state.playersInGrace = (state.playersInGrace || []).filter((id) => id !== playerId);
 
   return true;
 }

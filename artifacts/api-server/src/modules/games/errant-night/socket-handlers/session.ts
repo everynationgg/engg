@@ -277,6 +277,7 @@ export function registerSessionHandlers(
         }
 
         cancelRemovePlayer(sessionId, playerId);
+        removePlayerFromGrace(session, playerId);
         reconnectPlayer(session, existing.id, socket.id);
         existing.connectionStatus = "connected";
         existing.connected = true;
@@ -359,6 +360,7 @@ export function registerSessionHandlers(
           // Re-bind identity to this new socket
           const oldId = existing.id;
           reconnectPlayer(session, oldId, socket.id);
+          removePlayerFromGrace(session, playerId);
           existing.connectionStatus = "connected";
           existing.connected = true;
           
