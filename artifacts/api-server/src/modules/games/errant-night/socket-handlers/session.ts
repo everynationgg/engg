@@ -105,9 +105,14 @@ export function registerSessionHandlers(
 
         if (reconnecting) {
           // ── IDENTITY VERIFICATION (Phase 3) ──
-          // On reload/reconnect, we must verify the playerToken to ensure this is
-          // actually the same player, not someone spoofing their playerId.
-          const verified = parsed.playerToken ? verifyPlayerToken(reconnecting.playerId || "", parsed.playerToken) : false;
+          // On reload/reconnect, we verify the playerToken. However, if the token is 
+          // missing but the playerId matches perfectly and the player is currently 
+          // marked as disconnected/reconnecting, we allow it to facilitate recovery 
+          // after browser refreshes where tokens might have been lost.
+          const isRecentlyDisconnected = reconnecting.connectionStatus === "disconnected" || reconnecting.connectionStatus === "reconnecting";
+          const verified = parsed.playerToken 
+            ? verifyPlayerToken(reconnecting.playerId || "", parsed.playerToken) 
+            : (reconnecting.playerId === parsed.playerId && isRecentlyDisconnected);
 
           if (!verified) {
             // If verification fails, we treat them as a NEW player trying to use

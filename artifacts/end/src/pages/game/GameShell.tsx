@@ -119,18 +119,23 @@ export default function GameShell() {
   const [showGameMenu, setShowGameMenu] = useState(false);
   const [isGameFrozen, setIsGameFrozen] = useState(false);
   const { preferences, updateMusicVolume } = usePreferences();
+  const [myPlayerId] = useState(() => {
+    const code = (params.roomCode ?? "").toUpperCase();
+    let pId = sessionStorage.getItem("lp_playerId");
+    if (!pId && code) {
+      pId = localStorage.getItem(`lp_playerId_${code}`);
+      if (pId) sessionStorage.setItem("lp_playerId", pId);
+    }
+    return pId;
+  });
   const musicOn = (preferences?.musicVolume ?? 0) > 0;
   const touchStartX = useRef<number | null>(null);
 
-  const [isHost] = useState(() => {
-    const isCreating = sessionStorage.getItem("lp_isCreating") === "true";
+  const [isHost, setIsHost] = useState(() => {
     const code = (params.roomCode ?? "").toUpperCase();
+    const isCreating = sessionStorage.getItem("lp_isCreating") === "true";
     const alreadyHost = sessionStorage.getItem(`lp_isHost_${code}`) === "true";
-    if (isCreating || alreadyHost) {
-      if (code) sessionStorage.setItem(`lp_isHost_${code}`, "true");
-      return true;
-    }
-    return false;
+    return isCreating || alreadyHost;
   });
   const { token } = useAuth();
   const { midGame, showConfirm, openConfirm, closeConfirm, handleConfirmQuit } = useQuitGame(isHost);
@@ -339,10 +344,18 @@ export default function GameShell() {
               applyPhase(resp.session.phase);
             }
           }
+          if (resp.session.players) {
+            const myId = myPlayerId || sessionStorage.getItem("lp_playerId") || localStorage.getItem(`lp_playerId_${roomCode}`);
+            const me = resp.session.players.find(p => p.playerId === myId || p.id === socket.id);
+            if (me?.isHost) {
+              setIsHost(true);
+              sessionStorage.setItem(`lp_isHost_${roomCode}`, "true");
+            }
+          }
           if (resp.session.rolesAssigned) {
-            const myPlayerId = sessionStorage.getItem("lp_playerId") || localStorage.getItem(`lp_playerId_${roomCode}`);
+            const myId = myPlayerId || sessionStorage.getItem("lp_playerId") || localStorage.getItem(`lp_playerId_${roomCode}`);
             const mySocketId = socket.id;
-            const myRole = resp.session.rolesAssigned[myPlayerId || ""] || resp.session.rolesAssigned[mySocketId || ""];
+            const myRole = resp.session.rolesAssigned[myId || ""] || resp.session.rolesAssigned[mySocketId || ""];
             if (myRole) sessionStorage.setItem("lp_assignedRole", myRole);
           }
           if (resp.session.playersInGrace && resp.session.playersInGrace.length > 0 && resp.session.players) {
@@ -360,7 +373,6 @@ export default function GameShell() {
     const pollId = setInterval(syncSession, 3000);
 
     const handleReconnect = () => {
-      if (displayedPhaseRef.current === "role_config") return;
       const callsign = sessionStorage.getItem("lp_callsign") || localStorage.getItem("lp_callsign");
       const playerId = sessionStorage.getItem("lp_playerId") || localStorage.getItem(`lp_playerId_${roomCode}`);
       if (!callsign || !playerId) return;

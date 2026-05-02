@@ -178,10 +178,7 @@ export default function RoleConfigPage() {
       kickedOutRef.current = true;
       setKickedNotice(reason);
 
-      // Remove local lobby/session identity so auto-join logic cannot re-enter.
-      sessionStorage.removeItem("lp_roomCode");
-      sessionStorage.removeItem("lp_isCreating");
-      sessionStorage.removeItem("lp_isHost");
+      // Only remove if we are intentionally leaving, not on refresh
     };
 
     const handleJoinBlocked = (reason?: string) => {
@@ -247,27 +244,7 @@ export default function RoleConfigPage() {
       }
 
       if (!isCreating) {
-        // Try to use a cached token.  If none exists, attempt to fetch one from
-        // the server — but if that request times out, proceed WITHOUT a token.
-        // The server will generate one server-side so the join never partially
-        // fails (player visible in chat but absent from session.players).
-        let playerToken: string | undefined = sessionStorage.getItem("lp_playerToken") || localStorage.getItem(`lp_playerToken_${roomCode}`) || undefined;
-        if (!playerToken) {
-          const resp = await new Promise<{ success: boolean; token?: string } | null>((resolve) => {
-            const timer = setTimeout(() => resolve(null), 3000);
-            socket.emit("request_player_token", { playerId }, (r: { success: boolean; token?: string }) => {
-              clearTimeout(timer);
-              resolve(r);
-            });
-          });
-          if (resp?.success && resp.token) {
-            playerToken = resp.token;
-            sessionStorage.setItem("lp_playerToken", playerToken);
-            localStorage.setItem(`lp_playerToken_${roomCode}`, playerToken);
-          } else {
-            console.warn("[join] Failed to obtain player token — proceeding anonymously");
-          }
-        }
+        const playerToken: string | undefined = sessionStorage.getItem("lp_playerToken") || localStorage.getItem(`lp_playerToken_${roomCode}`) || undefined;
 
         socket.emit(
           "join_session",
@@ -277,7 +254,7 @@ export default function RoleConfigPage() {
             if (resp?.success && resp.session) {
               console.log("[join] join_session OK — players:", resp.session.players.length);
               joinSucceeded = true;
-              systemToast("Joined lobby", "success");
+              
               // Cache the server-returned token (may have been generated server-side).
               if (resp.playerToken) {
                 sessionStorage.setItem("lp_playerToken", resp.playerToken);
@@ -294,24 +271,17 @@ export default function RoleConfigPage() {
                 joinSucceeded = true;
                 return;
               }
-              // Session doesn't exist or room code is invalid — stop retrying and
-              // send the user back to the landing page so they don't get stuck in
-              // an infinite join loop.
+
               const errLower = (resp?.error ?? "").toLowerCase();
-              if (errLower.includes("game already in progress")) {
+              if (errLower.includes("not found") || errLower.includes("closed") || errLower.includes("invalid session")) {
                 joinSucceeded = true;
-                systemToast("Game already in progress — please wait for the next round", "error", 6000);
-                sessionStorage.removeItem("lp_callsign");
+                systemToast("Session not found or closed.", "error", 6000);
                 sessionStorage.removeItem("lp_roomCode");
                 setLocation("/");
-                return;
-              }
-              if (errLower.includes("not found") || errLower.includes("invalid session")) {
-                joinSucceeded = true;
-                systemToast("Room not found. Use Create Game to start a new lobby.", "error", 6000);
-                sessionStorage.removeItem("lp_callsign");
-                sessionStorage.removeItem("lp_roomCode");
-                setLocation("/");
+              } else {
+                // For other errors (like transient network issues), don't redirect yet.
+                // The periodic retry will catch it if it's transient.
+                systemToast(resp?.error || "Connection failed. Retrying...", "warning");
               }
             }
           },
