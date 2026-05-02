@@ -60,8 +60,13 @@ export const startGameCustomSchema = z.object({
 export const submitActionSchema = z.object({
   sessionId: sessionIdSchema,
   action: orbitActionSchema,
-  playerId: z.string().uuid().nullable().optional(),
-  playerToken: z.string().min(1).max(128).nullable().optional(),
+  playerId: z.string().uuid().optional(),
+  playerToken: z.string().min(1).max(128).optional(),
+});
+
+export const updateRoleCountsSchema = z.object({
+  sessionId: sessionIdSchema,
+  roleCounts: z.record(z.string().max(50), z.number().int().min(0).max(20)),
 });
 
 export const castEmergencyVoteSchema = z.object({

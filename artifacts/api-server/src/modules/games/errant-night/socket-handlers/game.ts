@@ -8,6 +8,7 @@ import {
   startGameCustomSchema,
   sessionIdSchema,
   submitActionSchema,
+  updateRoleCountsSchema,
   castVoteSchema,
   castEmergencyVoteSchema,
   kickPlayerSchema,
@@ -117,6 +118,29 @@ export function registerGameHandlers(
     });
 
     ack?.({ success: true });
+  });
+
+  // ── UPDATE ROLE COUNTS (Host Only) ──
+  socket.on("update_role_counts", async (data: unknown, ack) => {
+    const parsed = validate(updateRoleCountsSchema, data, ack);
+    if (!parsed) return;
+    const { sessionId, roleCounts } = parsed;
+
+    const cas = await withCasRetry(sessionId, (session) => {
+      const player = session.players.find((p) => p.playerId === state.currentPlayerId);
+      if (!player?.isHost) return CAS_SKIP;
+      if (session.phase !== "role_config") return CAS_SKIP;
+
+      session.roleCounts = { ...roleCounts };
+      return true as const;
+    });
+
+    if (cas) {
+      ack?.({ success: true });
+      phaseUpdate(io, sessionId, cas.session);
+    } else {
+      ack?.({ success: false, error: "Unauthorized or wrong phase" });
+    }
   });
 
   // ── UNLOCK ROLE (Credits) ──

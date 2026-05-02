@@ -424,21 +424,37 @@ export default function RoleConfigPage() {
   const handleAdd = useCallback((roleId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     playSciFiClick();
-    setRoleCounts((prev) => ({ ...prev, [roleId]: (prev[roleId] || 0) + 1 }));
-  }, []);
+    setRoleCounts((prev) => {
+      const next = { ...prev, [roleId]: (prev[roleId] || 0) + 1 };
+      if (amIHost) {
+        getSocket().emit("update_role_counts", { sessionId: roomCode, roleCounts: next });
+      }
+      return next;
+    });
+  }, [amIHost, roomCode]);
 
   const handleRemove = useCallback((roleId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     playSciFiClick();
-    setRoleCounts((prev) => ({ ...prev, [roleId]: Math.max(0, (prev[roleId] || 0) - 1) }));
-  }, []);
+    setRoleCounts((prev) => {
+      const next = { ...prev, [roleId]: Math.max(0, (prev[roleId] || 0) - 1) };
+      if (amIHost) {
+        getSocket().emit("update_role_counts", { sessionId: roomCode, roleCounts: next });
+      }
+      return next;
+    });
+  }, [amIHost, roomCode]);
 
   const handleRandomize = useCallback(() => {
     playSciFiClick();
     setStartError(null);
     const activePlayerCount = players.filter(p => !p.isSpectator).length;
-    setRoleCounts(randomizeRoles(activePlayerCount, unlockedRoles));
-  }, [players, unlockedRoles]);
+    const next = randomizeRoles(activePlayerCount, unlockedRoles);
+    setRoleCounts(next);
+    if (amIHost) {
+      getSocket().emit("update_role_counts", { sessionId: roomCode, roleCounts: next });
+    }
+  }, [players, unlockedRoles, amIHost, roomCode]);
 
   const handleCopyLink = useCallback(() => {
     playSciFiClick();
