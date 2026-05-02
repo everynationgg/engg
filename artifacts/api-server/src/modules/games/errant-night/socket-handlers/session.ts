@@ -260,11 +260,12 @@ export function registerSessionHandlers(
         return true as const;
       }
 
+      const isHostLess = !session.players.some(p => p.isHost);
       const joinRes = addPlayerToSession(session, {
         id: socket.id,
         playerId,
         name: playerName,
-        isHost: false,
+        isHost: isHostLess,
         isSpectator: !!parsed.isSpectator,
         userId,
         connectionStatus: "connected",
@@ -308,6 +309,14 @@ export function registerSessionHandlers(
     if (!session) {
       ack?.({ success: false, error: "Session not found" });
       return;
+    }
+
+    // ── ROOM MEMBERSHIP SAFEGUARD ──
+    // Ensure the socket is ALWAYS in the room when checking session state.
+    // This fixes "ghost" states where a player is connected but not hearing broadcasts.
+    if (!socket.rooms.has(sessionId)) {
+      socket.join(sessionId);
+      state.currentSessionId = sessionId;
     }
 
     // Attempt identity resolution if credentials provided

@@ -35,6 +35,7 @@ export default function JoinPage() {
     playSciFiClick();
     localStorage.setItem("lp_callsign", callsign.trim().toUpperCase());
     localStorage.setItem("lp_roomCode", roomCode);
+    // Note: playerId is generated inside RoleConfigPage/GameShell to ensure tab isolation
     setLocation(`/room/${roomCode}`);
   }, [callsign, roomCode, setLocation]);
 

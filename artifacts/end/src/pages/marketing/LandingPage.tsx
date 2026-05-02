@@ -89,6 +89,7 @@ export default function LandingPage() {
     sessionStorage.setItem("lp_isCreating", "true");
     if (userId) {
       localStorage.setItem("lp_userId", userId);
+      localStorage.setItem(`lp_userId_${roomCode}`, userId);
     }
     setTimeout(() => {
       setLocation(`/room/${roomCode}`);
@@ -100,9 +101,11 @@ export default function LandingPage() {
     if (!callsign.trim() || !roomCodeInput.trim()) return;
     playSciFiClick();
     localStorage.setItem("lp_callsign", callsign.trim().toUpperCase());
-    localStorage.setItem("lp_roomCode", roomCodeInput.trim().toUpperCase());
+    const cleanCode = roomCodeInput.trim().toUpperCase();
+    localStorage.setItem("lp_roomCode", cleanCode);
     if (userId) {
       localStorage.setItem("lp_userId", userId);
+      localStorage.setItem(`lp_userId_${cleanCode}`, userId);
     }
     setLocation(`/room/${roomCodeInput.trim().toUpperCase()}`);
   }, [callsign, roomCodeInput, userId, setLocation]);

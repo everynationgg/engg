@@ -26,6 +26,7 @@ type SessionPayload = {
 };
 
 function getMyCallsign(): string {
+  // Callsign is a preference, safe to share across tabs
   return localStorage.getItem("lp_callsign") || sessionStorage.getItem("lp_callsign") || "OPERATIVE";
 }
 
@@ -217,12 +218,24 @@ export default function RoleConfigPage() {
       // Ensure a stable per-session UUID for both host and non-host flows.
       // Without this, a host recreated via create_session fallback can lose
       // identity continuity after restart/reconnect.
-      let playerId = localStorage.getItem("lp_playerId") || sessionStorage.getItem("lp_playerId");
+      // ── TAB-ISOLATED IDENTITY ──
+      // Prioritize sessionStorage so different tabs can be different players.
+      // Use localStorage ONLY as a recovery fallback for the SAME room.
+      let playerId = sessionStorage.getItem("lp_playerId");
+      const rememberedPlayerId = localStorage.getItem(`lp_playerId_${roomCode}`);
+
+      if (!playerId && rememberedPlayerId) {
+        playerId = rememberedPlayerId;
+        sessionStorage.setItem("lp_playerId", playerId);
+      }
+
       if (!playerId) {
         playerId = crypto.randomUUID();
-        localStorage.setItem("lp_playerId", playerId);
+        sessionStorage.setItem("lp_playerId", playerId);
+        localStorage.setItem(`lp_playerId_${roomCode}`, playerId);
         // Remove any cached token — it was issued for a different playerId.
-        localStorage.removeItem("lp_playerToken");
+        localStorage.removeItem(`lp_playerToken_${roomCode}`);
+        sessionStorage.removeItem("lp_playerToken");
       }
 
       if (!isCreating) {
@@ -230,7 +243,7 @@ export default function RoleConfigPage() {
         // the server — but if that request times out, proceed WITHOUT a token.
         // The server will generate one server-side so the join never partially
         // fails (player visible in chat but absent from session.players).
-        let playerToken: string | undefined = localStorage.getItem("lp_playerToken") || sessionStorage.getItem("lp_playerToken") || undefined;
+        let playerToken: string | undefined = sessionStorage.getItem("lp_playerToken") || localStorage.getItem(`lp_playerToken_${roomCode}`) || undefined;
         if (!playerToken) {
           const resp = await new Promise<{ success: boolean; token?: string } | null>((resolve) => {
             const timer = setTimeout(() => resolve(null), 5000);
@@ -241,7 +254,8 @@ export default function RoleConfigPage() {
           });
           if (resp?.success && resp.token) {
             playerToken = resp.token;
-            localStorage.setItem("lp_playerToken", playerToken);
+            sessionStorage.setItem("lp_playerToken", playerToken);
+            localStorage.setItem(`lp_playerToken_${roomCode}`, playerToken);
           } else {
             console.warn("[join] Failed to obtain player token — proceeding without it (server will generate)");
             // Do NOT return — fall through to join_session with playerToken undefined.
@@ -258,7 +272,8 @@ export default function RoleConfigPage() {
               systemToast("Joined lobby", "success");
               // Cache the server-returned token (may have been generated server-side).
               if (resp.playerToken) {
-                localStorage.setItem("lp_playerToken", resp.playerToken);
+                sessionStorage.setItem("lp_playerToken", resp.playerToken);
+                localStorage.setItem(`lp_playerToken_${roomCode}`, resp.playerToken);
               }
               handlePhaseUpdate(resp.session);
             } else {
