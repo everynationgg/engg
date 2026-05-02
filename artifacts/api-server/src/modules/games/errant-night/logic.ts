@@ -104,14 +104,6 @@ export async function advanceGameFlow(
   sessionId: string,
   session: NonNullable<MaybeSession>,
 ): Promise<void> {
-  // ── 0. LIFECYCLE & MONOTONICITY ───────────────────────────────────────────
-  if (isGameFrozen(session)) return;
-  if (consumeJustUnfrozen(session)) return;
-
-  const now = getGlobalTime(session);
-  const phaseStart = session.phaseStartedAt || 0;
-  const timeInPhase = now - phaseStart;
-
   // ENSURE HEARTBEAT (Autonomous Driver)
   // The logic layer is now responsible for ensuring its own heartbeat loop is active.
   if (session.phase !== "lobby" && session.phase !== "result") {
@@ -119,6 +111,17 @@ export async function advanceGameFlow(
       await advanceGameFlow(io, sessionId, fresh);
     });
   }
+
+  // ── 0. LIFECYCLE & MONOTONICITY ───────────────────────────────────────────
+  if (isGameFrozen(session)) return;
+  if (consumeJustUnfrozen(session)) {
+    await saveSession(session);
+    return;
+  }
+
+  const now = getGlobalTime(session);
+  const phaseStart = session.phaseStartedAt || 0;
+  const timeInPhase = now - phaseStart;
 
   // ── 0.5 FALLBACK SAFETY ───────────────────────────────────────────────────
   // Hardened fallback: use phase-specific timeouts + buffer to detect stalls.
