@@ -1,91 +1,13 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { FaExternalLinkAlt, FaLock, FaTerminal, FaShieldAlt, FaCubes, FaHistory, FaCheckCircle, FaClock } from "react-icons/fa";
+import { motion } from "framer-motion";
+import { FaTerminal } from "react-icons/fa";
 import TacticalSlate from "@/components/common/TacticalSlate";
 import { useParallax } from "@/hooks/useParallax";
 import { HUDOverlay } from "@/components/common/HUDOverlay";
 import { SciFiButton } from "@/components/common/SciFiButton";
 import { useAuth } from "@/hooks/useAuth";
+import { HeroSection } from "@/components/ui/feature-carousel";
 
-interface GameCardProps {
-  title: string;
-  description: string;
-  image: string;
-  href?: string;
-  status: "online" | "offline";
-  subtitle?: string;
-  index: number;
-}
-
-function GameCard({ title, description, image, href, status, subtitle, index }: GameCardProps) {
-  const isOffline = status === "offline";
-  const { x, y } = useParallax(15);
-
-  const handleEntry = () => {
-    if (!isOffline && href) {
-      window.location.href = href;
-    }
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: index * 0.1 }}
-      style={{ x, y }}
-      onClick={handleEntry}
-      className={`relative group w-full max-w-[420px] aspect-[10/16] transition-all duration-700 ${isOffline ? "cursor-not-allowed grayscale" : "cursor-pointer"}`}
-    >
-      <TacticalSlate color={isOffline ? "#ffffff20" : "#00f3ff"} className="h-full">
-        {/* Title Header */}
-        <div className="relative z-20 mb-4 px-6 pt-6">
-          <h2 className="font-orbitron font-black text-[12px] tracking-[0.3em] uppercase text-white/80 group-hover:text-cyan-400 transition-colors">
-            {title}
-          </h2>
-          <div className="w-full h-px bg-gradient-to-r from-cyan-500/20 via-cyan-500/5 to-transparent mt-2" />
-        </div>
-
-        {/* Image Container */}
-        <div className="absolute inset-0 z-0 opacity-20 group-hover:opacity-40 transition-opacity duration-700">
-          <img
-            src={image}
-            alt={title}
-            className={`w-full h-full object-cover transition-transform duration-[3000ms] ease-out ${!isOffline && "group-hover:scale-105"}`}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#020408] via-transparent to-transparent opacity-90" />
-        </div>
-
-        {/* Content Overlay */}
-        <div className="absolute inset-x-8 bottom-8 z-20 flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <div className={`w-1 h-1 rounded-full ${isOffline ? "bg-red-500/40" : "bg-cyan-500"}`} />
-            <span className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/30">
-              {subtitle}
-            </span>
-          </div>
-
-          <p className="font-mono text-[9px] uppercase tracking-wider text-white/30 leading-relaxed line-clamp-3 group-hover:text-white/60 transition-colors">
-            {description}
-          </p>
-
-          {!isOffline && (
-            <div className="mt-4 flex items-center gap-3 text-cyan-400/60 group-hover:text-cyan-400 transition-colors">
-              <span className="font-orbitron text-[8px] uppercase tracking-[0.4em] font-bold">Deploy_Link</span>
-              <FaExternalLinkAlt className="text-[7px]" />
-            </div>
-          )}
-
-          {isOffline && (
-            <div className="mt-4 flex items-center gap-2 text-white/10">
-              <FaLock className="text-[9px]" />
-              <span className="font-orbitron text-[8px] uppercase tracking-[0.4em]">Sector_Locked</span>
-            </div>
-          )}
-        </div>
-      </TacticalSlate>
-    </motion.div>
-  );
-}
 
 export default function Hub() {
   const { x, y } = useParallax(20);
@@ -152,7 +74,8 @@ export default function Hub() {
       subtitle: "Sub-Surface Extraction",
       description: "Descend into the encrypted depths of the Nether. Harvest exotic matter while evading the ancient sentinels of the deep.",
       image: "/hub_engraved.webp",
-      status: "offline" as const
+      href: "https://triple-triad-theta.vercel.app",
+      status: "online" as const
     },
     {
       title: "Epsilon Nine",
@@ -221,11 +144,20 @@ export default function Hub() {
 
             {/* Main Mission Deck */}
             <div className="relative z-10 w-full pb-32">
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 justify-items-center">
-                {games.map((game, i) => (
-                  <GameCard key={game.title} {...game} index={i} />
-                ))}
-              </div>
+              <HeroSection
+                title={<>SELECT <span className="text-cyan-400">GAME</span></>}
+                subtitle="Select a sector to deploy your squad."
+                images={games.map(g => ({
+                    src: g.image,
+                    alt: g.title,
+                    status: g.status,
+                    onClick: () => {
+                        if (g.status !== 'offline' && g.href) {
+                            window.location.href = g.href;
+                        }
+                    }
+                }))}
+              />
             </div>
           </div>
 
