@@ -156,7 +156,7 @@ export async function advanceGameFlow(
   
   // ── PHASE: ROLE REVEAL ──
   if (session.phase === "role_reveal") {
-    const REVEAL_TIMEOUT = 45_000;
+    const REVEAL_TIMEOUT = 25_000;
     
     // Check if everyone who is CURRENTLY connected has acknowledged.
     // We use getActivePlayers which includes 'reconnecting' to prevent 

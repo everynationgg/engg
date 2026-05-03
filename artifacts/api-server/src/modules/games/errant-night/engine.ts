@@ -552,17 +552,20 @@ export function acknowledgeRole(
     const roleId = state.rolesAssigned[playerId];
 
     // ROLE AUTHORITY VALIDATION (Reveal Phase)
-    if (roleId === "doctor" && revealAction.type !== "anesthetize") {
-      return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "invalid doctor action" };
-    }
-    if (roleId === "virus" && revealAction.type !== "packet_loss") {
-      return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "invalid virus action" };
-    }
-    if (roleId === "router" && revealAction.type !== "gateway_hijack") {
-      return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "invalid router action" };
-    }
-    if (roleId !== "doctor" && roleId !== "virus" && roleId !== "router" && roleId !== "chaotic") {
-      return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "unauthorized reveal action" };
+    if (revealAction.type !== "skip") {
+      if (roleId === "doctor" && revealAction.type !== "anesthetize") {
+        return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "invalid doctor action" };
+      }
+      if (roleId === "virus" && revealAction.type !== "packet_loss") {
+        return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "invalid virus action" };
+      }
+      if (roleId === "router" && revealAction.type !== "gateway_hijack") {
+        return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "invalid router action" };
+      }
+      const isChaotic = ["disruptor", "shifter", "warper", "router"].includes(roleId);
+      if (roleId !== "doctor" && roleId !== "virus" && !isChaotic) {
+        return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "unauthorized reveal action" };
+      }
     }
 
     // Prevent reveal-phase roles (Virus, Router) from targeting spectators
@@ -1430,14 +1433,6 @@ export function castVote(
     }
   }
 
-  result.allRoles = state.players.map((p) => ({
-    playerId: p.playerId || p.id,
-    socketId: p.id,
-    playerName: p.name,
-    role: state.rolesAssigned[p.playerId || p.id] ?? "unknown",
-    initialRole: state.initialRoles[p.playerId || p.id] ?? "unknown",
-    alive: p.alive !== false,
-  }));
   state.voteResult = result;
 
   // Build round summary
