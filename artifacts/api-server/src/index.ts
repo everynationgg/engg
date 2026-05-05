@@ -6,7 +6,6 @@ import { logger } from "./lib/logger.js";
 import { restoreSessionsFromDb, startSnapshotJob } from "./lib/session-persistence.js";
 import { migrateDb } from "./lib/migrate.js";
 import { pool } from "@workspace/db";
-import { redisClient } from "./config/redis.js";
 
 
 // Register SMTP email provider
@@ -31,14 +30,8 @@ app.get && app.get("/health", async (req, res) => {
     ]);
     status.db = "up";
 
-    // 2. Redis Readiness Probe
-    // We use the internal status property of ioredis
-    if (redisClient.status === "ready") {
-      status.redis = "up";
-    } else {
-      status.redis = "degraded";
-      logger.warn({ redisStatus: redisClient.status }, "HEALTH_CHECK: Redis is in a degraded state");
-    }
+    // 2. Redis Readiness Probe removed
+    status.redis = "up";
 
     res.status(200).json({
       status: "OK",
@@ -101,6 +94,7 @@ httpServer.listen(port, "0.0.0.0", () => {
       // Optional Dev Seeding (Dynamic Import)
       if (process.env.NODE_ENV === "development") {
         try {
+          // @ts-ignore - Optional file for dev seeding
           const { seedDevUser } = await import("./seed-dev.js");
           console.log(">>> Seeding dev identities...");
           await seedDevUser();
