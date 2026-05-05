@@ -1,8 +1,8 @@
 import { Server as SocketIOServer } from "socket.io";
-import { createAdapter } from "@socket.io/redis-adapter";
+
 import type { Server as HttpServer } from "node:http";
 import { logger } from "./lib/logger.js";
-import { redisPub, redisSub } from "./config/redis.js";
+
 import { initSockets } from "./modules/core/sockets/init.js";
 import { verifyToken } from "./lib/auth.js";
 
@@ -54,8 +54,7 @@ export function attachSocketIO(httpServer: HttpServer): SocketIOServer {
     pingInterval: 25000,
   });
 
-  // ── Redis adapter — enables multi-instance Socket.IO (rooms/emits across nodes) ──
-  io.adapter(createAdapter(redisPub, redisSub));
+  // ── Redis adapter removed — running single-instance Socket.IO ──
 
   // ── Security Middleware: JWT Authentication ──
   io.use((socket, next) => {
@@ -85,6 +84,6 @@ export function attachSocketIO(httpServer: HttpServer): SocketIOServer {
   // Register all feature-based handlers (session, game, chat)
   initSockets(io);
 
-  logger.info("Socket.IO server initialized with Redis adapter");
+  logger.info("Socket.IO server initialized (Memory Adapter)");
   return io;
 }
