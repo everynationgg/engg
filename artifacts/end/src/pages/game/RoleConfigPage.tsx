@@ -158,8 +158,8 @@ export default function RoleConfigPage() {
       // Store role assignment when server transitions to role_reveal or any later
       // in-game phase (covers reconnect scenarios where phase is already past role_reveal)
       if (session.phase !== "role_config") {
-        if (session.rolesAssigned && mySocketId) {
-          const myRole = session.rolesAssigned[mySocketId];
+        if (session.rolesAssigned) {
+          const myRole = session.rolesAssigned[myPlayerId || ""] || session.rolesAssigned[mySocketId || ""];
           if (myRole) {
             sessionStorage.setItem("lp_assignedRole", myRole);
           }

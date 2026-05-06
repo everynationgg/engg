@@ -109,6 +109,7 @@ export function registerGameHandlers(
     }
 
     phaseUpdate(io, sessionId, cas.session);
+    await advanceGameFlow(io, sessionId, cas.session);
     logGameEvent("game_started", sessionId, state.currentPlayerId || socket.id, { players: cas.session.players.length });
 
     await logAudit({
@@ -117,6 +118,56 @@ export function registerGameHandlers(
       description: `Host initiated round deployment in session ${sessionId}`,
       metadata: { sessionId, playerCount: cas.session.players.length },
     });
+
+    ack?.({ success: true });
+  });
+
+  socket.on("start_game_custom", async (data: unknown, ack) => {
+    const parsed = validate(startGameCustomSchema, data, ack);
+    if (!parsed) return;
+    const { sessionId, customRoles, customDeck } = parsed;
+
+    if (state.currentSessionId !== sessionId) {
+      ack?.({ success: false, error: "Not in session" });
+      return;
+    }
+
+    const cas = await withCasRetry(sessionId, (session) => {
+      const player = session.players.find((p) => p.playerId === state.currentPlayerId);
+      if (!player?.isHost) return CAS_SKIP;
+      if (session.phase !== "lobby" && session.phase !== "role_config") return CAS_SKIP;
+
+      session.rolesAssigned = { ...customRoles };
+      session.initialRoles = { ...customRoles };
+      session.centerCards = [...customDeck];
+      
+      // Derive roleCounts from custom assignments for UI consistency
+      const counts: Record<string, number> = {};
+      Object.values(customRoles).forEach(r => counts[r] = (counts[r] || 0) + 1);
+      customDeck.forEach(r => counts[r] = (counts[r] || 0) + 1);
+      session.roleCounts = counts;
+
+      session.orbitActions = {};
+      session.orbitCompleted = [];
+      session.roleAcknowledgements = [];
+      session.emergencyVote = freshEmergencyVote();
+      session.votes = {};
+      session.voteResult = null;
+      session.roundSummary = freshRoundSummary();
+      session.phase = "role_reveal";
+      session.phaseStartedAt = Date.now();
+      session.phaseReady = false;
+      return true as const;
+    });
+
+    if (!cas) {
+      ack?.({ success: false, error: "Only host can start or game already in progress" });
+      return;
+    }
+
+    phaseUpdate(io, sessionId, cas.session);
+    await advanceGameFlow(io, sessionId, cas.session);
+    logGameEvent("game_started_custom", sessionId, state.currentPlayerId || socket.id, { players: cas.session.players.length });
 
     ack?.({ success: true });
   });
