@@ -8,4 +8,3 @@ A multi-game platform built with Node.js and React.
 
 ## Development
 See individual package directories in `artifacts/` for specific setup instructions.
-
