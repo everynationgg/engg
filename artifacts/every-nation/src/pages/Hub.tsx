@@ -11,7 +11,7 @@ import { HeroSection } from "@/components/ui/feature-carousel";
 
 export default function Hub() {
   const { x, y } = useParallax(20);
-  const { token, refreshUser } = useAuth();
+  const { token, refreshUser, isLoggedIn } = useAuth();
   const [claiming, setClaiming] = useState(false);
   const [claimed, setClaimed] = useState(false);
   const [activities, setActivities] = useState<any[]>([]);
@@ -116,7 +116,7 @@ export default function Hub() {
             </header>
 
             {/* Daily Tactical Briefing */}
-            {token && (
+            {isLoggedIn && (
               <div className="relative z-30">
                 <TacticalSlate>
                   <div className="p-8 flex flex-col md:flex-row items-center justify-between gap-8">

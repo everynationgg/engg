@@ -81,7 +81,7 @@ export default function Navbar() {
           </div>
 
           {/* RIGHT: IDENTITY + CONTROLS */}
-          <div className="flex items-center gap-6" style={{ marginRight: 'clamp(24px, 5vw, 64px)' }}>
+          <div className="flex items-center gap-6">
             {!isLoggedIn ? (
               <button
                 onClick={() => navigate("/login")}
