@@ -56,28 +56,27 @@ export function attachSocketIO(httpServer: HttpServer): SocketIOServer {
 
   // ── Redis adapter removed — running single-instance Socket.IO ──
 
-  // ── Security Middleware: JWT Authentication ──
+  // ── Security Middleware: JWT Authentication (Optional) ──
   io.use((socket, next) => {
     try {
       const token =
         socket.handshake.auth?.token ||
         socket.handshake.headers?.authorization?.split(" ")[1];
 
-      if (!token) {
-        // Allow guest sockets for lobby browsing? No, we require auth for all operations.
-        return next(new Error("Unauthorized: Signal Uplink requires a valid identity token."));
+      if (token) {
+        const decoded = verifyToken(token);
+        if (decoded) {
+          // Attach verified identity to the socket object if available
+          socket.data.userId = decoded.userId;
+        }
       }
 
-      const decoded = verifyToken(token);
-      if (!decoded) {
-        return next(new Error("Unauthorized: Identity token invalid or expired."));
-      }
-
-      // Attach verified identity to the socket object
-      socket.data.userId = decoded.userId;
+      // Allow all connections (Guests). Specific handlers (like spending credits)
+      // will verify the presence of userId independently.
       next();
     } catch (err) {
-      next(new Error("Unauthorized: Authentication failure."));
+      // Treat as guest even on verification error to prevent blocking players
+      next();
     }
   });
 
