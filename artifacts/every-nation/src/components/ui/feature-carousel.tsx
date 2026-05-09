@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button'; 
 import { cn } from '@/lib/utils'; 
 
-interface HeroProps extends React.HTMLAttributes<HTMLDivElement> {
+interface HeroProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   title: React.ReactNode;
   subtitle: string;
   images: { src: string; alt: string; onClick?: () => void; status?: "online" | "offline" }[];

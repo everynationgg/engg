@@ -12,6 +12,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { getSocket } from "@/lib/socket";
+import { playSciFiClick } from "@/lib/sound";
 
 export type PlayerConnectionStatus = "connected" | "reconnecting" | "disconnected";
 
@@ -203,7 +204,7 @@ export default function PlayerStatusList({ phase, roomCode }: PlayerStatusListPr
       sessionStorage.setItem("lp_detective_notes", JSON.stringify(updated));
       return updated;
     });
-    import("@/lib/sound").then(m => m.playSciFiClick(0.5));
+    playSciFiClick(0.5);
   };
 
   if (players.length === 0) return null;

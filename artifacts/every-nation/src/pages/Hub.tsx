@@ -116,31 +116,33 @@ export default function Hub() {
             </header>
 
             {/* Daily Tactical Briefing */}
-            <div className="relative z-30">
-              <TacticalSlate>
-                <div className="p-8 flex flex-col md:flex-row items-center justify-between gap-8">
-                  <div className="flex items-center gap-6">
-                    <div className="w-12 h-12 border border-cyan-500/20 flex items-center justify-center relative">
-                      <div className="absolute inset-0 bg-cyan-400/5 animate-pulse" />
-                      <FaTerminal className="text-cyan-400 text-xl" />
+            {token && (
+              <div className="relative z-30">
+                <TacticalSlate>
+                  <div className="p-8 flex flex-col md:flex-row items-center justify-between gap-8">
+                    <div className="flex items-center gap-6">
+                      <div className="w-12 h-12 border border-cyan-500/20 flex items-center justify-center relative">
+                        <div className="absolute inset-0 bg-cyan-400/5 animate-pulse" />
+                        <FaTerminal className="text-cyan-400 text-xl" />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <h3 className="font-orbitron text-[14px] font-black uppercase tracking-[0.3em] text-white">Daily Tactical Briefing</h3>
+                        <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/30">Status: {claimed ? "IDENTITY SYNCED" : "SYNC REQUIRED"}</span>
+                      </div>
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <h3 className="font-orbitron text-[14px] font-black uppercase tracking-[0.3em] text-white">Daily Tactical Briefing</h3>
-                      <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/30">Status: {claimed ? "IDENTITY SYNCED" : "SYNC REQUIRED"}</span>
-                    </div>
-                  </div>
 
-                  <SciFiButton
-                    variant={claimed ? "ghost" : "primary"}
-                    disabled={claimed || claiming}
-                    onClick={handleClaim}
-                    className="min-w-[200px]"
-                  >
-                    {claiming ? "SYNCING..." : claimed ? "PROTOCOL COMPLETE" : "CLAIM DAILY"}
-                  </SciFiButton>
-                </div>
-              </TacticalSlate>
-            </div>
+                    <SciFiButton
+                      variant={claimed ? "ghost" : "primary"}
+                      disabled={claimed || claiming}
+                      onClick={handleClaim}
+                      className="min-w-[200px]"
+                    >
+                      {claiming ? "SYNCING..." : claimed ? "PROTOCOL COMPLETE" : "CLAIM DAILY"}
+                    </SciFiButton>
+                  </div>
+                </TacticalSlate>
+              </div>
+            )}
 
             {/* Main Mission Deck */}
             <div className="relative z-10 w-full pb-32">

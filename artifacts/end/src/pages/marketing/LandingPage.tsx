@@ -12,6 +12,7 @@ import SettingsModal from "@/components/system/SettingsModal";
 import ProfileModal from "@/components/profile/ProfileModal";
 import HowToPlayModal from "@/components/game/HowToPlayModal";
 import howToPlayImg from "@assets/How_to_Play.webp";
+import { gameSessionStore } from "@/lib/gameSessionStore";
 
 function generateRoomCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -84,12 +85,11 @@ export default function LandingPage() {
     playSciFiClick();
     setIsCreatingLobby(true);
     const roomCode = generateRoomCode();
-    localStorage.setItem("lp_callsign", callsign.trim().toUpperCase());
-    localStorage.setItem("lp_roomCode", roomCode);
-    sessionStorage.setItem("lp_isCreating", "true");
+    gameSessionStore.setCallsign(callsign);
+    gameSessionStore.setRoomCode(roomCode);
+    gameSessionStore.markCreating();
     if (userId) {
-      localStorage.setItem("lp_userId", userId);
-      localStorage.setItem(`lp_userId_${roomCode}`, userId);
+      gameSessionStore.setUserId(userId, roomCode);
     }
     setTimeout(() => {
       setLocation(`/room/${roomCode}`);
@@ -100,14 +100,13 @@ export default function LandingPage() {
   const handleJoinLobby = useCallback(() => {
     if (!callsign.trim() || !roomCodeInput.trim()) return;
     playSciFiClick();
-    localStorage.setItem("lp_callsign", callsign.trim().toUpperCase());
     const cleanCode = roomCodeInput.trim().toUpperCase();
-    localStorage.setItem("lp_roomCode", cleanCode);
+    gameSessionStore.setCallsign(callsign);
+    gameSessionStore.setRoomCode(cleanCode);
     if (userId) {
-      localStorage.setItem("lp_userId", userId);
-      localStorage.setItem(`lp_userId_${cleanCode}`, userId);
+      gameSessionStore.setUserId(userId, cleanCode);
     }
-    setLocation(`/room/${roomCodeInput.trim().toUpperCase()}`);
+    setLocation(`/room/${cleanCode}`);
   }, [callsign, roomCodeInput, userId, setLocation]);
 
   return (

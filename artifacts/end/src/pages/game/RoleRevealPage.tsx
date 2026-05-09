@@ -4,18 +4,20 @@ import { ROLES, type Role } from "@/data/roles";
 import { playSciFiClick, playBassDrop } from "@/lib/sound";
 import { getSocket } from "@/lib/socket";
 import { TeamIcon } from "@/components/common/TeamIcon";
+import { gameSessionStore } from "@/lib/gameSessionStore";
+
 function getAssignedRole(): Role {
-  const roleId = sessionStorage.getItem("lp_assignedRole");
+  const roleId = gameSessionStore.getAssignedRole();
   const found = ROLES.find((r) => r.id === roleId);
   return found ?? ROLES.find((r) => r.id === "crew") ?? ROLES[0];
 }
 
 function getPlayerName(): string {
-  return sessionStorage.getItem("lp_callsign") || "OPERATIVE";
+  return gameSessionStore.getCallsign("OPERATIVE");
 }
 
 function getTotalPlayers(): number {
-  const raw = sessionStorage.getItem("lp_totalPlayers");
+  const raw = gameSessionStore.getTotalPlayers();
   return raw ? parseInt(raw, 10) : 1;
 }
 
@@ -36,7 +38,7 @@ export default function RoleRevealPage() {
 
   // Defensive: Only compute after state is initialized
   const role = getAssignedRole();
-  const myPlayerId = sessionStorage.getItem("lp_playerId");
+  const myPlayerId = gameSessionStore.getPlayerId();
   const me = livePlayers.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === getSocket().id);
   const isSpectator = !!me && !!me.isSpectator;
   const isAlien = !!role && role.team === "alien";
@@ -63,7 +65,7 @@ export default function RoleRevealPage() {
 
   const playerName = getPlayerName();
   const totalPlayers = getTotalPlayers();
-  const roomCode = sessionStorage.getItem("lp_roomCode") || "";
+  const roomCode = gameSessionStore.getRoomCode();
 
   // Sync timer with server
   useEffect(() => {
@@ -101,11 +103,11 @@ export default function RoleRevealPage() {
       }
       if (session.rolesAssigned) {
         setRolesAssigned(session.rolesAssigned);
-        const myPlayerId = sessionStorage.getItem("lp_playerId");
+        const myPlayerId = gameSessionStore.getPlayerId(roomCode);
         const mySocketId = socket.id;
         const myRole = session.rolesAssigned[myPlayerId || ""] || session.rolesAssigned[mySocketId || ""];
         if (myRole) {
-          sessionStorage.setItem("lp_assignedRole", myRole);
+          gameSessionStore.setAssignedRole(myRole);
         }
       }
       if (session.initialRoles) setInitialRoles(session.initialRoles);
@@ -113,8 +115,8 @@ export default function RoleRevealPage() {
       const me = session.players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === socket.id);
       if (me) setIsHost(me.isHost);
       if (session.phase === "orbit_action") {
-        sessionStorage.removeItem("lp_orbit_info");
-        sessionStorage.removeItem("lp_orbit_result");
+        gameSessionStore.clearOrbitInfo();
+        gameSessionStore.clearOrbitResult();
       }
       if (session.phaseReady !== undefined) {
         setIsPhaseReady(session.phaseReady);
@@ -122,7 +124,7 @@ export default function RoleRevealPage() {
     };
 
     const handleOrbitInfo = (info: unknown) => {
-      sessionStorage.setItem("lp_orbit_info", JSON.stringify(info));
+      gameSessionStore.setOrbitInfo(info);
     };
 
     socket.on("phase_update", handlePhaseUpdate);
@@ -142,11 +144,11 @@ export default function RoleRevealPage() {
           }
           if (resp.session.rolesAssigned) {
             setRolesAssigned(resp.session.rolesAssigned);
-            const myPlayerId = sessionStorage.getItem("lp_playerId");
+            const myPlayerId = gameSessionStore.getPlayerId(roomCode);
             const mySocketId = socket.id;
             const myRole = resp.session.rolesAssigned[myPlayerId || ""] || resp.session.rolesAssigned[mySocketId || ""];
             if (myRole) {
-              sessionStorage.setItem("lp_assignedRole", myRole);
+              gameSessionStore.setAssignedRole(myRole);
             }
           }
           if (resp.session.initialRoles) setInitialRoles(resp.session.initialRoles);
@@ -247,7 +249,7 @@ export default function RoleRevealPage() {
       { sessionId: roomCode, action },
       (resp: { success: boolean; orbitInfo?: unknown }) => {
         if (resp?.orbitInfo) {
-          sessionStorage.setItem("lp_orbit_info", JSON.stringify(resp.orbitInfo));
+          gameSessionStore.setOrbitInfo(resp.orbitInfo);
         }
       },
     );
@@ -582,7 +584,7 @@ export default function RoleRevealPage() {
 
             {/* Target Selection for Virus/Router/Doctor + Skip Button */}
             {!acknowledged && revealState === "ready" && (role.id === "virus" || role.id === "router" || role.id === "doctor") && (() => {
-              const myPlayerId = sessionStorage.getItem("lp_playerId");
+              const myPlayerId = gameSessionStore.getPlayerId(roomCode);
               const mySocketId = getSocket().id;
               const isSelf = (p: any) =>
                 (myPlayerId && p.playerId === myPlayerId) || p.id === mySocketId;
@@ -629,7 +631,7 @@ export default function RoleRevealPage() {
                         { sessionId: roomCode, action: { type: "skip", targets: [] } },
                         (resp: { success: boolean; orbitInfo?: unknown }) => {
                           if (resp?.orbitInfo) {
-                            sessionStorage.setItem("lp_orbit_info", JSON.stringify(resp.orbitInfo));
+                            gameSessionStore.setOrbitInfo(resp.orbitInfo);
                           }
                         }
                       );

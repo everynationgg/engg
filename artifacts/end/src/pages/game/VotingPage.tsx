@@ -5,6 +5,8 @@ import { ROLES } from "@/data/roles";
 import { playSciFiClick, playMechanicalChunk } from "@/lib/sound";
 import { isPlayerConnected } from "@/lib/utils";
 import HolographicCard from "@/components/common/HolographicCard";
+import { getInitialRoleId, getRoomCode } from "@/lib/gameHelpers";
+import { gameSessionStore } from "@/lib/gameSessionStore";
 
 interface LivePlayer {
   id: string;
@@ -16,13 +18,6 @@ interface LivePlayer {
   connectionStatus?: "connected" | "reconnecting" | "disconnected";
   alive?: boolean;
   isSpectator?: boolean;
-}
-
-function getRoomCode(): string {
-  return sessionStorage.getItem("lp_roomCode") || "------";
-}
-function getInitialRoleId(): string {
-  return sessionStorage.getItem("lp_assignedRole") || "crew";
 }
 
 export default function VotingPage() {
@@ -46,9 +41,9 @@ export default function VotingPage() {
   const [votes, setVotes] = useState<Record<string, string>>({});
   const [myId, setMyId] = useState<string>("");
   const [roomCopyFeedback, setRoomCopyFeedback] = useState(false);
-  const [isHost, setIsHost] = useState(() => sessionStorage.getItem("lp_isHost") === "true");
+  const [isHost, setIsHost] = useState(() => gameSessionStore.isHost(roomCode));
   const [isSpectator, setIsSpectator] = useState(() => {
-    const role = sessionStorage.getItem("lp_assignedRole");
+    const role = gameSessionStore.getAssignedRole();
     return role === "spectator" || role === "Spectator";
   });
   const [secondsLeft, setSecondsLeft] = useState(60);
@@ -140,7 +135,7 @@ export default function VotingPage() {
     setMyId(socket.id ?? "");
 
     const handlePhaseUpdate = (session: { phase: string; phaseReady?: boolean; players: LivePlayer[]; votes?: Record<string, string>; roundSummary?: any; anesthetizedPlayers?: string[] }) => {
-      const myPlayerId = sessionStorage.getItem("lp_playerId");
+      const myPlayerId = gameSessionStore.getPlayerId(roomCode);
       const myId = socket.id;
       const players = session.players.map((p) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === myId }));
       setSessionPlayers(players);
@@ -167,7 +162,7 @@ export default function VotingPage() {
       }
       if (session.roundSummary) setRoundSummary(session.roundSummary);
       if (session.anesthetizedPlayers) {
-        const myPlayerId = sessionStorage.getItem("lp_playerId");
+        const myPlayerId = gameSessionStore.getPlayerId(roomCode);
         const me = session.players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === socket.id);
         if (me) {
           const checkId = me.playerId || me.id;
@@ -183,7 +178,7 @@ export default function VotingPage() {
     const syncSession = () => {
       socket.emit("get_session", { sessionId: roomCode }, (resp: { success: boolean; session?: { phase: string; players: LivePlayer[]; votes?: Record<string, string>; roundSummary?: any; anesthetizedPlayers?: string[]; phaseReady?: boolean } }) => {
         if (resp.success && resp.session) {
-          const myPlayerId = sessionStorage.getItem("lp_playerId");
+          const myPlayerId = gameSessionStore.getPlayerId(roomCode);
           const id = socket.id;
           if (resp.session.players) {
             setSessionPlayers(resp.session.players.map((p: LivePlayer) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === id })));
@@ -200,7 +195,7 @@ export default function VotingPage() {
           }
           if (resp.session.roundSummary) setRoundSummary(resp.session.roundSummary);
           if (resp.session.anesthetizedPlayers) {
-            const myPlayerId = sessionStorage.getItem("lp_playerId");
+            const myPlayerId = gameSessionStore.getPlayerId(roomCode);
             const me = resp.session.players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === id);
             if (me) {
               const checkId = me.playerId || me.id;

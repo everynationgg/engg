@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { getSocket } from "@/lib/socket";
 import { playSciFiClick } from "@/lib/sound";
 import { isPlayerConnected, isPlayerReconnecting, isPlayerDisconnected } from "@/lib/utils";
+import { gameSessionStore } from "@/lib/gameSessionStore";
 
 interface LivePlayer {
   id: string;
@@ -16,7 +17,7 @@ interface LivePlayer {
 }
 
 function getRoomCode(): string {
-  return sessionStorage.getItem("lp_roomCode") || "------";
+  return gameSessionStore.getRoomCode("------");
 }
 
 export default function InterruptedPage() {

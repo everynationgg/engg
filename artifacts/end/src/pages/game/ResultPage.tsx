@@ -8,6 +8,7 @@ import { useRecordGameResult, determinePlayerWon, generateGameId } from "@/hooks
 import StatsDisplay from "@/components/profile/StatsDisplay";
 import { motion, AnimatePresence } from "framer-motion";
 import { TeamIcon } from "@/components/common/TeamIcon";
+import { gameSessionStore } from "@/lib/gameSessionStore";
 
 interface VoteResult {
   eliminatedId: string | null;
@@ -42,7 +43,7 @@ interface RoundSummary {
 }
 
 function getRoomCode(): string {
-  return sessionStorage.getItem("lp_roomCode") || "------";
+  return gameSessionStore.getRoomCode("------");
 }
 
 function PlayAgainButton({ roomCode, bannerColor, bannerGlow }: { roomCode: string; bannerColor: string; bannerGlow: string }) {
@@ -199,9 +200,9 @@ export default function ResultPage() {
   const maybeRecordMyResult = useCallback((voteResult: VoteResult) => {
     if (recordedResultRef.current || hasRecorded) return;
 
-    const myStablePlayerId = sessionStorage.getItem("lp_playerId");
+    const myStablePlayerId = gameSessionStore.getPlayerId(roomCode);
     const mySocketId = getSocket().id;
-    const callsign = (sessionStorage.getItem("lp_callsign") || "").toUpperCase();
+    const callsign = gameSessionStore.getCallsign().toUpperCase();
 
     const playerData = voteResult.allRoles.find((p) =>
       (myStablePlayerId && p.stablePlayerId === myStablePlayerId)
@@ -281,7 +282,7 @@ export default function ResultPage() {
 
         if (sess.players) {
           const mySocketId = socket.id;
-          const myPlayerId = sessionStorage.getItem("lp_playerId") ?? null;
+          const myPlayerId = gameSessionStore.getPlayerId(roomCode);
           const me = sess.players.find(
             (p) => p.id === mySocketId || (myPlayerId && (p as { playerId?: string }).playerId === myPlayerId),
           );
@@ -311,7 +312,7 @@ export default function ResultPage() {
           if (sess.roundSummary) setSummary((prev) => JSON.stringify(prev) === JSON.stringify(sess.roundSummary) ? prev : sess.roundSummary!);
           if (sess.players) {
             const mySocketId = socket.id;
-            const myPlayerId = sessionStorage.getItem("lp_playerId") ?? null;
+            const myPlayerId = gameSessionStore.getPlayerId(roomCode);
             const me = sess.players.find(
               (p) => p.id === mySocketId || (myPlayerId && (p as { playerId?: string }).playerId === myPlayerId),
             );

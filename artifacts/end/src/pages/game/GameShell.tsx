@@ -29,6 +29,7 @@ import LandingNavbar from "@/components/system/LandingNavbar";
 import LandingSidebar from "@/components/system/LandingSidebar";
 import HamburgerMenu from "@/components/system/HamburgerMenu";
 import { useAuth } from "@/hooks/useAuth";
+import { gameSessionStore } from "@/lib/gameSessionStore";
 
 // Phases that warrant a dramatic countdown overlay before switching
 const DRAMATIC_PHASES = new Set(["voting", "result", "discussion"]);
@@ -102,7 +103,7 @@ export default function GameShell() {
   // Store room code in sessionStorage synchronously before children render
   const [roomCode] = useState(() => {
     const code = (params.roomCode ?? "").toUpperCase();
-    if (code) sessionStorage.setItem("lp_roomCode", code);
+    if (code) gameSessionStore.setRoomCode(code);
     return code;
   });
 
@@ -121,20 +122,15 @@ export default function GameShell() {
   const { preferences, updateMusicVolume } = usePreferences();
   const [myPlayerId] = useState(() => {
     const code = (params.roomCode ?? "").toUpperCase();
-    let pId = sessionStorage.getItem("lp_playerId");
-    if (!pId && code) {
-      pId = localStorage.getItem(`lp_playerId_${code}`);
-      if (pId) sessionStorage.setItem("lp_playerId", pId);
-    }
-    return pId;
+    return gameSessionStore.getPlayerId(code);
   });
   const musicOn = (preferences?.musicVolume ?? 0) > 0;
   const touchStartX = useRef<number | null>(null);
 
   const [isHost, setIsHost] = useState(() => {
     const code = (params.roomCode ?? "").toUpperCase();
-    const isCreating = sessionStorage.getItem("lp_isCreating") === "true";
-    const alreadyHost = sessionStorage.getItem(`lp_isHost_${code}`) === "true";
+    const isCreating = gameSessionStore.isCreating();
+    const alreadyHost = gameSessionStore.isHost(code);
     return isCreating || alreadyHost;
   });
   const { token } = useAuth();
@@ -203,7 +199,7 @@ export default function GameShell() {
 
   // Redirect to join page if no callsign is set (direct URL access)
   useEffect(() => {
-    const callsign = localStorage.getItem("lp_callsign") || sessionStorage.getItem("lp_callsign");
+    const callsign = gameSessionStore.getCallsign();
     if (roomCode && !callsign) {
       setLocation(`/join/${roomCode}`);
     }
@@ -223,7 +219,7 @@ export default function GameShell() {
       if (!newPhase || newPhase === prevPhaseRef.current) return;
 
       if (newPhase === "role_config") {
-        sessionStorage.removeItem("lp_assignedRole");
+        gameSessionStore.clearAssignedRole();
       }
 
       const prevPhase = prevPhaseRef.current;
@@ -273,10 +269,10 @@ export default function GameShell() {
       if (session.phase) applyPhase(session.phase);
 
       if (session.rolesAssigned) {
-        const myPlayerId = sessionStorage.getItem("lp_playerId") || localStorage.getItem(`lp_playerId_${roomCode}`);
+        const myPlayerId = gameSessionStore.getPlayerId(roomCode);
         const mySocketId = socket.id;
         const myRole = session.rolesAssigned[myPlayerId || ""] || session.rolesAssigned[mySocketId || ""];
-        if (myRole) sessionStorage.setItem("lp_assignedRole", myRole);
+        if (myRole) gameSessionStore.setAssignedRole(myRole);
       }
       if (!session.playersInGrace || session.playersInGrace.length === 0) {
         setGracePlayerNames([]);
@@ -325,8 +321,8 @@ export default function GameShell() {
     socket.on("system_message", handleSystemMessage);
 
     const syncSession = () => {
-      const myPlayerId = sessionStorage.getItem("lp_playerId") || localStorage.getItem(`lp_playerId_${roomCode}`);
-      const myPlayerToken = sessionStorage.getItem("lp_playerToken") || localStorage.getItem(`lp_playerToken_${roomCode}`);
+      const myPlayerId = gameSessionStore.getPlayerId(roomCode);
+      const myPlayerToken = gameSessionStore.getPlayerToken(roomCode);
 
       socket.emit("get_session", {
         sessionId: roomCode,
@@ -345,18 +341,18 @@ export default function GameShell() {
             }
           }
           if (resp.session.players) {
-            const myId = myPlayerId || sessionStorage.getItem("lp_playerId") || localStorage.getItem(`lp_playerId_${roomCode}`);
+            const myId = myPlayerId || gameSessionStore.getPlayerId(roomCode);
             const me = resp.session.players.find(p => p.playerId === myId || p.id === socket.id);
             if (me?.isHost) {
               setIsHost(true);
-              sessionStorage.setItem(`lp_isHost_${roomCode}`, "true");
+              gameSessionStore.setHost(roomCode);
             }
           }
           if (resp.session.rolesAssigned) {
-            const myId = myPlayerId || sessionStorage.getItem("lp_playerId") || localStorage.getItem(`lp_playerId_${roomCode}`);
+            const myId = myPlayerId || gameSessionStore.getPlayerId(roomCode);
             const mySocketId = socket.id;
             const myRole = resp.session.rolesAssigned[myId || ""] || resp.session.rolesAssigned[mySocketId || ""];
-            if (myRole) sessionStorage.setItem("lp_assignedRole", myRole);
+            if (myRole) gameSessionStore.setAssignedRole(myRole);
           }
           if (resp.session.playersInGrace && resp.session.playersInGrace.length > 0 && resp.session.players) {
             const graceSet = new Set(resp.session.playersInGrace);
@@ -373,18 +369,17 @@ export default function GameShell() {
     const pollId = setInterval(syncSession, 3000);
 
     const handleReconnect = () => {
-      const callsign = sessionStorage.getItem("lp_callsign") || localStorage.getItem("lp_callsign");
-      const playerId = sessionStorage.getItem("lp_playerId") || localStorage.getItem(`lp_playerId_${roomCode}`);
+      const callsign = gameSessionStore.getCallsign();
+      const playerId = gameSessionStore.getPlayerId(roomCode);
       if (!callsign || !playerId) return;
       socket.emit("join_session", {
         sessionId: roomCode,
         playerName: callsign,
         playerId,
-        playerToken: sessionStorage.getItem("lp_playerToken") ?? undefined,
+        playerToken: gameSessionStore.getPlayerToken(roomCode) ?? undefined,
       }, (resp: JoinSessionResponse) => {
         if (resp?.playerToken) {
-          sessionStorage.setItem("lp_playerToken", resp.playerToken);
-          localStorage.setItem(`lp_playerToken_${roomCode}`, resp.playerToken);
+          gameSessionStore.setPlayerToken(resp.playerToken, roomCode);
         }
         if (resp?.session?.phase) applyPhase(resp.session.phase);
       });

@@ -20,6 +20,7 @@ import GlobalControls from "@/components/system/GlobalControls";
 import ShipOSBoot from "@/components/system/ShipOSBoot";
 import ParallaxBackground from "@/components/common/ParallaxBackground";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { gameSessionStore } from "@/lib/gameSessionStore";
 
 const queryClient = new QueryClient();
 
@@ -27,7 +28,7 @@ const queryClient = new QueryClient();
 function OldGameRouteRedirect() {
   const [, setLocation] = useLocation();
   useEffect(() => {
-    const roomCode = sessionStorage.getItem("lp_roomCode");
+    const roomCode = gameSessionStore.getRoomCode();
     setLocation(roomCode ? `/room/${roomCode}` : "/");
   }, [setLocation]);
   return null;

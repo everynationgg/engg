@@ -40,7 +40,10 @@ export default function ForgotPassword() {
 
   return (
     <HUDOverlay pageLabel="AUTH_RECOVERY">
-      <div className="min-h-screen flex flex-col items-center pt-48 pb-12 px-4 md:px-8 relative overflow-x-hidden bg-[#020408] selection:bg-cyan-500/30">
+      <div className="min-h-screen flex flex-col items-center pb-12 px-4 md:px-8 relative overflow-x-hidden bg-[#020408] selection:bg-cyan-500/30">
+        {/* Header Clearance Spacer */}
+        <div className="h-[104px] w-full shrink-0 pointer-events-none" />
+
         {/* Cinematic Background Layer */}
         <motion.div 
           className="fixed inset-0 z-0 opacity-10 pointer-events-none grayscale"
@@ -76,9 +79,9 @@ export default function ForgotPassword() {
               {!submitted ? (
                 <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                   <div className="flex flex-col gap-2">
-                    <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20 ml-1">Registered_ID</label>
-                    <div className="flex items-center bg-white/[0.02] border border-white/5 focus-within:border-cyan-500/20 focus-within:bg-cyan-500/[0.01] transition-all group">
-                      <div className="pl-4 pr-3 text-white/10 group-focus-within:text-cyan-400 transition-colors pointer-events-none shrink-0">
+                    <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20 ml-4">Registered_ID</label>
+                    <div className="flex items-center gap-4 bg-white/[0.02] border border-white/5 focus-within:border-cyan-500/20 focus-within:bg-cyan-500/[0.01] transition-all group">
+                      <div className="pl-4 text-white/10 group-focus-within:text-cyan-400 transition-colors pointer-events-none shrink-0">
                         <FaEnvelope size={10} />
                       </div>
                       <input

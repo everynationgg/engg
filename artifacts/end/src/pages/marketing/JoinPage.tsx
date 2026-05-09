@@ -6,6 +6,7 @@ import { playSciFiClick } from "@/lib/sound";
 import { startLobbyMusic, stopLobbyMusic, getSoundEnabled, setSoundEnabled } from "@/lib/music";
 import howToPlayImg from "@assets/How_to_Play.webp";
 import HowToPlayModal from "@/components/game/HowToPlayModal";
+import { gameSessionStore } from "@/lib/gameSessionStore";
 
 export default function JoinPage() {
   const params = useParams<{ roomCode: string }>();
@@ -33,8 +34,8 @@ export default function JoinPage() {
   const handleJoin = useCallback(() => {
     if (!callsign.trim()) return;
     playSciFiClick();
-    localStorage.setItem("lp_callsign", callsign.trim().toUpperCase());
-    localStorage.setItem("lp_roomCode", roomCode);
+    gameSessionStore.setCallsign(callsign);
+    gameSessionStore.setRoomCode(roomCode);
     // Note: playerId is generated inside RoleConfigPage/GameShell to ensure tab isolation
     setLocation(`/room/${roomCode}`);
   }, [callsign, roomCode, setLocation]);

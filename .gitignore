@@ -49,7 +49,9 @@ Thumbs.db
 .local/
 
 # Auto-generated files (regenerated at build/dev time)
-artifacts/mockup-sandbox/src/.generated/
+artifacts/mockup-sandbox/src/.generated/*
+!artifacts/mockup-sandbox/src/.generated/
+!artifacts/mockup-sandbox/src/.generated/mockup-components.ts
 
 # Backup files
 *.old

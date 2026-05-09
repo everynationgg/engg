@@ -1,26 +1,27 @@
 // Shared helpers for game state, session, and role logic
 
 import { ROLES, type Role } from "@/data/roles";
+import { gameSessionStore } from "@/lib/gameSessionStore";
 
 export function getRoomCode(): string {
-  return sessionStorage.getItem("lp_roomCode") || "------";
+  return gameSessionStore.getRoomCode("------");
 }
 
 export function getCallsign(): string {
-  return sessionStorage.getItem("lp_callsign") || "UNKNOWN";
+  return gameSessionStore.getCallsign("UNKNOWN");
 }
 
 export function getInitialRoleId(): string {
-  return sessionStorage.getItem("lp_assignedRole") || "crew";
+  return gameSessionStore.getAssignedRole("crew");
 }
 
 export function getAssignedRole(): Role {
-  const roleId = sessionStorage.getItem("lp_assignedRole");
+  const roleId = gameSessionStore.getAssignedRole();
   return ROLES.find((r) => r.id === roleId) ?? ROLES.find((r) => r.id === "crew") ?? ROLES[0];
 }
 
 export function getOrbitResult(): { type: string; data?: unknown } | null {
-  try { return JSON.parse(sessionStorage.getItem("lp_orbit_result") ?? "null"); } catch { return null; }
+  try { return JSON.parse(gameSessionStore.getOrbitResult() ?? "null"); } catch { return null; }
 }
 
 export function getMySocketId(): string {

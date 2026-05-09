@@ -98,9 +98,9 @@ export default function Register() {
               <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                 <div className="flex flex-col gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20 ml-1">Codename</label>
-                    <div className="flex items-center bg-white/[0.02] border border-white/5 focus-within:border-purple-500/20 focus-within:bg-purple-500/[0.01] transition-all group">
-                      <div className="pl-4 pr-3 text-white/10 group-focus-within:text-purple-400 transition-colors pointer-events-none shrink-0">
+                    <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20 ml-4">Codename</label>
+                    <div className="flex items-center gap-4 bg-white/[0.02] border border-white/5 focus-within:border-purple-500/20 focus-within:bg-purple-500/[0.01] transition-all group">
+                      <div className="pl-4 text-white/10 group-focus-within:text-purple-400 transition-colors pointer-events-none shrink-0">
                         <FaUser size={10} />
                       </div>
                       <input
@@ -115,9 +115,9 @@ export default function Register() {
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20 ml-1">Uplink</label>
-                    <div className="flex items-center bg-white/[0.02] border border-white/5 focus-within:border-purple-500/20 focus-within:bg-purple-500/[0.01] transition-all group">
-                      <div className="pl-4 pr-3 text-white/10 group-focus-within:text-purple-400 transition-colors pointer-events-none shrink-0">
+                    <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20 ml-4">Uplink</label>
+                    <div className="flex items-center gap-4 bg-white/[0.02] border border-white/5 focus-within:border-purple-500/20 focus-within:bg-purple-500/[0.01] transition-all group">
+                      <div className="pl-4 text-white/10 group-focus-within:text-purple-400 transition-colors pointer-events-none shrink-0">
                         <FaEnvelope size={10} />
                       </div>
                       <input
@@ -132,9 +132,9 @@ export default function Register() {
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20 ml-1">Cipher</label>
-                    <div className="flex items-center bg-white/[0.02] border border-white/5 focus-within:border-purple-500/20 focus-within:bg-purple-500/[0.01] transition-all group">
-                      <div className="pl-4 pr-3 text-white/10 group-focus-within:text-purple-400 transition-colors pointer-events-none shrink-0">
+                    <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20 ml-4">Cipher</label>
+                    <div className="flex items-center gap-4 bg-white/[0.02] border border-white/5 focus-within:border-purple-500/20 focus-within:bg-purple-500/[0.01] transition-all group">
+                      <div className="pl-4 text-white/10 group-focus-within:text-purple-400 transition-colors pointer-events-none shrink-0">
                         <FaLock size={10} />
                       </div>
                       <input

@@ -51,7 +51,7 @@ export default function Shop() {
 
   useEffect(() => {
     setLoading(true);
-    const url = new URL(`${import.meta.env.VITE_API_URL}/api/shop/config`);
+    const url = new URL(`${import.meta.env.VITE_API_URL || ""}/api/shop/config`, window.location.origin);
     if (user?.id) url.searchParams.append("userId", user.id);
 
     fetch(url.toString(), {
@@ -91,7 +91,7 @@ export default function Shop() {
       return "";
     }
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/shop/create-order`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/shop/create-order`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -113,7 +113,7 @@ export default function Shop() {
 
   const handleApprove = async (data: any) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/shop/capture-order`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/shop/capture-order`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -207,21 +207,6 @@ export default function Shop() {
             <div className="flex flex-col items-center gap-4 mt-20">
               <div className="w-6 h-6 border-2 border-cyan-500/10 border-t-cyan-400 rounded-full animate-spin" />
               <span className="font-mono text-[8px] uppercase tracking-[0.4em] text-white/20 animate-pulse">Syncing_Nodes...</span>
-            </div>
-          ) : !isLoggedIn ? (
-            <div className="flex items-center justify-center min-h-[400px] w-full">
-               <TacticalSlate className="w-full max-w-md">
-                  <div className="p-10 flex flex-col items-center text-center">
-                    <FaLock className="text-2xl text-cyan-500/10 mb-6" />
-                    <h2 className="font-orbitron text-[12px] font-black tracking-[0.4em] uppercase mb-3 text-white">Identity_Required</h2>
-                    <p className="font-mono text-[8px] uppercase tracking-[0.3em] text-white/20 mb-8 leading-relaxed max-w-[240px]">
-                      Secure connection required for asset acquisition.
-                    </p>
-                    <SciFiButton onClick={() => setLocation("/login")} variant="outline" size="sm" className="px-10">
-                       Authorize_Now
-                    </SciFiButton>
-                  </div>
-               </TacticalSlate>
             </div>
           ) : (
             <div className="flex flex-col gap-8 w-full">
@@ -492,11 +477,23 @@ export default function Shop() {
                                  </div>
                               </div>
 
-                              <SciFiButton variant="primary" className="w-full md:w-auto py-6" onClick={() => setCheckoutMode(true)}>
-                                 <span className="text-[12px]">Deploy ${selectedPack.price}</span>
+                              <SciFiButton 
+                                variant={isLoggedIn ? "primary" : "outline"} 
+                                className="w-full md:w-auto py-6" 
+                                onClick={() => {
+                                  if (isLoggedIn) {
+                                    setCheckoutMode(true);
+                                  } else {
+                                    setLocation("/login");
+                                  }
+                                }}
+                              >
+                                 <span className="text-[12px]">{isLoggedIn ? `Deploy $${selectedPack.price}` : "Authorize to Deploy"}</span>
                               </SciFiButton>
                               <div className="flex justify-center md:justify-start mt-4">
-                                 <span className="font-mono text-[6px] uppercase tracking-[0.4em] text-white/10">Authorized_Transaction_Ready</span>
+                                 <span className="font-mono text-[6px] uppercase tracking-[0.4em] text-white/10">
+                                   {isLoggedIn ? "Authorized_Transaction_Ready" : "Identity_Required_for_Transfer"}
+                                 </span>
                               </div>
                             </div>
                           </div>

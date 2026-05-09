@@ -4,6 +4,7 @@ import { ROLES, type Role } from "@/data/roles";
 import { getAssignedRole, getRoomCode, getMySocketId } from "@/lib/gameHelpers";
 import { playSciFiClick, playActionConfirm } from "@/lib/sound";
 import { getSocket } from "@/lib/socket";
+import { gameSessionStore } from "@/lib/gameSessionStore";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -150,7 +151,7 @@ export default function OrbitPage() {
   const bgTint = isAlien ? "hsl(0 40% 6%)" : isChaotic ? "hsl(290 30% 6%)" : "hsl(200 30% 6%)";
   const bgOverlay = isAlien ? "hsl(0 35% 3% / 0.83)" : isChaotic ? "hsl(290 25% 3% / 0.83)" : "hsl(200 25% 3% / 0.83)";
 
-  const myPlayerId = sessionStorage.getItem("lp_playerId");
+  const myPlayerId = gameSessionStore.getPlayerId(roomCode);
   const me = sessionPlayers.find((p) => myPlayerId ? p.playerId === myPlayerId : p.id === getSocket().id);
   const isSpectator = !!me && !!me.isSpectator;
 
@@ -159,8 +160,8 @@ export default function OrbitPage() {
     getSocket().emit("submit_action", {
       sessionId: roomCode,
       action: { type, targets },
-      playerId: sessionStorage.getItem("lp_playerId") || undefined,
-      playerToken: sessionStorage.getItem("lp_playerToken") || undefined
+      playerId: gameSessionStore.getPlayerId(roomCode) || undefined,
+      playerToken: gameSessionStore.getPlayerToken(roomCode) || undefined
     }, (resp: { success: boolean; error?: string }) => {
       if (resp.success) {
         setPageState("waiting");
@@ -182,7 +183,7 @@ export default function OrbitPage() {
     const socket = getSocket();
 
     const applySessionUpdate = (session: { phase: string; players: LivePlayer[]; orbitCompleted?: string[]; rolesAssigned?: Record<string, string>; phaseReady?: boolean }) => {
-      const myPlayerId = sessionStorage.getItem("lp_playerId");
+      const myPlayerId = gameSessionStore.getPlayerId(roomCode);
       const mySocketId = socket.id;
       const orbitCompleted = session.orbitCompleted ?? [];
 
@@ -205,7 +206,7 @@ export default function OrbitPage() {
       if (session.rolesAssigned) {
         const myRole = session.rolesAssigned[myPlayerId || ""] || session.rolesAssigned[mySocketId || ""];
         if (myRole) {
-          sessionStorage.setItem("lp_assignedRole", myRole);
+          gameSessionStore.setAssignedRole(myRole);
         }
       }
       if (session.phaseReady !== undefined) {
@@ -220,11 +221,11 @@ export default function OrbitPage() {
 
     const handleOrbitInfo = (info: { type: string; data?: unknown }) => {
       setOrbitInfoData(info);
-      sessionStorage.setItem("lp_orbit_info", JSON.stringify(info));
+      gameSessionStore.setOrbitInfo(info);
     };
 
     const handleOrbitResult = (result: { type: string; data?: unknown }) => {
-      sessionStorage.setItem("lp_orbit_result", JSON.stringify(result));
+      gameSessionStore.setOrbitResult(result);
     };
 
     socket.on("phase_update", handlePhaseUpdate);
@@ -232,8 +233,8 @@ export default function OrbitPage() {
     socket.on("orbit_result", handleOrbitResult);
 
     const syncSession = () => {
-      const myPlayerId = sessionStorage.getItem("lp_playerId");
-      const myPlayerToken = sessionStorage.getItem("lp_playerToken");
+      const myPlayerId = gameSessionStore.getPlayerId(roomCode);
+      const myPlayerToken = gameSessionStore.getPlayerToken(roomCode);
 
       socket.emit("get_session", {
         sessionId: roomCode,
@@ -253,7 +254,7 @@ export default function OrbitPage() {
     const pollId = setInterval(syncSession, 3000);
 
     // Restore cached orbit info (in case page remounted)
-    const cached = sessionStorage.getItem("lp_orbit_info");
+    const cached = gameSessionStore.getOrbitInfo();
     if (cached) {
       try { setOrbitInfoData(JSON.parse(cached)); } catch { }
     }

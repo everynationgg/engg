@@ -12,6 +12,7 @@ import { FaLock, FaBolt, FaCoins, FaTimes } from "react-icons/fa";
 import ShopModal from "@/components/shop/ShopModal";
 import AuthModal from "@/components/auth/AuthModal";
 import ProfileModal from "@/components/profile/ProfileModal";
+import { gameSessionStore } from "@/lib/gameSessionStore";
 
 const SPECTATOR_ROLES = ROLES.filter((r) => r.team === "spectator");
 const NON_SPECTATOR_ROLES = ROLES.filter((r) => r.team !== "spectator");
@@ -28,7 +29,7 @@ type SessionPayload = {
 
 function getMyCallsign(): string {
   // Callsign is a preference, safe to share across tabs
-  return localStorage.getItem("lp_callsign") || sessionStorage.getItem("lp_callsign") || "OPERATIVE";
+  return gameSessionStore.getCallsign("OPERATIVE");
 }
 
 interface RoleCounts {
@@ -45,7 +46,7 @@ interface LivePlayer {
 }
 
 function getRoomCode(): string {
-  return sessionStorage.getItem("lp_roomCode") || "------";
+  return gameSessionStore.getRoomCode("------");
 }
 
 function randomizeRoles(playerCount: number, unlockedRoles: string[]): RoleCounts {
@@ -104,9 +105,7 @@ export default function RoleConfigPage() {
   // Only the player who clicked "Create Lobby" will have lp_isCreating="true".
   // Every other path (join, page reload, reconnect) will have it absent → false.
   const [isCreating] = useState(() => {
-    const v = sessionStorage.getItem("lp_isCreating") === "true";
-    sessionStorage.removeItem("lp_isCreating");
-    return v;
+    return gameSessionStore.consumeIsCreating();
   });
 
   const myCallsign = getMyCallsign();
@@ -115,7 +114,7 @@ export default function RoleConfigPage() {
   const previousPlayerCountRef = useRef(0);
 
   // Identity lookup available across the entire component
-  const myPlayerId = typeof window !== "undefined" ? (sessionStorage.getItem("lp_playerId") || localStorage.getItem(`lp_playerId_${roomCode}`)) : null;
+  const myPlayerId = typeof window !== "undefined" ? gameSessionStore.getPlayerId(roomCode) : null;
 
 
 
@@ -145,7 +144,7 @@ export default function RoleConfigPage() {
 
       // Detect if I am the host based on server authority
       if (me?.isHost) {
-        sessionStorage.setItem(`lp_isHost_${roomCode}`, "true");
+        gameSessionStore.setHost(roomCode);
       }
 
       setUnlockedRoles(session.unlockedRoles || []);
@@ -161,13 +160,13 @@ export default function RoleConfigPage() {
         if (session.rolesAssigned) {
           const myRole = session.rolesAssigned[myPlayerId || ""] || session.rolesAssigned[mySocketId || ""];
           if (myRole) {
-            sessionStorage.setItem("lp_assignedRole", myRole);
+            gameSessionStore.setAssignedRole(myRole);
           }
         }
-        sessionStorage.setItem("lp_totalPlayers", String(session.players.length));
+        gameSessionStore.setTotalPlayers(session.players.length);
       } else {
         // Entering lobby phase: clear the assigned role from previous round
-        sessionStorage.removeItem("lp_assignedRole");
+        gameSessionStore.clearAssignedRole();
       }
     };
 
@@ -185,9 +184,7 @@ export default function RoleConfigPage() {
 
       kickedOutRef.current = true;
       setKickedNotice(reason ?? "You were removed from this session");
-      sessionStorage.removeItem("lp_roomCode");
-      sessionStorage.removeItem("lp_isCreating");
-      sessionStorage.removeItem("lp_isHost");
+      gameSessionStore.clearVolatileGameState(roomCode);
       return true;
     };
 
@@ -211,7 +208,7 @@ export default function RoleConfigPage() {
       // code on this device. It is a one-shot React state value (sessionStorage
       // key was deleted immediately on mount), so reconnects always see false and
       // always call join_session — preventing any accidental create_session calls.
-      const lp_userId = localStorage.getItem("lp_userId") || sessionStorage.getItem("lp_userId");
+      const lp_userId = gameSessionStore.getUserId(roomCode);
 
       console.log(
         "[join] Emitting", isCreating ? "create_session" : "join_session",
@@ -224,25 +221,10 @@ export default function RoleConfigPage() {
       // ── TAB-ISOLATED IDENTITY ──
       // Prioritize sessionStorage so different tabs can be different players.
       // Use localStorage ONLY as a recovery fallback for the SAME room.
-      let playerId = sessionStorage.getItem("lp_playerId");
-      const rememberedPlayerId = localStorage.getItem(`lp_playerId_${roomCode}`);
-
-      if (!playerId && rememberedPlayerId) {
-        playerId = rememberedPlayerId;
-        sessionStorage.setItem("lp_playerId", playerId);
-      }
-
-      if (!playerId) {
-        playerId = crypto.randomUUID();
-        sessionStorage.setItem("lp_playerId", playerId);
-        localStorage.setItem(`lp_playerId_${roomCode}`, playerId);
-        // Remove any cached token — it was issued for a different playerId.
-        localStorage.removeItem(`lp_playerToken_${roomCode}`);
-        sessionStorage.removeItem("lp_playerToken");
-      }
+      const playerId = gameSessionStore.ensurePlayerId(roomCode);
 
       if (!isCreating) {
-        const playerToken: string | undefined = sessionStorage.getItem("lp_playerToken") || localStorage.getItem(`lp_playerToken_${roomCode}`) || undefined;
+        const playerToken = gameSessionStore.getPlayerToken(roomCode) || undefined;
 
         socket.emit(
           "join_session",
@@ -255,8 +237,7 @@ export default function RoleConfigPage() {
               
               // Cache the server-returned token (may have been generated server-side).
               if (resp.playerToken) {
-                sessionStorage.setItem("lp_playerToken", resp.playerToken);
-                localStorage.setItem(`lp_playerToken_${roomCode}`, resp.playerToken);
+                gameSessionStore.setPlayerToken(resp.playerToken, roomCode);
               }
               handlePhaseUpdate(resp.session);
             } else {
@@ -274,7 +255,7 @@ export default function RoleConfigPage() {
               if (errLower.includes("not found") || errLower.includes("closed") || errLower.includes("invalid session")) {
                 joinSucceeded = true;
                 systemToast("Session not found or closed.", "error", 6000);
-                sessionStorage.removeItem("lp_roomCode");
+                gameSessionStore.clearVolatileGameState(roomCode);
                 setLocation("/");
               } else {
                 // For other errors (like transient network issues), don't redirect yet.
@@ -343,7 +324,7 @@ export default function RoleConfigPage() {
         } else if (joinSucceeded) {
           socket.emit(
             "get_session",
-            { sessionId: roomCode, playerId: myPlayerId, playerToken: sessionStorage.getItem("lp_playerToken") || undefined },
+            { sessionId: roomCode, playerId: myPlayerId, playerToken: gameSessionStore.getPlayerToken(roomCode) || undefined },
             (resp: { success: boolean; session?: SessionPayload }) => {
               if (resp?.success && resp.session) {
                 handlePhaseUpdate(resp.session);
@@ -367,13 +348,13 @@ export default function RoleConfigPage() {
   }, [roomCode, myCallsign, isCreating]);
 
   // Show active roles only in lobby phase (before game starts)
-  const showActiveRoles = typeof window !== "undefined" ? (sessionStorage.getItem("lp_assignedRole") === null) : true;
+  const showActiveRoles = typeof window !== "undefined" ? !gameSessionStore.getAssignedRole() : true;
 
   // Derive host status from server-provided player list. Falls back to
   // room-keyed storage to ensure authority survives reloads.
   const amIHost = livePlayers.find((p) => p.playerId === myPlayerId || (getSocket()?.id && p.id === getSocket().id))?.isHost || 
                   (livePlayers.length === 1 && (livePlayers[0].playerId === myPlayerId || (getSocket()?.id && livePlayers[0].id === getSocket().id))) || 
-                  sessionStorage.getItem(`lp_isHost_${roomCode}`) === "true" || 
+                  gameSessionStore.isHost(roomCode) || 
                   isCreating;
 
   // Derive final players list with fresh isYou/isHost flags for UI
@@ -560,8 +541,7 @@ export default function RoleConfigPage() {
 
   const acknowledgeNameTaken = useCallback(() => {
     setNameTakenNotice(null);
-    sessionStorage.removeItem("lp_callsign");
-    sessionStorage.removeItem("lp_isCreating");
+    gameSessionStore.clearVolatileGameState(roomCode);
     setLocation(`/join/${roomCode}`);
   }, [roomCode, setLocation]);
 
@@ -658,7 +638,7 @@ export default function RoleConfigPage() {
             <div className="flex items-center gap-6 bg-white/[0.03] px-6 py-2 border border-white/5 rounded-sm">
               <div className="flex flex-col items-end">
                 <div className="text-[9px] tracking-[0.3em] uppercase opacity-40 font-bold">Authenticated_Operator</div>
-                <div className="font-orbitron text-xs text-white/80">{sessionStorage.getItem("lp_callsign")}</div>
+                <div className="font-orbitron text-xs text-white/80">{gameSessionStore.getCallsign()}</div>
               </div>
               <div className="w-px h-6 bg-white/10" />
               <div className="flex flex-col items-end">

@@ -4,6 +4,7 @@ import { ROLES } from "@/data/roles";
 import { getRoomCode, getCallsign, getInitialRoleId, getOrbitResult } from "@/lib/gameHelpers";
 import { playSciFiClick, playEmergencyVoteCalled } from "@/lib/sound";
 import { FaComments, FaExclamationTriangle } from "react-icons/fa";
+import { gameSessionStore } from "@/lib/gameSessionStore";
 
 interface LivePlayer {
   id: string;
@@ -32,7 +33,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
   const bgTint = isAlien ? "hsl(0 40% 6%)" : isChaotic ? "hsl(290 30% 6%)" : "hsl(200 30% 6%)";
   const bgOverlay = isAlien ? "hsl(0 35% 3% / 0.83)" : isChaotic ? "hsl(290 25% 3% / 0.83)" : "hsl(200 25% 3% / 0.83)";
   const [sessionPlayers, setSessionPlayers] = useState<LivePlayer[]>([]);
-  const myPlayerId = sessionStorage.getItem("lp_playerId");
+  const myPlayerId = gameSessionStore.getPlayerId(roomCode);
   const me = sessionPlayers.find((p) => myPlayerId ? p.playerId === myPlayerId : p.id === getSocket().id);
   const isSpectator = (!!me && !!me.isSpectator) || (initialRoleId === "spectator");
   const [orbitResultState, setOrbitResultState] = useState<{ type: string; data?: unknown } | null>(() => getOrbitResult());
@@ -40,7 +41,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
   const [rolesAssigned, setRolesAssigned] = useState<Record<string, string>>({});
   const [initialRoles, setInitialRoles] = useState<Record<string, string>>({});
   const [roundSummary, setRoundSummary] = useState<{ abilityLog: { actorName: string; event: string }[] } | null>(null);
-  const [isHost, setIsHost] = useState(() => sessionStorage.getItem("lp_isHost") === "true");
+  const [isHost, setIsHost] = useState(() => gameSessionStore.isHost(roomCode));
   const [isAnesthetized, setIsAnesthetized] = useState(false);
 
   const [evPopup, setEvPopup] = useState<{ callerName: string } | null>(null);
@@ -140,7 +141,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
     const socket = getSocket();
 
     const handlePhaseUpdate = (session: any) => {
-      const myPlayerId = sessionStorage.getItem("lp_playerId");
+      const myPlayerId = gameSessionStore.getPlayerId(roomCode);
       const myId = socket.id;
       const players = (session.players || []).map((p: any) => ({ 
         ...p, 
@@ -158,7 +159,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
       if (session.initialRoles) setInitialRoles(session.initialRoles);
       if (session.roundSummary) setRoundSummary(session.roundSummary);
       if (session.anesthetizedPlayers) {
-        const myPlayerId = sessionStorage.getItem("lp_playerId");
+        const myPlayerId = gameSessionStore.getPlayerId(roomCode);
         const me = players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === socket.id);
         if (me) {
           const checkId = me.playerId || me.id;
@@ -199,7 +200,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
     // Receive private ability result  -  delivered by the server when discussion phase begins
     const handleOrbitResult = (result: { type: string; data?: unknown }) => {
       setOrbitResultState(result);
-      sessionStorage.setItem("lp_orbit_result", JSON.stringify(result));
+      gameSessionStore.setOrbitResult(result);
     };
 
     socket.on("phase_update", handlePhaseUpdate);
@@ -211,7 +212,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
     const syncSession = () => {
       socket.emit("get_session", { sessionId: roomCode }, (resp: { success: boolean; session?: { phase: string; players: LivePlayer[]; orbitFeedback?: Record<string, unknown>; roleCounts?: Record<string, number>; rolesAssigned?: Record<string, string>; initialRoles?: Record<string, string>; roundSummary?: any; anesthetizedPlayers?: string[] } }) => {
         if (resp.success && resp.session) {
-          const myPlayerId = sessionStorage.getItem("lp_playerId");
+          const myPlayerId = gameSessionStore.getPlayerId(roomCode);
           const myId = socket.id;
           if (resp.session.players) {
             setSessionPlayers(resp.session.players.map((p: LivePlayer) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === myId })));
@@ -225,7 +226,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
           if (resp.session.initialRoles) setInitialRoles(resp.session.initialRoles);
           if (resp.session.roundSummary) setRoundSummary(resp.session.roundSummary);
           if (resp.session.anesthetizedPlayers) {
-            const myPlayerId = sessionStorage.getItem("lp_playerId");
+            const myPlayerId = gameSessionStore.getPlayerId(roomCode);
             const me = resp.session.players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === myId);
             if (me) {
               const checkId = me.playerId || me.id;
@@ -238,7 +239,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
           if (!orbitResultState && feedbackKey && resp.session.orbitFeedback?.[feedbackKey]) {
             const fb = resp.session.orbitFeedback[feedbackKey] as { type: string; data?: unknown };
             setOrbitResultState(fb);
-            sessionStorage.setItem("lp_orbit_result", JSON.stringify(fb));
+            gameSessionStore.setOrbitResult(fb);
           }
           // GameShell handles phase navigation
         }
@@ -371,7 +372,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
             <div className="lg:col-span-7 flex flex-col gap-6">
               <h3 className="font-orbitron text-xs tracking-[0.4em] uppercase mb-4 flex items-center gap-2" style={{ color: "hsl(185 100% 50%)" }}>
                 <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full" />
-                Biometric Manifest  -  {sessionPlayers.length > 0 ? sessionPlayers.filter(p => !p.isSpectator).length : (sessionStorage.getItem("lp_totalPlayers") || 0)} Active Subjects
+                Biometric Manifest  -  {sessionPlayers.length > 0 ? sessionPlayers.filter(p => !p.isSpectator).length : gameSessionStore.getTotalPlayers("0")} Active Subjects
               </h3>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -556,7 +557,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
         {/* Player list */}
         <div className="rounded-md p-4" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 15%)" }}>
           <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(210 30% 50%)" }}>
-            CREW MANIFEST  -  {sessionPlayers.length > 0 ? sessionPlayers.filter(p => !p.isSpectator).length : (sessionStorage.getItem("lp_totalPlayers") || 0)} ABOARD
+            CREW MANIFEST  -  {sessionPlayers.length > 0 ? sessionPlayers.filter(p => !p.isSpectator).length : gameSessionStore.getTotalPlayers("0")} ABOARD
           </div>
           <div className="flex flex-col gap-2">
             {sessionPlayers.filter(p => !p.isSpectator).map((p) => {

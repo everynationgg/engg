@@ -2,27 +2,15 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { getSocket, disconnectSocket } from "@/lib/socket";
 import ConfirmModal from "@/components/common/ConfirmModal";
-
-const GAME_SESSION_KEYS = [
-  "lp_callsign",
-  "lp_roomCode",
-  "lp_isCreating",
-  "lp_userId",
-  "lp_assignedRole",
-  "lp_totalPlayers",
-  "lp_orbit_info",
-  "lp_orbit_result",
-  "lp_playerId",
-  "lp_playerToken",
-] as const;
+import { gameSessionStore } from "@/lib/gameSessionStore";
 
 function clearGameState() {
-  GAME_SESSION_KEYS.forEach((key) => sessionStorage.removeItem(key));
+  gameSessionStore.clearVolatileGameState();
 }
 
 /** Returns true when the player has been assigned a role (i.e. game is in progress). */
 function isMidGame(): boolean {
-  return !!sessionStorage.getItem("lp_assignedRole");
+  return !!gameSessionStore.getAssignedRole();
 }
 
 interface QuitGameButtonProps {
@@ -37,7 +25,7 @@ export function useQuitGame(isHost = false) {
   const handleConfirmQuit = () => {
     setShowConfirm(false);
     // Get room code before clearing state
-    const roomCode = sessionStorage.getItem("lp_roomCode");
+    const roomCode = gameSessionStore.getRoomCode();
     clearGameState();
     setLocation("/");
     if (roomCode) {

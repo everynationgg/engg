@@ -94,9 +94,9 @@ export default function Login() {
               <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                 <div className="flex flex-col gap-5">
                   <div className="flex flex-col gap-2">
-                    <label className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/20 ml-1">Operator ID (Email or Username)</label>
-                    <div className="flex items-center bg-white/[0.02] border border-white/5 focus-within:border-cyan-500/20 focus-within:bg-cyan-500/[0.01] transition-all group">
-                      <div className="pl-4 pr-3 text-white/10 group-focus-within:text-cyan-400 transition-colors pointer-events-none shrink-0">
+                    <label className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/20 ml-4">Operator ID (Email or Username)</label>
+                    <div className="flex items-center gap-4 bg-white/[0.02] border border-white/5 focus-within:border-cyan-500/20 focus-within:bg-cyan-500/[0.01] transition-all group">
+                      <div className="pl-4 text-white/10 group-focus-within:text-cyan-400 transition-colors pointer-events-none shrink-0">
                         <FaIdCard size={12} />
                       </div>
                       <input
@@ -111,14 +111,14 @@ export default function Login() {
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <div className="flex justify-between items-center px-1">
+                    <div className="flex justify-between items-center px-4">
                        <label className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/20">Access_Cipher</label>
                        <Link href="/forgot-password" title="Recover Access" className="font-mono text-[10px] uppercase text-cyan-500/20 hover:text-cyan-400 transition-colors tracking-widest">
                           Forgotten?
                        </Link>
                     </div>
-                    <div className="flex items-center bg-white/[0.02] border border-white/5 focus-within:border-cyan-500/20 focus-within:bg-cyan-500/[0.01] transition-all group">
-                      <div className="pl-4 pr-3 text-white/10 group-focus-within:text-cyan-400 transition-colors pointer-events-none shrink-0">
+                    <div className="flex items-center gap-4 bg-white/[0.02] border border-white/5 focus-within:border-cyan-500/20 focus-within:bg-cyan-500/[0.01] transition-all group">
+                      <div className="pl-4 text-white/10 group-focus-within:text-cyan-400 transition-colors pointer-events-none shrink-0">
                         <FaLock size={12} />
                       </div>
                       <input

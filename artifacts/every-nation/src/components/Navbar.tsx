@@ -43,7 +43,7 @@ export default function Navbar() {
         className={`fixed top-0 left-0 right-0 transition-all duration-300 border-b ${scrolled || isOpen ? "bg-black/95 backdrop-blur-md border-white/5 py-3" : "bg-transparent border-transparent py-5"
           } ${activePanel !== "none" ? "z-[90]" : "z-[50]"}`}
       >
-        <div className="w-full max-w-[1800px] mx-auto px-6 h-12 flex items-center justify-between pointer-events-auto">
+        <div className="w-full max-w-[1800px] mx-auto px-6 md:px-12 xl:px-16 h-12 flex items-center justify-between pointer-events-auto">
 
           {/* LEFT: BRAND */}
           <Link href="/" className="flex items-center gap-3 group h-12">
@@ -81,7 +81,7 @@ export default function Navbar() {
           </div>
 
           {/* RIGHT: IDENTITY + CONTROLS */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-6" style={{ marginRight: 'clamp(24px, 5vw, 64px)' }}>
             {!isLoggedIn ? (
               <button
                 onClick={() => navigate("/login")}
