@@ -272,12 +272,12 @@ export default function SettingsPage() {
               {isLoggedIn && isLoading ? "SAVING..." : "SAVE SETTINGS"}
             </button>
 
-            {/* Logout Button — only for logged-in users */}
+            {/* Reset Profile Button */}
             {isLoggedIn && (
             <button
               onClick={() => {
                 logout();
-                window.location.href = "/?login=true";
+                window.location.reload();
               }}
               className="w-full py-3 font-orbitron font-bold text-sm tracking-[0.1em] uppercase rounded-md border-2 transition-all"
               style={{
@@ -294,7 +294,7 @@ export default function SettingsPage() {
                 e.currentTarget.style.color = "hsl(0 75% 65%)";
               }}
             >
-              LOGOUT
+              RESET GUEST PROFILE
             </button>
             )}
           </div>

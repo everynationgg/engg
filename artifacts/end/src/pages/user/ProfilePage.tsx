@@ -68,7 +68,7 @@ export default function ProfilePage() {
   const handleLogout = () => {
     playSciFiClick();
     logout();
-    window.location.href = "/?login=true";
+    window.location.reload();
   };
 
   return (
