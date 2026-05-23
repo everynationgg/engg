@@ -288,7 +288,8 @@ router.post("/shop/paymongo-create-session", authMiddleware, async (req: AuthReq
               quantity: 1,
             },
           ],
-          payment_method_types: ["gcash", "paymaya", "card", "grab_pay"],
+          payment_method_types: ["card", "gcash", "paymaya", "grab_pay", "qrph"],
+          send_email_receipt: false,
           success_url: `${process.env.FRONTEND_URL || "https://www.engg.online"}/profile?success=true`,
           cancel_url: `${process.env.FRONTEND_URL || "https://www.engg.online"}/profile?cancel=true`,
           metadata: {
