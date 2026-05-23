@@ -7,7 +7,7 @@ interface LandingNavbarProps {
   onShowSettings: () => void;
   onShowProfile: () => void;
   onShowHowToPlay: () => void;
-  onShowAuth: () => void;
+  onShowAuth?: () => void;
   onShowMenu?: () => void;
 }
 
@@ -44,13 +44,7 @@ export default function LandingNavbar({
       <div className="flex items-center gap-8">
         <NavbarLink label="HOW TO PLAY" onClick={onShowHowToPlay} />
         <NavbarLink label="SETTINGS" onClick={onShowSettings} />
-        
-        {isLoggedIn ? (
-          <NavbarLink label="PROFILE" onClick={onShowProfile} />
-        ) : (
-          <NavbarLink label="LOGIN" onClick={onShowAuth} />
-        )}
-
+        <NavbarLink label="PROFILE" onClick={onShowProfile} />
         <div className="w-px h-4 bg-white/10 mx-2" />
         
         {onShowMenu && (

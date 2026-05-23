@@ -10,7 +10,6 @@ import ConfirmModal from "@/components/common/ConfirmModal";
 import { useAuth } from "@/hooks/useAuth";
 import { FaLock, FaBolt, FaCoins, FaTimes } from "react-icons/fa";
 import ShopModal from "@/components/shop/ShopModal";
-import AuthModal from "@/components/auth/AuthModal";
 import ProfileModal from "@/components/profile/ProfileModal";
 import { gameSessionStore } from "@/lib/gameSessionStore";
 
@@ -97,7 +96,6 @@ export default function RoleConfigPage() {
   const [unlockedRoles, setUnlockedRoles] = useState<string[]>([]);
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [showShopModal, setShowShopModal] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   // isCreating is a one-shot flag: read from sessionStorage ONCE on mount (then
@@ -1197,7 +1195,7 @@ export default function RoleConfigPage() {
                   userCredits={credits}
                   isUnlocking={isUnlocking}
                   isLoggedIn={isLoggedIn}
-                  onShowProfile={() => isLoggedIn ? setShowProfileModal(true) : setShowAuthModal(true)}
+                  onShowProfile={() => setShowProfileModal(true)}
                   onBuyCredits={() => setShowShopModal(true)}
                   onClose={() => setSelectedRole(null)}
                 />
@@ -1226,7 +1224,6 @@ export default function RoleConfigPage() {
         </AnimatePresence>
       </div>
       <ShopModal isOpen={showShopModal} onClose={() => setShowShopModal(false)} />
-      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
       <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
     </div>
   );
@@ -1618,6 +1615,9 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
                       <span className="font-mono text-[8px] text-red-400/40 uppercase tracking-widest group-hover:text-red-400/60 transition-colors">Access the Credit Exchange to continue</span>
                     </button>
                   )}
+                  <div className="text-center font-mono text-[8px] text-amber-500/80 uppercase tracking-wider leading-normal px-2 mt-1">
+                    Notice: Unlocking this role is temporary and will only apply to the current game session.
+                  </div>
                 </div>
               )}
             </div>

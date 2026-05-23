@@ -5,7 +5,6 @@ import { playSciFiClick } from "@/lib/sound";
 import { startLobbyMusic, stopLobbyMusic, getSoundEnabled, setSoundEnabled } from "@/lib/music";
 import { useAuth } from "@/hooks/useAuth";
 import { usePreferences } from "@/hooks/usePreferences";
-import AuthModal from "@/components/auth/AuthModal";
 import LandingSidebar from "@/components/system/LandingSidebar";
 import LandingNavbar from "@/components/system/LandingNavbar";
 import SettingsModal from "@/components/system/SettingsModal";
@@ -34,21 +33,12 @@ export default function LandingPage() {
   const { preferences, updateMusicVolume } = usePreferences();
   const musicOn = (preferences?.musicVolume ?? 0) > 0;
   const [showHowToPlay, setShowHowToPlay] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const { isLoggedIn, username, userId, logout } = useAuth();
 
   useEffect(() => {
     startLobbyMusic();
-    
-    // Check for login redirect from logout
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("login") === "true") {
-      setShowAuthModal(true);
-      // Clean up URL without refreshing
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
   }, []);
 
   const handleToggleMusic = useCallback(() => {
@@ -145,7 +135,6 @@ export default function LandingPage() {
         onShowSettings={() => setShowSettingsModal(true)}
         onShowProfile={() => setShowProfileModal(true)}
         onShowHowToPlay={() => setShowHowToPlay(true)}
-        onShowAuth={() => setShowAuthModal(true)}
       />
 
       <div className="h-[var(--nav-height)] shrink-0 hidden lg:block" />
@@ -155,7 +144,6 @@ export default function LandingPage() {
         onShowSettings={() => setShowSettingsModal(true)}
         onShowProfile={() => setShowProfileModal(true)}
         onShowHowToPlay={() => setShowHowToPlay(true)}
-        onShowAuth={() => setShowAuthModal(true)}
         musicOn={musicOn}
         onToggleMusic={handleToggleMusic}
         playSound={playSciFiClick}
@@ -529,8 +517,7 @@ export default function LandingPage() {
         )}
       </section>
 
-      {/* Auth Modal */}
-      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
+      {/* Auth Modal disabled */}
 
       {/* Settings Modal */}
       <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />

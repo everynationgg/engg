@@ -65,7 +65,7 @@ export default function LandingSidebar({
     playSound();
     closeMenu();
     logout();
-    window.location.href = "/?login=true";
+    window.location.reload();
   };
 
   const toggleMenu = () => {
@@ -81,21 +81,13 @@ export default function LandingSidebar({
     onClick: () => void;
   }[] = [];
 
-  if (isLoggedIn) {
-    menuItems.push({
-      id: "profile",
-      icon: <ProfileIcon />,
-      label: "PROFILE",
-      onClick: () => handleMenuItemClick(onShowProfile),
-    });
-  } else if (onShowAuth) {
-    menuItems.push({
-      id: "login",
-      icon: <LoginIcon />,
-      label: "LOGIN",
-      onClick: () => handleMenuItemClick(onShowAuth),
-    });
-  }
+  // All users have guest profiles by default now, so always show PROFILE link
+  menuItems.push({
+    id: "profile",
+    icon: <ProfileIcon />,
+    label: "PROFILE",
+    onClick: () => handleMenuItemClick(onShowProfile),
+  });
 
   menuItems.push({
     id: "settings",
@@ -428,7 +420,7 @@ export default function LandingSidebar({
                         fontWeight: 700,
                       }}
                     >
-                      TERMINATE_SESSION
+                      RESET_GUEST_PROFILE
                     </span>
                   </button>
                 )}

@@ -91,32 +91,13 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             </div>
             <div className="flex items-baseline gap-3">
               <span className="font-mono text-2xl text-cyan-400 tracking-wider">{username}</span>
-              <div className="flex items-center gap-2 px-2 py-0.5 bg-white/5 border border-white/10 rounded-sm">
-                <div className={`w-1.5 h-1.5 rounded-full ${isVerified ? "bg-cyan-500 animate-pulse" : "bg-amber-500"}`} />
-                <span className="font-mono text-[8px] tracking-widest uppercase opacity-40">
-                  {isVerified ? "SECURED" : "PENDING"}
+              <div className="flex items-center gap-2 px-2 py-0.5 bg-cyan-500/10 border border-cyan-500/30 rounded-sm">
+                <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                <span className="font-mono text-[8px] tracking-widest uppercase text-cyan-400/80">
+                  GUEST SESSION
                 </span>
               </div>
             </div>
-
-            {!isVerified && (
-              <div className="mt-6 p-4 bg-amber-500/5 border border-amber-500/20 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <p className="font-orbitron text-[9px] tracking-[0.1em] uppercase text-amber-500 mb-1">
-                    Identity Unverified
-                  </p>
-                  {resendError && <p className="font-mono text-[8px] text-red-400">{resendError.toUpperCase()}</p>}
-                  {resendSuccess && <p className="font-mono text-[8px] text-cyan-400">TRANSMISSION SENT</p>}
-                </div>
-                <button
-                  onClick={handleResendVerificationEmail}
-                  disabled={authLoading}
-                  className="px-4 py-1.5 border border-amber-500/40 text-amber-500 font-orbitron text-[9px] tracking-[0.2em] uppercase hover:bg-amber-500/10 transition-all disabled:opacity-30"
-                >
-                  {authLoading ? "---" : "REVERIFY"}
-                </button>
-              </div>
-            )}
           </div>
 
           {loading ? (
@@ -181,11 +162,12 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                   onClick={() => {
                     playSciFiClick();
                     logout();
-                    window.location.href = "/?login=true";
+                    onClose();
+                    window.location.reload();
                   }}
                   className="w-full py-3 border border-red-500/20 hover:border-red-500/50 font-orbitron text-[10px] tracking-[0.4em] uppercase hover:bg-red-500/10 transition-all text-red-500/60 hover:text-red-500"
                 >
-                  Terminate_Session
+                  Reset Guest Profile
                 </button>
               </div>
             </div>

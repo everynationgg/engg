@@ -25,7 +25,8 @@
     "pino-http": "^10",
     "socket.io": "^4.8.3",
     "stripe": "^22.0.2",
-    "xss": "^1.0.15"
+    "xss": "^1.0.15",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/bad-words": "^3.0.3",

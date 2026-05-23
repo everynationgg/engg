@@ -67,7 +67,7 @@ export default function HamburgerMenu({
     playSound();
     closeMenu();
     logout();
-    window.location.href = "/?login=true";
+    window.location.reload();
   };
 
   const toggleMenu = () => {
@@ -103,18 +103,9 @@ export default function HamburgerMenu({
     menuItems.push({
       id: "logout",
       icon: <LogoutIcon />,
-      label: "LOGOUT",
-      tooltip: "Terminate current authenticated session.",
+      label: "RESET PROFILE",
+      tooltip: "Reset guest profile and reload page.",
       onClick: handleLogout,
-      color: "#ffaa00"
-    });
-  } else if (onShowAuth) {
-    menuItems.push({
-      id: "login",
-      icon: <LoginIcon />,
-      label: "LOGIN",
-      tooltip: "Establish a secure identity handshake.",
-      onClick: () => handleMenuItemClick(onShowAuth),
       color: "#ffaa00"
     });
   }

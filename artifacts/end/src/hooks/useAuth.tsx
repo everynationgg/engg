@@ -126,14 +126,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setToken(data.token);
         setUserId(data.id);
         setUsername(data.username);
-        setIsLoggedIn(false);
+        setIsLoggedIn(true);
+        // Trigger a background refresh to pull latest user stats/credits from database
+        setTimeout(() => {
+          refreshUser();
+        }, 0);
       }
     } catch (err) {
       console.error("Anonymous init failed:", err);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, isLoggedIn, token]);
+  }, [isLoading, isLoggedIn, token, refreshUser]);
 
   const performTokenRefresh = useCallback(async () => {
     const refreshToken = localStorage.getItem(STORAGE_KEY_REFRESH_TOKEN);
@@ -196,12 +200,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setXp(savedXp);
       setLevel(savedLevel);
       
-      const isGuest = savedUserId.startsWith("guest_");
-      setIsLoggedIn(!isGuest);
-      
-      if (!isGuest) {
-        refreshUser();
-      }
+      setIsLoggedIn(true); // Treat guest and registered users as logged in to enable profile & shop
+      refreshUser(); // Always refresh user to pull latest credit balance from the DB
     } else {
       initAnonymous();
     }

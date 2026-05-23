@@ -262,6 +262,15 @@ export default function ShopModal({ isOpen, onClose }: ShopModalProps) {
 
                       {/* Pricing & CTA */}
                       <div className="space-y-6 pt-6">
+                        <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded text-left space-y-1.5">
+                          <div className="flex items-center gap-2 text-amber-500 font-orbitron text-[9px] font-black tracking-widest uppercase">
+                            <FaShieldAlt className="text-xs" /> WARNING: EPHEMERAL IDENTITY
+                          </div>
+                          <p className="font-mono text-[8px] leading-relaxed text-amber-500/80 uppercase">
+                            Coins purchased are stored in this browser's local cache. Clearing cookies, browsing history, or switching devices/browsers will result in the loss of your coin balance. Coins cannot be recovered.
+                          </p>
+                        </div>
+
                         <div className="flex items-end justify-between px-2">
                            <span className="font-mono text-xs text-white/20 uppercase tracking-[0.4em]">Exchange_Rate</span>
                            <span className="font-orbitron text-3xl text-white font-bold tracking-widest">${selectedPack.price} <span className="text-[10px] opacity-20">USD</span></span>

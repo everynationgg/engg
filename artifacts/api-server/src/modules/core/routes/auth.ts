@@ -31,14 +31,26 @@ router.post("/auth/anonymous", async (req, res) => {
     const guestId = `guest_${randomUUID()}`;
     const token = generateToken(guestId);
     
+    const shortCode = guestId.substring(6, 10).toUpperCase();
+    const guestUsername = `GUEST_${shortCode}`;
+    
+    // Persist the guest identity in the database to allow credits/coins tracking
+    await db.insert(usersTable).values({
+      id: guestId,
+      username: guestUsername,
+      email: `${guestId}@guest.engg.online`,
+      passwordHash: "",
+      isVerified: false,
+    });
+    
     await logAudit({
       userId: guestId,
       eventType: "AUTH_GUEST_INIT",
-      description: "Anonymous session initiated for non-persistent identity",
+      description: "Anonymous session initiated and persisted in database",
       req,
     });
 
-    res.json({ token, id: guestId, username: "GUEST", isVerified: false });
+    res.json({ token, id: guestId, username: guestUsername, isVerified: false });
   } catch (err) {
     logger.error({ err }, "Anonymous auth failure");
     res.status(500).json({ error: "Failed to issue guest credentials" });
@@ -400,16 +412,8 @@ router.get("/auth/me", authMiddleware, async (req: AuthRequest, res) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // Optimization: If it's a guest, return synthetic profile immediately without DB hit
-    if (req.userId.startsWith("guest_")) {
-      return res.json({
-        id: req.userId,
-        username: "GUEST",
-        isVerified: false,
-        credits: 0,
-        isAdmin: false,
-      });
-    }
+    // Guest users now have persistent DB rows so they can buy/hold credits.
+    // They fall through to the database query below to load actual credits.
 
     const users = await db
       .select({ 
