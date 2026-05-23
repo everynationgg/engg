@@ -1,54 +1,25 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useRecordGameResult } from "@/hooks/useRecordGameResult";
-import { useAchievements } from "@/hooks/useAchievements";
-import { ROLES } from "@/data/roles";
 import { playSciFiClick } from "@/lib/sound";
+import { FaCoins } from "react-icons/fa";
 
 interface ProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-function formatRoleName(roleId?: string | null): string {
-  if (!roleId) return "Unknown";
-  const role = ROLES.find((r) => r.id === roleId);
-  if (role) return role.name;
-  return roleId
-    .split(/[_-]/g)
-    .map((part) => part ? part[0].toUpperCase() + part.slice(1) : "")
-    .join(" ");
-}
-
 export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
-  const { username, userId, isVerified, logout, resendVerificationEmail, refreshUser, isLoading: authLoading } = useAuth();
-  const { personalStats, roleStats, fetchPersonalStats, fetchRoleStats } = useRecordGameResult();
-  const { achievements } = useAchievements();
+  const { username, userId, credits, logout, refreshUser } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [resendError, setResendError] = useState<string | null>(null);
-  const [resendSuccess, setResendSuccess] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       setLoading(true);
       playSciFiClick();
-      // Always refresh user identity state to prevent stale verification status
-      Promise.all([refreshUser(), fetchPersonalStats(), fetchRoleStats()]).finally(() => setLoading(false));
+      refreshUser().finally(() => setLoading(false));
     }
-  }, [isOpen, refreshUser, fetchPersonalStats, fetchRoleStats]);
-
-  const handleResendVerificationEmail = async () => {
-    setResendError(null);
-    setResendSuccess(false);
-    try {
-      await resendVerificationEmail();
-      setResendSuccess(true);
-      setTimeout(() => setResendSuccess(false), 5000);
-    } catch (err) {
-      setResendError(err instanceof Error ? err.message : "Failed to resend email");
-    }
-  };
+  }, [isOpen, refreshUser]);
 
   if (!isOpen) return null;
 
@@ -107,48 +78,28 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Overall Stats HUD */}
+              {/* Identity & Coin Balance HUD */}
               <div className="p-6 bg-white/5 border border-white/5 relative">
-                <div className="absolute top-0 right-0 p-2 font-mono text-[8px] opacity-20">STATS_v2.1</div>
-                <h3 className="font-orbitron text-[10px] tracking-[0.3em] uppercase opacity-40 mb-6 border-b border-white/5 pb-2">Operational Data</h3>
+                <div className="absolute top-0 right-0 p-2 font-mono text-[8px] opacity-20">IDENTITY_v2.5</div>
+                <h3 className="font-orbitron text-[10px] tracking-[0.3em] uppercase opacity-40 mb-6 border-b border-white/5 pb-2">Guest Account Data</h3>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                <div className="space-y-4">
                   <div>
-                    <p className="font-mono text-[9px] uppercase opacity-40 mb-1">Win Rate</p>
-                    <p className="font-orbitron text-2xl text-cyan-400">
-                      {(personalStats?.winRate ?? 0).toFixed(1)}%
+                    <p className="font-mono text-[9px] uppercase opacity-40 mb-1">Guest UUID</p>
+                    <p className="font-mono text-xs text-white/80 break-all select-all">
+                      {userId}
                     </p>
-                    <div className="h-1 w-full bg-white/5 mt-2 overflow-hidden">
-                       <div className="h-full bg-cyan-500" style={{ width: `${personalStats?.winRate ?? 0}%` }} />
-                    </div>
                   </div>
-                  <div>
-                    <p className="font-mono text-[9px] uppercase opacity-40 mb-1">Engagements</p>
-                    <p className="font-orbitron text-2xl">{personalStats?.gamesPlayed ?? 0}</p>
-                    <div className="flex gap-4 mt-2 font-mono text-[9px]">
-                       <span className="text-cyan-400/60">W: {personalStats?.gamesWon ?? 0}</span>
-                       <span className="text-red-400/60">L: {personalStats?.gamesLost ?? 0}</span>
+                  <div className="pt-2">
+                    <p className="font-mono text-[9px] uppercase opacity-40 mb-1">Balance</p>
+                    <div className="flex items-center gap-3">
+                      <FaCoins className="text-cyan-500/40 text-xs" />
+                      <p className="font-orbitron text-2xl text-cyan-400 font-black">
+                        {credits} <span className="text-xs text-cyan-500/40 font-bold">CC</span>
+                      </p>
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Achievements HUD */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 bg-white/5 border border-white/5">
-                  <p className="font-mono text-[9px] uppercase opacity-40 mb-1">Achievements</p>
-                  <p className="font-orbitron text-lg text-cyan-400">
-                    {achievements?.unlockedCount}/{achievements?.totalAchievements}
-                  </p>
-                </div>
-                {roleStats && roleStats.length > 0 && (
-                  <div className="p-4 bg-white/5 border border-white/5">
-                    <p className="font-mono text-[9px] uppercase opacity-40 mb-1">Top Role</p>
-                    <p className="font-orbitron text-lg truncate">
-                      {formatRoleName([...roleStats].sort((a, b) => (b.gamesPlayed || 0) - (a.gamesPlayed || 0))[0]?.role)}
-                    </p>
-                  </div>
-                )}
               </div>
 
               <div className="flex flex-col gap-3 mt-8">
