@@ -1,8 +1,8 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { Router, type IRouter } from "express";
 import { z } from "zod";
-import { db, usersTable, emailVerificationTokensTable, passwordResetTokensTable, refreshTokensTable } from "@workspace/db";
-import { eq, and, gt } from "drizzle-orm";
+import { db, usersTable, emailVerificationTokensTable, passwordResetTokensTable, refreshTokensTable, creditTransactionsTable } from "@workspace/db";
+import { eq, and, gt, sql } from "drizzle-orm";
 import {
   RegisterUserBody,
   LoginUserBody,
@@ -755,6 +755,147 @@ router.post("/auth/logout", async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: "Logout failed" });
+  }
+});
+
+// ── EMAIL COIN RESTORATION (SOLUTION 1) ──────────────────────────────────────
+
+router.post("/auth/recover-request", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email || !email.includes("@")) {
+      res.status(400).json({ error: "Valid email address is required" });
+      return;
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    // Check if there are any guest/user accounts matching this email
+    const users = await db
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(eq(usersTable.email, cleanEmail))
+      .limit(1);
+
+    if (users.length === 0) {
+      res.status(404).json({ error: "No accounts found with this recovery email" });
+      return;
+    }
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes expiry
+
+    // Save token in DB using emailVerificationTokensTable (reusing column schema)
+    await db.insert(emailVerificationTokensTable).values({
+      id: randomUUID(),
+      userId: users[0].id,
+      token: code,
+      expiresAt: expiresAt,
+    });
+
+    const html = generateVerificationEmailHTML("Identity Restoration", code);
+    await sendEmail({
+      to: cleanEmail,
+      subject: "[ LOCKDOWN ] Identity Restoration Code",
+      html,
+    });
+
+    res.json({ success: true, message: "Restoration code dispatched to email" });
+  } catch (error) {
+    logger.error({ error }, "Recovery request failure");
+    res.status(500).json({ error: "Failed to dispatch restoration code" });
+  }
+});
+
+router.post("/auth/recover-verify", async (req, res) => {
+  try {
+    const { email, code, currentGuestId } = req.body;
+    if (!email || !code || !currentGuestId) {
+      res.status(400).json({ error: "Missing required verification parameters" });
+      return;
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    // Validate recovery code
+    const tokens = await db
+      .select()
+      .from(emailVerificationTokensTable)
+      .where(and(eq(emailVerificationTokensTable.token, code), gt(emailVerificationTokensTable.expiresAt, new Date())))
+      .limit(1);
+
+    if (tokens.length === 0) {
+      res.status(400).json({ error: "Invalid or expired restoration code" });
+      return;
+    }
+
+    // Burn token after use
+    await db.delete(emailVerificationTokensTable).where(eq(emailVerificationTokensTable.id, tokens[0].id));
+
+    // Fetch all user accounts linked to this email
+    const accounts = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, cleanEmail));
+
+    let totalCoins = 0;
+    const oldUserIds: string[] = [];
+
+    for (const acc of accounts) {
+      if (acc.id !== currentGuestId) {
+        totalCoins += acc.credits;
+        oldUserIds.push(acc.id);
+      }
+    }
+
+    if (totalCoins === 0) {
+      // Just link the email if no balance was found on old accounts
+      await db
+        .update(usersTable)
+        .set({ email: cleanEmail })
+        .where(eq(usersTable.id, currentGuestId));
+      
+      res.json({ success: true, mergedCredits: 0 });
+      return;
+    }
+
+    // Perform database transaction to merge balances
+    await db.transaction(async (tx) => {
+      // 1. Zero out old accounts
+      for (const oldId of oldUserIds) {
+        await tx
+          .update(usersTable)
+          .set({ credits: 0 })
+          .where(eq(usersTable.id, oldId));
+      }
+
+      // 2. Add merged balance to active guest account and link verified email
+      await tx
+        .update(usersTable)
+        .set({ 
+          credits: sql`${usersTable.credits} + ${totalCoins}`,
+          email: cleanEmail 
+        })
+        .where(eq(usersTable.id, currentGuestId));
+
+      // 3. Log merge transaction
+      await tx.insert(creditTransactionsTable).values({
+        id: randomUUID(),
+        userId: currentGuestId,
+        username: "GUEST",
+        email: cleanEmail,
+        amount: totalCoins,
+        type: "merge",
+        packId: "merge",
+        description: `Restored and merged ${totalCoins} credits from older profiles linked to ${cleanEmail}`,
+      });
+    });
+
+    logger.info({ currentGuestId, totalCoins, cleanEmail }, "Credits successfully merged from recovery");
+    res.json({ success: true, mergedCredits: totalCoins });
+  } catch (error) {
+    logger.error({ error }, "Recovery verification failed");
+    res.status(500).json({ error: "Restoration failed during account merge" });
   }
 });
 

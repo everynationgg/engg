@@ -13,6 +13,14 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const [loading, setLoading] = useState(true);
   const modalRef = useRef<HTMLDivElement>(null);
 
+  // Recovery States
+  const [recoveryEmail, setRecoveryEmail] = useState("");
+  const [recoveryCode, setRecoveryCode] = useState("");
+  const [recoveryStep, setRecoveryStep] = useState(0); // 0 = email, 1 = code
+  const [isRecovering, setIsRecovering] = useState(false);
+  const [recoveryError, setRecoveryError] = useState<string | null>(null);
+  const [recoverySuccess, setRecoverySuccess] = useState(false);
+
   useEffect(() => {
     if (isOpen) {
       setLoading(true);
@@ -20,6 +28,73 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       refreshUser().finally(() => setLoading(false));
     }
   }, [isOpen, refreshUser]);
+
+  const handleRequestCode = async () => {
+    playSciFiClick();
+    if (!recoveryEmail || !recoveryEmail.includes("@")) {
+      setRecoveryError("Valid email address required");
+      return;
+    }
+    setIsRecovering(true);
+    setRecoveryError(null);
+    try {
+      const baseUrl = import.meta.env.VITE_API_URL || "";
+      const response = await fetch(`${baseUrl}/api/auth/recover-request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: recoveryEmail }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setRecoveryStep(1);
+      } else {
+        setRecoveryError(data.error || "Verification request failed");
+      }
+    } catch (err) {
+      setRecoveryError("Handshake failure");
+    } finally {
+      setIsRecovering(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    playSciFiClick();
+    if (!recoveryCode) {
+      setRecoveryError("Restoration code required");
+      return;
+    }
+    setIsRecovering(true);
+    setRecoveryError(null);
+    try {
+      const baseUrl = import.meta.env.VITE_API_URL || "";
+      const response = await fetch(`${baseUrl}/api/auth/recover-verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: recoveryEmail,
+          code: recoveryCode,
+          currentGuestId: userId
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setRecoverySuccess(true);
+        await refreshUser();
+        setTimeout(() => {
+          setRecoverySuccess(false);
+          setRecoveryStep(0);
+          setRecoveryEmail("");
+          setRecoveryCode("");
+        }, 3000);
+      } else {
+        setRecoveryError(data.error || "Restoration verification failed");
+      }
+    } catch (err) {
+      setRecoveryError("Restoration verification failure");
+    } finally {
+      setIsRecovering(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -95,11 +170,81 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     <div className="flex items-center gap-3">
                       <FaCoins className="text-cyan-500/40 text-xs" />
                       <p className="font-orbitron text-2xl text-cyan-400 font-black">
-                        {credits} <span className="text-xs text-cyan-500/40 font-bold">CC</span>
+                        {credits} <span className="text-xs text-cyan-500/40 font-bold text-sm">CC</span>
                       </p>
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Restoration Protocol */}
+              <div className="p-6 bg-white/[0.02] border border-white/5 relative">
+                <h3 className="font-orbitron text-[10px] tracking-[0.3em] uppercase opacity-40 mb-4 border-b border-white/5 pb-2">Coin Restoration Protocol</h3>
+                
+                {!recoveryStep ? (
+                  <div className="space-y-3">
+                    <p className="font-mono text-[8px] leading-relaxed uppercase text-white/40">
+                      Enter the email address used during PayPal or GCash checkout to recover and restore your coin balance.
+                    </p>
+                    <input
+                      type="email"
+                      placeholder="ENTER BILLING EMAIL..."
+                      value={recoveryEmail}
+                      onChange={(e) => setRecoveryEmail(e.target.value)}
+                      className="w-full py-2.5 px-3 bg-black/60 border border-white/10 text-cyan-400 font-mono text-[10px] outline-none tracking-widest"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRequestCode}
+                      disabled={isRecovering}
+                      className="w-full py-2.5 bg-cyan-950 border border-cyan-500/40 text-cyan-400 font-orbitron font-bold text-[9px] tracking-widest uppercase hover:bg-cyan-500/10 transition-all disabled:opacity-40"
+                    >
+                      {isRecovering ? "DISPATCHING CODE..." : "SEND RESTORATION CODE"}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="font-mono text-[8px] leading-relaxed uppercase text-amber-500/80">
+                      Restoration protocol initialized. Enter the 6-digit code sent to {recoveryEmail}.
+                    </p>
+                    <input
+                      type="text"
+                      placeholder="ENTER 6-DIGIT CODE..."
+                      maxLength={6}
+                      value={recoveryCode}
+                      onChange={(e) => setRecoveryCode(e.target.value)}
+                      className="w-full py-2.5 px-3 bg-black/60 border border-white/10 text-cyan-400 font-mono text-[10px] text-center outline-none tracking-widest"
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => { playSciFiClick(); setRecoveryStep(0); setRecoveryCode(""); }}
+                        className="py-2.5 border border-white/10 font-orbitron text-[9px] tracking-widest text-white/40 uppercase hover:bg-white/5"
+                      >
+                        Back
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleVerifyCode}
+                        disabled={isRecovering}
+                        className="py-2.5 bg-cyan-600 border border-cyan-400 text-white font-orbitron font-bold text-[9px] tracking-widest uppercase hover:bg-cyan-500 transition-all disabled:opacity-40"
+                      >
+                        {isRecovering ? "VERIFYING..." : "RESTORE BALANCE"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+                
+                {recoveryError && (
+                  <div className="mt-3 p-2 bg-red-500/10 border border-red-500/20 text-center">
+                    <p className="font-mono text-[8px] text-red-400 uppercase font-bold">{recoveryError}</p>
+                  </div>
+                )}
+                {recoverySuccess && (
+                  <div className="mt-3 p-2 bg-green-500/10 border border-green-500/20 text-center">
+                    <p className="font-mono text-[8px] text-green-400 uppercase font-bold">Protocol successful. Coins merged!</p>
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-col gap-3 mt-8">

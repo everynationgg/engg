@@ -22,10 +22,38 @@ export default function ShopModal({ isOpen, onClose }: ShopModalProps) {
   const { token, refreshUser, userId } = useAuth();
   const [packs, setPacks] = useState<CreditPack[]>([]);
   const [selectedPack, setSelectedPack] = useState<CreditPack | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"paypal" | "paymongo">("paypal");
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const payPalRef = useRef<HTMLDivElement>(null);
+
+  const handlePayMongoCheckout = async () => {
+    if (!selectedPack) return;
+    setIsProcessing(true);
+    setError(null);
+    try {
+      const baseUrl = import.meta.env.VITE_API_URL || "";
+      const response = await fetch(`${baseUrl}/api/shop/paymongo-create-session`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ packId: selectedPack.id }),
+      });
+      const data = await response.json();
+      if (response.ok && data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        setError(data.error || "Failed to initialize PayMongo checkout link");
+      }
+    } catch (err) {
+      setError("Failed to connect to payment gateway");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -271,6 +299,32 @@ export default function ShopModal({ isOpen, onClose }: ShopModalProps) {
                           </p>
                         </div>
 
+                        {/* Payment Method Selector */}
+                        <div className="grid grid-cols-2 gap-4 mb-6">
+                          <button
+                            type="button"
+                            onClick={() => { playSciFiClick(); setPaymentMethod("paypal"); setError(null); }}
+                            className={`py-3 font-orbitron font-bold text-xs tracking-wider uppercase border rounded-md transition-all ${
+                              paymentMethod === "paypal"
+                                ? "bg-blue-600/20 border-blue-500 text-blue-400 shadow-[0_0_15px_rgba(37,99,235,0.15)]"
+                                : "bg-white/[0.02] border-white/10 text-white/40 hover:text-white"
+                            }`}
+                          >
+                            PayPal
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { playSciFiClick(); setPaymentMethod("paymongo"); setError(null); }}
+                            className={`py-3 font-orbitron font-bold text-xs tracking-wider uppercase border rounded-md transition-all ${
+                              paymentMethod === "paymongo"
+                                ? "bg-cyan-600/20 border-cyan-500 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
+                                : "bg-white/[0.02] border-white/10 text-white/40 hover:text-white"
+                            }`}
+                          >
+                            GCash / Maya / Card
+                          </button>
+                        </div>
+
                         <div className="flex items-end justify-between px-2">
                            <span className="font-mono text-xs text-white/20 uppercase tracking-[0.4em]">Exchange_Rate</span>
                            <span className="font-orbitron text-3xl text-white font-bold tracking-widest">${selectedPack.price} <span className="text-[10px] opacity-20">USD</span></span>
@@ -288,18 +342,36 @@ export default function ShopModal({ isOpen, onClose }: ShopModalProps) {
                               </div>
                             ) : (
                               <div className="space-y-4">
-                                <div ref={payPalRef} className="scale-110 origin-top transform translate-y-2">
-                                  <PayPalButtons
-                                    style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
-                                    createOrder={handleCreateOrder}
-                                    onApprove={handleApprove}
-                                    onError={(err) => setError("PayPal synchronization failed. Please try again.")}
-                                  />
-                                </div>
-                                <div className="flex items-center justify-center gap-3 text-white/20 mt-6 pt-4 border-t border-white/5">
-                                  <FaShieldAlt className="text-[10px]" />
-                                  <span className="font-mono text-[8px] uppercase tracking-widest">End-to-End Encrypted Secure Gateway</span>
-                                </div>
+                                {paymentMethod === "paypal" ? (
+                                  <>
+                                    <div ref={payPalRef} className="scale-110 origin-top transform translate-y-2">
+                                      <PayPalButtons
+                                        style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
+                                        createOrder={handleCreateOrder}
+                                        onApprove={handleApprove}
+                                        onError={(err) => setError("PayPal synchronization failed. Please try again.")}
+                                      />
+                                    </div>
+                                    <div className="flex items-center justify-center gap-3 text-white/20 mt-6 pt-4 border-t border-white/5">
+                                      <FaShieldAlt className="text-[10px]" />
+                                      <span className="font-mono text-[8px] uppercase tracking-widest">End-to-End Encrypted Secure Gateway</span>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={handlePayMongoCheckout}
+                                      className="w-full py-4 rounded-md bg-cyan-600 hover:bg-cyan-500 text-white transition-all flex flex-col items-center gap-1 shadow-[0_0_20px_rgba(6,182,212,0.3)] font-orbitron font-bold text-xs tracking-[0.2em] uppercase"
+                                    >
+                                      Proceed to Secure GCash / Card Checkout
+                                    </button>
+                                    <div className="flex items-center justify-center gap-3 text-white/20 mt-6 pt-4 border-t border-white/5">
+                                      <FaShieldAlt className="text-[10px]" />
+                                      <span className="font-mono text-[8px] uppercase tracking-widest">Powered by PayMongo Secure Gateway</span>
+                                    </div>
+                                  </>
+                                )}
                               </div>
                             )}
                           </div>
