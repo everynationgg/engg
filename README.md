@@ -1,84 +1,84 @@
-# Errant Night (Every Nation GG)
+# ENGG Product Workspace
 
-A pnpm workspace with separate deployable apps for the main website and the Errant Night game.
+This repository currently contains the ENGG main website, the Errant Night game,
+the Fly-hosted API server, and shared workspace libraries. It is organized as a
+pnpm workspace while the product is being prepared for a cleaner split between
+the website and the game.
 
-## Workspace Apps
+## Current Status
 
-- `artifacts/every-nation` - main website, package `@workspace/every-nation`
-- `artifacts/end` - Errant Night game, package `@workspace/end`
-- `artifacts/api-server` - Fly-hosted API and Socket.IO backend
-- `lib/*` - shared workspace packages used by the backend and clients
+- The same-repo Vercel deployment split was committed and pushed as
+  `7587310 Split website and game Vercel builds`.
+- The main website build now targets `artifacts/every-nation` and outputs to
+  root `dist`.
+- The game build now targets `artifacts/end` and outputs to
+  `artifacts/end/dist/public`.
+- The main website no longer bundles the game into `dist/end`.
+- The main website Hub links Errant Night through `VITE_ERRANT_NIGHT_URL`.
+- Old main-site `/end` paths redirect in the browser to the configured external
+  game URL.
+- `artifacts/end` has not been deleted or moved yet.
+- The next product-cleanup target is a standalone game repository.
 
-The main website does not build the game into `/end` anymore. Its Hub uses `VITE_ERRANT_NIGHT_URL` to send players to the separate game deployment, and old `/end` website paths redirect to that same external URL.
+## What This Repo Contains
 
-## Local Development
+- `artifacts/every-nation` - main website app, package `@workspace/every-nation`
+- `artifacts/end` - Errant Night game app, package `@workspace/end`
+- `artifacts/api-server` - API and Socket.IO server deployed to Fly
+- `artifacts/brain` - workspace artifact retained for now
+- `artifacts/mockup-sandbox` - sandbox artifact retained for now
+- `lib/api-client-react` - generated/client API helpers for React apps
+- `lib/api-spec` - OpenAPI/orval source
+- `lib/api-zod` - API validation schemas
+- `lib/db` - database schema and Drizzle setup
+- `scripts` - workspace build and support scripts
+- `attached_assets` - shared media currently used by the game
 
-Install from the repo root:
+## Separation Direction
+
+The product is moving in two steps:
+
+1. Current step: keep the existing workspace, but deploy the website and game as
+   separate Vercel projects from the same repo.
+2. Future step: extract Errant Night into its own repository and Vercel project,
+   then remove game code from the website repo.
+
+The API server remains separate on Fly unless that decision changes later.
+
+## Core Commands
 
 ```powershell
 pnpm install
+pnpm run typecheck
+pnpm run build:landing
+pnpm run build:game
 ```
 
-Run the main website:
+Run the main website locally:
 
 ```powershell
 pnpm --filter @workspace/every-nation run dev
 ```
 
-Run the game on another local port:
+Run the game locally:
 
 ```powershell
 $env:PORT="5174"; pnpm --filter @workspace/end run dev
 ```
 
-## Vercel: Main Website
+## Important Docs
 
-Create one Vercel project from this repo for the main website.
-
-- Root Directory: `.`
-- Framework Preset: Other
-- Install Command: `pnpm install --frozen-lockfile`
-- Build Command: `pnpm run build:landing`
-- Output Directory: `dist`
-- Domains: `engg.online`, `www.engg.online`, or the chosen main website domains
-
-Environment variables:
-
-- `VITE_ERRANT_NIGHT_URL=https://end.engg.online`
-- `VITE_API_URL=https://engg.fly.dev`
-- `VITE_PAYPAL_CLIENT_ID=<public PayPal client id if shop is enabled>`
-
-## Vercel: Errant Night Game
-
-Create a second Vercel project from this same repo for the game.
-
-- Root Directory: `.`
-- Framework Preset: Other
-- Install Command: `pnpm install --frozen-lockfile`
-- Build Command: `pnpm run build:game`
-- Output Directory: `artifacts/end/dist/public`
-- Domains: `end.engg.online` or the chosen game domain
-
-Environment variables:
-
-- `BASE_PATH=/`
-- `VITE_API_URL=https://engg.fly.dev`
-- `VITE_API_BASE_URL=https://engg.fly.dev/api`
-- `VITE_PAYPAL_CLIENT_ID=<public PayPal client id if in-game shop is enabled>`
-
-The shared root `vercel.json` keeps `/api/*` and `/socket.io/*` pointed at `https://engg.fly.dev`, then rewrites client routes to `index.html`.
-
-## Validation
-
-```powershell
-pnpm run typecheck
-pnpm run build:landing
-pnpm run build:game
-pnpm --filter @workspace/every-nation run typecheck
-pnpm --filter @workspace/end run typecheck
-```
-
-## Documentation
-
-- [UI Standards & Mobile Compliance](./UI_STANDARDS.md)
+- [AI Context](./AI_CONTEXT.md)
+- [Architecture](./ARCHITECTURE.md)
+- [Deployment](./DEPLOYMENT.md)
+- [Local Setup](./LOCAL_SETUP.md)
+- [Testing](./TESTING.md)
+- [Security](./SECURITY.md)
+- [Tech Stack](./TECH_STACK.md)
+- [Roadmap](./ROADMAP.md)
+- [Debugging](./DEBUGGING.md)
+- [MVP QA Checklist](./MVP_QA_CHECKLIST.md)
+- [UI Standards](./UI_STANDARDS.md)
+- [Decision Records](./decisions/README.md)
+- [Repo Research](./repo-research/README.md)
 - [API Deployment Guide](./artifacts/api-server/DEPLOY.md)
