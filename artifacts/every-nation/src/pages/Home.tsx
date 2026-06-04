@@ -41,8 +41,8 @@ export default function Home() {
           preload="metadata"
           aria-hidden="true"
         >
-          <source src="/EN_PAGE_BACKGROUND.webm" type="video/webm" />
           <source src="/bg-video.mp4" type="video/mp4" />
+          <source src="/EN_PAGE_BACKGROUND.webm" type="video/webm" />
         </video>
       )}
 
