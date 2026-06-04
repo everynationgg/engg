@@ -20,7 +20,9 @@ It keeps only shared install/framework metadata and route rewrites:
 
 - `/api/*` -> `https://engg.fly.dev/api/*`
 - `/socket.io/*` -> `https://engg.fly.dev/socket.io/*`
-- other client routes -> `/index.html`
+- `/errant-night/*` -> `https://errant-night.vercel.app/errant-night/*`
+- `/errant-night/assets/*` -> `https://errant-night.vercel.app/assets/*`
+- other website client routes -> `/index.html`
 
 Because both Vercel projects use root directory `.`, each project must set its
 own build command and output directory in the Vercel dashboard.
@@ -37,20 +39,20 @@ Use these dashboard settings:
 
 Environment variables:
 
-- `VITE_ERRANT_NIGHT_URL=https://end.engg.online`
 - `VITE_API_URL=https://engg.fly.dev`
 - `VITE_PAYPAL_CLIENT_ID=<public PayPal client id>`
 
 Expected behavior:
 
 - Main website serves normal website routes.
-- Main `/hub` opens `VITE_ERRANT_NIGHT_URL`.
-- Main `/end` and `/end/*` hand off to the external game URL.
+- Main `/hub` opens `/errant-night`.
+- Main `/end` and `/end/*` redirect to `/errant-night`.
+- Main `/errant-night` proxies to `https://errant-night.vercel.app`.
 - Main build output does not include `dist/end`.
 
-## Game Vercel Project
+## Legacy Same-Repo Game Vercel Project
 
-Use these dashboard settings:
+The original same-repo game project used these dashboard settings:
 
 - Root Directory: `.`
 - Framework Preset: `Other`
@@ -85,14 +87,17 @@ pnpm run deploy:api
 
 ## Future Target
 
-The next target is a separate game repository:
+The standalone game repository now exists:
 
-- Move `artifacts/end` into a standalone game repo.
-- Move or duplicate only the game-required assets from `attached_assets`.
-- Replace workspace package dependencies with copied/generated code or a clean
-  published/shared package.
-- Keep the game deployed to its own Vercel project.
+- Repo: `everynationgg/errant-night`
+- Public origin: `https://errant-night.vercel.app`
+- Path base: `/errant-night/`
+- Build command: `pnpm run build`
+- Output directory: `dist/public`
+
+The next target is cleanup:
+
 - Keep the website repository free of game code after extraction.
 
-Do not delete `artifacts/end` from this repo until the standalone game repo is
-deployed and verified.
+Do not delete `artifacts/end` from this repo until the website `/errant-night`
+proxy is deployed and verified.

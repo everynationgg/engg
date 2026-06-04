@@ -27,7 +27,7 @@ a preview server may still be serving the old game build. Stop the preview
 process and rerun:
 
 ```powershell
-$env:BASE_PATH="/"; pnpm run build:game
+$env:BASE_PATH="/errant-night/"; pnpm run build:game
 ```
 
 ## Vercel Deployment Issues
@@ -43,28 +43,30 @@ root `buildCommand` or `outputDirectory`.
 
 ## `BASE_PATH` Issues
 
-The game should deploy at `/` on its own domain:
+The standalone game currently deploys under `/errant-night/`:
 
 ```text
-BASE_PATH=/
+BASE_PATH=/errant-night/
 ```
 
 Symptoms of a wrong base path:
 
-- Assets request `/end/...` on the game domain.
-- `/join/ABC123` or `/room/ABC123` load a blank page.
-- Manifest or icon URLs point to `/end`.
+- Assets request `/end/...` or `/assets/...` without the expected proxy rule.
+- `/errant-night/join/ABC123` or `/errant-night/room/ABC123` load a blank page.
+- Manifest or icon URLs point to the old `/end` path.
 
 ## SPA Fallback Issues
 
-The root `vercel.json` rewrites non-API and non-socket routes to `/index.html`.
-This is required for Vite client-side routing.
+The root `vercel.json` rewrites website routes to `/index.html`, but excludes
+`/api`, `/socket.io`, and `/errant-night` so API/socket calls and the game proxy
+do not fall into the website SPA.
 
 If deep links 404:
 
 - Confirm the project output directory is correct.
 - Confirm the fallback rewrite is present.
-- Confirm `/api/*` and `/socket.io/*` are excluded from the SPA fallback.
+- Confirm `/api/*`, `/socket.io/*`, and `/errant-night/*` are excluded from the
+  website SPA fallback.
 
 ## API And Socket Proxy Issues
 
@@ -80,11 +82,12 @@ For local game development, Vite proxies `/api` and `/socket.io` to
 
 ## Redirect Issues
 
-Main website `/end` and `/end/*` are currently client-side handoffs to
-`VITE_ERRANT_NIGHT_URL`.
+Main website `/end` and `/end/*` are Vercel redirects to `/errant-night`.
+Main website `/errant-night` and `/errant-night/*` are Vercel rewrites to
+`https://errant-night.vercel.app`.
 
-If `/end/join/ABC123?x=1#frag` does not preserve path/query/hash, check
-`artifacts/every-nation/src/lib/externalLinks.ts` and the `/end/*` route in
-`artifacts/every-nation/src/App.tsx`.
+If `/end/join/ABC123?x=1` does not preserve path/query, check the `redirects`
+entries in root `vercel.json`. URL hashes are client-side only and are not
+visible to Vercel redirects.
 
 Do not change Navbar or unrelated website UI while debugging split redirects.

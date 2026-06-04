@@ -2,7 +2,7 @@
 
 ## Phase 1: Documentation Cleanup
 
-Status: in progress.
+Status: complete.
 
 Goals:
 
@@ -12,6 +12,8 @@ Goals:
 - Keep all changes documentation-only.
 
 ## Phase 2: Standalone Game Repo Extraction
+
+Status: complete.
 
 Goals:
 
@@ -26,12 +28,15 @@ Goals:
 
 ## Phase 3: Deploy Game Repo To Vercel
 
+Status: preview/proxy path verified.
+
 Goals:
 
 - Link the standalone game repo to its own Vercel project.
 - Build with `pnpm run build`.
-- Serve at `/` with `BASE_PATH=/`.
-- Verify `/`, `/join/ABC123`, and `/room/ABC123`.
+- Serve at `/errant-night/` with `BASE_PATH=/errant-night/`.
+- Verify `/errant-night/`, `/errant-night/join/ABC123`, and
+  `/errant-night/room/ABC123`.
 - Verify API and Socket.IO still reach `https://engg.fly.dev`.
 
 ## Phase 4: Remove Game From Website Repo
@@ -40,9 +45,8 @@ Goals:
 
 - Remove game code from the website repo only after standalone deployment is
   verified.
-- Keep website `VITE_ERRANT_NIGHT_URL` link.
-- Keep `/end` handoff behavior or replace it with a server-level redirect if
-  needed.
+- Keep website `/errant-night` proxy.
+- Keep `/end` as a server-level redirect to `/errant-night`.
 - Remove game-only dependencies from the website repo.
 
 ## Phase 5: Cleanup Dependencies And Docs

@@ -49,10 +49,12 @@ Check:
 
 Website split checks:
 
-- `/hub` Errant Night opens `https://end.engg.online/`.
-- `/end` opens `https://end.engg.online/`.
+- `/hub` Errant Night opens `/errant-night`.
+- `/end` redirects to `/errant-night`.
 - `/end/join/ABC123?x=1#frag` opens
-  `https://end.engg.online/join/ABC123?x=1#frag`.
+  `/errant-night/join/ABC123?x=1`.
+- `/errant-night/join/ABC123` serves the standalone game through the website
+  proxy after Vercel deploy.
 
 ## Manual Game Checks
 
@@ -68,11 +70,11 @@ Check game routes at root:
 - `/join/ABC123`
 - `/room/ABC123`
 
-For deployed game checks, use the game domain:
+For deployed standalone game checks, use the public game origin:
 
-- `https://end.engg.online/`
-- `https://end.engg.online/join/ABC123`
-- `https://end.engg.online/room/ABC123`
+- `https://errant-night.vercel.app/errant-night/`
+- `https://errant-night.vercel.app/errant-night/join/ABC123`
+- `https://errant-night.vercel.app/errant-night/room/ABC123`
 
 ## API And Socket Checks
 

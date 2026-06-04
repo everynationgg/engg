@@ -26,7 +26,9 @@ Keep the workspace structure and split the Vercel builds first:
 - Game: `pnpm run build:game` -> `artifacts/end/dist/public`
 - Root `vercel.json` does not force one shared `buildCommand` or
   `outputDirectory`.
-- Main website links to the game through `VITE_ERRANT_NIGHT_URL`.
+- Main website originally linked to the game through a configurable external
+  URL; this was later replaced by the `/errant-night` website proxy after the
+  standalone game repo was verified.
 - Game deploys at `/` with `BASE_PATH=/`.
 
 This was committed as:

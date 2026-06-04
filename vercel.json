@@ -7,6 +7,18 @@
       "dev": true
     }
   },
+  "redirects": [
+    {
+      "source": "/end",
+      "destination": "/errant-night",
+      "permanent": false
+    },
+    {
+      "source": "/end/:path*",
+      "destination": "/errant-night/:path*",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/:path*",
@@ -17,7 +29,19 @@
       "destination": "https://engg.fly.dev/socket.io/:path*"
     },
     {
-      "source": "/((?!api|socket.io).*)",
+      "source": "/errant-night/assets/:path*",
+      "destination": "https://errant-night.vercel.app/assets/:path*"
+    },
+    {
+      "source": "/errant-night/:path*",
+      "destination": "https://errant-night.vercel.app/errant-night/:path*"
+    },
+    {
+      "source": "/errant-night",
+      "destination": "https://errant-night.vercel.app/errant-night"
+    },
+    {
+      "source": "/((?!api|socket.io|errant-night).*)",
       "destination": "/index.html"
     }
   ]

@@ -14,11 +14,13 @@ the website and the game.
 - The game build now targets `artifacts/end` and outputs to
   `artifacts/end/dist/public`.
 - The main website no longer bundles the game into `dist/end`.
-- The main website Hub links Errant Night through `VITE_ERRANT_NIGHT_URL`.
-- Old main-site `/end` paths redirect in the browser to the configured external
-  game URL.
+- The standalone game repo is `everynationgg/errant-night`.
+- The main website Hub links Errant Night at `/errant-night`.
+- Main-site `/errant-night` is proxied to `https://errant-night.vercel.app`.
+- Old main-site `/end` paths redirect to `/errant-night`.
 - `artifacts/end` has not been deleted or moved yet.
-- The next product-cleanup target is a standalone game repository.
+- The next product-cleanup target is removing the old in-repo game app after
+  the path proxy is deployed and verified.
 
 ## What This Repo Contains
 
@@ -40,8 +42,9 @@ The product is moving in two steps:
 
 1. Current step: keep the existing workspace, but deploy the website and game as
    separate Vercel projects from the same repo.
-2. Future step: extract Errant Night into its own repository and Vercel project,
-   then remove game code from the website repo.
+2. Current path-proxy step: serve Errant Night through `/errant-night` from the
+   standalone `everynationgg/errant-night` Vercel app.
+3. Future cleanup step: remove game code from the website repo.
 
 The API server remains separate on Fly unless that decision changes later.
 

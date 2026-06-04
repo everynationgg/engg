@@ -24,11 +24,12 @@ The main site build uses `pnpm run build:landing`; the game build uses
 - Main website Vercel project:
   - Build command: `pnpm run build:landing`
   - Output directory: `dist`
-  - Env includes `VITE_ERRANT_NIGHT_URL=https://end.engg.online`
+  - Proxies `/errant-night` to `https://errant-night.vercel.app`
+  - Redirects legacy `/end` paths to `/errant-night`
 - Game Vercel project:
-  - Build command: `pnpm run build:game`
-  - Output directory: `artifacts/end/dist/public`
-  - Env includes `BASE_PATH=/`
+  - Standalone repo: `everynationgg/errant-night`
+  - Public origin: `https://errant-night.vercel.app`
+  - Path base: `/errant-night/`
 - API and Socket.IO remain on `https://engg.fly.dev`.
 
 ## Safety Rules
@@ -38,8 +39,8 @@ The main site build uses `pnpm run build:landing`; the game build uses
 - Do not change auth, PayPal, sockets, database, API server, or Navbar unless
   explicitly requested.
 - Do not delete or move `artifacts/end` yet.
-- Do not split the game into a new repository until that task is explicitly
-  started.
+- Do not delete the old in-repo game until the website path proxy is deployed
+  and verified.
 - Search the whole repo before removing references, routes, assets, or packages.
 - Keep changes minimal and reversible.
 - Avoid new dependencies unless the user explicitly approves them.
@@ -68,6 +69,6 @@ For the split specifically, also verify:
 
 - Main build produces `dist` without `dist/end`.
 - Game build produces `artifacts/end/dist/public`.
-- Main `/hub` opens `VITE_ERRANT_NIGHT_URL`.
-- Main `/end/*` redirects to the external game URL.
-- Game routes work at root: `/`, `/join/ABC123`, `/room/ABC123`.
+- Main `/hub` opens `/errant-night`.
+- Main `/end/*` redirects to `/errant-night/*`.
+- Website `/errant-night/*` proxies to `https://errant-night.vercel.app`.

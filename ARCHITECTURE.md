@@ -22,8 +22,9 @@ Package: `@workspace/every-nation`
 The website is a Vite/React app. It owns the main ENGG web experience, website
 routes, shop UI, profile/auth surfaces, Hub, and website navigation.
 
-The Hub links to Errant Night through `VITE_ERRANT_NIGHT_URL`. The website no
-longer builds the game into `/end`.
+The Hub links to Errant Night at `/errant-night`. Vercel proxies that path to
+the standalone public game origin, `https://errant-night.vercel.app`. The
+website no longer builds the game into `/end`.
 
 ## Errant Night Game
 
@@ -35,9 +36,9 @@ The game is a Vite/React app. It owns the Errant Night landing page, room join
 flow, room routes, game shell, game UI, role data, game-specific media, and
 client-side Socket.IO integration.
 
-The game currently still lives in this repo. Its build output is
-`artifacts/end/dist/public`, and it is intended to run at `/` on its own Vercel
-domain with `BASE_PATH=/`.
+The old workspace game still lives in this repo temporarily. The current
+standalone game repo is `everynationgg/errant-night`, deployed at
+`https://errant-night.vercel.app` with path base `/errant-night/`.
 
 ## API Server
 
@@ -85,7 +86,7 @@ Target architecture:
 
 - Website repository:
   - Contains the main website only.
-  - Links out to the game URL.
+  - Proxies `/errant-night` to the standalone game origin.
   - Does not contain game source, game assets, or game-only dependencies.
 - Game repository:
   - Contains the standalone Errant Night app.

@@ -42,21 +42,22 @@ The website should keep:
 - Shop UI.
 - Auth/profile UI.
 - Website navigation and layout.
-- External game link through `VITE_ERRANT_NIGHT_URL`.
-- `/end` handoff behavior unless replaced by a deployment-level redirect.
+- Same-origin game link through `/errant-night`.
+- `/end` handoff behavior through deployment-level redirects.
 
 ## Game References Remaining In Website
 
 Intentional:
 
 - Hub Errant Night card points to `getGameUrl()`.
-- `/end` and `/end/*` routes hand off to external game URL.
+- `/end` and `/end/*` redirect to `/errant-night` through Vercel.
+- `/errant-night` proxies to `https://errant-night.vercel.app`.
 - Sitemap no longer advertises old `/end` as a website-owned route.
 
 Before deleting game code from this repo, re-run:
 
 ```powershell
-rg "/end|Errant Night|VITE_ERRANT_NIGHT_URL|artifacts/end|@workspace/end"
+rg "/end|/errant-night|Errant Night|artifacts/end|@workspace/end"
 ```
 
 ## What Can Remain In Website Repo

@@ -13,9 +13,9 @@
 
 ## Game Checks
 
-- [ ] Game root `/` loads on the game domain.
-- [ ] `/join/ABC123` loads at root.
-- [ ] `/room/ABC123` loads at root.
+- [ ] Game `/errant-night/` loads on the game domain.
+- [ ] `/errant-night/join/ABC123` loads.
+- [ ] `/errant-night/room/ABC123` loads.
 - [ ] Room creation/join flow works.
 - [ ] Socket.IO connects to the Fly API.
 - [ ] Game media loads.
@@ -27,18 +27,19 @@
 - [ ] Main project build command is `pnpm run build:landing`.
 - [ ] Main project output directory is `dist`.
 - [ ] Main build output does not contain `dist/end`.
-- [ ] Game project build command is `pnpm run build:game`.
-- [ ] Game project output directory is `artifacts/end/dist/public`.
-- [ ] Game project env includes `BASE_PATH=/`.
+- [ ] Standalone game project build command is `pnpm run build`.
+- [ ] Standalone game project output directory is `dist/public`.
+- [ ] Standalone game project env includes `BASE_PATH=/errant-night/`.
 - [ ] Both projects use `pnpm install --frozen-lockfile`.
 
 ## Redirect Checks
 
-- [ ] Main `/hub` Errant Night card opens `https://end.engg.online/`.
-- [ ] Main `/end` opens `https://end.engg.online/`.
+- [ ] Main `/hub` Errant Night card opens `/errant-night`.
+- [ ] Main `/end` redirects to `/errant-night`.
 - [ ] Main `/end/join/ABC123?x=1#frag` opens
-      `https://end.engg.online/join/ABC123?x=1#frag`.
+      `/errant-night/join/ABC123?x=1`.
 - [ ] Website does not serve old bundled game files from `/end`.
+- [ ] Website `/errant-night/*` proxies to `https://errant-night.vercel.app`.
 
 ## API And Socket Checks
 
