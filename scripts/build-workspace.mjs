@@ -37,17 +37,19 @@ if (!["all", "landing", "game"].includes(mode)) {
   process.exit(1);
 }
 
-if (mode === "all" || mode === "landing") {
+const buildsMainSite = mode === "all" || mode === "landing";
+const buildsGame = mode === "all" || mode === "game";
+
+if (buildsMainSite) {
   runBuild("@workspace/every-nation", "/");
 }
 
-if (mode === "all" || mode === "game") {
-  runBuild("@workspace/end", "/end");
+if (buildsGame) {
+  runBuild("@workspace/end", "/");
 }
 
-if (mode === "all") {
+if (buildsMainSite) {
   const dist = resolve(root, "dist");
   rmSync(dist, { recursive: true, force: true });
   copyDist(resolve(root, "artifacts/every-nation/dist/public"), dist);
-  copyDist(resolve(root, "artifacts/end/dist/public"), resolve(dist, "end"));
 }

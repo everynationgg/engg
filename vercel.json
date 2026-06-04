@@ -1,7 +1,5 @@
 {
-  "buildCommand": "pnpm run build",
-  "outputDirectory": "dist",
-  "installCommand": "pnpm install",
+  "installCommand": "pnpm install --frozen-lockfile",
   "framework": null,
   "git": {
     "deploymentEnabled": {
@@ -9,58 +7,6 @@
       "dev": true
     }
   },
-  "redirects": [
-    {
-      "source": "/join/:code",
-      "destination": "/end/join/:code",
-      "permanent": false
-    },
-    {
-      "source": "/r/:roomCode",
-      "destination": "/end/room/:roomCode",
-      "permanent": true
-    },
-    {
-      "source": "/verify-email",
-      "destination": "/end/verify-email",
-      "permanent": false
-    },
-    {
-      "source": "/reset-password",
-      "destination": "/end/reset-password",
-      "permanent": false
-    },
-    {
-      "source": "/role-config",
-      "destination": "/end/role-config",
-      "permanent": false
-    },
-    {
-      "source": "/role-reveal",
-      "destination": "/end/role-reveal",
-      "permanent": false
-    },
-    {
-      "source": "/orbit",
-      "destination": "/end/orbit",
-      "permanent": false
-    },
-    {
-      "source": "/discussion",
-      "destination": "/end/discussion",
-      "permanent": false
-    },
-    {
-      "source": "/voting",
-      "destination": "/end/voting",
-      "permanent": false
-    },
-    {
-      "source": "/result",
-      "destination": "/end/result",
-      "permanent": false
-    }
-  ],
   "rewrites": [
     {
       "source": "/api/:path*",
@@ -71,11 +17,7 @@
       "destination": "https://engg.fly.dev/socket.io/:path*"
     },
     {
-      "source": "/end/:path*",
-      "destination": "/end/index.html"
-    },
-    {
-      "source": "/((?!end|assets|api|socket.io).*)",
+      "source": "/((?!api|socket.io).*)",
       "destination": "/index.html"
     }
   ]

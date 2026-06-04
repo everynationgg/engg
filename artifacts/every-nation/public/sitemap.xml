@@ -24,10 +24,4 @@
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
-  <url>
-    <loc>https://engg.online/end</loc>
-    <lastmod>2026-04-24</lastmod>
-    <changefreq>always</changefreq>
-    <priority>0.8</priority>
-  </url>
 </urlset>

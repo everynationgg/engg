@@ -20,11 +20,34 @@ import SystemToastContainer from "@/components/common/SystemToast";
 import { MessagingProvider } from "@/context/MessagingContext";
 import { UIProvider } from "@/context/UIContext";
 import { HUDFilters } from "@/components/common/HUDRenderer";
+import { getGameUrlFromWebsitePath } from "@/lib/externalLinks";
+
+function ExternalGameRedirect() {
+  useEffect(() => {
+    window.location.replace(
+      getGameUrlFromWebsitePath(
+        window.location.pathname,
+        window.location.search,
+        window.location.hash,
+      ),
+    );
+  }, []);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-6 text-center">
+      <p className="font-orbitron text-xs uppercase tracking-[0.35em] text-cyan-300">
+        Opening Errant Night...
+      </p>
+    </div>
+  );
+}
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/end" component={ExternalGameRedirect} />
+      <Route path="/end/*" component={ExternalGameRedirect} />
       <Route path="/shop" component={Shop} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />

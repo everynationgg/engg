@@ -7,6 +7,7 @@ import { HUDOverlay } from "@/components/common/HUDOverlay";
 import { SciFiButton } from "@/components/common/SciFiButton";
 import { useAuth } from "@/hooks/useAuth";
 import { HeroSection } from "@/components/ui/feature-carousel";
+import { getGameUrl } from "@/lib/externalLinks";
 
 
 export default function Hub() {
@@ -66,7 +67,7 @@ export default function Hub() {
       subtitle: "Neural Defense Protocol",
       description: "A high-stakes network defense simulator. Trace the anomaly through the digital ether before system-wide compromise.",
       image: "/ERRANT.png",
-      href: "/end",
+      href: getGameUrl(),
       status: "online" as const
     },
     {

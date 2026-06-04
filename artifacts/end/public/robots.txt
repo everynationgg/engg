@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://engg.online/end/sitemap.xml
+Sitemap: https://end.engg.online/sitemap.xml

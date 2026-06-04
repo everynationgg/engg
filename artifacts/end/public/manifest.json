@@ -2,18 +2,18 @@
   "name": "Errant Night",
   "short_name": "Errant Night",
   "description": "A free, browser-based multiplayer social deduction game. Create a room, invite friends, and survive the infestation!",
-  "start_url": "/end",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#0f0f1a",
   "theme_color": "#0f0f1a",
   "icons": [
     {
-      "src": "/end/favicon.png",
+      "src": "/favicon.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/end/favicon.png",
+      "src": "/favicon.png",
       "sizes": "512x512",
       "type": "image/png"
     }
