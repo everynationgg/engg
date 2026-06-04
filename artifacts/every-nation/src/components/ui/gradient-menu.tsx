@@ -19,7 +19,7 @@ interface LandingNavProps {
 export default function LandingNav({ onDiscord, onEnter, onSocials }: LandingNavProps) {
   const items: GradientNavItem[] = [
     {
-      title: 'Discord',
+      title: 'Join Discord',
       icon: <IoShareSocialOutline />,
       gradientFrom: '#56CCF2',
       gradientTo: '#2F80ED',
@@ -27,7 +27,7 @@ export default function LandingNav({ onDiscord, onEnter, onSocials }: LandingNav
       size: 'md',
     },
     {
-      title: 'Enter',
+      title: 'Enter Hub',
       icon: <IoHomeOutline />,
       gradientFrom: '#a955ff',
       gradientTo: '#ea51ff',
@@ -35,7 +35,7 @@ export default function LandingNav({ onDiscord, onEnter, onSocials }: LandingNav
       size: 'lg',
     },
     {
-      title: 'Socials',
+      title: 'Social Links',
       icon: <IoHeartOutline />,
       gradientFrom: '#ffa9c6',
       gradientTo: '#f434e2',

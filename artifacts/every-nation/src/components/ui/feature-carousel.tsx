@@ -6,7 +6,13 @@ import { cn } from '@/lib/utils';
 interface HeroProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   title: React.ReactNode;
   subtitle: string;
-  images: { src: string; alt: string; onClick?: () => void; status?: "online" | "offline" }[];
+  images: {
+    src: string;
+    alt: string;
+    subtitle?: string;
+    onClick?: () => void;
+    status?: "online" | "offline";
+  }[];
 }
 
 export const HeroSection = React.forwardRef<HTMLDivElement, HeroProps>(
@@ -27,7 +33,7 @@ export const HeroSection = React.forwardRef<HTMLDivElement, HeroProps>(
       <div
         ref={ref}
         className={cn(
-          'relative w-full min-h-[600px] flex flex-col items-center justify-center overflow-x-hidden p-4',
+          'relative w-full min-h-[560px] md:min-h-[620px] flex flex-col items-center justify-center overflow-x-hidden p-3 sm:p-4',
           className
         )}
         {...props}
@@ -39,19 +45,19 @@ export const HeroSection = React.forwardRef<HTMLDivElement, HeroProps>(
         </div>
 
         {/* Content */}
-        <div className="z-10 flex w-full flex-col items-center text-center space-y-8 md:space-y-12">
+        <div className="z-10 flex w-full flex-col items-center text-center space-y-7 md:space-y-12">
           {/* Header Section */}
           <div className="space-y-4">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-orbitron font-bold tracking-widest max-w-4xl uppercase text-white">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-orbitron font-bold tracking-widest max-w-4xl uppercase text-white">
               {title}
             </h1>
-            <p className="max-w-2xl mx-auto text-white/50 font-mono tracking-widest uppercase text-xs md:text-sm">
+            <p className="max-w-2xl mx-auto text-white/70 font-mono tracking-widest uppercase text-[11px] md:text-sm">
               {subtitle}
             </p>
           </div>
 
           {/* Main Showcase Section */}
-          <div className="relative w-full h-[400px] md:h-[520px] flex items-center justify-center">
+          <div className="relative w-full h-[380px] sm:h-[420px] md:h-[520px] flex items-center justify-center">
             {/* Carousel Wrapper */}
             <div className="relative w-full h-full flex items-center justify-center [perspective:1000px]">
               {images.map((image, index) => {
@@ -67,7 +73,7 @@ export const HeroSection = React.forwardRef<HTMLDivElement, HeroProps>(
 
                 return (
                   <div
-                    key={index}
+                    key={image.src}
                     onClick={() => {
                         if (isCenter && image.onClick && image.status !== "offline") {
                             image.onClick();
@@ -76,7 +82,7 @@ export const HeroSection = React.forwardRef<HTMLDivElement, HeroProps>(
                         }
                     }}
                     className={cn(
-                      'absolute w-64 h-96 md:w-[330px] md:h-[460px] transition-all duration-500 ease-in-out',
+                      'absolute w-[min(72vw,16rem)] h-[min(108vw,24rem)] sm:w-64 sm:h-96 md:w-[330px] md:h-[460px] transition-all duration-500 ease-in-out',
                       'flex items-center justify-center cursor-pointer group'
                     )}
                     style={{
@@ -97,25 +103,47 @@ export const HeroSection = React.forwardRef<HTMLDivElement, HeroProps>(
                         image.status === "offline" && "grayscale opacity-80 cursor-not-allowed"
                     )}>
                         <img
-                        src={image.src}
-                        alt={image.alt}
-                        className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105"
+                          src={image.src}
+                          alt={image.alt}
+                          width={660}
+                          height={920}
+                          loading={isCenter ? "eager" : "lazy"}
+                          decoding="async"
+                          fetchPriority={isCenter ? "high" : "low"}
+                          sizes="(min-width: 768px) 330px, min(72vw, 256px)"
+                          className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-transparent pointer-events-none" />
+                        <div className="absolute left-4 top-4 rounded-full border border-cyan-300/25 bg-black/55 px-3 py-1 backdrop-blur-sm">
+                          <span className={cn(
+                            "font-mono text-[9px] uppercase tracking-[0.22em]",
+                            image.status === "offline" ? "text-red-300" : "text-cyan-200"
+                          )}>
+                            {image.status === "offline" ? "Locked" : "Online"}
+                          </span>
+                        </div>
                         
                         {/* Title Overlay */}
-                        <div className="absolute bottom-6 left-0 w-full text-center px-4">
+                        <div className="absolute bottom-5 left-0 w-full text-center px-5">
                             <h3 className={cn(
-                                "font-orbitron font-bold text-lg md:text-xl tracking-widest uppercase text-white transition-colors",
+                                "font-orbitron font-bold text-base md:text-xl tracking-widest uppercase text-white transition-colors",
                                 isCenter && image.status !== "offline" && "text-cyan-400"
                             )}>
                                 {image.alt}
                             </h3>
-                            {image.status === "offline" && (
-                                <span className="font-mono text-[10px] text-red-400 uppercase tracking-[0.2em] mt-2 block">
-                                    [ LOCKED ]
-                                </span>
+                            {image.subtitle && (
+                              <p className="mt-2 text-[10px] uppercase tracking-[0.25em] text-white/70 font-mono">
+                                {image.subtitle}
+                              </p>
                             )}
+                            <span className={cn(
+                              "mt-4 inline-flex border px-3 py-1 font-mono text-[9px] uppercase tracking-[0.24em]",
+                              image.status === "offline"
+                                ? "border-red-400/25 text-red-300/80"
+                                : "border-cyan-300/30 text-cyan-200"
+                            )}>
+                              {image.status === "offline" ? "Standby" : "Deploy"}
+                            </span>
                         </div>
                     </div>
                   </div>
@@ -129,6 +157,7 @@ export const HeroSection = React.forwardRef<HTMLDivElement, HeroProps>(
               size="icon"
               className="absolute left-2 sm:left-8 top-1/2 -translate-y-1/2 rounded-full h-12 w-12 z-20 bg-black/50 backdrop-blur-md border-white/10 hover:bg-black/80 hover:text-cyan-400"
               onClick={handlePrev}
+              aria-label="Previous game"
             >
               <ChevronLeft className="h-6 w-6" />
             </Button>
@@ -137,6 +166,7 @@ export const HeroSection = React.forwardRef<HTMLDivElement, HeroProps>(
               size="icon"
               className="absolute right-2 sm:right-8 top-1/2 -translate-y-1/2 rounded-full h-12 w-12 z-20 bg-black/50 backdrop-blur-md border-white/10 hover:bg-black/80 hover:text-cyan-400"
               onClick={handleNext}
+              aria-label="Next game"
             >
               <ChevronRight className="h-6 w-6" />
             </Button>

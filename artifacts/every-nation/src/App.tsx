@@ -1,26 +1,35 @@
 import { Switch, Route, useLocation, Router as WouterRouter } from "wouter";
-import { useState, useEffect } from "react";
-import { AnimatePresence } from "framer-motion";
+import { lazy, Suspense, useEffect } from "react";
 import Home from "@/pages/Home";
-import Shop from "@/pages/Shop";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
-import Profile from "@/pages/Profile";
-import Hub from "@/pages/Hub";
-import Verify from "@/pages/Verify";
-import ForgotPassword from "@/pages/ForgotPassword";
-import ResetPassword from "@/pages/ResetPassword";
-import NotFound from "@/pages/not-found";
 import { AuthProvider } from "@/hooks/useAuth";
-
-import Navbar from "@/components/Navbar";
-import AlliesSidebar from "@/components/AlliesSidebar";
 
 import SystemToastContainer from "@/components/common/SystemToast";
 import { MessagingProvider } from "@/context/MessagingContext";
 import { UIProvider } from "@/context/UIContext";
 import { HUDFilters } from "@/components/common/HUDRenderer";
 import { getGameUrlFromWebsitePath } from "@/lib/externalLinks";
+
+const Shop = lazy(() => import("@/pages/Shop"));
+const Login = lazy(() => import("@/pages/Login"));
+const Register = lazy(() => import("@/pages/Register"));
+const Profile = lazy(() => import("@/pages/Profile"));
+const Hub = lazy(() => import("@/pages/Hub"));
+const Verify = lazy(() => import("@/pages/Verify"));
+const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
+const NotFound = lazy(() => import("@/pages/not-found"));
+const Navbar = lazy(() => import("@/components/Navbar"));
+const AlliesSidebar = lazy(() => import("@/components/AlliesSidebar"));
+
+function RouteLoadingFallback() {
+  return (
+    <div className="min-h-[40vh] flex items-center justify-center px-6 text-center">
+      <p className="font-orbitron text-[10px] uppercase tracking-[0.35em] text-cyan-300/70">
+        Loading node...
+      </p>
+    </div>
+  );
+}
 
 function ExternalGameRedirect() {
   useEffect(() => {
@@ -44,20 +53,22 @@ function ExternalGameRedirect() {
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/end" component={ExternalGameRedirect} />
-      <Route path="/end/*" component={ExternalGameRedirect} />
-      <Route path="/shop" component={Shop} />
-      <Route path="/login" component={Login} />
-      <Route path="/register" component={Register} />
-      <Route path="/profile" component={Profile} />
-      <Route path="/hub" component={Hub} />
-      <Route path="/verify" component={Verify} />
-      <Route path="/forgot-password" component={ForgotPassword} />
-      <Route path="/reset-password" component={ResetPassword} />
-      <Route component={NotFound} />
-    </Switch>
+    <Suspense fallback={<RouteLoadingFallback />}>
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/end" component={ExternalGameRedirect} />
+        <Route path="/end/*" component={ExternalGameRedirect} />
+        <Route path="/shop" component={Shop} />
+        <Route path="/login" component={Login} />
+        <Route path="/register" component={Register} />
+        <Route path="/profile" component={Profile} />
+        <Route path="/hub" component={Hub} />
+        <Route path="/verify" component={Verify} />
+        <Route path="/forgot-password" component={ForgotPassword} />
+        <Route path="/reset-password" component={ResetPassword} />
+        <Route component={NotFound} />
+      </Switch>
+    </Suspense>
   );
 }
 
@@ -75,8 +86,12 @@ export default function App() {
             <div className="min-h-screen bg-black text-white selection:bg-cyan-500/30 overflow-x-hidden">
               <HUDFilters />
               <SystemToastContainer />
-              {!isHomePage && <Navbar />}
-              {!isHomePage && <AlliesSidebar />}
+              {!isHomePage && (
+                <Suspense fallback={null}>
+                  <Navbar />
+                  <AlliesSidebar />
+                </Suspense>
+              )}
               <div className={`${!isHomePage ? "pt-[100px] lg:pt-[120px]" : ""}`}>
                 <Router />
               </div>
