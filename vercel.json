@@ -38,19 +38,19 @@
     },
     {
       "source": "/errant-night/assets/:path*",
-      "destination": "https://errant-night.vercel.app/assets/:path*"
+      "destination": "https://errant-night-yogs-projects-cee6471c.vercel.app/assets/:path*"
     },
     {
       "source": "/errant-night/",
-      "destination": "https://errant-night.vercel.app/errant-night/"
+      "destination": "https://errant-night-yogs-projects-cee6471c.vercel.app/errant-night/"
     },
     {
       "source": "/errant-night",
-      "destination": "https://errant-night.vercel.app/errant-night"
+      "destination": "https://errant-night-yogs-projects-cee6471c.vercel.app/errant-night"
     },
     {
       "source": "/errant-night/:path*",
-      "destination": "https://errant-night.vercel.app/errant-night/:path*"
+      "destination": "https://errant-night-yogs-projects-cee6471c.vercel.app/errant-night/:path*"
     },
     {
       "source": "/((?!api|socket.io|errant-night).*)",
