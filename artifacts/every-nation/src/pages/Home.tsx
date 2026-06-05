@@ -36,7 +36,6 @@ export default function Home() {
           poster="/opengraph.jpg"
           autoPlay
           muted
-          loop
           playsInline
           preload="metadata"
           aria-hidden="true"
