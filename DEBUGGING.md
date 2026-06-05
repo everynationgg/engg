@@ -14,32 +14,23 @@ Run focused checks:
 
 ```powershell
 pnpm --filter @workspace/every-nation run typecheck
-pnpm --filter @workspace/end run typecheck
 pnpm --filter @workspace/api-server run typecheck
 ```
 
 Use the focused failure to avoid changing unrelated apps.
 
-### Game Build Cannot Copy Assets On Windows
-
-If Vite reports `EPERM` while copying files into `artifacts/end/dist/public`,
-a preview server may still be serving the old game build. Stop the preview
-process and rerun:
-
-```powershell
-$env:BASE_PATH="/errant-night/"; pnpm run build:game
-```
-
 ## Vercel Deployment Issues
 
-Both Vercel projects currently use root directory `.`. The dashboard settings
-must differ:
+The website Vercel project uses root directory `.`:
 
 - Website build: `pnpm run build:landing`, output `dist`
-- Game build: `pnpm run build:game`, output `artifacts/end/dist/public`
 
-If one project serves the wrong output, check that Vercel did not inherit an old
-root `buildCommand` or `outputDirectory`.
+The standalone game project lives in `everynationgg/errant-night` and uses:
+
+- Game build: `pnpm run build`, output `dist/public`
+
+If a project serves the wrong output, check that Vercel did not inherit an old
+`buildCommand` or `outputDirectory`.
 
 ## `BASE_PATH` Issues
 
@@ -51,9 +42,9 @@ BASE_PATH=/errant-night/
 
 Symptoms of a wrong base path:
 
-- Assets request `/end/...` or `/assets/...` without the expected proxy rule.
+- Assets request `/assets/...` without the expected proxy rule.
 - `/errant-night/join/ABC123` or `/errant-night/room/ABC123` load a blank page.
-- Manifest or icon URLs point to the old `/end` path.
+- Manifest or icon URLs point to a stale path.
 
 ## SPA Fallback Issues
 
@@ -77,14 +68,13 @@ Expected production routing:
 - `/socket.io/*` rewrites to `https://engg.fly.dev/socket.io/*`
 - Socket.IO client path is `/socket.io`
 
-For local game development, Vite proxies `/api` and `/socket.io` to
-`API_SERVER_PORT` or `8080`.
+For local game development, use the standalone repo's Vite proxy settings.
 
 ## Redirect Issues
 
 Main website `/end` and `/end/*` are Vercel redirects to `/errant-night`.
 Main website `/errant-night` and `/errant-night/*` are Vercel rewrites to
-`https://errant-night.vercel.app`.
+the Everynation game Vercel project.
 
 If `/end/join/ABC123?x=1` does not preserve path/query, check the `redirects`
 entries in root `vercel.json`. URL hashes are client-side only and are not

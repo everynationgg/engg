@@ -16,13 +16,11 @@ Root scripts:
 - `pnpm run typecheck`
 - `pnpm run build`
 - `pnpm run build:landing`
-- `pnpm run build:game`
 - `pnpm run deploy:api`
 
 ## Artifact Packages
 
 - `artifacts/every-nation` - main website.
-- `artifacts/end` - Errant Night game.
 - `artifacts/api-server` - Fly API and Socket.IO backend.
 - `artifacts/brain` - present, not part of current split.
 - `artifacts/mockup-sandbox` - present, not part of current split.
@@ -39,7 +37,6 @@ Root scripts:
 - `scripts/build-workspace.mjs` controls root build modes.
 - `vercel.json` controls shared Vercel rewrites.
 - `artifacts/every-nation/.env.example` documents website public env.
-- `artifacts/end/.env.example` documents game public env.
 - `artifacts/api-server/DEPLOY.md` documents Fly API deployment.
 
 ## Dirty Worktree Observation
@@ -53,10 +50,9 @@ Use `git diff --name-only` to confirm actual content changes.
 
 ## Extraction Notes
 
-Do not delete or move `artifacts/end` until:
+The standalone game extraction is complete:
 
-- The standalone game repo has been created.
-- Game assets have been copied.
-- Workspace dependencies have been resolved.
-- Game deployment has been verified.
-- Website links and redirects have been verified.
+- Repo: `everynationgg/errant-night`
+- Website path: `/errant-night`
+- Legacy redirect: `/end` -> `/errant-night`
+- Game source should stay out of this website repo.

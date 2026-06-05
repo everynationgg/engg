@@ -26,7 +26,7 @@
 
 - [ ] Main project build command is `pnpm run build:landing`.
 - [ ] Main project output directory is `dist`.
-- [ ] Main build output does not contain `dist/end`.
+- [ ] Main build output contains website files only.
 - [ ] Standalone game project build command is `pnpm run build`.
 - [ ] Standalone game project output directory is `dist/public`.
 - [ ] Standalone game project env includes `BASE_PATH=/errant-night/`.
@@ -39,7 +39,7 @@
 - [ ] Main `/end/join/ABC123?x=1#frag` opens
       `/errant-night/join/ABC123?x=1`.
 - [ ] Website does not serve old bundled game files from `/end`.
-- [ ] Website `/errant-night/*` proxies to `https://errant-night.vercel.app`.
+- [ ] Website `/errant-night/*` proxies to the Everynation game Vercel project.
 
 ## API And Socket Checks
 

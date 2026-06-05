@@ -8,7 +8,6 @@
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
     "build": "node scripts/build-workspace.mjs",
     "build:landing": "node scripts/build-workspace.mjs landing",
-    "build:game": "node scripts/build-workspace.mjs game",
     "deploy:api": "fly deploy -c artifacts/api-server/fly.toml --dockerfile artifacts/api-server/Dockerfile"
   },
   "private": true,

@@ -12,7 +12,7 @@ The main website and Errant Night game were already separate workspace apps in a
 pnpm workspace:
 
 - `artifacts/every-nation`
-- `artifacts/end`
+- the old in-repo Errant Night app
 
 The original root build bundled both apps into one output and served the game
 under `/end`. The product needed the main website and game to deploy as separate
@@ -23,13 +23,14 @@ Vercel projects without doing a risky file extraction first.
 Keep the workspace structure and split the Vercel builds first:
 
 - Main website: `pnpm run build:landing` -> `dist`
-- Game: `pnpm run build:game` -> `artifacts/end/dist/public`
+- Game: standalone repo build -> `dist/public`
 - Root `vercel.json` does not force one shared `buildCommand` or
   `outputDirectory`.
 - Main website originally linked to the game through a configurable external
   URL; this was later replaced by the `/errant-night` website proxy after the
   standalone game repo was verified.
-- Game deploys at `/` with `BASE_PATH=/`.
+- Game deploys from `everynationgg/errant-night` with
+  `BASE_PATH=/errant-night/`.
 
 This was committed as:
 
@@ -41,6 +42,5 @@ This was committed as:
 
 - Lower risk than moving files immediately.
 - Vercel projects can be configured separately while the repo stays intact.
-- The game still remains in the website repo for now.
-- A later extraction pass is still required to make the game a truly standalone
-  repository.
+- This decision is now historical; the game has moved to its standalone
+  repository and the old in-repo app has been removed.

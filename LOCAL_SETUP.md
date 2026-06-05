@@ -21,7 +21,6 @@ pnpm install
 Use the example files as starting points:
 
 - `artifacts/every-nation/.env.example`
-- `artifacts/end/.env.example`
 
 Do not commit real secrets. Vite `VITE_*` values are exposed to the browser and
 must be treated as public configuration.
@@ -43,14 +42,14 @@ $env:PORT="5173"; pnpm --filter @workspace/every-nation run dev
 
 ## Run The Game
 
-Use a different port from the website:
+Errant Night is no longer part of this repository. Run it from the standalone
+repo:
 
 ```powershell
-$env:PORT="5174"; pnpm --filter @workspace/end run dev
+cd C:\projects\errant-night
+pnpm install
+pnpm run dev
 ```
-
-For local API proxying, the game Vite config proxies `/api` and `/socket.io` to
-`API_SERVER_PORT` or `8080` by default.
 
 ## Run The API Server
 
@@ -67,7 +66,6 @@ for production-oriented configuration.
 ```powershell
 pnpm run typecheck
 pnpm --filter @workspace/every-nation run typecheck
-pnpm --filter @workspace/end run typecheck
 ```
 
 ## Builds
@@ -78,13 +76,6 @@ Build the main website:
 pnpm run build:landing
 ```
 
-Build the game:
-
-```powershell
-$env:BASE_PATH="/"; pnpm run build:game
-```
-
 Expected outputs:
 
 - Website: `dist`
-- Game: `artifacts/end/dist/public`

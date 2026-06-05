@@ -7,14 +7,12 @@ Run these from the repository root:
 ```powershell
 pnpm run typecheck
 pnpm run build:landing
-pnpm run build:game
 ```
 
 Useful focused checks:
 
 ```powershell
 pnpm --filter @workspace/every-nation run typecheck
-pnpm --filter @workspace/end run typecheck
 ```
 
 ## Build Output Checks
@@ -22,13 +20,7 @@ pnpm --filter @workspace/end run typecheck
 After `pnpm run build:landing`:
 
 - `dist/index.html` exists.
-- `dist/end` does not exist.
-
-After `pnpm run build:game`:
-
-- `artifacts/end/dist/public/index.html` exists.
-- `artifacts/end/dist/public/assets` exists.
-- Game metadata points to the game domain/root paths, not `/end`.
+- No bundled game output is produced in `dist`.
 
 ## Manual Website Checks
 
@@ -58,23 +50,24 @@ Website split checks:
 
 ## Manual Game Checks
 
-Run the game preview:
+Run the game from the standalone repo:
 
 ```powershell
-$env:PORT="4174"; pnpm --filter @workspace/end run serve
+cd C:\projects\errant-night
+pnpm run serve
 ```
 
-Check game routes at root:
+Check game routes under the path base:
 
-- `/`
-- `/join/ABC123`
-- `/room/ABC123`
+- `/errant-night/`
+- `/errant-night/join/ABC123`
+- `/errant-night/room/ABC123`
 
 For deployed standalone game checks, use the public game origin:
 
-- `https://errant-night.vercel.app/errant-night/`
-- `https://errant-night.vercel.app/errant-night/join/ABC123`
-- `https://errant-night.vercel.app/errant-night/room/ABC123`
+- `https://errant-night-yogs-projects-cee6471c.vercel.app/errant-night/`
+- `https://errant-night-yogs-projects-cee6471c.vercel.app/errant-night/join/ABC123`
+- `https://errant-night-yogs-projects-cee6471c.vercel.app/errant-night/room/ABC123`
 
 ## API And Socket Checks
 

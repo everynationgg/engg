@@ -1,6 +1,6 @@
 # Deployment
 
-## Current Split Commit
+## Historical Split Commit
 
 The same-repo Vercel split is committed and pushed as:
 
@@ -8,8 +8,8 @@ The same-repo Vercel split is committed and pushed as:
 7587310 Split website and game Vercel builds
 ```
 
-That commit makes the website and game build independently from the same repo.
-It does not move the game into a separate repository yet.
+That commit made the website and game build independently from the same repo.
+The game has since moved to `everynationgg/errant-night`.
 
 ## Root Vercel Config
 
@@ -20,12 +20,12 @@ It keeps only shared install/framework metadata and route rewrites:
 
 - `/api/*` -> `https://engg.fly.dev/api/*`
 - `/socket.io/*` -> `https://engg.fly.dev/socket.io/*`
-- `/errant-night/*` -> `https://errant-night.vercel.app/errant-night/*`
-- `/errant-night/assets/*` -> `https://errant-night.vercel.app/assets/*`
+- `/errant-night/*` -> `https://errant-night-yogs-projects-cee6471c.vercel.app/errant-night/*`
+- `/errant-night/assets/*` -> `https://errant-night-yogs-projects-cee6471c.vercel.app/assets/*`
 - other website client routes -> `/index.html`
 
-Because both Vercel projects use root directory `.`, each project must set its
-own build command and output directory in the Vercel dashboard.
+The website project uses root directory `.` and owns its build command/output
+directory in the Vercel dashboard.
 
 ## Main Website Vercel Project
 
@@ -47,31 +47,32 @@ Expected behavior:
 - Main website serves normal website routes.
 - Main `/hub` opens `/errant-night`.
 - Main `/end` and `/end/*` redirect to `/errant-night`.
-- Main `/errant-night` proxies to `https://errant-night.vercel.app`.
-- Main build output does not include `dist/end`.
+- Main `/errant-night` proxies to the Everynation game Vercel project.
+- Main build output does not include bundled game files.
 
-## Legacy Same-Repo Game Vercel Project
+## Standalone Game Vercel Project
 
-The original same-repo game project used these dashboard settings:
+The game is deployed from `everynationgg/errant-night` under the Everynation
+Vercel team.
 
 - Root Directory: `.`
 - Framework Preset: `Other`
 - Install Command: `pnpm install --frozen-lockfile`
-- Build Command: `pnpm run build:game`
-- Output Directory: `artifacts/end/dist/public`
+- Build Command: `pnpm run build`
+- Output Directory: `dist/public`
 
 Environment variables:
 
-- `BASE_PATH=/`
+- `BASE_PATH=/errant-night/`
 - `VITE_API_URL=https://engg.fly.dev`
 - `VITE_API_BASE_URL=https://engg.fly.dev/api`
 - `VITE_PAYPAL_CLIENT_ID=<public PayPal client id>`
 
 Expected behavior:
 
-- Game serves at `/` on its own domain.
-- Game route `/join/ABC123` works at the domain root.
-- Game route `/room/ABC123` works at the domain root.
+- Game serves under `/errant-night/` on its Vercel origin.
+- Game route `/errant-night/join/ABC123` works.
+- Game route `/errant-night/room/ABC123` works.
 - API calls and Socket.IO reach `https://engg.fly.dev`.
 
 ## API Deployment
@@ -85,19 +86,13 @@ The workspace deploy command is:
 pnpm run deploy:api
 ```
 
-## Future Target
-
-The standalone game repository now exists:
+## Game Repository
 
 - Repo: `everynationgg/errant-night`
-- Public origin: `https://errant-night.vercel.app`
+- Public origin: `https://errant-night-yogs-projects-cee6471c.vercel.app`
 - Path base: `/errant-night/`
 - Build command: `pnpm run build`
 - Output directory: `dist/public`
 
-The next target is cleanup:
-
-- Keep the website repository free of game code after extraction.
-
-Do not delete `artifacts/end` from this repo until the website `/errant-night`
-proxy is deployed and verified.
+The old in-repo game app has been removed. Do not recreate game code in this
+repository unless a later migration explicitly reverses the split.

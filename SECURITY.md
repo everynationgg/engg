@@ -7,7 +7,7 @@ Do not commit secrets.
 Use `.env.example` files for names and placeholder values only:
 
 - `artifacts/every-nation/.env.example`
-- `artifacts/end/.env.example`
+- standalone game repo `everynationgg/errant-night` `.env.example`
 
 Vite variables prefixed with `VITE_` are exposed to browser clients. They must
 only contain public configuration, such as public API URLs or public PayPal
@@ -61,5 +61,5 @@ changing those policies during unrelated feature or docs work.
   tracked already.
 - Do not stage unrelated dirty files.
 - Before deleting files, search for references across the whole repo.
-- Treat `attached_assets` as product media; do not prune it until the game
-  extraction audit is complete.
+- Treat `attached_assets` as product media; prune only after a separate asset
+  audit confirms files are unused by the website.

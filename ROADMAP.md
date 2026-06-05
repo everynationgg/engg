@@ -18,7 +18,7 @@ Status: complete.
 Goals:
 
 - Create a new repository for Errant Night.
-- Move or copy `artifacts/end` into the new repo.
+- Move or copy the old in-repo game app into the new repo.
 - Copy only required game assets from `attached_assets`.
 - Resolve workspace dependencies:
   - copy minimal API client code, or
@@ -28,7 +28,7 @@ Goals:
 
 ## Phase 3: Deploy Game Repo To Vercel
 
-Status: preview/proxy path verified.
+Status: complete.
 
 Goals:
 
@@ -41,6 +41,8 @@ Goals:
 
 ## Phase 4: Remove Game From Website Repo
 
+Status: complete.
+
 Goals:
 
 - Remove game code from the website repo only after standalone deployment is
@@ -50,6 +52,8 @@ Goals:
 - Remove game-only dependencies from the website repo.
 
 ## Phase 5: Cleanup Dependencies And Docs
+
+Status: in progress.
 
 Goals:
 

@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
 const root = resolve(import.meta.dirname, "..");
-const mode = process.argv[2] ?? "all";
+const mode = process.argv[2] ?? "landing";
 
 function runBuild(packageName, basePath) {
   const result = spawnSync(
@@ -32,20 +32,15 @@ function copyDist(from, to) {
   cpSync(from, to, { recursive: true });
 }
 
-if (!["all", "landing", "game"].includes(mode)) {
+if (!["all", "landing"].includes(mode)) {
   console.error(`Unknown build target: ${mode}`);
   process.exit(1);
 }
 
 const buildsMainSite = mode === "all" || mode === "landing";
-const buildsGame = mode === "all" || mode === "game";
 
 if (buildsMainSite) {
   runBuild("@workspace/every-nation", "/");
-}
-
-if (buildsGame) {
-  runBuild("@workspace/end", "/");
 }
 
 if (buildsMainSite) {

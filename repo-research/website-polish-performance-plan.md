@@ -33,7 +33,7 @@ Scope is limited to the main website app:
 - Do not touch game extraction work.
 - Do not touch `C:\projects\errant-night`.
 - Do not touch unrelated `artifacts/every-nation/src/components/Navbar.tsx`.
-- Do not delete `artifacts/end`.
+- Do not mix website polish with game extraction or cleanup.
 - Do not make large unrelated UI rewrites.
 - Do not remove dependencies unless they are proven unused and removal is separately approved.
 

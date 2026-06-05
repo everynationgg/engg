@@ -1,9 +1,8 @@
 # ENGG Product Workspace
 
-This repository currently contains the ENGG main website, the Errant Night game,
-the Fly-hosted API server, and shared workspace libraries. It is organized as a
-pnpm workspace while the product is being prepared for a cleaner split between
-the website and the game.
+This repository contains the ENGG main website, the Fly-hosted API server, and
+shared workspace libraries. Errant Night now lives in its standalone repository,
+`everynationgg/errant-night`, and is served through the website path proxy.
 
 ## Current Status
 
@@ -11,21 +10,16 @@ the website and the game.
   `7587310 Split website and game Vercel builds`.
 - The main website build now targets `artifacts/every-nation` and outputs to
   root `dist`.
-- The game build now targets `artifacts/end` and outputs to
-  `artifacts/end/dist/public`.
-- The main website no longer bundles the game into `dist/end`.
+- The main website no longer owns or builds Errant Night game code.
 - The standalone game repo is `everynationgg/errant-night`.
 - The main website Hub links Errant Night at `/errant-night`.
-- Main-site `/errant-night` is proxied to `https://errant-night.vercel.app`.
+- Main-site `/errant-night` is proxied to the Everynation Vercel game project.
 - Old main-site `/end` paths redirect to `/errant-night`.
-- `artifacts/end` has not been deleted or moved yet.
-- The next product-cleanup target is removing the old in-repo game app after
-  the path proxy is deployed and verified.
+- The old in-repo Errant Night app has been removed from this repository.
 
 ## What This Repo Contains
 
 - `artifacts/every-nation` - main website app, package `@workspace/every-nation`
-- `artifacts/end` - Errant Night game app, package `@workspace/end`
 - `artifacts/api-server` - API and Socket.IO server deployed to Fly
 - `artifacts/brain` - workspace artifact retained for now
 - `artifacts/mockup-sandbox` - sandbox artifact retained for now
@@ -34,17 +28,18 @@ the website and the game.
 - `lib/api-zod` - API validation schemas
 - `lib/db` - database schema and Drizzle setup
 - `scripts` - workspace build and support scripts
-- `attached_assets` - shared media currently used by the game
+- `attached_assets` - retained media assets; prune only after a separate audit
 
 ## Separation Direction
 
-The product is moving in two steps:
+The product split is now:
 
-1. Current step: keep the existing workspace, but deploy the website and game as
-   separate Vercel projects from the same repo.
-2. Current path-proxy step: serve Errant Night through `/errant-night` from the
-   standalone `everynationgg/errant-night` Vercel app.
-3. Future cleanup step: remove game code from the website repo.
+1. Website repo: owns the ENGG portal, Hub, shop/profile/auth UI, shared libs,
+   and Fly API server source.
+2. Game repo: `everynationgg/errant-night` owns Errant Night source, assets, and
+   game deployment.
+3. Website path proxy: `/errant-night` serves the standalone game behind the
+   scenes; `/end` remains only as a legacy redirect.
 
 The API server remains separate on Fly unless that decision changes later.
 
@@ -54,7 +49,6 @@ The API server remains separate on Fly unless that decision changes later.
 pnpm install
 pnpm run typecheck
 pnpm run build:landing
-pnpm run build:game
 ```
 
 Run the main website locally:
@@ -63,11 +57,7 @@ Run the main website locally:
 pnpm --filter @workspace/every-nation run dev
 ```
 
-Run the game locally:
-
-```powershell
-$env:PORT="5174"; pnpm --filter @workspace/end run dev
-```
+Run the game locally from `C:\projects\errant-night`, not this repository.
 
 ## Important Docs
 

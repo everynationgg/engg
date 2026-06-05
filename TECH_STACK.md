@@ -28,7 +28,7 @@ Relevant packages include:
 
 ## Errant Night Game
 
-Path: `artifacts/end`
+Repo: `everynationgg/errant-night`
 
 Relevant packages include:
 
@@ -41,9 +41,7 @@ Relevant packages include:
 - Socket.IO client
 - PayPal React SDK
 - React Query
-- `@workspace/api-client-react`
-
-The game imports media from `attached_assets` through the `@assets` Vite alias.
+The game owns its own copied media and standalone API helper code in its repo.
 
 ## API Server
 

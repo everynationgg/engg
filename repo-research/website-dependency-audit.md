@@ -51,13 +51,13 @@ Intentional:
 
 - Hub Errant Night card points to `getGameUrl()`.
 - `/end` and `/end/*` redirect to `/errant-night` through Vercel.
-- `/errant-night` proxies to `https://errant-night.vercel.app`.
+- `/errant-night` proxies to the Everynation game Vercel project.
 - Sitemap no longer advertises old `/end` as a website-owned route.
 
 Before deleting game code from this repo, re-run:
 
 ```powershell
-rg "/end|/errant-night|Errant Night|artifacts/end|@workspace/end"
+rg "/end|/errant-night|Errant Night"
 ```
 
 ## What Can Remain In Website Repo
@@ -70,9 +70,8 @@ rg "/end|/errant-night|Errant Night|artifacts/end|@workspace/end"
 
 ## What Should Leave With The Game
 
-- `artifacts/end`
-- Game-only public assets.
-- Game-only role media from `attached_assets`.
+- Game source and game-specific public assets.
+- Game-only role media.
 - Game-specific SEO/manifest files.
 - Game-specific Vercel env examples and deployment docs.
 

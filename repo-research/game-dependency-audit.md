@@ -1,12 +1,17 @@
-# Game Dependency Audit
+# Game Extraction Summary
 
-Date: 2026-06-04
+Original audit date: 2026-06-04
+Updated: 2026-06-05
 
-## App
+## Current Location
 
-Path: `artifacts/end`
+Errant Night now lives in the standalone repository:
 
-Package: `@workspace/end`
+```text
+everynationgg/errant-night
+```
+
+The website repository no longer owns the game source package.
 
 ## Runtime/Build
 
@@ -18,7 +23,7 @@ Package: `@workspace/end`
 
 ## Important Dependencies
 
-From `artifacts/end/package.json`:
+The standalone game keeps its own package setup for:
 
 - `@paypal/react-paypal-js`
 - `@vercel/speed-insights`
@@ -32,45 +37,19 @@ From `artifacts/end/package.json`:
 - Recharts
 - Sonner
 - Zod
-- `@workspace/api-client-react`
-
-## Workspace Dependencies
-
-The game imports `@workspace/api-client-react` in
-`artifacts/end/src/hooks/useAuth.tsx`.
-
-Before extracting the game, choose one:
-
-- Copy the minimal API client helper code into the game repo.
-- Generate a standalone API client from `lib/api-spec`.
-- Create a clean shared package if the organization wants shared package
-  maintenance across repos.
-
-Do not leave a broken `workspace:*` dependency in a standalone repo.
+- local API helper code copied during extraction
 
 ## Asset Dependencies
 
-The game Vite config defines:
-
-```text
-@assets -> attached_assets
-```
-
-Current game imports include role images/videos, landing art, join page art, and
-how-to-play art from `attached_assets`.
-
-Before extraction:
-
-- List every `@assets` import.
-- Copy only required assets into the game repo.
-- Replace the alias target with a game-local assets folder.
-- Verify build output still includes all media.
+Required game media was copied into the standalone game repo. Do not move or
+prune website repo media in this cleanup unless a separate asset audit confirms
+it is unused by the website.
 
 ## Environment Dependencies
 
-Game Vercel env:
+Standalone game Vercel env:
 
-- `BASE_PATH=/`
+- `BASE_PATH=/errant-night/`
 - `VITE_API_URL=https://engg.fly.dev`
 - `VITE_API_BASE_URL=https://engg.fly.dev/api`
 - `VITE_PAYPAL_CLIENT_ID=<public PayPal client id>`
@@ -82,9 +61,9 @@ Local helper env:
 
 ## Routes To Preserve
 
-- `/`
-- `/join/:roomCode`
-- `/room/:roomCode`
+- `/errant-night/`
+- `/errant-night/join/:roomCode`
+- `/errant-night/room/:roomCode`
 - `/profile`
 - `/settings`
 - `/verify-email`
@@ -101,11 +80,11 @@ separate game-routing decision.
 - Socket.IO client uses `VITE_API_URL` and path `/socket.io`.
 - Production API/socket target is `https://engg.fly.dev`.
 
-## Extraction Risks
+## Resolved Extraction Risks
 
-- Missing `attached_assets` media.
-- Broken `@workspace/api-client-react` dependency.
-- Incorrect `BASE_PATH` causing root-domain assets to fail.
-- Socket.IO path or CORS issues after domain change.
-- PayPal public client ID missing in the new Vercel project.
-- SEO/manifest URLs accidentally pointing back to `/end`.
+- Missing game media was addressed by copying required assets into the
+  standalone repo.
+- Workspace-only API client dependency was replaced with local standalone code.
+- `BASE_PATH=/errant-night/` was verified in production.
+- Socket.IO path continues to route to `https://engg.fly.dev`.
+- PayPal public client ID is set in the Everynation Vercel game project.
