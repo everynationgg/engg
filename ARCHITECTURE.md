@@ -26,6 +26,10 @@ The Hub links to Errant Night at `/errant-night`. Vercel proxies that path to
 the standalone Everynation Vercel game project. The website no longer builds or
 serves the game code.
 
+Hub game card data lives in
+`artifacts/every-nation/src/lib/gameCatalog.ts`. Future games should be added to
+that catalog before they are wired into routing.
+
 ## Errant Night Game
 
 Repo: `everynationgg/errant-night`
@@ -37,6 +41,25 @@ media, and client-side Socket.IO integration.
 The website repo proxies `/errant-night` to the game project's Everynation
 Vercel origin, currently `https://errant-night-yogs-projects-cee6471c.vercel.app`,
 with path base `/errant-night/`.
+
+## Multi-Game Model
+
+Future games should follow the same pattern:
+
+- Public URL: `https://www.engg.online/<game-slug>`
+- Local repo folder: `C:\projects\<game-slug>`
+- GitHub repo: `everynationgg/<game-slug>`
+- Vercel project: standalone game project under the Everynation team
+- Game base path: `BASE_PATH=/<game-slug>/`
+- Website routing: path proxy in root `vercel.json`
+
+Examples:
+
+- `/errant-night`
+- `/engraved-nether`
+- `/epsilon-nine`
+
+Public game subdomains are not the default architecture.
 
 ## API Server
 
@@ -88,7 +111,7 @@ Target architecture:
 - Game repository:
   - Contains the standalone Errant Night app.
   - Owns game assets and game-specific docs.
-  - Deploys to its own Vercel project/domain at `/`.
+  - Deploys to its own Vercel project with the matching game base path.
 - API:
   - Remains separately deployed on Fly.
   - Continues to serve both clients unless later split or replaced.

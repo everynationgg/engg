@@ -8,3 +8,4 @@ changes materially.
 
 - [0001: Vercel same-repo split](./0001-vercel-split.md)
 - [0002: Game repository separation plan](./0002-game-repo-separation-plan.md)
+- [0004: Multi-game path routing](./0004-multi-game-path-routing.md)

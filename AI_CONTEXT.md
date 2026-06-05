@@ -18,6 +18,11 @@ Errant Night source has moved to the standalone repo
 `everynationgg/errant-night`. The website repo no longer owns or builds the
 game package.
 
+The website is becoming a multi-game portal. Hub game metadata lives in
+`artifacts/every-nation/src/lib/gameCatalog.ts`. Future games should use public
+paths like `/engraved-nether` and `/epsilon-nine`, backed by separate game repos
+and Vercel projects.
+
 ## Current Deployment Shape
 
 - Main website Vercel project:
@@ -39,6 +44,9 @@ game package.
   explicitly requested.
 - Do not edit the standalone game repo from this website repo unless explicitly
   requested.
+- Do not add game runtime code back into this website repo. Add Hub entries to
+  the game catalog and proxy routes to `vercel.json` only after a standalone
+  game deployment exists.
 - Search the whole repo before removing references, routes, assets, or packages.
 - Keep changes minimal and reversible.
 - Avoid new dependencies unless the user explicitly approves them.

@@ -62,3 +62,16 @@ Goals:
 - Update docs in both repositories.
 - Re-run full validation.
 - Confirm production routes after deploy.
+
+## Phase 6: Multi-Game Portal Standards
+
+Status: in progress.
+
+Goals:
+
+- Keep Hub game entries in a shared catalog.
+- Document game onboarding, deployment, proxy routing, QA, and security.
+- Move future games into standalone repositories and Everynation Vercel
+  projects.
+- Use public paths like `/engraved-nether` and `/epsilon-nine` instead of public
+  game subdomains.

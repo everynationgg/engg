@@ -3,6 +3,8 @@
 This repository contains the ENGG main website, the Fly-hosted API server, and
 shared workspace libraries. Errant Night now lives in its standalone repository,
 `everynationgg/errant-night`, and is served through the website path proxy.
+The website is now being organized as a multi-game portal with game entries
+managed through a catalog.
 
 ## Current Status
 
@@ -13,6 +15,8 @@ shared workspace libraries. Errant Night now lives in its standalone repository,
 - The main website no longer owns or builds Errant Night game code.
 - The standalone game repo is `everynationgg/errant-night`.
 - The main website Hub links Errant Night at `/errant-night`.
+- Hub game cards are registered in
+  `artifacts/every-nation/src/lib/gameCatalog.ts`.
 - Main-site `/errant-night` is proxied to the Everynation Vercel game project.
 - Old main-site `/end` paths redirect to `/errant-night`.
 - The old in-repo Errant Night app has been removed from this repository.
@@ -40,6 +44,8 @@ The product split is now:
    game deployment.
 3. Website path proxy: `/errant-night` serves the standalone game behind the
    scenes; `/end` remains only as a legacy redirect.
+4. Future games should use public paths like `/engraved-nether` and
+   `/epsilon-nine`, with separate repos and Vercel projects.
 
 The API server remains separate on Fly unless that decision changes later.
 
@@ -71,6 +77,13 @@ Run the game locally from `C:\projects\errant-night`, not this repository.
 - [Roadmap](./ROADMAP.md)
 - [Debugging](./DEBUGGING.md)
 - [MVP QA Checklist](./MVP_QA_CHECKLIST.md)
+- [Game Architecture](./GAME_ARCHITECTURE.md)
+- [Game Registry](./GAME_REGISTRY.md)
+- [Game Onboarding](./GAME_ONBOARDING.md)
+- [Game Deployment](./GAME_DEPLOYMENT.md)
+- [Game Proxy Routing](./GAME_PROXY_ROUTING.md)
+- [Game QA Checklist](./GAME_QA_CHECKLIST.md)
+- [Game Security Checklist](./GAME_SECURITY_CHECKLIST.md)
 - [UI Standards](./UI_STANDARDS.md)
 - [Decision Records](./decisions/README.md)
 - [Repo Research](./repo-research/README.md)

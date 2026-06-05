@@ -8,3 +8,4 @@ notes practical and update them before moving files or deleting dependencies.
 - [Workspace audit](./workspace-audit.md)
 - [Game dependency audit](./game-dependency-audit.md)
 - [Website dependency audit](./website-dependency-audit.md)
+- [Multi-game platform plan](./multi-game-platform-plan.md)

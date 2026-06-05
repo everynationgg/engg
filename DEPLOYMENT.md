@@ -96,3 +96,16 @@ pnpm run deploy:api
 
 The old in-repo game app has been removed. Do not recreate game code in this
 repository unless a later migration explicitly reverses the split.
+
+## Future Game Deployments
+
+Future games should follow the standards in:
+
+- [Game Architecture](./GAME_ARCHITECTURE.md)
+- [Game Deployment](./GAME_DEPLOYMENT.md)
+- [Game Proxy Routing](./GAME_PROXY_ROUTING.md)
+- [Game QA Checklist](./GAME_QA_CHECKLIST.md)
+
+Public user-facing URLs should stay under
+`https://www.engg.online/<game-slug>`. Standalone Vercel origins are proxy
+targets, not public product URLs.

@@ -7,7 +7,7 @@ import { HUDOverlay } from "@/components/common/HUDOverlay";
 import { SciFiButton } from "@/components/common/SciFiButton";
 import { useAuth } from "@/hooks/useAuth";
 import { HeroSection } from "@/components/ui/feature-carousel";
-import { getGameUrl } from "@/lib/externalLinks";
+import { gameCatalog } from "@/lib/gameCatalog";
 
 
 export default function Hub() {
@@ -61,31 +61,7 @@ export default function Hub() {
     }
   };
 
-  const games = [
-    {
-      title: "Errant Night",
-      subtitle: "Neural Defense Protocol",
-      description: "A high-stakes network defense simulator. Trace the anomaly through the digital ether before system-wide compromise.",
-      image: "/ERRANT.png",
-      href: getGameUrl(),
-      status: "online" as const
-    },
-    {
-      title: "Engraved Nether",
-      subtitle: "Sub-Surface Extraction",
-      description: "Descend into the encrypted depths of the Nether. Harvest exotic matter while evading the ancient sentinels of the deep.",
-      image: "/hub_engraved.webp",
-      href: "https://triple-triad-theta.vercel.app",
-      status: "online" as const
-    },
-    {
-      title: "Epsilon Nine",
-      subtitle: "Orbital Command",
-      description: "Coordinate the defense of the Epsilon Nine station. Manage energy grids and orbital batteries against incoming threats.",
-      image: "/hub_epsilon.webp",
-      status: "offline" as const
-    }
-  ];
+  const games = gameCatalog;
 
   return (
     <HUDOverlay pageLabel="MISSION_HUB">
