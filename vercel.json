@@ -25,6 +25,14 @@
       "destination": "https://engg.fly.dev/api/:path*"
     },
     {
+      "source": "/socket.io/",
+      "destination": "https://engg.fly.dev/socket.io/"
+    },
+    {
+      "source": "/socket.io",
+      "destination": "https://engg.fly.dev/socket.io/"
+    },
+    {
       "source": "/socket.io/:path*",
       "destination": "https://engg.fly.dev/socket.io/:path*"
     },
@@ -33,12 +41,16 @@
       "destination": "https://errant-night.vercel.app/assets/:path*"
     },
     {
-      "source": "/errant-night/:path*",
-      "destination": "https://errant-night.vercel.app/errant-night/:path*"
+      "source": "/errant-night/",
+      "destination": "https://errant-night.vercel.app/errant-night/"
     },
     {
       "source": "/errant-night",
       "destination": "https://errant-night.vercel.app/errant-night"
+    },
+    {
+      "source": "/errant-night/:path*",
+      "destination": "https://errant-night.vercel.app/errant-night/:path*"
     },
     {
       "source": "/((?!api|socket.io|errant-night).*)",
