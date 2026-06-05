@@ -6,7 +6,7 @@ import { useParallax } from "@/hooks/useParallax";
 import { HUDOverlay } from "@/components/common/HUDOverlay";
 import { SciFiButton } from "@/components/common/SciFiButton";
 import { useAuth } from "@/hooks/useAuth";
-import { HeroSection } from "@/components/ui/feature-carousel";
+import PortalDeck from "@/components/hub/PortalDeck";
 import { gameCatalog } from "@/lib/gameCatalog";
 
 
@@ -126,21 +126,7 @@ export default function Hub() {
 
             {/* Main Mission Deck */}
             <div className="relative z-10 w-full pb-32">
-              <HeroSection
-                title={<>SELECT <span className="text-cyan-400">GAME</span></>}
-                subtitle="Select a sector and deploy your squad."
-                images={games.map(g => ({
-                    src: g.image,
-                    alt: g.title,
-                    subtitle: g.subtitle,
-                    status: g.status,
-                    onClick: () => {
-                        if (g.status !== 'offline' && g.href) {
-                            window.location.href = g.href;
-                        }
-                    }
-                }))}
-              />
+              <PortalDeck games={games} />
             </div>
           </div>
 

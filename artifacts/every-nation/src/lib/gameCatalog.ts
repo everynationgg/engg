@@ -2,6 +2,28 @@ import { getGameUrl } from "@/lib/externalLinks";
 
 export type GameStatus = "online" | "offline" | "coming-soon";
 
+export type GamePortalEffect =
+  | "signal-breach"
+  | "nether-rune"
+  | "orbital-command"
+  | "default";
+
+export type GameThemeParticle =
+  | "scanline"
+  | "role-card"
+  | "moon"
+  | "rune"
+  | "orbit";
+
+export type GameTheme = {
+  accent: string;
+  accentSoft: string;
+  backgroundImage: string;
+  previewImage: string;
+  portalEffect: GamePortalEffect;
+  particles: readonly GameThemeParticle[];
+};
+
 export type GameCatalogItem = {
   title: string;
   slug: string;
@@ -12,6 +34,7 @@ export type GameCatalogItem = {
   status: GameStatus;
   legacyPaths?: string[];
   externalOrigin?: string;
+  theme?: GameTheme;
 };
 
 export const gameCatalog = [
@@ -26,6 +49,14 @@ export const gameCatalog = [
     status: "online",
     legacyPaths: ["/end"],
     externalOrigin: "https://errant-night-yogs-projects-cee6471c.vercel.app",
+    theme: {
+      accent: "#22d3ee",
+      accentSoft: "rgba(34, 211, 238, 0.18)",
+      backgroundImage: "/hub_bg.png",
+      previewImage: "/ERRANT.png",
+      portalEffect: "signal-breach",
+      particles: ["scanline", "role-card"],
+    },
   },
   {
     title: "Engraved Nether",
@@ -37,6 +68,14 @@ export const gameCatalog = [
     href: "https://triple-triad-theta.vercel.app",
     status: "online",
     externalOrigin: "https://triple-triad-theta.vercel.app",
+    theme: {
+      accent: "#d946ef",
+      accentSoft: "rgba(217, 70, 239, 0.18)",
+      backgroundImage: "/hub_engraved.webp",
+      previewImage: "/hub_engraved.webp",
+      portalEffect: "nether-rune",
+      particles: ["rune"],
+    },
   },
   {
     title: "Epsilon Nine",
@@ -47,5 +86,13 @@ export const gameCatalog = [
     image: "/hub_epsilon.webp",
     href: "",
     status: "offline",
+    theme: {
+      accent: "#f59e0b",
+      accentSoft: "rgba(245, 158, 11, 0.18)",
+      backgroundImage: "/hub_epsilon.webp",
+      previewImage: "/hub_epsilon.webp",
+      portalEffect: "orbital-command",
+      particles: ["moon", "orbit"],
+    },
   },
 ] as const satisfies readonly GameCatalogItem[];
