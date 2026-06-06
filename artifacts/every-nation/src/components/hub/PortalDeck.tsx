@@ -549,6 +549,18 @@ function PortalWorldScene({
         ? `radial-gradient(circle at 22% 52%, rgba(34,211,238,0.18), transparent 32%), radial-gradient(circle at 72% 34%, rgba(245,158,11,0.24), transparent 30%), radial-gradient(circle at 50% 90%, rgba(127,29,29,0.26), transparent 34%), linear-gradient(180deg, #03050a 0%, #090b12 44%, #110806 78%, #010204 100%)`
         : `radial-gradient(circle at 72% 18%, ${theme.accentSoft}, transparent 32%), radial-gradient(circle at 50% 92%, rgba(245,158,11,0.18), transparent 34%), linear-gradient(180deg, #05060b 0%, #0b0d12 52%, #010204 100%)`;
 
+  if (isMobile) {
+    return (
+      <div
+        data-portal-world
+        data-world-scene={sceneKind}
+        className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-black"
+        style={{ background: baseBackground }}
+        aria-hidden="true"
+      />
+    );
+  }
+
   return (
     <div
       data-portal-world
@@ -1529,7 +1541,8 @@ export default function PortalDeck({ games }: PortalDeckProps) {
   const launchPendingRef = useRef(false);
   const sectionRef = useRef<HTMLElement | null>(null);
   const reducedMotion = useReducedMotion();
-  const shouldReduceMotion = Boolean(reducedMotion);
+  const isMobile = typeof window !== "undefined" && (window.innerWidth < 1024 || "ontouchstart" in window || navigator.maxTouchPoints > 0);
+  const shouldReduceMotion = Boolean(reducedMotion) || isMobile;
 
   const activeGame = games[activeIndex] ?? games[0];
   const activeTheme = useMemo(() => getTheme(activeGame), [activeGame]);

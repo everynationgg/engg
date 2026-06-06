@@ -20,8 +20,8 @@ export function useParallax(strength = 20) {
   const y = useTransform(smoothY, [-0.5, 0.5], [-strength, strength]);
 
   useEffect(() => {
-    const isTouchDevice = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
-    if (isTouchDevice) return;
+    const isMobile = typeof window !== 'undefined' && (window.innerWidth < 1024 || 'ontouchstart' in window || navigator.maxTouchPoints > 0);
+    if (isMobile) return;
 
     const handleMouseMove = (e: MouseEvent) => {
       // Calculate position from -0.5 to 0.5

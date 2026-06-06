@@ -78,10 +78,17 @@ export default function Hub() {
       <div className="min-h-screen relative flex flex-col items-center overflow-x-hidden selection:bg-cyan-500/30">
 
         {/* Cinematic Background Layer */}
-        <motion.div
-          className="fixed inset-0 z-0 bg-cover bg-center opacity-40 grayscale"
-          style={{ backgroundImage: "url('/hub_bg.png')", x: isMobile ? 0 : x, y: isMobile ? 0 : y }}
-        />
+        {typeof window !== "undefined" && (window.innerWidth < 1024 || "ontouchstart" in window || navigator.maxTouchPoints > 0) ? (
+          <div
+            className="fixed inset-0 z-0 bg-cover bg-center opacity-40 grayscale"
+            style={{ backgroundImage: "url('/hub_bg.png')" }}
+          />
+        ) : (
+          <motion.div
+            className="fixed inset-0 z-0 bg-cover bg-center opacity-40 grayscale"
+            style={{ backgroundImage: "url('/hub_bg.png')", x, y }}
+          />
+        )}
         <div className="fixed inset-0 z-1 bg-gradient-to-b from-[#020408]/90 via-[#020408]/60 to-[#020408]/95" />
 
         {/* Main Content Area */}
