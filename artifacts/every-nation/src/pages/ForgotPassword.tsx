@@ -1,30 +1,34 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { motion, AnimatePresence } from "framer-motion";
-import { FaFingerprint, FaTerminal, FaEnvelope, FaArrowRight, FaKey } from "react-icons/fa";
-import { useParallax } from "@/hooks/useParallax";
-import TacticalSlate from "@/components/common/TacticalSlate";
-import { HUDOverlay } from "@/components/common/HUDOverlay";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { FaTerminal, FaEnvelope, FaArrowRight, FaKey } from "react-icons/fa";
+import {
+  CinematicPageShell,
+  AccessGate,
+} from "@/components/common/PremiumVisuals";
 import { systemToast } from "@/components/common/SystemToast";
 
 export default function ForgotPassword() {
-  const { x, y } = useParallax(10);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const reducedMotion = useReducedMotion();
+  const shouldReduceMotion = Boolean(reducedMotion);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
-    // Simulate API call
+
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/request-password-reset`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/auth/request-password-reset`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        },
+      );
+
       if (response.ok) {
         setSubmitted(true);
         systemToast("Recovery_Signal_Sent", "success");
@@ -39,96 +43,100 @@ export default function ForgotPassword() {
   };
 
   return (
-    <HUDOverlay pageLabel="AUTH_RECOVERY">
-      <div className="min-h-screen flex flex-col items-center pb-12 px-4 md:px-8 relative overflow-x-hidden bg-[#020408] selection:bg-cyan-500/30">
-        {/* Header Clearance Spacer */}
-        <div className="h-[104px] w-full shrink-0 pointer-events-none" />
-
-        {/* Cinematic Background Layer */}
-        <motion.div 
-          className="fixed inset-0 z-0 opacity-10 pointer-events-none grayscale"
-          style={{ x, y }}
+    <CinematicPageShell
+      pageLabel="AUTH_RECOVERY"
+      accentColor="rgba(6, 182, 212, 0.12)"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{
+          duration: shouldReduceMotion ? 0 : 0.45,
+          ease: "easeOut",
+        }}
+        className="w-full max-w-[1080px] relative z-20 px-4 flex justify-center"
+      >
+        <AccessGate
+          title="Reset Cipher"
+          subtitle="Recovery_Protocol_Initialised"
+          icon={
+            <div className="relative flex items-center justify-center">
+              <FaKey
+                className={`text-2xl transition-colors duration-500 ${
+                  email.length > 5
+                    ? "text-cyan-400 drop-shadow-[0_0_8px_#00f3ff]"
+                    : "text-white/20"
+                }`}
+              />
+            </div>
+          }
+          accentColor="#00f3ff"
+          reducedMotion={shouldReduceMotion}
         >
-          <div className="absolute inset-0 bg-[url('/background.png')] bg-cover bg-center" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#020408]/80 via-transparent to-[#020408]" />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-[420px] relative z-20 mt-8"
-        >
-          <TacticalSlate color="#00f3ff">
-            <div className="p-8 md:p-10 flex flex-col gap-8">
-              {/* Header */}
-              <div className="text-center flex flex-col items-center gap-6 px-4 md:px-8">
-                <div className="w-16 h-16 border border-cyan-500/20 flex items-center justify-center relative">
-                   <div className="absolute inset-0 border border-cyan-500/40 border-t-transparent animate-[spin_15s_linear_infinite]" />
-                   <FaKey className="text-xl text-cyan-400/40" />
-                </div>
+          <div className="p-6 sm:p-8 md:p-10 flex flex-col gap-6">
+            {!submitted ? (
+              <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                 <div className="flex flex-col gap-2">
-                  <h1 className="font-orbitron text-4xl lg:text-5xl font-black tracking-[0.4em] uppercase text-white leading-tight">
-                    Reset <span className="text-cyan-400">Cipher</span>
-                  </h1>
-                  <p className="font-mono text-[8px] uppercase tracking-[0.4em] text-white/20">
-                    Recovery_Protocol_Initialised
-                  </p>
-                </div>
-              </div>
-
-              {!submitted ? (
-                <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-                  <div className="flex flex-col gap-2">
-                    <label className="font-mono text-[7px] uppercase tracking-[0.4em] text-white/20 ml-4">Registered_ID</label>
-                    <div className="flex items-center gap-4 bg-white/[0.02] border border-white/5 focus-within:border-cyan-500/20 focus-within:bg-cyan-500/[0.01] transition-all group">
-                      <div className="pl-4 text-white/10 group-focus-within:text-cyan-400 transition-colors pointer-events-none shrink-0">
-                        <FaEnvelope size={10} />
-                      </div>
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="flex-1 py-3 pr-4 bg-transparent font-mono text-[11px] tracking-wider text-white outline-none"
-                        placeholder="ACCESS_EMAIL"
-                        required
-                      />
+                  <label className="font-mono text-[11px] uppercase tracking-[0.4em] text-white/30 ml-1">
+                    Registered_ID
+                  </label>
+                  <div className="flex items-center gap-4 bg-white/[0.01] border border-white/5 focus-within:border-cyan-500/30 focus-within:bg-cyan-500/[0.01] transition-all group">
+                    <div className="pl-4 text-white/20 group-focus-within:text-cyan-400 transition-colors pointer-events-none shrink-0">
+                      <FaEnvelope size={12} />
                     </div>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="flex-1 py-4 pr-4 bg-transparent font-mono text-[14px] tracking-wider text-white outline-none"
+                      placeholder="ACCESS_EMAIL"
+                      required
+                    />
                   </div>
+                </div>
 
-                  <div className="flex flex-col gap-4">
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full h-11 bg-cyan-400/90 hover:bg-cyan-400 text-[#020408] transition-all duration-300 flex items-center justify-center gap-3 group"
-                    >
-                      <span className="font-orbitron font-black tracking-[0.2em] text-[10px] uppercase">
-                        {loading ? "Transmitting..." : "Send_Recovery_Link"}
-                      </span>
-                      {!loading && <FaArrowRight className="text-[10px] group-hover:translate-x-1 transition-transform" />}
-                    </button>
+                <div className="flex flex-col gap-4">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full h-13 bg-cyan-400/90 hover:bg-cyan-400 text-[#020408] transition-all duration-300 flex items-center justify-center gap-4 group cursor-pointer"
+                  >
+                    <span className="font-orbitron font-black tracking-[0.25em] text-[15px] uppercase">
+                      {loading ? "Transmitting..." : "Send_Recovery_Link"}
+                    </span>
+                    {!loading && (
+                      <FaArrowRight className="text-[11px] group-hover:translate-x-1 transition-transform" />
+                    )}
+                  </button>
 
-                    <Link href="/login" className="w-full h-10 border border-white/5 hover:border-white/10 text-white/20 hover:text-white/40 transition-all font-mono text-[9px] uppercase tracking-widest flex items-center justify-center gap-3">
-                      <FaTerminal className="text-[8px] opacity-40" />
-                      Return_to_Login
-                    </Link>
-                  </div>
-                </form>
-              ) : (
-                <div className="flex flex-col items-center gap-6 text-center">
-                  <div className="w-full p-4 border border-cyan-500/10 bg-cyan-500/5">
-                    <p className="font-mono text-[10px] text-cyan-400/80 uppercase tracking-widest leading-relaxed">
-                      Recovery_Sequence_Initiated. Check your neural uplink (Email) for reset instructions.
-                    </p>
-                  </div>
-                  <Link href="/login" className="w-full h-11 border border-white/10 text-white hover:bg-white/5 transition-all font-orbitron text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center">
-                    Acknowledge
+                  <Link
+                    href="/login"
+                    className="w-full h-11 border border-white/5 hover:border-white/10 text-white/30 hover:text-white/60 hover:bg-white/[0.01] transition-all font-mono text-[11px] uppercase tracking-widest flex items-center justify-center gap-3"
+                  >
+                    <FaTerminal className="text-[8px] opacity-40" />
+                    Return_to_Login
                   </Link>
                 </div>
-              )}
-            </div>
-          </TacticalSlate>
-        </motion.div>
-      </div>
-    </HUDOverlay>
+              </form>
+            ) : (
+              <div className="flex flex-col items-center gap-6 text-center">
+                <div className="w-full p-4 border border-cyan-500/10 bg-cyan-500/5">
+                  <p className="font-mono text-[11px] text-cyan-400/80 uppercase tracking-widest leading-relaxed">
+                    Recovery_Sequence_Initiated. Check your neural uplink
+                    (Email) for reset instructions.
+                  </p>
+                </div>
+                <Link
+                  href="/login"
+                  className="w-full h-11 border border-white/10 text-white hover:bg-white/5 transition-all font-orbitron text-[13px] font-black uppercase tracking-[0.25em] flex items-center justify-center"
+                >
+                  Acknowledge
+                </Link>
+              </div>
+            )}
+          </div>
+        </AccessGate>
+      </motion.div>
+    </CinematicPageShell>
   );
 }

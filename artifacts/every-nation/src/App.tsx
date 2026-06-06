@@ -7,6 +7,8 @@ import SystemToastContainer from "@/components/common/SystemToast";
 import { MessagingProvider } from "@/context/MessagingContext";
 import { UIProvider } from "@/context/UIContext";
 import { HUDFilters } from "@/components/common/HUDRenderer";
+import { AuthAccessPaused, ShopOffline } from "@/pages/AccessPaused";
+import { AUTH_PUBLIC_ACCESS_ENABLED, SHOP_ENABLED } from "@/lib/productAccess";
 
 const Shop = lazy(() => import("@/pages/Shop"));
 const Login = lazy(() => import("@/pages/Login"));
@@ -19,6 +21,14 @@ const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 const Navbar = lazy(() => import("@/components/Navbar"));
 const AlliesSidebar = lazy(() => import("@/components/AlliesSidebar"));
+
+const ShopRoute = SHOP_ENABLED ? Shop : ShopOffline;
+const LoginRoute = AUTH_PUBLIC_ACCESS_ENABLED ? Login : AuthAccessPaused;
+const RegisterRoute = AUTH_PUBLIC_ACCESS_ENABLED ? Register : AuthAccessPaused;
+const ProfileRoute = AUTH_PUBLIC_ACCESS_ENABLED ? Profile : AuthAccessPaused;
+const VerifyRoute = AUTH_PUBLIC_ACCESS_ENABLED ? Verify : AuthAccessPaused;
+const ForgotPasswordRoute = AUTH_PUBLIC_ACCESS_ENABLED ? ForgotPassword : AuthAccessPaused;
+const ResetPasswordRoute = AUTH_PUBLIC_ACCESS_ENABLED ? ResetPassword : AuthAccessPaused;
 
 function RouteLoadingFallback() {
   return (
@@ -35,44 +45,48 @@ function Router() {
     <Suspense fallback={<RouteLoadingFallback />}>
       <Switch>
         <Route path="/" component={Home} />
-        <Route path="/shop" component={Shop} />
-        <Route path="/login" component={Login} />
-        <Route path="/register" component={Register} />
-        <Route path="/profile" component={Profile} />
+        <Route path="/shop" component={ShopRoute} />
+        <Route path="/login" component={LoginRoute} />
+        <Route path="/register" component={RegisterRoute} />
+        <Route path="/profile" component={ProfileRoute} />
         <Route path="/hub" component={Hub} />
-        <Route path="/verify" component={Verify} />
-        <Route path="/forgot-password" component={ForgotPassword} />
-        <Route path="/reset-password" component={ResetPassword} />
+        <Route path="/verify" component={VerifyRoute} />
+        <Route path="/forgot-password" component={ForgotPasswordRoute} />
+        <Route path="/reset-password" component={ResetPasswordRoute} />
         <Route component={NotFound} />
       </Switch>
     </Suspense>
   );
 }
 
-export default function App() {
+function AppContent() {
   const [location] = useLocation();
-
-
   const isHomePage = location === "/" || location === "";
 
+  return (
+    <div className="min-h-screen bg-black text-white selection:bg-cyan-500/30 overflow-x-hidden">
+      <HUDFilters />
+      <SystemToastContainer />
+      {!isHomePage && (
+        <Suspense fallback={null}>
+          <Navbar />
+          <AlliesSidebar />
+        </Suspense>
+      )}
+      <div className={`${!isHomePage ? "pt-[100px] lg:pt-[120px]" : ""}`}>
+        <Router />
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
   return (
     <AuthProvider>
       <MessagingProvider>
         <UIProvider>
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <div className="min-h-screen bg-black text-white selection:bg-cyan-500/30 overflow-x-hidden">
-              <HUDFilters />
-              <SystemToastContainer />
-              {!isHomePage && (
-                <Suspense fallback={null}>
-                  <Navbar />
-                  <AlliesSidebar />
-                </Suspense>
-              )}
-              <div className={`${!isHomePage ? "pt-[100px] lg:pt-[120px]" : ""}`}>
-                <Router />
-              </div>
-            </div>
+            <AppContent />
           </WouterRouter>
         </UIProvider>
       </MessagingProvider>

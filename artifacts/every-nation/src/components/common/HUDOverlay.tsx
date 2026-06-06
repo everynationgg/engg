@@ -21,14 +21,14 @@ export function HUDOverlay({ children, pageLabel, showVignette = true }: HUDOver
 
       {/* LATERAL TELEMETRY (TOP LEFT) */}
       <div className="fixed top-12 left-12 hidden xl:flex flex-col gap-1 z-[81] opacity-20 pointer-events-none">
-        <span className="font-mono text-[7px] tracking-[0.4em] uppercase">Protocol: ENGG_NEXUS</span>
-        <span className="font-mono text-[7px] tracking-[0.4em] uppercase text-cyan-400">Status: ACTIVE</span>
+        <span className="font-mono text-[9px] tracking-[0.4em] uppercase">Protocol: ENGG_NEXUS</span>
+        <span className="font-mono text-[9px] tracking-[0.4em] uppercase text-cyan-400">Status: ACTIVE</span>
       </div>
 
       {/* LATERAL TELEMETRY (TOP RIGHT) */}
       <div className="fixed top-12 right-12 hidden xl:flex flex-col items-end gap-1 z-[81] opacity-20 pointer-events-none">
-        <span className="font-mono text-[7px] tracking-[0.4em] uppercase">Node: {pageLabel}</span>
-        <span className="font-mono text-[7px] tracking-[0.4em] uppercase">Region: ALPHA_01</span>
+        <span className="font-mono text-[9px] tracking-[0.4em] uppercase">Node: {pageLabel}</span>
+        <span className="font-mono text-[9px] tracking-[0.4em] uppercase">Region: ALPHA_01</span>
       </div>
 
       {/* DYNAMIC SCANLINE */}

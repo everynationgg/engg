@@ -85,7 +85,7 @@ export default function Hub() {
             <header className="w-full flex flex-col items-center gap-4 mb-8 md:mb-12 text-center px-4 md:px-8">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-[1px] bg-cyan-500/40" />
-                <span className="font-mono text-[9px] uppercase tracking-[0.6em] text-cyan-300/75">Node_Selection</span>
+                <span className="font-mono text-[11px] uppercase tracking-[0.6em] text-cyan-300/75">Node_Selection</span>
               </div>
               <h1 className="font-orbitron font-black text-2xl sm:text-3xl lg:text-4xl tracking-[0.4em] uppercase text-white leading-tight">
                 Gaming <span className="text-cyan-400">Hub</span>
@@ -106,8 +106,8 @@ export default function Hub() {
                         <FaTerminal className="text-cyan-400 text-xl" />
                       </div>
                       <div className="flex flex-col gap-1">
-                        <h3 className="font-orbitron text-[14px] font-black uppercase tracking-[0.3em] text-white">Daily Tactical Briefing</h3>
-                        <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-white/30">Status: {claimed ? "IDENTITY SYNCED" : "SYNC REQUIRED"}</span>
+                        <h3 className="font-orbitron text-[16px] font-black uppercase tracking-[0.3em] text-white">Daily Tactical Briefing</h3>
+                        <span className="font-mono text-[12px] uppercase tracking-[0.4em] text-white/30">Status: {claimed ? "IDENTITY SYNCED" : "SYNC REQUIRED"}</span>
                       </div>
                     </div>
 

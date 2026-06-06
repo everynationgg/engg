@@ -15,9 +15,9 @@ const sciFiButtonVariants = cva(
         ghost: "text-cyan-500/50 hover:text-cyan-400",
       },
       size: {
-        sm: "h-8 px-4 text-[9px]",
-        default: "h-10 px-6 text-[10px]",
-        lg: "h-12 px-10 text-[11px]",
+        sm: "h-8 px-4 text-[11px]",
+        default: "h-10 px-6 text-[13px]",
+        lg: "h-12 px-10 text-[15px]",
         icon: "h-10 w-10",
       },
       justify: {
