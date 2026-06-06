@@ -16,6 +16,16 @@ export default function Hub() {
   const [claiming, setClaiming] = useState(false);
   const [claimed, setClaimed] = useState(false);
   const [activities, setActivities] = useState<any[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024 || "ontouchstart" in window || navigator.maxTouchPoints > 0);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     if (token) {
@@ -70,7 +80,7 @@ export default function Hub() {
         {/* Cinematic Background Layer */}
         <motion.div
           className="fixed inset-0 z-0 bg-cover bg-center opacity-40 grayscale"
-          style={{ backgroundImage: "url('/hub_bg.png')", x, y }}
+          style={{ backgroundImage: "url('/hub_bg.png')", x: isMobile ? 0 : x, y: isMobile ? 0 : y }}
         />
         <div className="fixed inset-0 z-1 bg-gradient-to-b from-[#020408]/90 via-[#020408]/60 to-[#020408]/95" />
 

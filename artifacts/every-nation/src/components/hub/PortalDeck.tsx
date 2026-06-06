@@ -387,6 +387,17 @@ function PortalWorldScene({
   theme: GameTheme;
   reducedMotion: boolean;
 }) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024 || "ontouchstart" in window || navigator.maxTouchPoints > 0);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   const sceneKind = getSceneKind(theme);
   const isSpace = sceneKind === "space-anomaly";
   const isNether = sceneKind === "nether-depths";
@@ -394,7 +405,7 @@ function PortalWorldScene({
 
   const stars = useMemo(
     () =>
-      Array.from({ length: sceneStarCount }, (_, index) => ({
+      Array.from({ length: isMobile ? 20 : sceneStarCount }, (_, index) => ({
         id: `${game.slug}-star-${index}`,
         left: `${(index * 37) % 100}%`,
         top: `${(index * 53) % 100}%`,
@@ -403,11 +414,11 @@ function PortalWorldScene({
         delay: index * 0.04,
         drift: index % 2 === 0 ? "18px" : "-18px",
       })),
-    [game.slug],
+    [game.slug, isMobile],
   );
   const particles = useMemo(
     () =>
-      Array.from({ length: worldParticleCount }, (_, index) => ({
+      Array.from({ length: isMobile ? 10 : worldParticleCount }, (_, index) => ({
         id: `${game.slug}-particle-${index}`,
         left: `${-8 + ((index * 29) % 116)}%`,
         top: `${4 + ((index * 41) % 92)}%`,
@@ -417,7 +428,7 @@ function PortalWorldScene({
         lift: index % 3 === 0 ? "-20vh" : "16vh",
         opacity: 0.16 + (index % 4) * 0.1,
       })),
-    [game.slug],
+    [game.slug, isMobile],
   );
   const ruinRunes = useMemo(
     () =>
@@ -542,7 +553,7 @@ function PortalWorldScene({
     <div
       data-portal-world
       data-world-scene={sceneKind}
-      className="pointer-events-none fixed left-1/2 top-1/2 z-0 h-[100dvh] w-[100vw] -translate-x-1/2 -translate-y-1/2 overflow-hidden bg-black"
+      className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-black"
       aria-hidden="true"
     >
       <style>
@@ -1263,9 +1274,10 @@ function PortalLeakParticles({
   accent: string;
   reducedMotion: boolean;
 }) {
+  const isMobile = typeof window !== "undefined" && (window.innerWidth < 1024 || "ontouchstart" in window || navigator.maxTouchPoints > 0);
   const leaks = useMemo(
     () =>
-      Array.from({ length: portalLeakCount }, (_, index) => ({
+      Array.from({ length: isMobile ? 8 : portalLeakCount }, (_, index) => ({
         id: `${game.slug}-leak-${index}`,
         left: `${14 + ((index * 17) % 72)}%`,
         top: `${12 + ((index * 29) % 72)}%`,
@@ -1274,7 +1286,7 @@ function PortalLeakParticles({
         y: `${-46 - (index % 6) * 20}px`,
         delay: index * 0.06,
       })),
-    [game.slug],
+    [game.slug, isMobile],
   );
 
   if (reducedMotion) return null;
@@ -1337,9 +1349,10 @@ function PortalOutflowStreams({
   accent: string;
   reducedMotion: boolean;
 }) {
+  const isMobile = typeof window !== "undefined" && (window.innerWidth < 1024 || "ontouchstart" in window || navigator.maxTouchPoints > 0);
   const streams = useMemo(
     () =>
-      Array.from({ length: portalStreamCount }, (_, index) => {
+      Array.from({ length: isMobile ? 4 : portalStreamCount }, (_, index) => {
         const angle = -165 + index * 30;
         const radians = (angle * Math.PI) / 180;
         const distance = 126 + (index % 4) * 34;
@@ -1555,6 +1568,7 @@ export default function PortalDeck({ games }: PortalDeckProps) {
 
   const handlePointerMove = (event: PointerEvent<HTMLElement>) => {
     if (shouldReduceMotion) return;
+    if (event.pointerType === "touch" || event.pointerType === "pen") return;
 
     const rect = event.currentTarget.getBoundingClientRect();
     const x = ((event.clientX - rect.left) / rect.width - 0.5) * 28;

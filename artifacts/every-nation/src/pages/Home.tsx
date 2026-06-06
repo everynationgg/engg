@@ -32,20 +32,21 @@ export default function Home() {
 
       {!prefersReducedMotion && (
         <video
-          className="absolute inset-0 h-full w-full scale-[0.9] object-cover origin-center pointer-events-none md:scale-100"
+          className="absolute inset-x-0 top-0 h-[115%] w-full object-cover origin-top pointer-events-none scale-110 -translate-y-2 md:inset-0 md:h-full md:scale-100 md:translate-y-0"
           poster="/opengraph.jpg"
           autoPlay
           muted
+          loop
           playsInline
           preload="metadata"
           aria-hidden="true"
         >
-          <source src="/bg-video.mp4" type="video/mp4" />
           <source src="/EN_PAGE_BACKGROUND.webm" type="video/webm" />
+          <source src="/bg-video.mp4" type="video/mp4" />
         </video>
       )}
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent pointer-events-none z-10" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/95 via-35% to-transparent pointer-events-none z-10" />
 
       {/* BOTTOM NAVIGATION HUB */}
       <div className="absolute bottom-8 md:bottom-16 left-1/2 -translate-x-1/2 z-30 px-4 w-full flex justify-center">
