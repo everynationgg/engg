@@ -22,11 +22,6 @@ export default function Home() {
   const [, navigate] = useLocation();
   const prefersReducedMotion = usePrefersReducedMotion();
 
-  // The source MP4 video asset contains the baked-in old EN logo graphic in the center.
-  // Set this flag to true to disable the video and show the clean dark gradient fallback,
-  // preventing any old branding from being visible on the landing page.
-  const MP4_HAS_OLD_BRANDING = true;
-
   return (
     <div className="landing-root relative h-screen min-h-[100dvh] overflow-hidden bg-black">
       {/* Dark premium gradient background fallback */}
@@ -35,7 +30,7 @@ export default function Home() {
         aria-hidden="true"
       />
 
-      {!prefersReducedMotion && !MP4_HAS_OLD_BRANDING && (
+      {!prefersReducedMotion && (
         <video
           className="absolute inset-0 h-full w-full object-cover origin-center pointer-events-none"
           autoPlay
