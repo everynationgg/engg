@@ -1683,7 +1683,7 @@ export default function PortalDeck({ games }: PortalDeckProps) {
   return (
     <section
       ref={sectionRef}
-      className="relative w-full h-full flex flex-col items-center justify-between min-h-0 overflow-hidden py-2 sm:py-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/55"
+      className="relative w-full flex-1 flex flex-col items-center justify-between min-h-0 overflow-hidden py-2 sm:py-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/55"
       aria-label="ENGG Portal Deck"
       onKeyDown={handleKeyDown}
       onPointerMove={handlePointerMove}
@@ -1707,7 +1707,7 @@ export default function PortalDeck({ games }: PortalDeckProps) {
         Selected game: {activeGame.title}
       </p>
 
-      <div className="relative left-1/2 z-10 flex flex-1 min-h-0 w-screen max-w-none -translate-x-1/2 flex-col items-center justify-between px-4 py-2 sm:px-8">
+      <div className="relative z-10 flex flex-1 min-h-0 w-full flex-col items-center justify-center gap-3 sm:gap-5 px-4 py-2 sm:px-8">
         <AnimatePresence mode="wait">
           <motion.div
             key={`details-${activeGame.slug}`}
@@ -1766,7 +1766,7 @@ export default function PortalDeck({ games }: PortalDeckProps) {
 
           <motion.div
             key={`portal-${activeGame.slug}`}
-            className="relative w-[min(68vw,28vh,300px)] sm:w-[min(55vw,34vh,380px)] lg:w-[min(45vw,38vh,420px)] [perspective:1400px]"
+            className="relative h-[25vh] sm:h-[35vh] lg:h-[42vh] max-h-[180px] sm:max-h-[280px] md:max-h-[360px] lg:max-h-[440px] aspect-[4/5] [perspective:1400px]"
             initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: shouldReduceMotion ? 0 : 0.35 }}
@@ -2163,7 +2163,7 @@ export default function PortalDeck({ games }: PortalDeckProps) {
                 type="button"
                 onClick={() => beginLaunch(activeGame)}
                 disabled={Boolean(enteringGame)}
-                className="group relative inline-flex w-full items-center justify-center overflow-hidden border font-orbitron text-[12px] sm:text-[14px] font-black uppercase tracking-[0.34em] text-white backdrop-blur-sm transition duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-cyan-300/60 sm:w-auto h-11 sm:h-14 px-6 sm:px-10"
+                className="group relative inline-flex w-full items-center justify-center gap-3 overflow-hidden border font-orbitron text-[12px] sm:text-[14px] font-black uppercase tracking-[0.34em] text-white backdrop-blur-sm transition duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-cyan-300/60 sm:w-auto h-11 sm:h-14 px-6 sm:px-10"
                 style={{
                   borderColor: `${activeTheme.accent}c8`,
                   background: `linear-gradient(135deg, ${activeTheme.accent}34, rgba(255,255,255,0.06) 42%, ${activeTheme.accent}1a)`,
@@ -2187,7 +2187,7 @@ export default function PortalDeck({ games }: PortalDeckProps) {
                   style={{ background: `linear-gradient(90deg, transparent, ${activeTheme.accent}, transparent)` }}
                   aria-hidden="true"
                 />
-                <Play className="relative mr-3 h-5 w-5" />
+                <Play className="relative h-5 w-5 shrink-0" />
                 <span className="relative">{getLaunchLabel(activeGame)}</span>
               </button>
             ) : (

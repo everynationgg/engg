@@ -134,7 +134,7 @@ export default function Hub() {
 
           <div className="flex-1 flex flex-col w-full min-h-0 overflow-hidden">
             {/* Header Clearance Spacer */}
-            <div className="h-14 sm:h-20 lg:h-24 w-full shrink-0 pointer-events-none" />
+            <div className="h-12 sm:h-16 lg:h-20 w-full shrink-0 pointer-events-none" />
 
             {/* Header Overlay */}
             <header className="w-full flex flex-col items-center gap-1 sm:gap-2 mb-2 sm:mb-4 text-center px-4 md:px-8 shrink-0">
@@ -180,7 +180,7 @@ export default function Hub() {
             )}
 
             {/* Main Mission Deck */}
-            <div className="relative z-10 w-full flex-1 min-h-0">
+            <div className="relative z-10 w-full flex-1 min-h-0 flex flex-col">
               <PortalDeck games={games} />
             </div>
           </div>
