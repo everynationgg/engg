@@ -25,7 +25,7 @@ export default function Navbar() {
 
   const navLinks = [
     { name: "Home", href: "/", subtitle: "RETURN_TO_ORIGIN" },
-    { name: "Gaming Hub", href: "/hub", subtitle: "ACTIVE_OPERATION" },
+    { name: "Hub", href: "/hub", subtitle: "ACTIVE_OPERATION" },
     ...(SHOP_ENABLED ? [{ name: "Credit Shop", href: "/shop", subtitle: "ASSET_ACQUISITION" }] : []),
   ];
 
