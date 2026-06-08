@@ -381,11 +381,11 @@ function AmbientEntity({
 function PortalWorldScene({
   game,
   theme,
-  reducedMotion,
+  motionProfile,
 }: {
   game: GameCatalogItem;
   theme: GameTheme;
-  reducedMotion: boolean;
+  motionProfile: "reduced" | "mobile" | "desktop";
 }) {
   const [isMobile, setIsMobile] = useState(false);
 
@@ -398,6 +398,7 @@ function PortalWorldScene({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  const reducedMotion = motionProfile === "reduced";
   const sceneKind = getSceneKind(theme);
   const isSpace = sceneKind === "space-anomaly";
   const isNether = sceneKind === "nether-depths";
@@ -405,7 +406,7 @@ function PortalWorldScene({
 
   const stars = useMemo(
     () =>
-      Array.from({ length: isMobile ? 20 : sceneStarCount }, (_, index) => ({
+      Array.from({ length: isMobile ? 15 : sceneStarCount }, (_, index) => ({
         id: `${game.slug}-star-${index}`,
         left: `${(index * 37) % 100}%`,
         top: `${(index * 53) % 100}%`,
@@ -418,7 +419,7 @@ function PortalWorldScene({
   );
   const particles = useMemo(
     () =>
-      Array.from({ length: isMobile ? 10 : worldParticleCount }, (_, index) => ({
+      Array.from({ length: isMobile ? 8 : worldParticleCount }, (_, index) => ({
         id: `${game.slug}-particle-${index}`,
         left: `${-8 + ((index * 29) % 116)}%`,
         top: `${4 + ((index * 41) % 92)}%`,
@@ -549,7 +550,7 @@ function PortalWorldScene({
         ? `radial-gradient(circle at 22% 52%, rgba(34,211,238,0.18), transparent 32%), radial-gradient(circle at 72% 34%, rgba(245,158,11,0.24), transparent 30%), radial-gradient(circle at 50% 90%, rgba(127,29,29,0.26), transparent 34%), linear-gradient(180deg, #03050a 0%, #090b12 44%, #110806 78%, #010204 100%)`
         : `radial-gradient(circle at 72% 18%, ${theme.accentSoft}, transparent 32%), radial-gradient(circle at 50% 92%, rgba(245,158,11,0.18), transparent 34%), linear-gradient(180deg, #05060b 0%, #0b0d12 52%, #010204 100%)`;
 
-  if (isMobile) {
+  if (motionProfile === "reduced") {
     return (
       <div
         data-portal-world
@@ -644,18 +645,24 @@ function PortalWorldScene({
             {isSpace && (
               <motion.div
                 data-world-bg
-                className="absolute -inset-[8vmax] bg-cover bg-center opacity-35 mix-blend-screen will-change-transform"
+                className="absolute -inset-[4vmax] bg-cover bg-center opacity-35 mix-blend-screen will-change-transform"
                 style={{ backgroundImage: `url(${theme.backgroundImage})` }}
                 animate={
                   reducedMotion
                     ? undefined
+                    : motionProfile === "mobile"
+                    ? {
+                        scale: [1.02, 1.05, 1.02],
+                        x: ["-0.5vw", "0.5vw", "-0.5vw"],
+                        y: ["-0.3vh", "0.3vh", "-0.3vh"],
+                      }
                     : {
                         scale: [1.05, 1.09, 1.05],
                         x: ["-1.5vw", "1.4vw", "-1.5vw"],
                         y: ["-1vh", "1.2vh", "-1vh"],
                       }
                 }
-                transition={{ duration: 18, repeat: Infinity, repeatDelay: 0.1, ease: "easeInOut" }}
+                transition={{ duration: motionProfile === "mobile" ? 25 : 18, repeat: Infinity, repeatDelay: 0.1, ease: "easeInOut" }}
               />
             )}
           </WorldSceneLayer>
@@ -693,7 +700,7 @@ function PortalWorldScene({
             ))}
           </WorldSceneLayer>
 
-          {isSpace && (
+          {motionProfile === "desktop" && isSpace && (
             <WorldSceneLayer name="space-anomaly">
               <motion.div
                 data-world-planet
@@ -723,7 +730,7 @@ function PortalWorldScene({
             </WorldSceneLayer>
           )}
 
-          {isNether && (
+          {motionProfile === "desktop" && isNether && (
             <WorldSceneLayer name="nether-depths">
               <div
                 data-world-ruin-cavern
@@ -934,7 +941,7 @@ function PortalWorldScene({
             </WorldSceneLayer>
           )}
 
-          {isOrbital && (
+          {motionProfile === "desktop" && isOrbital && (
             <WorldSceneLayer name="orbital-lock">
               <div
                 data-world-battlefield
@@ -1134,7 +1141,7 @@ function PortalWorldScene({
             ))}
           </WorldSceneLayer>
 
-          {(isSpace || isOrbital) && (
+          {motionProfile === "desktop" && (isSpace || isOrbital) && (
             <WorldSceneLayer name={isSpace ? "scanlines" : "combat-streaks"}>
               {[13, 28, 44, 61, 79].map((top, index) => (
                 <motion.span
@@ -1446,9 +1453,11 @@ function PortalOutflowStreams({
 function EntryTransitionOverlay({
   game,
   theme,
+  motionProfile,
 }: {
   game: GameCatalogItem;
   theme: GameTheme;
+  motionProfile: "reduced" | "mobile" | "desktop";
 }) {
   const streaks = useMemo(
     () =>
@@ -1489,7 +1498,7 @@ function EntryTransitionOverlay({
         aria-hidden="true"
       />
 
-      {streaks.map((streak) => (
+      {motionProfile === "desktop" && streaks.map((streak) => (
         <motion.span
           key={streak.id}
           className="absolute h-[2px] w-24 origin-left rounded-full"
@@ -1507,29 +1516,33 @@ function EntryTransitionOverlay({
         />
       ))}
 
-      <motion.div
-        className="absolute left-1/2 top-1/2 h-[42vmin] w-[42vmin] -translate-x-1/2 -translate-y-1/2 rounded-full border"
-        style={{
-          borderColor: `${theme.accent}99`,
-          boxShadow: `0 0 64px ${theme.accent}55, inset 0 0 58px ${theme.accent}33`,
-        }}
-        initial={{ scale: 0.82, opacity: 0.52 }}
-        animate={{ scale: [0.82, 1.2, 5.8], opacity: [0.52, 1, 0] }}
-        transition={{ duration: entryTransitionMs / 1000, ease: "easeInOut" }}
-        aria-hidden="true"
-      />
+      {motionProfile === "desktop" && (
+        <>
+          <motion.div
+            className="absolute left-1/2 top-1/2 h-[42vmin] w-[42vmin] -translate-x-1/2 -translate-y-1/2 rounded-full border"
+            style={{
+              borderColor: `${theme.accent}99`,
+              boxShadow: `0 0 64px ${theme.accent}55, inset 0 0 58px ${theme.accent}33`,
+            }}
+            initial={{ scale: 0.82, opacity: 0.52 }}
+            animate={{ scale: [0.82, 1.2, 5.8], opacity: [0.52, 1, 0] }}
+            transition={{ duration: entryTransitionMs / 1000, ease: "easeInOut" }}
+            aria-hidden="true"
+          />
 
-      <motion.div
-        className="absolute left-1/2 top-1/2 h-[22vmin] w-[22vmin] -translate-x-1/2 -translate-y-1/2 rounded-full"
-        style={{
-          background: `radial-gradient(circle, ${theme.accent}55, transparent 64%)`,
-          boxShadow: `0 0 90px ${theme.accent}55`,
-        }}
-        initial={{ scale: 0.4, opacity: 0.25 }}
-        animate={{ scale: [0.4, 2.2, 7], opacity: [0.25, 0.92, 0] }}
-        transition={{ duration: entryTransitionMs / 1000, ease: "easeInOut" }}
-        aria-hidden="true"
-      />
+          <motion.div
+            className="absolute left-1/2 top-1/2 h-[22vmin] w-[22vmin] -translate-x-1/2 -translate-y-1/2 rounded-full"
+            style={{
+              background: `radial-gradient(circle, ${theme.accent}55, transparent 64%)`,
+              boxShadow: `0 0 90px ${theme.accent}55`,
+            }}
+            initial={{ scale: 0.4, opacity: 0.25 }}
+            animate={{ scale: [0.4, 2.2, 7], opacity: [0.25, 0.92, 0] }}
+            transition={{ duration: entryTransitionMs / 1000, ease: "easeInOut" }}
+            aria-hidden="true"
+          />
+        </>
+      )}
     </motion.div>
   );
 }
@@ -1540,9 +1553,29 @@ export default function PortalDeck({ games }: PortalDeckProps) {
   const entryTimerRef = useRef<number | null>(null);
   const launchPendingRef = useRef(false);
   const sectionRef = useRef<HTMLElement | null>(null);
-  const reducedMotion = useReducedMotion();
-  const isMobile = typeof window !== "undefined" && (window.innerWidth < 1024 || "ontouchstart" in window || navigator.maxTouchPoints > 0);
-  const shouldReduceMotion = Boolean(reducedMotion) || isMobile;
+
+  const [motionProfile, setMotionProfile] = useState<"reduced" | "mobile" | "desktop">("reduced");
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const handleUpdate = () => {
+      if (mediaQuery.matches) {
+        setMotionProfile("reduced");
+      } else {
+        const isMobileDevice = window.innerWidth < 1024 || "ontouchstart" in window || navigator.maxTouchPoints > 0;
+        setMotionProfile(isMobileDevice ? "mobile" : "desktop");
+      }
+    };
+    handleUpdate();
+    mediaQuery.addEventListener("change", handleUpdate);
+    window.addEventListener("resize", handleUpdate);
+    return () => {
+      mediaQuery.removeEventListener("change", handleUpdate);
+      window.removeEventListener("resize", handleUpdate);
+    };
+  }, []);
+
+  const shouldReduceMotion = motionProfile === "reduced";
 
   const activeGame = games[activeIndex] ?? games[0];
   const activeTheme = useMemo(() => getTheme(activeGame), [activeGame]);
@@ -1653,10 +1686,10 @@ export default function PortalDeck({ games }: PortalDeckProps) {
         } as PortalDeckStyle
       }
     >
-      <PortalWorldScene game={activeGame} theme={activeTheme} reducedMotion={shouldReduceMotion} />
+      <PortalWorldScene game={activeGame} theme={activeTheme} motionProfile={motionProfile} />
 
       <AnimatePresence>
-        {enteringGame && enteringTheme && <EntryTransitionOverlay game={enteringGame} theme={enteringTheme} />}
+        {enteringGame && enteringTheme && <EntryTransitionOverlay game={enteringGame} theme={enteringTheme} motionProfile={motionProfile} />}
       </AnimatePresence>
 
       <p className="sr-only" aria-live="polite">
@@ -1716,7 +1749,7 @@ export default function PortalDeck({ games }: PortalDeckProps) {
             <PortalFragments
               particles={activeTheme.particles}
               accent={activeTheme.accent}
-              reducedMotion={shouldReduceMotion}
+              reducedMotion={motionProfile !== "desktop"}
             />
           </div>
 
@@ -1843,14 +1876,14 @@ export default function PortalDeck({ games }: PortalDeckProps) {
                   decoding="async"
                   fetchPriority="high"
                   className="relative z-10 h-full w-full object-cover"
-                  initial={{ scale: shouldReduceMotion ? 1 : 1.1, opacity: 0 }}
-                  animate={shouldReduceMotion ? { scale: 1, opacity: 1 } : { scale: [1.04, 1.1, 1.04], opacity: 1 }}
+                  initial={{ scale: motionProfile === "reduced" ? 1 : 1.05, opacity: 0 }}
+                  animate={motionProfile === "reduced" ? { scale: 1, opacity: 1 } : { scale: [1.02, 1.05, 1.02], opacity: 1 }}
                   transition={
-                    shouldReduceMotion
+                    motionProfile === "reduced"
                       ? { duration: 0 }
                       : {
                           opacity: { duration: 0.55 },
-                          scale: { duration: 10, repeat: Infinity, ease: "easeInOut" },
+                          scale: { duration: motionProfile === "mobile" ? 20 : 10, repeat: Infinity, ease: "easeInOut" },
                         }
                   }
                 />
@@ -1918,34 +1951,38 @@ export default function PortalDeck({ games }: PortalDeckProps) {
                 )}
 
                 <span className="absolute inset-0 z-20 bg-gradient-to-t from-black/82 via-black/12 to-black/16" />
-                <motion.span
-                  data-portal-inner-distortion
-                  className="absolute inset-0 z-30 mix-blend-screen opacity-60"
-                  style={{
-                    background: `repeating-linear-gradient(102deg, transparent 0 17px, ${activeTheme.accent}33 18px 19px, transparent 20px 42px), radial-gradient(circle at 50% 46%, ${activeTheme.accent}44, transparent 46%)`,
-                    WebkitMaskImage: "radial-gradient(circle at 50% 50%, black 12%, transparent 72%)",
-                    maskImage: "radial-gradient(circle at 50% 50%, black 12%, transparent 72%)",
-                  }}
-                  animate={shouldReduceMotion ? undefined : { x: ["-4%", "5%", "-4%"], opacity: [0.36, 0.74, 0.36] }}
-                  transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
-                  aria-hidden="true"
-                />
-                <motion.span
-                  className="absolute -left-1/4 top-0 z-30 h-full w-1/2 bg-white/10 mix-blend-screen blur-xl"
-                  style={{
-                    background: `linear-gradient(100deg, transparent, ${activeTheme.accent}4d, transparent)`,
-                  }}
-                  animate={shouldReduceMotion ? undefined : { x: ["-80%", "240%"], opacity: [0, 0.75, 0] }}
-                  transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut" }}
-                  aria-hidden="true"
-                />
+                {motionProfile === "desktop" && (
+                  <>
+                    <motion.span
+                      data-portal-inner-distortion
+                      className="absolute inset-0 z-30 mix-blend-screen opacity-60"
+                      style={{
+                        background: `repeating-linear-gradient(102deg, transparent 0 17px, ${activeTheme.accent}33 18px 19px, transparent 20px 42px), radial-gradient(circle at 50% 46%, ${activeTheme.accent}44, transparent 46%)`,
+                        WebkitMaskImage: "radial-gradient(circle at 50% 50%, black 12%, transparent 72%)",
+                        maskImage: "radial-gradient(circle at 50% 50%, black 12%, transparent 72%)",
+                      }}
+                      animate={{ x: ["-4%", "5%", "-4%"], opacity: [0.36, 0.74, 0.36] }}
+                      transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
+                      aria-hidden="true"
+                    />
+                    <motion.span
+                      className="absolute -left-1/4 top-0 z-30 h-full w-1/2 bg-white/10 mix-blend-screen blur-xl"
+                      style={{
+                        background: `linear-gradient(100deg, transparent, ${activeTheme.accent}4d, transparent)`,
+                      }}
+                      animate={{ x: ["-80%", "240%"], opacity: [0, 0.75, 0] }}
+                      transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut" }}
+                      aria-hidden="true"
+                    />
+                  </>
+                )}
                 <motion.span
                   className="absolute inset-0 z-30 mix-blend-screen"
                   style={{
                     background: `radial-gradient(circle at 50% 46%, ${activeTheme.accent}3d, transparent 48%)`,
                   }}
-                  animate={shouldReduceMotion ? undefined : { opacity: [0.35, 0.82, 0.35] }}
-                  transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+                  animate={motionProfile === "reduced" ? undefined : { opacity: [0.35, 0.82, 0.35] }}
+                  transition={{ duration: motionProfile === "mobile" ? 6 : 3.2, repeat: Infinity, ease: "easeInOut" }}
                   aria-hidden="true"
                 />
                 <span className="absolute inset-x-10 top-10 z-40 h-[1px]" style={{ backgroundColor: activeTheme.accent }} />
@@ -1967,8 +2004,8 @@ export default function PortalDeck({ games }: PortalDeckProps) {
                 }}
                 aria-hidden="true"
               />
-              <PortalOutflowStreams game={activeGame} accent={activeTheme.accent} reducedMotion={shouldReduceMotion} />
-              <PortalLeakParticles game={activeGame} accent={activeTheme.accent} reducedMotion={shouldReduceMotion} />
+              <PortalOutflowStreams game={activeGame} accent={activeTheme.accent} reducedMotion={motionProfile !== "desktop"} />
+              <PortalLeakParticles game={activeGame} accent={activeTheme.accent} reducedMotion={motionProfile !== "desktop"} />
             </motion.button>
           </motion.div>
         </div>
@@ -2029,14 +2066,16 @@ export default function PortalDeck({ games }: PortalDeckProps) {
                   >
                     {isActive && (
                       <>
-                        <motion.span
-                          data-selector-signal
-                          className="pointer-events-none absolute -left-1/3 top-0 h-full w-1/2 bg-white/10 mix-blend-screen blur-lg"
-                          style={{ background: `linear-gradient(100deg, transparent, ${theme.accent}55, transparent)` }}
-                          animate={shouldReduceMotion ? undefined : { x: ["0%", "260%"], opacity: [0, 0.7, 0] }}
-                          transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-                          aria-hidden="true"
-                        />
+                        {motionProfile === "desktop" && (
+                          <motion.span
+                            data-selector-signal
+                            className="pointer-events-none absolute -left-1/3 top-0 h-full w-1/2 bg-white/10 mix-blend-screen blur-lg"
+                            style={{ background: `linear-gradient(100deg, transparent, ${theme.accent}55, transparent)` }}
+                            animate={{ x: ["0%", "260%"], opacity: [0, 0.7, 0] }}
+                            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                            aria-hidden="true"
+                          />
+                        )}
                         <span
                           className="pointer-events-none absolute bottom-0 left-2 right-2 h-px"
                           style={{ background: `linear-gradient(90deg, transparent, ${theme.accent}, transparent)` }}
@@ -2125,13 +2164,15 @@ export default function PortalDeck({ games }: PortalDeckProps) {
                 }}
                 aria-label={`Enter ${activeGame.title}`}
               >
-                <motion.span
-                  className="pointer-events-none absolute -left-1/3 top-0 h-full w-1/2 bg-white/15 mix-blend-screen blur-lg"
-                  style={{ background: `linear-gradient(100deg, transparent, ${activeTheme.accent}66, transparent)` }}
-                  animate={shouldReduceMotion ? undefined : { x: ["0%", "280%"], opacity: [0, 0.78, 0] }}
-                  transition={{ duration: 2.1, repeat: Infinity, ease: "easeInOut" }}
-                  aria-hidden="true"
-                />
+                {motionProfile === "desktop" && (
+                  <motion.span
+                    className="pointer-events-none absolute -left-1/3 top-0 h-full w-1/2 bg-white/15 mix-blend-screen blur-lg"
+                    style={{ background: `linear-gradient(100deg, transparent, ${activeTheme.accent}66, transparent)` }}
+                    animate={{ x: ["0%", "280%"], opacity: [0, 0.78, 0] }}
+                    transition={{ duration: 2.1, repeat: Infinity, ease: "easeInOut" }}
+                    aria-hidden="true"
+                  />
+                )}
                 <span
                   className="pointer-events-none absolute inset-x-4 top-0 h-px"
                   style={{ background: `linear-gradient(90deg, transparent, ${activeTheme.accent}, transparent)` }}

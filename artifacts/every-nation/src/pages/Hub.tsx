@@ -16,15 +16,25 @@ export default function Hub() {
   const [claiming, setClaiming] = useState(false);
   const [claimed, setClaimed] = useState(false);
   const [activities, setActivities] = useState<any[]>([]);
-  const [isMobile, setIsMobile] = useState(false);
+  const [motionProfile, setMotionProfile] = useState<"reduced" | "mobile" | "desktop">("reduced");
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024 || "ontouchstart" in window || navigator.maxTouchPoints > 0);
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const handleUpdate = () => {
+      if (mediaQuery.matches) {
+        setMotionProfile("reduced");
+      } else {
+        const isMobileDevice = window.innerWidth < 1024 || "ontouchstart" in window || navigator.maxTouchPoints > 0;
+        setMotionProfile(isMobileDevice ? "mobile" : "desktop");
+      }
     };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
+    handleUpdate();
+    mediaQuery.addEventListener("change", handleUpdate);
+    window.addEventListener("resize", handleUpdate);
+    return () => {
+      mediaQuery.removeEventListener("change", handleUpdate);
+      window.removeEventListener("resize", handleUpdate);
+    };
   }, []);
 
   useEffect(() => {
@@ -78,15 +88,22 @@ export default function Hub() {
       <div className="min-h-screen relative flex flex-col items-center overflow-x-hidden selection:bg-cyan-500/30">
 
         {/* Cinematic Background Layer */}
-        {typeof window !== "undefined" && (window.innerWidth < 1024 || "ontouchstart" in window || navigator.maxTouchPoints > 0) ? (
-          <div
-            className="fixed inset-0 z-0 bg-cover bg-center opacity-40 grayscale"
-            style={{ backgroundImage: "url('/hub_bg.png')" }}
-          />
-        ) : (
+        {motionProfile === "desktop" ? (
           <motion.div
             className="fixed inset-0 z-0 bg-cover bg-center opacity-40 grayscale"
             style={{ backgroundImage: "url('/hub_bg.png')", x, y }}
+          />
+        ) : motionProfile === "mobile" ? (
+          <motion.div
+            className="fixed inset-0 z-0 bg-cover bg-center opacity-40 grayscale"
+            style={{ backgroundImage: "url('/hub_bg.png')" }}
+            animate={{ scale: [1.02, 1.06, 1.02], x: [-6, 6, -6], y: [-4, 4, -4] }}
+            transition={{ duration: 24, repeat: Infinity, ease: "easeInOut" }}
+          />
+        ) : (
+          <div
+            className="fixed inset-0 z-0 bg-cover bg-center opacity-40 grayscale"
+            style={{ backgroundImage: "url('/hub_bg.png')" }}
           />
         )}
         <div className="fixed inset-0 z-1 bg-gradient-to-b from-[#020408]/90 via-[#020408]/60 to-[#020408]/95" />
