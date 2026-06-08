@@ -387,17 +387,7 @@ function PortalWorldScene({
   theme: GameTheme;
   motionProfile: "reduced" | "mobile" | "desktop";
 }) {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024 || "ontouchstart" in window || navigator.maxTouchPoints > 0);
-    };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
+  const isMobile = motionProfile === "mobile";
   const reducedMotion = motionProfile === "reduced";
   const sceneKind = getSceneKind(theme);
   const isSpace = sceneKind === "space-anomaly";
@@ -1558,7 +1548,24 @@ export default function PortalDeck({ games }: PortalDeckProps) {
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const handleUpdate = () => {
+    let lastWidth = window.innerWidth;
+
+    const handleUpdate = (force = false) => {
+      const currentWidth = window.innerWidth;
+      if (!force && currentWidth === lastWidth) return;
+      lastWidth = currentWidth;
+
+      if (mediaQuery.matches) {
+        setMotionProfile("reduced");
+      } else {
+        const isMobileDevice = currentWidth < 1024 || "ontouchstart" in window || navigator.maxTouchPoints > 0;
+        setMotionProfile(isMobileDevice ? "mobile" : "desktop");
+      }
+    };
+
+    handleUpdate(true);
+
+    const mediaChangeListener = () => {
       if (mediaQuery.matches) {
         setMotionProfile("reduced");
       } else {
@@ -1566,12 +1573,16 @@ export default function PortalDeck({ games }: PortalDeckProps) {
         setMotionProfile(isMobileDevice ? "mobile" : "desktop");
       }
     };
-    handleUpdate();
-    mediaQuery.addEventListener("change", handleUpdate);
-    window.addEventListener("resize", handleUpdate);
+
+    const handleResize = () => {
+      handleUpdate(false);
+    };
+
+    mediaQuery.addEventListener("change", mediaChangeListener);
+    window.addEventListener("resize", handleResize);
     return () => {
-      mediaQuery.removeEventListener("change", handleUpdate);
-      window.removeEventListener("resize", handleUpdate);
+      mediaQuery.removeEventListener("change", mediaChangeListener);
+      window.removeEventListener("resize", handleResize);
     };
   }, []);
 
@@ -1672,7 +1683,7 @@ export default function PortalDeck({ games }: PortalDeckProps) {
   return (
     <section
       ref={sectionRef}
-      className="relative w-full overflow-visible py-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/55 focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:py-8"
+      className="relative w-full h-full flex flex-col items-center justify-between min-h-0 overflow-hidden py-2 sm:py-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/55"
       aria-label="ENGG Portal Deck"
       onKeyDown={handleKeyDown}
       onPointerMove={handlePointerMove}
@@ -1696,38 +1707,38 @@ export default function PortalDeck({ games }: PortalDeckProps) {
         Selected game: {activeGame.title}
       </p>
 
-      <div className="relative left-1/2 z-10 flex min-h-[720px] w-screen max-w-none -translate-x-1/2 flex-col items-center justify-center px-4 py-6 sm:min-h-[780px] sm:px-8 sm:py-10">
+      <div className="relative left-1/2 z-10 flex flex-1 min-h-0 w-screen max-w-none -translate-x-1/2 flex-col items-center justify-between px-4 py-2 sm:px-8">
         <AnimatePresence mode="wait">
           <motion.div
             key={`details-${activeGame.slug}`}
-            className="relative z-20 mx-auto max-w-3xl text-center"
+            className="relative z-20 mx-auto max-w-3xl text-center shrink-0"
             initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -10 }}
             transition={{ duration: shouldReduceMotion ? 0 : 0.28 }}
           >
-            <div className="mb-4 flex items-center justify-center gap-3">
+            <div className="mb-1 sm:mb-2 flex items-center justify-center gap-2">
               <span
-                className="h-2 w-2 rounded-full"
-                style={{ backgroundColor: activeTheme.accent, boxShadow: `0 0 18px ${activeTheme.accent}` }}
+                className="h-1.5 w-1.5 rounded-full"
+                style={{ backgroundColor: activeTheme.accent, boxShadow: `0 0 12px ${activeTheme.accent}` }}
                 aria-hidden="true"
               />
-              <span className="font-mono text-[10px] uppercase tracking-[0.42em] text-white/48">
+              <span className="font-mono text-[9px] uppercase tracking-[0.42em] text-white/48">
                 ENGG Portal Deck
               </span>
             </div>
 
-            <p className="font-mono text-[11px] uppercase tracking-[0.34em]" style={{ color: activeTheme.accent }}>
+            <p className="font-mono text-[9px] sm:text-[11px] uppercase tracking-[0.34em]" style={{ color: activeTheme.accent }}>
               {activeGame.subtitle}
             </p>
             <h2
-              className="mt-3 break-words font-orbitron text-2xl font-black uppercase leading-tight tracking-[0.16em] text-white sm:text-5xl"
+              className="mt-1 break-words font-orbitron text-xl font-black uppercase leading-tight tracking-[0.16em] text-white sm:mt-2 sm:text-3xl"
               style={{ textShadow: "0 0 30px rgba(255,255,255,0.2), 0 2px 24px rgba(0,0,0,0.85)" }}
             >
               {activeGame.title}
             </h2>
             <p
-              className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-white/72 sm:text-base"
+              className="mx-auto mt-1 sm:mt-2 max-w-2xl text-[11px] leading-relaxed text-white/72 sm:text-sm"
               style={{ textShadow: "0 2px 24px rgba(0,0,0,0.8)" }}
             >
               {activeGame.description}
@@ -1735,15 +1746,15 @@ export default function PortalDeck({ games }: PortalDeckProps) {
           </motion.div>
         </AnimatePresence>
 
-        <div className="relative z-10 mt-3 flex w-full justify-center py-4 sm:mt-6 sm:py-6">
+        <div className="relative z-10 flex-1 min-h-0 flex items-center justify-center w-full py-2 sm:py-4">
           <div
-            className="pointer-events-none absolute left-1/2 top-1/2 h-[min(86vw,660px)] w-[min(86vw,660px)] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-55 blur-3xl"
+            className="pointer-events-none absolute left-1/2 top-1/2 h-[min(90vw,55vh,520px)] w-[min(90vw,55vh,520px)] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-55 blur-3xl"
             style={{ background: `radial-gradient(circle, ${activeTheme.accentSoft}, transparent 68%)` }}
             aria-hidden="true"
           />
 
           <div
-            className="pointer-events-none absolute left-1/2 top-1/2 h-[min(94vw,740px)] w-[min(94vw,740px)] -translate-x-1/2 -translate-y-1/2 overflow-visible opacity-80"
+            className="pointer-events-none absolute left-1/2 top-1/2 h-[min(100vw,65vh,640px)] w-[min(100vw,65vh,640px)] -translate-x-1/2 -translate-y-1/2 overflow-visible opacity-80"
             aria-hidden="true"
           >
             <PortalFragments
@@ -1755,7 +1766,7 @@ export default function PortalDeck({ games }: PortalDeckProps) {
 
           <motion.div
             key={`portal-${activeGame.slug}`}
-            className="relative w-[min(84vw,460px)] [perspective:1400px] sm:w-[min(64vw,500px)]"
+            className="relative w-[min(68vw,28vh,300px)] sm:w-[min(55vw,34vh,380px)] lg:w-[min(45vw,38vh,420px)] [perspective:1400px]"
             initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: shouldReduceMotion ? 0 : 0.35 }}
@@ -2010,8 +2021,8 @@ export default function PortalDeck({ games }: PortalDeckProps) {
           </motion.div>
         </div>
 
-        <div className="relative z-20 flex w-full max-w-[920px] flex-col items-center gap-4">
-          <div className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-stretch gap-3">
+        <div className="relative z-20 flex w-full max-w-[920px] flex-col items-center gap-2 sm:gap-3 shrink-0">
+          <div className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-stretch gap-2">
             <button
               type="button"
               onClick={() => setWrappedIndex(activeIndex - 1)}
@@ -2047,7 +2058,7 @@ export default function PortalDeck({ games }: PortalDeckProps) {
                     onFocus={() => selectGame(index)}
                     onMouseEnter={() => selectGame(index)}
                     className={cn(
-                      "relative min-h-14 min-w-0 flex-1 overflow-hidden border bg-black/35 px-2 py-2 text-left backdrop-blur-sm transition duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-300/60",
+                      "relative min-h-11 sm:min-h-14 min-w-0 flex-1 overflow-hidden border bg-black/35 px-2 py-2 text-left backdrop-blur-sm transition duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-300/60",
                       isActive ? "border-white/35 text-white" : "border-white/10 opacity-72 hover:opacity-100",
                       isLocked && "opacity-55",
                     )}
@@ -2152,10 +2163,8 @@ export default function PortalDeck({ games }: PortalDeckProps) {
                 type="button"
                 onClick={() => beginLaunch(activeGame)}
                 disabled={Boolean(enteringGame)}
-                className="group relative inline-flex w-full items-center justify-center overflow-hidden border font-orbitron text-[14px] font-black uppercase tracking-[0.34em] text-white backdrop-blur-sm transition duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-cyan-300/60 sm:w-auto"
+                className="group relative inline-flex w-full items-center justify-center overflow-hidden border font-orbitron text-[12px] sm:text-[14px] font-black uppercase tracking-[0.34em] text-white backdrop-blur-sm transition duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-cyan-300/60 sm:w-auto h-11 sm:h-14 px-6 sm:px-10"
                 style={{
-                  minHeight: 58,
-                  padding: "16px 34px",
                   borderColor: `${activeTheme.accent}c8`,
                   background: `linear-gradient(135deg, ${activeTheme.accent}34, rgba(255,255,255,0.06) 42%, ${activeTheme.accent}1a)`,
                   boxShadow: `0 0 42px ${activeTheme.accent}44, inset 0 0 28px ${activeTheme.accent}22`,
@@ -2185,7 +2194,7 @@ export default function PortalDeck({ games }: PortalDeckProps) {
               <button
                 type="button"
                 disabled
-                className="inline-flex min-h-12 w-full items-center justify-center border border-white/10 bg-white/[0.03] px-6 py-3 font-orbitron text-[13px] font-black uppercase tracking-[0.32em] text-white/35 backdrop-blur-sm sm:w-auto"
+                className="inline-flex h-11 sm:h-14 w-full items-center justify-center border border-white/10 bg-white/[0.03] px-6 py-3 font-orbitron text-[11px] sm:text-[13px] font-black uppercase tracking-[0.32em] text-white/35 backdrop-blur-sm sm:w-auto"
                 aria-label={`${activeGame.title} is locked`}
               >
                 <Lock className="mr-3 h-4 w-4" />
