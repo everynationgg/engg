@@ -1,0 +1,308 @@
+{
+  "schema_version": 1,
+  "generated_by": "ai-memory-index.mjs",
+  "nodes": [
+    {
+      "id": "repo-map",
+      "title": "Repo Map",
+      "type": "memory_node",
+      "status": "active",
+      "path": "ai-memory/nodes/repo-map.md",
+      "priority": 10,
+      "summary": "Fast map of the workspace, apps, shared libraries, docs, and retained artifacts.",
+      "related_nodes": [
+        "architecture",
+        "agent-workflow",
+        "safety-rules"
+      ],
+      "source_files": [
+        "README.md",
+        "ARCHITECTURE.md",
+        "AI_CONTEXT.md",
+        "repo-research/workspace-audit.md"
+      ],
+      "last_reviewed": "2026-06-11"
+    },
+    {
+      "id": "safety-rules",
+      "title": "Safety Rules",
+      "type": "memory_node",
+      "status": "active",
+      "path": "ai-memory/nodes/safety-rules.md",
+      "priority": 20,
+      "summary": "Hard boundaries for safe edits, dirty worktrees, game separation, dependencies, and secrets.",
+      "related_nodes": [
+        "repo-map",
+        "security",
+        "agent-workflow"
+      ],
+      "source_files": [
+        "AI_CONTEXT.md",
+        "SECURITY.md",
+        "DESIGN_SECURITY_CHECKLIST.md",
+        "repo-research/workspace-audit.md"
+      ],
+      "last_reviewed": "2026-06-11"
+    },
+    {
+      "id": "architecture",
+      "title": "Architecture",
+      "type": "memory_node",
+      "status": "active",
+      "path": "ai-memory/nodes/architecture.md",
+      "priority": 30,
+      "summary": "Workspace architecture across the website, API server, shared libraries, and standalone games.",
+      "related_nodes": [
+        "repo-map",
+        "website",
+        "api-server",
+        "game-separation",
+        "deployment"
+      ],
+      "source_files": [
+        "ARCHITECTURE.md",
+        "TECH_STACK.md",
+        "README.md"
+      ],
+      "last_reviewed": "2026-06-11"
+    },
+    {
+      "id": "website",
+      "title": "Website",
+      "type": "memory_node",
+      "status": "active",
+      "path": "ai-memory/nodes/website.md",
+      "priority": 40,
+      "summary": "Main website ownership, routes, Hub catalog, public app boundaries, and validation.",
+      "related_nodes": [
+        "architecture",
+        "design-system",
+        "performance",
+        "game-separation"
+      ],
+      "source_files": [
+        "README.md",
+        "ARCHITECTURE.md",
+        "GAME_REGISTRY.md",
+        "repo-research/website-dependency-audit.md"
+      ],
+      "last_reviewed": "2026-06-11"
+    },
+    {
+      "id": "api-server",
+      "title": "API Server",
+      "type": "memory_node",
+      "status": "active",
+      "path": "ai-memory/nodes/api-server.md",
+      "priority": 50,
+      "summary": "Express and Socket.IO server ownership, shared schema dependencies, and server-side caution areas.",
+      "related_nodes": [
+        "architecture",
+        "security",
+        "deployment",
+        "testing"
+      ],
+      "source_files": [
+        "ARCHITECTURE.md",
+        "TECH_STACK.md",
+        "SECURITY.md",
+        "DEPLOYMENT.md"
+      ],
+      "last_reviewed": "2026-06-11"
+    },
+    {
+      "id": "game-separation",
+      "title": "Game Separation",
+      "type": "memory_node",
+      "status": "active",
+      "path": "ai-memory/nodes/game-separation.md",
+      "priority": 60,
+      "summary": "Errant Night extraction, standalone game ownership, and multi-game repository pattern.",
+      "related_nodes": [
+        "architecture",
+        "deployment",
+        "website",
+        "decisions"
+      ],
+      "source_files": [
+        "GAME_ARCHITECTURE.md",
+        "GAME_DEPLOYMENT.md",
+        "GAME_PROXY_ROUTING.md",
+        "GAME_REGISTRY.md",
+        "decisions/0002-game-repo-separation-plan.md",
+        "decisions/0004-multi-game-path-routing.md"
+      ],
+      "last_reviewed": "2026-06-11"
+    },
+    {
+      "id": "deployment",
+      "title": "Deployment",
+      "type": "memory_node",
+      "status": "active",
+      "path": "ai-memory/nodes/deployment.md",
+      "priority": 70,
+      "summary": "Website, API, and standalone game deployment shape without changing routing or environment values.",
+      "related_nodes": [
+        "architecture",
+        "game-separation",
+        "security",
+        "testing"
+      ],
+      "source_files": [
+        "DEPLOYMENT.md",
+        "GAME_DEPLOYMENT.md",
+        "GAME_PROXY_ROUTING.md",
+        "vercel.json"
+      ],
+      "last_reviewed": "2026-06-11"
+    },
+    {
+      "id": "design-system",
+      "title": "Design System",
+      "type": "memory_node",
+      "status": "active",
+      "path": "ai-memory/nodes/design-system.md",
+      "priority": 80,
+      "summary": "Hub visual system, Portal Deck direction, UI standards, and design safety constraints.",
+      "related_nodes": [
+        "website",
+        "performance",
+        "security"
+      ],
+      "source_files": [
+        "HUB_VISUAL_SYSTEM.md",
+        "PORTAL_DECK_DESIGN.md",
+        "UI_STANDARDS.md",
+        "DESIGN_SECURITY_CHECKLIST.md"
+      ],
+      "last_reviewed": "2026-06-11"
+    },
+    {
+      "id": "performance",
+      "title": "Performance",
+      "type": "memory_node",
+      "status": "active",
+      "path": "ai-memory/nodes/performance.md",
+      "priority": 90,
+      "summary": "Performance budgets for the website and Hub, especially media, motion, route loading, and layout stability.",
+      "related_nodes": [
+        "website",
+        "design-system",
+        "testing"
+      ],
+      "source_files": [
+        "DESIGN_PERFORMANCE_BUDGET.md",
+        "repo-research/website-polish-performance-plan.md",
+        "TESTING.md"
+      ],
+      "last_reviewed": "2026-06-11"
+    },
+    {
+      "id": "security",
+      "title": "Security",
+      "type": "memory_node",
+      "status": "active",
+      "path": "ai-memory/nodes/security.md",
+      "priority": 100,
+      "summary": "Secrets, env handling, supply-chain policy, payment caution, routing safety, and repo hygiene.",
+      "related_nodes": [
+        "safety-rules",
+        "api-server",
+        "deployment",
+        "testing"
+      ],
+      "source_files": [
+        "SECURITY.md",
+        "DESIGN_SECURITY_CHECKLIST.md",
+        "GAME_SECURITY_CHECKLIST.md",
+        "pnpm-workspace.yaml"
+      ],
+      "last_reviewed": "2026-06-11"
+    },
+    {
+      "id": "testing",
+      "title": "Testing",
+      "type": "memory_node",
+      "status": "active",
+      "path": "ai-memory/nodes/testing.md",
+      "priority": 110,
+      "summary": "Repository validation commands, build checks, manual route checks, and memory index validation.",
+      "related_nodes": [
+        "deployment",
+        "website",
+        "api-server",
+        "agent-workflow"
+      ],
+      "source_files": [
+        "TESTING.md",
+        "MVP_QA_CHECKLIST.md",
+        "GAME_QA_CHECKLIST.md",
+        "AI_CONTEXT.md"
+      ],
+      "last_reviewed": "2026-06-11"
+    },
+    {
+      "id": "roadmap",
+      "title": "Roadmap",
+      "type": "memory_node",
+      "status": "active",
+      "path": "ai-memory/nodes/roadmap.md",
+      "priority": 120,
+      "summary": "Current roadmap phases, completed game extraction, cleanup direction, and multi-game portal standards.",
+      "related_nodes": [
+        "game-separation",
+        "decisions",
+        "architecture"
+      ],
+      "source_files": [
+        "ROADMAP.md",
+        "repo-research/multi-game-platform-plan.md"
+      ],
+      "last_reviewed": "2026-06-11"
+    },
+    {
+      "id": "decisions",
+      "title": "Decisions",
+      "type": "memory_node",
+      "status": "active",
+      "path": "ai-memory/nodes/decisions.md",
+      "priority": 130,
+      "summary": "Decision record index and how prior architecture decisions should guide new work.",
+      "related_nodes": [
+        "roadmap",
+        "deployment",
+        "game-separation",
+        "agent-workflow"
+      ],
+      "source_files": [
+        "decisions/README.md",
+        "decisions/0001-vercel-split.md",
+        "decisions/0002-game-repo-separation-plan.md",
+        "decisions/0004-multi-game-path-routing.md",
+        "decisions/0005-hub-portal-deck-direction.md"
+      ],
+      "last_reviewed": "2026-06-11"
+    },
+    {
+      "id": "agent-workflow",
+      "title": "Agent Workflow",
+      "type": "memory_node",
+      "status": "active",
+      "path": "ai-memory/nodes/agent-workflow.md",
+      "priority": 140,
+      "summary": "Practical workflow for agents: read order, dirty-file handling, scope control, validation, and reporting.",
+      "related_nodes": [
+        "repo-map",
+        "safety-rules",
+        "testing",
+        "decisions"
+      ],
+      "source_files": [
+        "AI_CONTEXT.md",
+        "README.md",
+        "repo-research/workspace-audit.md"
+      ],
+      "last_reviewed": "2026-06-11"
+    }
+  ]
+}

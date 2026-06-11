@@ -3,6 +3,18 @@
 This file is for future AI agents working in this repository. Read it before
 editing code.
 
+## AI Memory Core
+
+Start with the internal AI memory files before editing:
+
+- `ai-memory/memory-core.md` - fast repo orientation and safety boundaries.
+- `ai-memory/index.json` - static machine-readable memory node index.
+- `ai-memory/generated/memory-index.generated.json` - generated index from
+  `ai-memory/nodes/*.md` frontmatter.
+
+These files are for coding agents only. They are not product features, public
+routes, UI, API behavior, or game runtime code.
+
 ## Current Architecture
 
 This is a pnpm workspace. The main product pieces are:
