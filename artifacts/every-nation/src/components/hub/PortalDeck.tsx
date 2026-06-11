@@ -13,8 +13,9 @@ type PortalDeckProps = {
 const fallbackTheme: GameTheme = {
   accent: "#22d3ee",
   accentSoft: "rgba(34, 211, 238, 0.16)",
-  backgroundImage: "/hub_bg.png",
-  previewImage: "/hub_bg.png",
+  backgroundBase: "#010713",
+  backgroundImage: "/images/hub/errant-night.webp",
+  previewImage: "/ERRANT.png",
   portalEffect: "default",
   particles: ["scanline"],
 };
@@ -97,18 +98,28 @@ function getSceneKind(theme: GameTheme): WorldSceneKind {
   return "default";
 }
 
-function getWorldBaseBackground(theme: GameTheme): string {
+function getWorldImageOverlay(theme: GameTheme): string {
   const sceneKind = getSceneKind(theme);
   if (sceneKind === "space-anomaly") {
-    return `radial-gradient(circle at 75% 20%, rgba(79,70,229,0.26), transparent 28%), radial-gradient(circle at 32% 48%, ${theme.accentSoft}, transparent 34%), radial-gradient(circle at 50% 92%, rgba(5,12,24,0.4), transparent 32%), linear-gradient(180deg, #01040b 0%, #020617 46%, #00030a 100%)`;
+    return `radial-gradient(circle at 50% 58%, ${theme.accentSoft}, transparent 34%), linear-gradient(180deg, rgba(1,7,19,0.18) 0%, rgba(1,7,19,0.08) 44%, rgba(0,3,10,0.64) 100%)`;
   }
   if (sceneKind === "nether-depths") {
-    return `radial-gradient(circle at 50% 92%, rgba(217,70,239,0.24), transparent 34%), radial-gradient(circle at 32% 32%, rgba(245,158,11,0.14), transparent 31%), radial-gradient(circle at 75% 24%, rgba(88,28,135,0.22), transparent 28%), linear-gradient(180deg, #030105 0%, #120614 42%, #070209 72%, #010102 100%)`;
+    return `radial-gradient(circle at 50% 62%, ${theme.accentSoft}, transparent 36%), radial-gradient(circle at 34% 68%, rgba(245,158,11,0.12), transparent 26%), linear-gradient(180deg, rgba(5,2,7,0.1) 0%, rgba(5,2,7,0.04) 45%, rgba(2,1,3,0.58) 100%)`;
   }
   if (sceneKind === "orbital-lock") {
-    return `radial-gradient(circle at 22% 52%, rgba(34,211,238,0.18), transparent 32%), radial-gradient(circle at 72% 34%, rgba(245,158,11,0.24), transparent 30%), radial-gradient(circle at 50% 90%, rgba(127,29,29,0.26), transparent 34%), linear-gradient(180deg, #03050a 0%, #090b12 44%, #110806 78%, #010204 100%)`;
+    return `radial-gradient(circle at 50% 54%, ${theme.accentSoft}, transparent 34%), linear-gradient(180deg, rgba(7,5,2,0.14) 0%, rgba(7,5,2,0.05) 46%, rgba(3,2,1,0.6) 100%)`;
   }
-  return `radial-gradient(circle at 72% 18%, ${theme.accentSoft}, transparent 32%), radial-gradient(circle at 50% 92%, rgba(245,158,11,0.18), transparent 34%), linear-gradient(180deg, #05060b 0%, #0b0d12 52%, #010204 100%)`;
+  return `radial-gradient(circle at 50% 58%, ${theme.accentSoft}, transparent 34%), linear-gradient(180deg, rgba(0,0,0,0.14), rgba(0,0,0,0.62))`;
+}
+
+function getWorldBackgroundStyle(theme: GameTheme): CSSProperties {
+  return {
+    backgroundColor: theme.backgroundBase,
+    backgroundImage: `${getWorldImageOverlay(theme)}, url("${theme.backgroundImage}")`,
+    backgroundPosition: "center center, center center",
+    backgroundRepeat: "no-repeat, no-repeat",
+    backgroundSize: "cover, cover",
+  };
 }
 
 function WorldSceneLayer({
@@ -748,7 +759,7 @@ function WorldCanvasTransition({
 
   const isReduced = motionProfile === "reduced" || motionProfile === null;
   const useOpacityTransition = motionProfile === "mobile";
-  const canvasBackground = getWorldBaseBackground(currentTheme);
+  const canvasBackground = currentTheme.backgroundBase;
 
   if (isReduced) {
     return (
@@ -762,7 +773,7 @@ function WorldCanvasTransition({
   }
 
   return (
-    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-black" style={{ background: canvasBackground }}>
+    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-black" style={{ backgroundColor: canvasBackground }}>
       {/* 1. Previous Base Layer */}
       {isTransitioning && prevGame && prevTheme && (
         <PortalWorldScene
@@ -846,6 +857,7 @@ function PortalWorldScene({
   const isSpace = sceneKind === "space-anomaly";
   const isNether = sceneKind === "nether-depths";
   const isOrbital = sceneKind === "orbital-lock";
+  const hasCatalogWorldImage = Boolean(game.theme?.backgroundImage);
 
   const stars = useMemo(
     () =>
@@ -985,7 +997,7 @@ function PortalWorldScene({
     [game.slug, isNether, isOrbital, isSpace],
   );
 
-  const baseBackground = getWorldBaseBackground(theme);
+  const worldBackgroundStyle = getWorldBackgroundStyle(theme);
 
   if (reducedMotion) {
     return (
@@ -993,7 +1005,7 @@ function PortalWorldScene({
         data-portal-world
         data-world-scene={sceneKind}
         className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-black"
-        style={{ background: baseBackground }}
+        style={worldBackgroundStyle}
         aria-hidden="true"
       />
     );
@@ -1005,6 +1017,7 @@ function PortalWorldScene({
         data-portal-world
         data-world-scene={sceneKind}
         className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-black"
+        style={{ backgroundColor: theme.backgroundBase }}
         aria-hidden="true"
       >
         <style>
@@ -1071,7 +1084,7 @@ function PortalWorldScene({
           `}
         </style>
         <div className="absolute inset-0">
-          <WorldSceneLayer name="base" style={{ background: baseBackground }}>
+          <WorldSceneLayer name="base" style={worldBackgroundStyle}>
             {null}
           </WorldSceneLayer>
 
@@ -1142,6 +1155,7 @@ function PortalWorldScene({
       data-portal-world
       data-world-scene={sceneKind}
       className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-black"
+      style={{ backgroundColor: theme.backgroundBase }}
       aria-hidden="true"
     >
       <style>
@@ -1216,7 +1230,7 @@ function PortalWorldScene({
           exit={{ opacity: 0 }}
           transition={{ duration: reducedMotion ? 0 : 0.5 }}
         >
-          <WorldSceneLayer name="base" style={{ background: baseBackground }}>
+          <WorldSceneLayer name="base" style={worldBackgroundStyle}>
             {null}
           </WorldSceneLayer>
 
@@ -1253,7 +1267,7 @@ function PortalWorldScene({
             ))}
           </WorldSceneLayer>
 
-          {motionProfile === "desktop" && isSpace && (
+          {motionProfile === "desktop" && !hasCatalogWorldImage && isSpace && (
             <WorldSceneLayer name="space-anomaly">
               <motion.div
                 data-world-planet
@@ -1283,7 +1297,7 @@ function PortalWorldScene({
             </WorldSceneLayer>
           )}
 
-          {motionProfile === "desktop" && isNether && (
+          {motionProfile === "desktop" && !hasCatalogWorldImage && isNether && (
             <WorldSceneLayer name="nether-depths">
               <div
                 data-world-ruin-cavern
@@ -1494,7 +1508,7 @@ function PortalWorldScene({
             </WorldSceneLayer>
           )}
 
-          {motionProfile === "desktop" && isOrbital && (
+          {motionProfile === "desktop" && !hasCatalogWorldImage && isOrbital && (
             <WorldSceneLayer name="orbital-lock">
               <div
                 data-world-battlefield
@@ -2037,7 +2051,7 @@ function EntryTransitionOverlay({
     >
       <motion.div
         className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${theme.backgroundImage})` }}
+        style={{ backgroundColor: theme.backgroundBase, backgroundImage: `url(${theme.previewImage})` }}
         initial={{ scale: 1, opacity: 0.38 }}
         animate={{ scale: 1.18, opacity: 0.78 }}
         transition={{ duration: entryTransitionMs / 1000, ease: "easeInOut" }}

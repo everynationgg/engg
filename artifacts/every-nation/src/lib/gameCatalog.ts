@@ -18,6 +18,7 @@ export type GameThemeParticle =
 export type GameTheme = {
   accent: string;
   accentSoft: string;
+  backgroundBase: string;
   backgroundImage: string;
   previewImage: string;
   portalEffect: GamePortalEffect;
@@ -52,7 +53,8 @@ export const gameCatalog = [
     theme: {
       accent: "#22d3ee",
       accentSoft: "rgba(34, 211, 238, 0.18)",
-      backgroundImage: "/hub_bg.png",
+      backgroundBase: "#010713",
+      backgroundImage: "/images/hub/errant-night.webp",
       previewImage: "/ERRANT.png",
       portalEffect: "signal-breach",
       particles: ["scanline", "role-card"],
@@ -71,7 +73,8 @@ export const gameCatalog = [
     theme: {
       accent: "#d946ef",
       accentSoft: "rgba(217, 70, 239, 0.18)",
-      backgroundImage: "/hub_engraved.webp",
+      backgroundBase: "#050207",
+      backgroundImage: "/images/hub/engraved-nether-ruins.webp",
       previewImage: "/hub_engraved.webp",
       portalEffect: "nether-rune",
       particles: ["rune"],
@@ -89,7 +92,8 @@ export const gameCatalog = [
     theme: {
       accent: "#f59e0b",
       accentSoft: "rgba(245, 158, 11, 0.18)",
-      backgroundImage: "/hub_epsilon.webp",
+      backgroundBase: "#070502",
+      backgroundImage: "/images/hub/epsilon.webp",
       previewImage: "/hub_epsilon.webp",
       portalEffect: "orbital-command",
       particles: ["moon", "orbit"],

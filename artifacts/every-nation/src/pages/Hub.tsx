@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { FaTerminal } from "react-icons/fa";
 import TacticalSlate from "@/components/common/TacticalSlate";
-import { useParallax } from "@/hooks/useParallax";
 import { HUDOverlay } from "@/components/common/HUDOverlay";
 import { SciFiButton } from "@/components/common/SciFiButton";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,7 +9,6 @@ import { gameCatalog } from "@/lib/gameCatalog";
 
 
 export default function Hub() {
-  const { x, y } = useParallax(20);
   const { token, refreshUser, isLoggedIn } = useAuth();
   const [claiming, setClaiming] = useState(false);
   const [claimed, setClaimed] = useState(false);
@@ -112,29 +109,7 @@ export default function Hub() {
 
   return (
     <HUDOverlay pageLabel="MISSION_HUB">
-      <div className="h-[100svh] relative flex flex-col items-center overflow-hidden selection:bg-cyan-500/30 w-full select-none">
-
-        {/* Cinematic Background Layer */}
-        {motionProfile === "desktop" ? (
-          <motion.div
-            className="fixed inset-0 z-0 bg-cover bg-center opacity-40 grayscale"
-            style={{ backgroundImage: "url('/hub_bg.png')", x, y }}
-          />
-        ) : motionProfile === "mobile" ? (
-          <motion.div
-            className="fixed inset-0 z-0 bg-cover bg-center opacity-40 grayscale"
-            style={{ backgroundImage: "url('/hub_bg.png')" }}
-            animate={{ scale: [1.02, 1.06, 1.02], x: [-6, 6, -6], y: [-4, 4, -4] }}
-            transition={{ duration: 24, repeat: Infinity, ease: "easeInOut" }}
-          />
-        ) : (
-          <div
-            className="fixed inset-0 z-0 bg-cover bg-center opacity-40 grayscale"
-            style={{ backgroundImage: "url('/hub_bg.png')" }}
-          />
-        )}
-        <div className="fixed inset-0 z-1 bg-gradient-to-b from-[#020408]/90 via-[#020408]/60 to-[#020408]/95" />
-
+      <div className="h-[100svh] relative flex flex-col items-center overflow-hidden bg-[#020408] selection:bg-cyan-500/30 w-full select-none">
         {/* Main Content Area */}
         <main className="relative z-20 w-full max-w-[1400px] px-4 sm:px-6 md:px-12 xl:px-16 flex-1 flex flex-col items-center min-h-0 overflow-hidden pb-4">
 
