@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, KeyboardEvent, PointerEvent, ReactNode } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Lock, Play } from "lucide-react";
 import type { GameCatalogItem, GameTheme, GameThemeParticle } from "@/lib/gameCatalog";
 import { cn } from "@/lib/utils";
 
 type PortalDeckProps = {
   games: readonly GameCatalogItem[];
+  motionProfile: MotionProfile;
 };
 
 const fallbackTheme: GameTheme = {
@@ -57,6 +58,7 @@ function isLaunchableGame(game: GameCatalogItem): boolean {
 }
 
 type WorldSceneKind = "space-anomaly" | "nether-depths" | "orbital-lock" | "default";
+type MotionProfile = "reduced" | "mobile" | "desktop" | null;
 
 type WorldEntityKind =
   | "probe"
@@ -93,6 +95,20 @@ function getSceneKind(theme: GameTheme): WorldSceneKind {
   if (theme.portalEffect === "nether-rune") return "nether-depths";
   if (theme.portalEffect === "orbital-command") return "orbital-lock";
   return "default";
+}
+
+function getWorldBaseBackground(theme: GameTheme): string {
+  const sceneKind = getSceneKind(theme);
+  if (sceneKind === "space-anomaly") {
+    return `radial-gradient(circle at 75% 20%, rgba(79,70,229,0.26), transparent 28%), radial-gradient(circle at 32% 48%, ${theme.accentSoft}, transparent 34%), radial-gradient(circle at 50% 92%, rgba(5,12,24,0.4), transparent 32%), linear-gradient(180deg, #01040b 0%, #020617 46%, #00030a 100%)`;
+  }
+  if (sceneKind === "nether-depths") {
+    return `radial-gradient(circle at 50% 92%, rgba(217,70,239,0.24), transparent 34%), radial-gradient(circle at 32% 32%, rgba(245,158,11,0.14), transparent 31%), radial-gradient(circle at 75% 24%, rgba(88,28,135,0.22), transparent 28%), linear-gradient(180deg, #030105 0%, #120614 42%, #070209 72%, #010102 100%)`;
+  }
+  if (sceneKind === "orbital-lock") {
+    return `radial-gradient(circle at 22% 52%, rgba(34,211,238,0.18), transparent 32%), radial-gradient(circle at 72% 34%, rgba(245,158,11,0.24), transparent 30%), radial-gradient(circle at 50% 90%, rgba(127,29,29,0.26), transparent 34%), linear-gradient(180deg, #03050a 0%, #090b12 44%, #110806 78%, #010204 100%)`;
+  }
+  return `radial-gradient(circle at 72% 18%, ${theme.accentSoft}, transparent 32%), radial-gradient(circle at 50% 92%, rgba(245,158,11,0.18), transparent 34%), linear-gradient(180deg, #05060b 0%, #0b0d12 52%, #010204 100%)`;
 }
 
 function WorldSceneLayer({
@@ -387,6 +403,9 @@ interface PaintElement {
   width?: number;
   rotate?: number;
   color: string;
+  xDest?: number;
+  yDest?: number;
+  char?: string;
 }
 
 // World Paint Transition overlay rendering custom particles and wave reveals
@@ -397,7 +416,7 @@ function WorldPaintOverlay({
 }: {
   fromGame: GameCatalogItem | null;
   toGame: GameCatalogItem;
-  motionProfile: "reduced" | "mobile" | "desktop";
+  motionProfile: MotionProfile;
 }) {
   const theme = getTheme(toGame);
   const isMobile = motionProfile === "mobile";
@@ -405,38 +424,59 @@ function WorldPaintOverlay({
 
   const elements = useMemo<PaintElement[]>(() => {
     if (sceneKind === "space-anomaly") {
-      return Array.from({ length: isMobile ? 8 : 16 }, (_, i) => ({
-        id: `errant-paint-${i}`,
-        left: `${45 + Math.cos((i * Math.PI) / 8) * (20 + (i % 3) * 15)}%`,
-        top: `${45 + Math.sin((i * Math.PI) / 8) * (20 + (i % 3) * 15)}%`,
-        delay: i * 0.03,
-        size: 2 + (i % 3) * 2,
-        color: i % 2 === 0 ? "#22d3ee" : "#3b82f6",
-      }));
+      return Array.from({ length: isMobile ? 8 : 16 }, (_, i) => {
+        const xDest = ((i * 73) % 81) - 40;
+        const yDest = ((i * 109) % 81) - 40;
+        const char = (i * 17) % 2 === 0 ? "1" : "0";
+        return {
+          id: `errant-paint-${i}`,
+          left: `${45 + Math.cos((i * Math.PI) / 8) * (20 + (i % 3) * 15)}%`,
+          top: `${45 + Math.sin((i * Math.PI) / 8) * (20 + (i % 3) * 15)}%`,
+          delay: i * 0.03,
+          size: 2 + (i % 3) * 2,
+          color: i % 2 === 0 ? "#22d3ee" : "#3b82f6",
+          xDest,
+          yDest,
+          char,
+        };
+      });
     } else if (sceneKind === "nether-depths") {
-      return Array.from({ length: isMobile ? 6 : 12 }, (_, i) => ({
-        id: `nether-paint-${i}`,
-        left: `${42 + Math.cos((i * Math.PI) / 6) * (18 + (i % 2) * 12)}%`,
-        top: `${45 + Math.sin((i * Math.PI) / 6) * (18 + (i % 2) * 12)}%`,
-        delay: i * 0.04,
-        size: 3 + (i % 4) * 3,
-        color: i % 2 === 0 ? "#c084fc" : "#fbbf24",
-      }));
+      return Array.from({ length: isMobile ? 6 : 12 }, (_, i) => {
+        const yDest = -70 - ((i * 31) % 51);
+        return {
+          id: `nether-paint-${i}`,
+          left: `${42 + Math.cos((i * Math.PI) / 6) * (18 + (i % 2) * 12)}%`,
+          top: `${45 + Math.sin((i * Math.PI) / 6) * (18 + (i % 2) * 12)}%`,
+          delay: i * 0.04,
+          size: 3 + (i % 4) * 3,
+          color: i % 2 === 0 ? "#c084fc" : "#fbbf24",
+          yDest,
+        };
+      });
     } else {
-      return Array.from({ length: isMobile ? 8 : 14 }, (_, i) => ({
-        id: `epsilon-paint-${i}`,
-        left: `${48 + Math.cos((i * Math.PI) / 7) * (22 + (i % 3) * 10)}%`,
-        top: `${40 + Math.sin((i * Math.PI) / 7) * (22 + (i % 3) * 10)}%`,
-        delay: i * 0.025,
-        width: 15 + (i % 3) * 20,
-        rotate: (i * 360) / 7 + (i % 2) * 15,
-        color: i % 2 === 0 ? "#f97316" : "#22d3ee",
-      }));
+      return Array.from({ length: isMobile ? 8 : 14 }, (_, i) => {
+        const rotateVal = (i * 360) / 7 + (i % 2) * 15;
+        const rad = (rotateVal * Math.PI) / 180;
+        const xDest = Math.cos(rad) * 120;
+        const yDest = Math.sin(rad) * 120;
+        return {
+          id: `epsilon-paint-${i}`,
+          left: `${48 + Math.cos((i * Math.PI) / 7) * (22 + (i % 3) * 10)}%`,
+          top: `${40 + Math.sin((i * Math.PI) / 7) * (22 + (i % 3) * 10)}%`,
+          delay: i * 0.025,
+          width: 15 + (i % 3) * 20,
+          rotate: rotateVal,
+          color: i % 2 === 0 ? "#f97316" : "#22d3ee",
+          xDest,
+          yDest,
+        };
+      });
     }
   }, [sceneKind, isMobile]);
 
   return (
     <div className="fixed inset-0 z-[15] overflow-hidden pointer-events-none">
+      {/* Expanding radial wash ring from center */}
       <motion.div
         className="fixed left-1/2 top-[42%] -translate-x-1/2 -translate-y-1/2 rounded-full border-2"
         style={{
@@ -450,14 +490,39 @@ function WorldPaintOverlay({
         transition={{ duration: 1.1, ease: "easeOut" }}
       />
 
+      {/* Mobile-specific expanding radial wash filled overlay */}
+      {isMobile && (
+        <motion.div
+          className="fixed inset-0 z-[14]"
+          style={{
+            background: `radial-gradient(circle at 50% 42%, ${theme.accent} 0%, ${theme.accent}22 35%, transparent 70%)`,
+          }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: [0, 0.9, 0], scale: [0.8, 2.5] }}
+          transition={{ duration: 1.1, ease: "easeOut" }}
+        />
+      )}
+
       {sceneKind === "space-anomaly" && (
         <>
-          <motion.div
-            className="fixed left-0 w-full h-[5px] bg-cyan-400/90 shadow-[0_0_20px_rgba(34,211,238,1)]"
-            initial={{ top: "-10%" }}
-            animate={{ top: "110%" }}
-            transition={{ duration: 0.95, ease: "easeInOut" }}
-          />
+          {isMobile ? (
+            /* Smooth GPU-accelerated scanline sweep */
+            <motion.div
+              className="fixed left-0 w-full h-[6px] bg-cyan-400/95 shadow-[0_0_24px_#22d3ee] z-[16]"
+              style={{ top: 0 }}
+              initial={{ y: "-10vh" }}
+              animate={{ y: "110vh" }}
+              transition={{ duration: 0.95, ease: "easeInOut" }}
+            />
+          ) : (
+            <motion.div
+              className="fixed left-0 w-full h-[5px] bg-cyan-400/90 shadow-[0_0_20px_rgba(34,211,238,1)]"
+              initial={{ top: "-10%" }}
+              animate={{ top: "110%" }}
+              transition={{ duration: 0.95, ease: "easeInOut" }}
+            />
+          )}
+
           {elements.map((el) => (
             <motion.div
               key={el.id}
@@ -472,10 +537,10 @@ function WorldPaintOverlay({
                 boxShadow: `0 0 10px ${el.color}`,
               }}
               initial={{ scale: 0.1, opacity: 0 }}
-              animate={{ scale: [0.1, 1.3, 0], opacity: [0, 1, 0], x: [0, (Math.random() - 0.5) * 80], y: [0, (Math.random() - 0.5) * 80] }}
+              animate={{ scale: [0.1, 1.3, 0], opacity: [0, 1, 0], x: [0, el.xDest ?? 0], y: [0, el.yDest ?? 0] }}
               transition={{ duration: 0.8, delay: el.delay, ease: "easeOut" }}
             >
-              {Math.random() > 0.5 ? "1" : "0"}
+              {el.char}
             </motion.div>
           ))}
         </>
@@ -483,23 +548,35 @@ function WorldPaintOverlay({
 
       {sceneKind === "nether-depths" && (
         <>
-          {/* Full-screen cave darkness expansion */}
+          {isMobile ? (
+            /* Ash glow wash */
+            <motion.div
+              className="fixed inset-0 bg-gradient-to-b from-[#120614]/80 via-[#070209]/95 to-black pointer-events-none z-[13]"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 0.95, 0] }}
+              transition={{ duration: 1.2, ease: "easeInOut" }}
+            />
+          ) : (
+            /* Full-screen cave darkness expansion */
+            <motion.div
+              className="fixed inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,rgba(18,6,20,0.85)_100%)]"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 0.9, 0] }}
+              transition={{ duration: 1.1 }}
+            />
+          )}
+
           <motion.div
-            className="fixed inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,rgba(18,6,20,0.85)_100%)]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 0.9, 0] }}
-            transition={{ duration: 1.1 }}
-          />
-          <motion.div
-            className="fixed left-1/2 top-[42%] -translate-x-1/2 -translate-y-1/2 border border-purple-500/40 rounded-full flex items-center justify-center font-orbitron text-[8px] sm:text-[10px] text-purple-300/60 uppercase tracking-[0.3em]"
+            className="fixed left-1/2 top-[42%] -translate-x-1/2 -translate-y-1/2 border border-purple-500/40 rounded-full flex items-center justify-center font-orbitron text-[8px] sm:text-[10px] text-purple-300/60 uppercase tracking-[0.3em] z-[16]"
             style={{ width: "200px", height: "200px" }}
             initial={{ scale: 0.1, rotate: 0, opacity: 0.9 }}
-            animate={{ scale: isMobile ? 6 : 10, rotate: 180, opacity: 0 }}
+            animate={{ scale: isMobile ? 4 : 10, rotate: 180, opacity: 0 }}
             transition={{ duration: 1.1, ease: "easeOut" }}
           >
             <span className="border border-yellow-500/20 rounded-full w-[80%] h-[80%] absolute" />
             RUNE_SEAL
           </motion.div>
+
           {elements.map((el) => (
             <motion.div
               key={el.id}
@@ -513,7 +590,7 @@ function WorldPaintOverlay({
                 boxShadow: `0 0 12px ${el.color}`,
               }}
               initial={{ scale: 0.1, opacity: 0 }}
-              animate={{ scale: [0.1, 1.4, 0], opacity: [0, 0.85, 0], y: [0, -70 - Math.random() * 50] }}
+              animate={{ scale: [0.1, 1.4, 0], opacity: [0, 0.85, 0], y: [0, el.yDest ?? -70] }}
               transition={{ duration: 1.1, delay: el.delay, ease: "easeOut" }}
             />
           ))}
@@ -522,19 +599,49 @@ function WorldPaintOverlay({
 
       {sceneKind === "orbital-lock" && (
         <>
-          <motion.div
-            className="fixed inset-0 bg-[linear-gradient(rgba(249,115,22,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(249,115,22,0.06)_1px,transparent_1px)] bg-[size:40px_40px]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 0.8, 0] }}
-            transition={{ duration: 1.0 }}
-          />
-          <motion.div
-            className="fixed left-1/2 top-[42%] -translate-x-1/2 -translate-y-1/2 bg-gradient-to-t from-orange-950/20 via-transparent to-transparent pointer-events-none rounded-full blur-3xl"
-            style={{ width: "280px", height: "280px" }}
-            initial={{ scale: 0.1, opacity: 0.8 }}
-            animate={{ scale: isMobile ? 4 : 7, opacity: 0 }}
-            transition={{ duration: 1.0, ease: "easeOut" }}
-          />
+          {isMobile ? (
+            <>
+              {/* Tactical grid overlay */}
+              <motion.div
+                className="fixed inset-0 bg-[linear-gradient(rgba(249,115,22,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(249,115,22,0.05)_1px,transparent_1px)] bg-[size:30px_30px] pointer-events-none z-[13]"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0, 0.8, 0] }}
+                transition={{ duration: 1.0 }}
+              />
+              {/* Tactical laser line sweep */}
+              <motion.div
+                className="fixed left-0 w-full h-[3px] bg-orange-500/90 shadow-[0_0_18px_#f97316] z-[16]"
+                style={{ top: 0 }}
+                initial={{ y: "-10vh" }}
+                animate={{ y: "110vh" }}
+                transition={{ duration: 0.95, ease: "easeInOut" }}
+              />
+              {/* Tactical haze wash */}
+              <motion.div
+                className="fixed inset-0 bg-gradient-to-b from-orange-950/20 via-transparent to-orange-950/30 pointer-events-none z-[13]"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0, 0.7, 0] }}
+                transition={{ duration: 1.1, ease: "easeInOut" }}
+              />
+            </>
+          ) : (
+            <>
+              <motion.div
+                className="fixed inset-0 bg-[linear-gradient(rgba(249,115,22,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(249,115,22,0.06)_1px,transparent_1px)] bg-[size:40px_40px]"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0, 0.8, 0] }}
+                transition={{ duration: 1.0 }}
+              />
+              <motion.div
+                className="fixed left-1/2 top-[42%] -translate-x-1/2 -translate-y-1/2 bg-gradient-to-t from-orange-950/20 via-transparent to-transparent pointer-events-none rounded-full blur-3xl"
+                style={{ width: "280px", height: "280px" }}
+                initial={{ scale: 0.1, opacity: 0.8 }}
+                animate={{ scale: 7, opacity: 0 }}
+                transition={{ duration: 1.0, ease: "easeOut" }}
+              />
+            </>
+          )}
+
           {elements.map((el) => (
             <motion.div
               key={el.id}
@@ -549,7 +656,7 @@ function WorldPaintOverlay({
                 boxShadow: `0 0 8px ${el.color}`,
               }}
               initial={{ scale: 0.1, opacity: 0 }}
-              animate={{ scale: [0.1, 1.6, 0], opacity: [0, 0.9, 0], x: [0, Math.cos(((el.rotate ?? 0) * Math.PI) / 180) * 120], y: [0, Math.sin(((el.rotate ?? 0) * Math.PI) / 180) * 120] }}
+              animate={{ scale: [0.1, 1.6, 0], opacity: [0, 0.9, 0], x: [0, el.xDest ?? 0], y: [0, el.yDest ?? 0] }}
               transition={{ duration: 0.8, delay: el.delay, ease: "easeOut" }}
             />
           ))}
@@ -570,17 +677,19 @@ function WorldCanvasTransition({
   activeTheme: GameTheme;
   activeIndex: number;
   games: readonly GameCatalogItem[];
-  motionProfile: "reduced" | "mobile" | "desktop";
+  motionProfile: MotionProfile;
 }) {
   const [prevGame, setPrevGame] = useState<GameCatalogItem | null>(null);
   const [prevTheme, setPrevTheme] = useState<GameTheme | null>(null);
   const [currentGame, setCurrentGame] = useState<GameCatalogItem>(activeGame);
   const [currentTheme, setCurrentTheme] = useState<GameTheme>(activeTheme);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [transitionProgress, setTransitionProgress] = useState(false);
   const prevIndexRef = useRef(activeIndex);
 
   useEffect(() => {
     let timer: number | null = null;
+    let rafId: number | null = null;
     if (prevIndexRef.current !== activeIndex) {
       const oldGame = games[prevIndexRef.current];
       setPrevGame(oldGame);
@@ -588,17 +697,28 @@ function WorldCanvasTransition({
       setCurrentGame(activeGame);
       setCurrentTheme(activeTheme);
       setIsTransitioning(true);
+      setTransitionProgress(false);
       prevIndexRef.current = activeIndex;
+
+      rafId = requestAnimationFrame(() => {
+        rafId = requestAnimationFrame(() => {
+          setTransitionProgress(true);
+        });
+      });
 
       timer = window.setTimeout(() => {
         setIsTransitioning(false);
         setPrevGame(null);
         setPrevTheme(null);
+        setTransitionProgress(false);
       }, 1250); // clean transition end independent of child animation complete events
     }
     return () => {
       if (timer !== null) {
         window.clearTimeout(timer);
+      }
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
       }
     };
   }, [activeIndex, activeGame, activeTheme, games]);
@@ -618,15 +738,17 @@ function WorldCanvasTransition({
         animate: "polygon(0% 0%, 0% 0%, 50% 0%, 100% 0%, 100% 100%, 100% 100%, 75% 100%, 50% 100%, 0% 100%, 0% 100%)",
       };
     } else {
-      // Epsilon Nine: expanding hexagonal/tactical breach
+      // Epsilon Nine: expanding hexagonal/tactical breach (non-degenerate initial state to prevent browser GPU flicker)
       return {
-        initial: "polygon(50% 42%, 50% 42%, 50% 42%, 50% 42%, 50% 42%, 50% 42%, 50% 42%, 50% 42%)",
+        initial: "polygon(50% 41.9%, 50.1% 41.9%, 50.1% 42.1%, 50% 42.1%, 49.9% 42.1%, 49.9% 41.9%, 50% 41.9%, 50% 41.9%)",
         animate: "polygon(50% -50%, 150% 0%, 150% 150%, 50% 250%, -50% 150%, -50% 0%, 50% -50%, 50% -50%)",
       };
     }
   }, [currentGame]);
 
-  const isReduced = motionProfile === "reduced";
+  const isReduced = motionProfile === "reduced" || motionProfile === null;
+  const useOpacityTransition = motionProfile === "mobile";
+  const canvasBackground = getWorldBaseBackground(currentTheme);
 
   if (isReduced) {
     return (
@@ -634,41 +756,64 @@ function WorldCanvasTransition({
         game={activeGame}
         theme={activeTheme}
         motionProfile={motionProfile}
+        isTransitionActive={false}
       />
     );
   }
 
   return (
-    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-black" style={{ background: canvasBackground }}>
       {/* 1. Previous Base Layer */}
       {isTransitioning && prevGame && prevTheme && (
         <PortalWorldScene
           game={prevGame}
           theme={prevTheme}
           motionProfile={motionProfile}
+          isTransitionActive={true}
         />
       )}
 
       {/* 2. Next Paint-Reveal Layer */}
       {isTransitioning ? (
-        <motion.div
-          key={`paint-target-${currentGame.slug}`}
-          className="fixed inset-0 z-[1]"
-          initial={{ clipPath: clipPaths.initial }}
-          animate={{ clipPath: clipPaths.animate }}
-          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <PortalWorldScene
-            game={currentGame}
-            theme={currentTheme}
-            motionProfile={motionProfile}
-          />
-        </motion.div>
+        useOpacityTransition ? (
+          <motion.div
+            key={`paint-target-${currentGame.slug}`}
+            className="fixed inset-0 z-[1]"
+            initial={{ opacity: 0.001 }}
+            animate={{ opacity: transitionProgress ? 1 : 0.001 }}
+            transition={{ duration: 0.95, ease: "easeOut" }}
+          >
+            <PortalWorldScene
+              game={currentGame}
+              theme={currentTheme}
+              motionProfile={motionProfile}
+              isTransitionActive={true}
+            />
+          </motion.div>
+        ) : (
+          <div
+            key={`paint-target-${currentGame.slug}`}
+            className="fixed inset-0 z-[1]"
+            style={{
+              clipPath: transitionProgress ? clipPaths.animate : clipPaths.initial,
+              opacity: transitionProgress ? 1 : 0.1,
+              transition: "clip-path 1.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1)",
+            }}
+          >
+            <PortalWorldScene
+              game={currentGame}
+              theme={currentTheme}
+              motionProfile={motionProfile}
+              isTransitionActive={true}
+            />
+          </div>
+        )
       ) : (
         <PortalWorldScene
           game={currentGame}
           theme={currentTheme}
           motionProfile={motionProfile}
+          isTransitionActive={false}
         />
       )}
 
@@ -688,13 +833,15 @@ function PortalWorldScene({
   game,
   theme,
   motionProfile,
+  isTransitionActive = false,
 }: {
   game: GameCatalogItem;
   theme: GameTheme;
-  motionProfile: "reduced" | "mobile" | "desktop";
+  motionProfile: MotionProfile;
+  isTransitionActive?: boolean;
 }) {
   const isMobile = motionProfile === "mobile";
-  const reducedMotion = motionProfile === "reduced";
+  const reducedMotion = motionProfile === "reduced" || motionProfile === null;
   const sceneKind = getSceneKind(theme);
   const isSpace = sceneKind === "space-anomaly";
   const isNether = sceneKind === "nether-depths";
@@ -838,15 +985,9 @@ function PortalWorldScene({
     [game.slug, isNether, isOrbital, isSpace],
   );
 
-  const baseBackground = isSpace
-    ? `radial-gradient(circle at 75% 20%, rgba(79,70,229,0.26), transparent 28%), radial-gradient(circle at 32% 48%, ${theme.accentSoft}, transparent 34%), radial-gradient(circle at 50% 92%, rgba(5,12,24,0.4), transparent 32%), linear-gradient(180deg, #01040b 0%, #020617 46%, #00030a 100%)`
-    : isNether
-      ? `radial-gradient(circle at 50% 92%, rgba(217,70,239,0.24), transparent 34%), radial-gradient(circle at 32% 32%, rgba(245,158,11,0.14), transparent 31%), radial-gradient(circle at 75% 24%, rgba(88,28,135,0.22), transparent 28%), linear-gradient(180deg, #030105 0%, #120614 42%, #070209 72%, #010102 100%)`
-      : isOrbital
-        ? `radial-gradient(circle at 22% 52%, rgba(34,211,238,0.18), transparent 32%), radial-gradient(circle at 72% 34%, rgba(245,158,11,0.24), transparent 30%), radial-gradient(circle at 50% 90%, rgba(127,29,29,0.26), transparent 34%), linear-gradient(180deg, #03050a 0%, #090b12 44%, #110806 78%, #010204 100%)`
-        : `radial-gradient(circle at 72% 18%, ${theme.accentSoft}, transparent 32%), radial-gradient(circle at 50% 92%, rgba(245,158,11,0.18), transparent 34%), linear-gradient(180deg, #05060b 0%, #0b0d12 52%, #010204 100%)`;
+  const baseBackground = getWorldBaseBackground(theme);
 
-  if (motionProfile === "reduced") {
+  if (reducedMotion) {
     return (
       <div
         data-portal-world
@@ -855,6 +996,144 @@ function PortalWorldScene({
         style={{ background: baseBackground }}
         aria-hidden="true"
       />
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <div
+        data-portal-world
+        data-world-scene={sceneKind}
+        className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-black"
+        aria-hidden="true"
+      >
+        <style>
+          {`
+            @keyframes engg-world-star {
+              0%, 100% { transform: translate3d(0, 0, 0); opacity: var(--star-low); }
+              50% { transform: translate3d(var(--star-x), var(--star-y), 0); opacity: var(--star-high); }
+            }
+
+            @keyframes engg-world-entity {
+              0%, 100% { transform: translate3d(0, 0, 0) rotate(var(--entity-rotate)); opacity: 0.44; }
+              50% { transform: translate3d(var(--entity-x), var(--entity-y), 0) rotate(calc(var(--entity-rotate) + 10deg)); opacity: 0.92; }
+            }
+
+            @keyframes engg-world-data {
+              0%, 100% { transform: translate3d(var(--data-start), 0, 0); opacity: 0; }
+              42%, 58% { opacity: 0.62; }
+              50% { transform: translate3d(var(--data-end), 0, 0); }
+            }
+
+            @keyframes engg-world-scanline {
+              0%, 100% { transform: translate3d(-16vw, 0, 0); opacity: 0; }
+              45% { opacity: 0.72; }
+              65% { transform: translate3d(18vw, 0, 0); opacity: 0; }
+            }
+
+            @keyframes engg-world-particle {
+              0%, 100% { transform: translate3d(0, 0, 0); opacity: 0; }
+              50% { transform: translate3d(var(--particle-x), var(--particle-y), 0); opacity: var(--particle-opacity); }
+            }
+
+            @keyframes engg-ruin-rune {
+              0%, 100% { transform: translate3d(0, 0, 0) scale(0.9); opacity: 0.18; filter: blur(0.2px); }
+              48% { transform: translate3d(0, -12px, 0) scale(1.08); opacity: 0.86; filter: blur(0); }
+            }
+
+            @keyframes engg-ruin-fragment {
+              0%, 100% { transform: translate3d(0, 0, 0) rotate(var(--fragment-rotate)); opacity: var(--fragment-low); }
+              50% { transform: translate3d(var(--fragment-x), -18px, 0) rotate(calc(var(--fragment-rotate) + 8deg)); opacity: var(--fragment-high); }
+            }
+
+            @keyframes engg-arcane-beam {
+              0%, 100% { transform: translate3d(-10vw, 0, 0) rotate(var(--beam-rotate)); opacity: 0; }
+              45% { opacity: 0.72; }
+              68% { transform: translate3d(10vw, -3vh, 0) rotate(var(--beam-rotate)); opacity: 0; }
+            }
+
+            @keyframes engg-battle-laser {
+              0%, 100% { transform: translate3d(var(--laser-start), 0, 0) rotate(var(--laser-rotate)); opacity: 0; }
+              18%, 36% { opacity: 0.86; }
+              52% { transform: translate3d(var(--laser-end), -2vh, 0) rotate(var(--laser-rotate)); opacity: 0; }
+            }
+
+            @keyframes engg-smoke-drift {
+              0%, 100% { transform: translate3d(0, 0, 0) scale(0.95); opacity: 0.18; }
+              50% { transform: translate3d(3vw, -5vh, 0) scale(1.12); opacity: 0.38; }
+            }
+
+            @keyframes engg-battle-spark {
+              0%, 100% { transform: translate3d(0, 0, 0) scaleX(0.25); opacity: 0; }
+              42% { transform: translate3d(var(--spark-x), var(--spark-y), 0) scaleX(1); opacity: 0.9; }
+              70% { opacity: 0; }
+            }
+          `}
+        </style>
+        <div className="absolute inset-0">
+          <WorldSceneLayer name="base" style={{ background: baseBackground }}>
+            {null}
+          </WorldSceneLayer>
+
+          <WorldSceneLayer name={isSpace ? "starfield" : isNether ? "cave-dust" : "battlefield-sparks"}>
+            {stars.map((star, index) => (
+              <motion.span
+                data-world-star
+                key={star.id}
+                className={cn(
+                  "absolute rounded-full",
+                  isSpace ? "bg-white" : isNether ? "blur-[1px]" : "blur-[0.5px]",
+                )}
+                style={{
+                  left: star.left,
+                  top: star.top,
+                  width: isSpace ? star.size : isNether ? star.size * 1.4 : star.size * 1.8,
+                  height: isSpace ? star.size : isNether ? star.size * 1.4 : star.size * 0.65,
+                  opacity: star.opacity,
+                  backgroundColor: isSpace ? undefined : isNether ? "rgba(245,158,11,0.58)" : index % 2 ? "rgba(34,211,238,0.62)" : "rgba(245,158,11,0.7)",
+                  boxShadow: isSpace
+                    ? "0 0 10px rgba(180,230,255,0.75)"
+                    : isNether
+                      ? `0 0 10px rgba(245,158,11,0.42), 0 0 18px ${theme.accent}3d`
+                      : `0 0 10px ${index % 2 ? "rgba(34,211,238,0.65)" : `${theme.accent}77`}`,
+                  "--star-x": isSpace ? star.drift : isNether ? (index % 2 ? "5px" : "-5px") : (index % 2 ? "18px" : "-18px"),
+                  "--star-y": isSpace ? "28px" : isNether ? "-26px" : index % 2 ? "16px" : "-16px",
+                  "--star-low": `${star.opacity * (isSpace ? 0.45 : 0.22)}`,
+                  "--star-high": `${star.opacity * (isSpace ? 1 : 0.7)}`,
+                  animation: `engg-world-star ${isNether ? 7.4 : isSpace ? 5.8 + (star.size % 2) : 3.8 + (index % 4) * 0.3}s ease-in-out ${star.delay}s infinite`,
+                } as CSSProperties}
+              />
+            ))}
+          </WorldSceneLayer>
+
+          <WorldSceneLayer name="entities">
+            {entities.map((entity) => (
+              <AmbientEntity key={entity.id} entity={entity} accent={theme.accent} reducedMotion={reducedMotion} />
+            ))}
+          </WorldSceneLayer>
+
+          <WorldSceneLayer name="data-fragments">
+            {fragments.map((fragment, index) => (
+              <motion.span
+                data-world-data
+                key={fragment.id}
+                className="absolute font-mono text-[8px] uppercase tracking-[0.34em]"
+                style={{
+                  left: fragment.left,
+                  top: fragment.top,
+                  color: theme.accent,
+                  textShadow: `0 0 16px ${theme.accent}`,
+                  "--data-start": index % 2 ? "3vw" : "-3vw",
+                  "--data-end": index % 2 ? "-7vw" : "7vw",
+                  animation: `engg-world-data ${3.2 + (index % 3)}s ease-in-out ${fragment.delay}s infinite`,
+                } as CSSProperties}
+              >
+                {fragment.label}
+              </motion.span>
+            ))}
+          </WorldSceneLayer>
+        </div>
+      </div>
     );
   }
 
@@ -938,29 +1217,7 @@ function PortalWorldScene({
           transition={{ duration: reducedMotion ? 0 : 0.5 }}
         >
           <WorldSceneLayer name="base" style={{ background: baseBackground }}>
-            {isSpace && (
-              <motion.div
-                data-world-bg
-                className="absolute -inset-[4vmax] bg-cover bg-center opacity-35 mix-blend-screen will-change-transform"
-                style={{ backgroundImage: `url(${theme.backgroundImage})` }}
-                animate={
-                  reducedMotion
-                    ? undefined
-                    : motionProfile === "mobile"
-                      ? {
-                        scale: [1.02, 1.05, 1.02],
-                        x: ["-0.5vw", "0.5vw", "-0.5vw"],
-                        y: ["-0.3vh", "0.3vh", "-0.3vh"],
-                      }
-                      : {
-                        scale: [1.05, 1.09, 1.05],
-                        x: ["-1.5vw", "1.4vw", "-1.5vw"],
-                        y: ["-1vh", "1.2vh", "-1vh"],
-                      }
-                }
-                transition={{ duration: motionProfile === "mobile" ? 25 : 18, repeat: Infinity, repeatDelay: 0.1, ease: "easeInOut" }}
-              />
-            )}
+            {null}
           </WorldSceneLayer>
 
           <WorldSceneLayer name={isSpace ? "starfield" : isNether ? "cave-dust" : "battlefield-sparks"}>
@@ -988,7 +1245,7 @@ function PortalWorldScene({
                   "--star-y": isSpace ? "28px" : isNether ? "-26px" : index % 2 ? "16px" : "-16px",
                   "--star-low": `${star.opacity * (isSpace ? 0.45 : 0.22)}`,
                   "--star-high": `${star.opacity * (isSpace ? 1 : 0.7)}`,
-                  animation: reducedMotion
+                  animation: reducedMotion || isTransitionActive
                     ? undefined
                     : `engg-world-star ${isNether ? 7.4 : isSpace ? 5.8 + (star.size % 2) : 3.8 + (index % 4) * 0.3}s ease-in-out ${star.delay}s infinite`,
                 } as CSSProperties}
@@ -1006,13 +1263,13 @@ function PortalWorldScene({
                   background: `radial-gradient(ellipse at 50% 0%, ${theme.accent}30, transparent 34%), linear-gradient(180deg, rgba(8,22,40,0.88), rgba(0,3,10,0.98) 58%)`,
                   boxShadow: `0 -34px 120px ${theme.accent}24`,
                 }}
-                animate={reducedMotion ? undefined : { y: ["1vh", "-1vh", "1vh"], opacity: [0.78, 0.92, 0.78] }}
+                animate={reducedMotion || isTransitionActive ? undefined : { y: ["1vh", "-1vh", "1vh"], opacity: [0.78, 0.92, 0.78] }}
                 transition={{ duration: 8, repeat: Infinity, repeatDelay: 0.1, ease: "easeInOut" }}
               />
               <motion.div
                 data-world-anomaly
                 className="absolute left-1/2 top-[8vh] h-[42vh] w-[min(54vw,640px)] -translate-x-1/2 opacity-45 blur-[1px]"
-                animate={reducedMotion ? undefined : { y: ["0vh", "1.8vh", "0vh"], scale: [1, 1.025, 1] }}
+                animate={reducedMotion || isTransitionActive ? undefined : { y: ["0vh", "1.8vh", "0vh"], scale: [1, 1.025, 1] }}
                 transition={{ duration: 7.5, repeat: Infinity, repeatDelay: 0.1, ease: "easeInOut" }}
               >
                 <span
@@ -1093,7 +1350,7 @@ function PortalWorldScene({
               <motion.div
                 data-world-ruin-gate
                 className="absolute left-1/2 top-[13vh] h-[68vh] w-[min(104vw,860px)] -translate-x-1/2"
-                animate={reducedMotion ? undefined : { y: ["0vh", "-1.2vh", "0vh"], opacity: [0.78, 0.98, 0.78] }}
+                animate={reducedMotion || isTransitionActive ? undefined : { y: ["0vh", "-1.2vh", "0vh"], opacity: [0.78, 0.98, 0.78] }}
                 transition={{ duration: 7.4, repeat: Infinity, repeatDelay: 0.1, ease: "easeInOut" }}
               >
                 <span
@@ -1157,7 +1414,7 @@ function PortalWorldScene({
                     borderColor: `${theme.accent}70`,
                     boxShadow: `0 0 56px ${theme.accent}4a, inset 0 0 42px rgba(245,158,11,0.12)`,
                   }}
-                  animate={reducedMotion ? undefined : { rotate: 360, scale: [0.96, 1.04, 0.96] }}
+                  animate={reducedMotion || isTransitionActive ? undefined : { rotate: 360, scale: [0.96, 1.04, 0.96] }}
                   transition={{
                     rotate: { duration: 30, repeat: Infinity, ease: "linear" },
                     scale: { duration: 5.8, repeat: Infinity, ease: "easeInOut" },
@@ -1181,7 +1438,7 @@ function PortalWorldScene({
                     fontSize: rune.size,
                     color: rune.label.length > 3 ? "rgba(245,158,11,0.82)" : theme.accent,
                     textShadow: `0 0 18px ${theme.accent}, 0 0 34px rgba(245,158,11,0.35)`,
-                    animation: reducedMotion ? undefined : `engg-ruin-rune ${3.4 + (rune.size % 5)}s ease-in-out ${rune.delay}s infinite`,
+                    animation: reducedMotion || isTransitionActive ? undefined : `engg-ruin-rune ${3.4 + (rune.size % 5)}s ease-in-out ${rune.delay}s infinite`,
                   }}
                 >
                   {rune.label}
@@ -1205,7 +1462,7 @@ function PortalWorldScene({
                     "--fragment-x": index % 2 ? "-3vw" : "3vw",
                     "--fragment-low": `${fragment.opacity}`,
                     "--fragment-high": `${fragment.opacity + 0.28}`,
-                    animation: reducedMotion ? undefined : `engg-ruin-fragment ${6.2 + (index % 4)}s ease-in-out ${fragment.delay}s infinite`,
+                    animation: reducedMotion || isTransitionActive ? undefined : `engg-ruin-fragment ${6.2 + (index % 4)}s ease-in-out ${fragment.delay}s infinite`,
                   } as CSSProperties}
                 />
               ))}
@@ -1219,7 +1476,7 @@ function PortalWorldScene({
                     background: `linear-gradient(90deg, transparent, rgba(245,158,11,0.42), ${theme.accent}b8, transparent)`,
                     boxShadow: `0 0 22px ${theme.accent}66`,
                     "--beam-rotate": `${rotate}deg`,
-                    animation: reducedMotion ? undefined : `engg-arcane-beam ${3.8 + index * 0.42}s ease-in-out ${index * 0.38}s infinite`,
+                    animation: reducedMotion || isTransitionActive ? undefined : `engg-arcane-beam ${3.8 + index * 0.42}s ease-in-out ${index * 0.38}s infinite`,
                   } as CSSProperties}
                 />
               ))}
@@ -1231,7 +1488,7 @@ function PortalWorldScene({
                   background: `radial-gradient(ellipse at 50% 0%, ${theme.accent}40, transparent 30%), linear-gradient(180deg, rgba(30,4,38,0.85), rgba(3,1,5,0.98))`,
                   boxShadow: `0 -26px 110px ${theme.accent}2e`,
                 }}
-                animate={reducedMotion ? undefined : { y: ["0vh", "-1.4vh", "0vh"], opacity: [0.76, 0.96, 0.76] }}
+                animate={reducedMotion || isTransitionActive ? undefined : { y: ["0vh", "-1.4vh", "0vh"], opacity: [0.76, 0.96, 0.76] }}
                 transition={{ duration: 6.8, repeat: Infinity, repeatDelay: 0.1, ease: "easeInOut" }}
               />
             </WorldSceneLayer>
@@ -1290,7 +1547,7 @@ function PortalWorldScene({
                   background: `linear-gradient(180deg, transparent, ${theme.accent}aa, rgba(34,211,238,0.42), transparent)`,
                   boxShadow: `0 0 42px ${theme.accent}66, 0 0 90px rgba(34,211,238,0.26)`,
                 }}
-                animate={reducedMotion ? undefined : { scaleY: [0.84, 1.08, 0.84], opacity: [0.38, 0.86, 0.38] }}
+                animate={reducedMotion || isTransitionActive ? undefined : { scaleY: [0.84, 1.08, 0.84], opacity: [0.38, 0.86, 0.38] }}
                 transition={{ duration: 3.8, repeat: Infinity, repeatDelay: 0.1, ease: "easeInOut" }}
               />
 
@@ -1314,7 +1571,7 @@ function PortalWorldScene({
                     "--laser-rotate": `${laser.rotate}deg`,
                     "--laser-start": index % 2 === 0 ? "-10vw" : "8vw",
                     "--laser-end": index % 2 === 0 ? "18vw" : "-18vw",
-                    animation: reducedMotion ? undefined : `engg-battle-laser ${2.2 + (index % 4) * 0.34}s ease-out ${laser.delay}s infinite`,
+                    animation: reducedMotion || isTransitionActive ? undefined : `engg-battle-laser ${2.2 + (index % 4) * 0.34}s ease-out ${laser.delay}s infinite`,
                   } as CSSProperties}
                 />
               ))}
@@ -1322,7 +1579,7 @@ function PortalWorldScene({
               <motion.div
                 data-world-mech-army
                 className="absolute left-[-4vw] bottom-[10vh] h-[36vh] w-[36vw] max-w-[460px]"
-                animate={reducedMotion ? undefined : { x: ["0vw", "1.4vw", "0vw"], opacity: [0.72, 0.95, 0.72] }}
+                animate={reducedMotion || isTransitionActive ? undefined : { x: ["0vw", "1.4vw", "0vw"], opacity: [0.72, 0.95, 0.72] }}
                 transition={{ duration: 5.8, repeat: Infinity, repeatDelay: 0.1, ease: "easeInOut" }}
               >
                 <span
@@ -1342,7 +1599,7 @@ function PortalWorldScene({
               <motion.div
                 data-world-alien-front
                 className="absolute right-[-5vw] top-[17vh] h-[38vh] w-[39vw] max-w-[520px]"
-                animate={reducedMotion ? undefined : { x: ["0vw", "-1.8vw", "0vw"], y: ["0vh", "1.1vh", "0vh"], opacity: [0.72, 0.96, 0.72] }}
+                animate={reducedMotion || isTransitionActive ? undefined : { x: ["0vw", "-1.8vw", "0vw"], y: ["0vh", "1.1vh", "0vh"], opacity: [0.72, 0.96, 0.72] }}
                 transition={{ duration: 5.2, repeat: Infinity, repeatDelay: 0.1, ease: "easeInOut" }}
               >
                 <span
@@ -1371,7 +1628,7 @@ function PortalWorldScene({
                     width: smoke.size,
                     height: smoke.size * 0.58,
                     background: "radial-gradient(circle, rgba(255,255,255,0.16), rgba(245,158,11,0.13) 32%, rgba(0,0,0,0) 72%)",
-                    animation: reducedMotion ? undefined : `engg-smoke-drift ${7.5 + (smoke.size % 5)}s ease-in-out ${smoke.delay}s infinite`,
+                    animation: reducedMotion || isTransitionActive ? undefined : `engg-smoke-drift ${7.5 + (smoke.size % 5)}s ease-in-out ${smoke.delay}s infinite`,
                   }}
                 />
               ))}
@@ -1389,7 +1646,7 @@ function PortalWorldScene({
                     rotate: `${-30 + index * 14}deg`,
                     "--spark-x": index % 2 ? "-12vw" : "12vw",
                     "--spark-y": index % 2 ? "8vh" : "-7vh",
-                    animation: reducedMotion ? undefined : `engg-battle-spark ${2.6 + index * 0.2}s ease-out ${index * 0.24}s infinite`,
+                    animation: reducedMotion || isTransitionActive ? undefined : `engg-battle-spark ${2.6 + index * 0.2}s ease-out ${index * 0.24}s infinite`,
                   } as CSSProperties}
                 />
               ))}
@@ -1402,7 +1659,7 @@ function PortalWorldScene({
                   background: `radial-gradient(ellipse at 35% 0%, rgba(34,211,238,0.15), transparent 30%), radial-gradient(ellipse at 64% 0%, ${theme.accent}24, transparent 34%), linear-gradient(180deg, rgba(35,19,12,0.82), rgba(2,2,4,0.98))`,
                   boxShadow: `0 -26px 100px ${theme.accent}20`,
                 }}
-                animate={reducedMotion ? undefined : { y: ["0vh", "-1.1vh", "0vh"], opacity: [0.76, 0.94, 0.76] }}
+                animate={reducedMotion || isTransitionActive ? undefined : { y: ["0vh", "-1.1vh", "0vh"], opacity: [0.76, 0.94, 0.76] }}
                 transition={{ duration: 6.8, repeat: Infinity, repeatDelay: 0.1, ease: "easeInOut" }}
               />
             </WorldSceneLayer>
@@ -1410,7 +1667,7 @@ function PortalWorldScene({
 
           <WorldSceneLayer name="entities">
             {entities.map((entity) => (
-              <AmbientEntity key={entity.id} entity={entity} accent={theme.accent} reducedMotion={reducedMotion} />
+              <AmbientEntity key={entity.id} entity={entity} accent={theme.accent} reducedMotion={reducedMotion || isTransitionActive} />
             ))}
           </WorldSceneLayer>
 
@@ -1427,7 +1684,7 @@ function PortalWorldScene({
                   textShadow: `0 0 16px ${theme.accent}`,
                   "--data-start": index % 2 ? "3vw" : "-3vw",
                   "--data-end": index % 2 ? "-7vw" : "7vw",
-                  animation: reducedMotion
+                  animation: reducedMotion || isTransitionActive
                     ? undefined
                     : `engg-world-data ${3.2 + (index % 3)}s ease-in-out ${fragment.delay}s infinite`,
                 } as CSSProperties}
@@ -1451,7 +1708,7 @@ function PortalWorldScene({
                       : `linear-gradient(90deg, transparent, rgba(34,211,238,0.66), ${theme.accent}8c, transparent)`,
                     boxShadow: `0 0 20px ${theme.accent}66`,
                     rotate: isOrbital ? `${-10 + index * 5}deg` : undefined,
-                    animation: reducedMotion ? undefined : `engg-world-scanline ${isSpace ? 2.8 : 2.25}s ease-in-out ${index * 0.5}s infinite`,
+                    animation: reducedMotion || isTransitionActive ? undefined : `engg-world-scanline ${isSpace ? 2.8 : 2.25}s ease-in-out ${index * 0.5}s infinite`,
                   }}
                 />
               ))}
@@ -1477,7 +1734,7 @@ function PortalWorldScene({
                   "--particle-x": isNether ? (index % 2 ? "4vw" : "-4vw") : isOrbital ? (index % 2 ? "34vw" : "-34vw") : particle.drift,
                   "--particle-y": isNether ? `${-18 - (index % 6) * 7}vh` : isOrbital ? (index % 3 === 0 ? "-18vh" : "12vh") : particle.lift,
                   "--particle-opacity": `${isNether ? particle.opacity * 0.7 : particle.opacity}`,
-                  animation: reducedMotion
+                  animation: reducedMotion || isTransitionActive
                     ? undefined
                     : `engg-world-particle ${isNether ? 6.4 + (index % 4) * 0.4 : 4.4 + (particle.width % 5)}s ease-in-out ${particle.delay}s infinite`,
                 } as CSSProperties}
@@ -1753,7 +2010,7 @@ function EntryTransitionOverlay({
 }: {
   game: GameCatalogItem;
   theme: GameTheme;
-  motionProfile: "reduced" | "mobile" | "desktop";
+  motionProfile: MotionProfile;
 }) {
   const streaks = useMemo(
     () =>
@@ -1843,7 +2100,7 @@ function EntryTransitionOverlay({
   );
 }
 
-export default function PortalDeck({ games }: PortalDeckProps) {
+export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
   const [activeIndex, setActiveIndex] = useState<number>(() => {
     if (typeof window !== "undefined") {
       const saved = window.sessionStorage.getItem("engg-portal-active-index");
@@ -1861,49 +2118,7 @@ export default function PortalDeck({ games }: PortalDeckProps) {
   const launchPendingRef = useRef(false);
   const sectionRef = useRef<HTMLElement | null>(null);
 
-  const [motionProfile, setMotionProfile] = useState<"reduced" | "mobile" | "desktop">("reduced");
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let lastWidth = window.innerWidth;
-
-    const handleUpdate = (force = false) => {
-      const currentWidth = window.innerWidth;
-      if (!force && currentWidth === lastWidth) return;
-      lastWidth = currentWidth;
-
-      if (mediaQuery.matches) {
-        setMotionProfile("reduced");
-      } else {
-        const isMobileDevice = currentWidth < 1024 || "ontouchstart" in window || navigator.maxTouchPoints > 0;
-        setMotionProfile(isMobileDevice ? "mobile" : "desktop");
-      }
-    };
-
-    handleUpdate(true);
-
-    const mediaChangeListener = () => {
-      if (mediaQuery.matches) {
-        setMotionProfile("reduced");
-      } else {
-        const isMobileDevice = window.innerWidth < 1024 || "ontouchstart" in window || navigator.maxTouchPoints > 0;
-        setMotionProfile(isMobileDevice ? "mobile" : "desktop");
-      }
-    };
-
-    const handleResize = () => {
-      handleUpdate(false);
-    };
-
-    mediaQuery.addEventListener("change", mediaChangeListener);
-    window.addEventListener("resize", handleResize);
-    return () => {
-      mediaQuery.removeEventListener("change", mediaChangeListener);
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
-  const shouldReduceMotion = motionProfile === "reduced";
+  const shouldReduceMotion = motionProfile === "reduced" || motionProfile === null;
 
   const activeGame = games[activeIndex] ?? games[0];
   const activeTheme = useMemo(() => getTheme(activeGame), [activeGame]);
@@ -2122,7 +2337,7 @@ export default function PortalDeck({ games }: PortalDeckProps) {
 
           <motion.div
             key={`portal-${activeGame.slug}`}
-            className="relative h-[25vh] sm:h-[35vh] lg:h-[42vh] max-h-[180px] sm:max-h-[280px] md:max-h-[360px] lg:max-h-[440px] aspect-[4/5] [perspective:1400px]"
+            className="relative h-[32vh] sm:h-[36vh] lg:h-[42vh] max-h-[240px] sm:max-h-[290px] md:max-h-[360px] lg:max-h-[440px] aspect-[4/5] [perspective:1400px]"
             initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: shouldReduceMotion ? 0 : 0.35 }}

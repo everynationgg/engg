@@ -16,7 +16,13 @@ export default function Hub() {
   const [claiming, setClaiming] = useState(false);
   const [claimed, setClaimed] = useState(false);
   const [activities, setActivities] = useState<any[]>([]);
-  const [motionProfile, setMotionProfile] = useState<"reduced" | "mobile" | "desktop">("reduced");
+  const [motionProfile, setMotionProfile] = useState<"reduced" | "mobile" | "desktop" | null>(() => {
+    if (typeof window === "undefined") return null;
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (mediaQuery.matches) return "reduced";
+    const isMobileDevice = window.innerWidth < 1024 || "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    return isMobileDevice ? "mobile" : "desktop";
+  });
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -181,7 +187,7 @@ export default function Hub() {
 
             {/* Main Mission Deck */}
             <div className="relative z-10 w-full flex-1 min-h-0 flex flex-col">
-              <PortalDeck games={games} />
+              <PortalDeck games={games} motionProfile={motionProfile} />
             </div>
           </div>
 
