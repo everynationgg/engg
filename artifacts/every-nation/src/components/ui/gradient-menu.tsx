@@ -27,7 +27,7 @@ export default function LandingNav({ onDiscord, onEnter, onSocials }: LandingNav
       size: 'md',
     },
     {
-      title: 'Enter',
+      title: 'Hub',
       icon: <IoHomeOutline />,
       gradientFrom: '#a955ff',
       gradientTo: '#ea51ff',

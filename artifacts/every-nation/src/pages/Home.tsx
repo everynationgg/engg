@@ -1,62 +1,68 @@
-// v1.0.2
-import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { motion } from "framer-motion";
 import LandingNav from "@/components/ui/gradient-menu";
 
-function usePrefersReducedMotion() {
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
-  useEffect(() => {
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const updatePreference = () => setPrefersReducedMotion(query.matches);
-    updatePreference();
-    query.addEventListener("change", updatePreference);
-    return () => query.removeEventListener("change", updatePreference);
-  }, []);
-
-  return prefersReducedMotion;
-}
+const HOME_HERO_IMAGE = "/images/home/home-hero.webp";
+const HOME_HERO_MOBILE_IMAGE = "/images/home/home-hero-mobile.webp";
 
 export default function Home() {
   const [, navigate] = useLocation();
-  const prefersReducedMotion = usePrefersReducedMotion();
 
   return (
-    <div className="landing-root relative h-screen min-h-[100dvh] overflow-hidden bg-black">
-      {/* Dark premium gradient background fallback */}
+    <div className="landing-root relative h-screen min-h-[100dvh] overflow-hidden bg-[#02040a] text-white">
+      <style>{`
+        .home-hero-image {
+          object-position: center center;
+        }
+
+        .home-actions {
+          bottom: calc(env(safe-area-inset-bottom, 0px) + 1.5rem);
+        }
+
+        @media (max-width: 639px) and (orientation: portrait) {
+          .home-hero-image {
+            object-position: center 45%;
+          }
+        }
+
+        @media (min-width: 1280px) {
+          .home-actions {
+            bottom: 4rem;
+          }
+        }
+      `}</style>
+      <div className="absolute inset-0 bg-[#02040a]" aria-hidden="true" />
+
+      <picture
+        className="absolute inset-0 block h-full w-full bg-[#02040a]"
+        aria-hidden="true"
+      >
+        <source
+          media="(max-width: 639px) and (orientation: portrait)"
+          srcSet={HOME_HERO_MOBILE_IMAGE}
+        />
+        <img
+          src={HOME_HERO_IMAGE}
+          alt=""
+          className="home-hero-image h-full w-full bg-[#02040a] object-cover"
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
+        />
+      </picture>
+
       <div
-        className="absolute inset-0 bg-gradient-to-b from-[#080d16] via-[#020408] to-[#000102]"
+        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.04)_0%,rgba(0,0,0,0.1)_48%,rgba(0,0,0,0.44)_100%)]"
         aria-hidden="true"
       />
 
-      {!prefersReducedMotion && (
-        <video
-          className="absolute inset-0 h-full w-full object-cover origin-center pointer-events-none"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          aria-hidden="true"
-        >
-          <source src="/bg-video.mp4" type="video/mp4" />
-        </video>
-      )}
-
-      {/* BOTTOM NAVIGATION HUB */}
-      <div className="absolute bottom-8 md:bottom-16 left-1/2 -translate-x-1/2 z-30 px-4 w-full flex justify-center">
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, ease: "easeOut", delay: 0.08 }}
-        >
+      <div className="home-actions absolute left-1/2 z-30 flex w-full -translate-x-1/2 justify-center px-4">
+        <div>
           <LandingNav
             onDiscord={() => window.open("https://discord.gg/everynation", "_blank")}
             onEnter={() => navigate("/hub")}
             onSocials={() => window.open("https://linktr.ee/everynationgg", "_blank")}
           />
-        </motion.div>
+        </div>
       </div>
     </div>
   );
