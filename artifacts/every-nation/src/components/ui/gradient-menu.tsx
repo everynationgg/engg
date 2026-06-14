@@ -1,5 +1,6 @@
 import React from 'react';
-import { IoShareSocialOutline, IoHeartOutline, IoHomeOutline } from 'react-icons/io5';
+import { FaDiscord } from 'react-icons/fa';
+import { IoHeartOutline } from 'react-icons/io5';
 
 interface GradientNavItem {
   title: string;
@@ -20,16 +21,16 @@ export default function LandingNav({ onDiscord, onEnter, onSocials }: LandingNav
   const items: GradientNavItem[] = [
     {
       title: 'Discord',
-      icon: <IoShareSocialOutline />,
-      gradientFrom: '#56CCF2',
-      gradientTo: '#2F80ED',
+      icon: <FaDiscord />,
+      gradientFrom: '#ff9f45',
+      gradientTo: '#56CCF2',
       onClick: onDiscord,
       size: 'md',
     },
     {
-      title: 'Hub',
-      icon: <IoHomeOutline />,
-      gradientFrom: '#a955ff',
+      title: 'ENTER',
+      icon: null,
+      gradientFrom: '#875cff',
       gradientTo: '#ea51ff',
       onClick: onEnter,
       size: 'lg',
@@ -37,7 +38,7 @@ export default function LandingNav({ onDiscord, onEnter, onSocials }: LandingNav
     {
       title: 'Socials',
       icon: <IoHeartOutline />,
-      gradientFrom: '#ffa9c6',
+      gradientFrom: '#b66cff',
       gradientTo: '#f434e2',
       onClick: onSocials,
       size: 'md',
@@ -45,41 +46,61 @@ export default function LandingNav({ onDiscord, onEnter, onSocials }: LandingNav
   ];
 
   return (
-    <ul className="flex items-center gap-6 md:gap-10">
+    <ul className="home-nav-list flex items-center gap-2 sm:gap-4 md:gap-8">
       {items.map(({ title, icon, gradientFrom, gradientTo, onClick, size }, idx) => {
         const isLg = size === 'lg';
-        const baseSize = isLg ? 'w-16 h-16 md:w-20 md:h-20' : 'w-14 h-14 md:w-16 md:h-16';
-        const expandedWidth = isLg ? 'hover:w-[190px] md:hover:w-[220px]' : 'hover:w-[160px] md:hover:w-[190px]';
-        const iconSize = isLg ? 'text-3xl md:text-4xl' : 'text-2xl md:text-3xl';
-        const textSize = isLg ? 'text-sm md:text-base tracking-widest' : 'text-xs md:text-sm tracking-widest';
+        const buttonWidth = isLg ? 'clamp(7.15rem, 32vw, 14.25rem)' : 'clamp(6.1rem, 27vw, 11.8rem)';
+        const buttonHoverWidth = isLg ? 'clamp(8.4rem, 36vw, 16rem)' : 'clamp(6.9rem, 29vw, 12.75rem)';
+        const buttonHeight = isLg ? 'clamp(3.25rem, 6vw, 4.75rem)' : 'clamp(3rem, 5.4vw, 4.25rem)';
+        const buttonMobileSize = isLg ? '3.7rem' : '3.45rem';
+        const iconSize = isLg ? 'text-2xl md:text-3xl' : 'text-xl md:text-2xl';
+        const textSize = isLg ? 'text-[0.68rem] md:text-sm tracking-[0.32em]' : 'text-[0.62rem] md:text-xs tracking-[0.28em]';
+        const navTone = title === 'Discord' ? '#ffb35c' : title === 'ENTER' ? '#d45cff' : '#bf68ff';
+        const navGlow = title === 'Discord' ? 'rgba(255, 166, 70, 0.52)' : title === 'ENTER' ? 'rgba(195, 82, 255, 0.72)' : 'rgba(186, 94, 255, 0.5)';
 
         return (
           <li
-            key={idx}
-            onClick={onClick}
+            key={title}
             style={
               {
-                '--gradient-from': gradientFrom,
-                '--gradient-to': gradientTo,
+                '--nav-delay': `${720 + idx * 120}ms`,
               } as React.CSSProperties & { [key: string]: string }
             }
-            className={`relative ${baseSize} ${expandedWidth} bg-white/10 backdrop-blur-md border border-white/20 shadow-lg rounded-full flex items-center justify-center transition-all duration-500 hover:shadow-none group cursor-pointer`}
+            className="home-nav-item relative flex items-center justify-center"
           >
-            {/* Gradient fill on hover */}
-            <span className="absolute inset-0 rounded-full bg-[linear-gradient(45deg,var(--gradient-from),var(--gradient-to))] opacity-0 transition-all duration-500 group-hover:opacity-100" />
+            <button
+              type="button"
+              aria-label={title}
+              data-nav-title={title}
+              onClick={onClick}
+              style={
+                {
+                  '--gradient-from': gradientFrom,
+                  '--gradient-to': gradientTo,
+                  '--nav-width': buttonWidth,
+                  '--nav-hover-width': buttonHoverWidth,
+                  '--nav-height': buttonHeight,
+                  '--nav-mobile-size': buttonMobileSize,
+                  '--nav-tone': navTone,
+                  '--nav-glow': navGlow,
+                } as React.CSSProperties & { [key: string]: string }
+              }
+              className="home-nav-button group relative isolate appearance-none overflow-visible rounded-full shadow-lg flex items-center justify-center"
+            >
+              <span className="home-nav-fill pointer-events-none absolute rounded-full" />
 
-            {/* Glow */}
-            <span className="absolute top-[10px] inset-x-0 h-full rounded-full bg-[linear-gradient(45deg,var(--gradient-from),var(--gradient-to))] blur-[18px] opacity-0 -z-10 transition-all duration-500 group-hover:opacity-60" />
+              <span className="home-nav-glow pointer-events-none absolute -z-10 rounded-full bg-[linear-gradient(45deg,var(--gradient-from),var(--gradient-to))] blur-[18px]" />
 
-            {/* Icon */}
-            <span className={`relative z-10 transition-all duration-300 group-hover:scale-0 group-hover:opacity-0 text-white ${iconSize}`}>
-              {icon}
-            </span>
+              {icon && (
+                <span className={`home-nav-icon relative z-10 text-white ${iconSize}`}>
+                  {icon}
+                </span>
+              )}
 
-            {/* Label */}
-            <span className={`absolute z-10 text-white uppercase font-orbitron ${textSize} transition-all duration-300 scale-0 opacity-0 group-hover:scale-100 group-hover:opacity-100 delay-100 whitespace-nowrap`}>
-              {title}
-            </span>
+              <span className={`home-nav-label pointer-events-none z-10 whitespace-nowrap text-white uppercase font-orbitron ${textSize}`}>
+                {title}
+              </span>
+            </button>
           </li>
         );
       })}
