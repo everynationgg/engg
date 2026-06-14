@@ -207,8 +207,8 @@ const HOME_MOTION_STYLES = `
     position: absolute;
     left: 50%;
     top: clamp(14rem, 42vh, 28rem);
-    width: min(56rem, 62vw);
-    max-width: calc(100vw - 2rem);
+    width: min(72rem, 70vw);
+    max-width: calc(100vw - 1.5rem);
     text-align: center;
     transform: translate3d(-50%, -50%, 0);
     transform-origin: center center;
@@ -252,7 +252,7 @@ const HOME_MOTION_STYLES = `
     margin-top: clamp(0.2rem, 0.75vh, 0.65rem);
     color: rgba(255, 255, 255, 0.88);
     font-family: Georgia, "Times New Roman", serif;
-    font-size: clamp(1.15rem, 2vw, 2.45rem);
+    font-size: clamp(1.25rem, 2.25vw, 2.7rem);
     font-weight: 400;
     letter-spacing: clamp(0.08em, 0.55vw, 0.18em);
     line-height: 1;
@@ -536,12 +536,12 @@ const HOME_MOTION_STYLES = `
   @media (min-width: 768px) and (max-height: 760px) {
     .home-brand-layer {
       top: clamp(12.5rem, 44vh, 21rem);
-      width: min(52rem, 58vw);
+      width: min(64rem, 66vw);
     }
 
     .home-welcome-line {
       margin-top: clamp(0.15rem, 0.55vh, 0.45rem);
-      font-size: clamp(1.05rem, 1.75vw, 2.15rem);
+      font-size: clamp(1.1rem, 1.95vw, 2.35rem);
     }
   }
 
