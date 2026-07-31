@@ -1,5 +1,6 @@
 import { Switch, Route, useLocation, Router as WouterRouter } from "wouter";
 import { lazy, Suspense } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import Home from "@/pages/Home";
 import { AuthProvider } from "@/hooks/useAuth";
 
@@ -88,6 +89,7 @@ export default function App() {
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
             <AppContent />
           </WouterRouter>
+          <Analytics />
         </UIProvider>
       </MessagingProvider>
     </AuthProvider>
