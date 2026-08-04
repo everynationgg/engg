@@ -7,6 +7,7 @@ interface StudioLayoutProps {
 
 export default function StudioLayout({ children }: StudioLayoutProps) {
   const [location, setLocation] = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const isHomePage = location === "/" || location === "";
 
   // JSON-LD Structured Data for AEO (Answer Engine Optimization) & GEO (Generative Engine Optimization)
@@ -52,11 +53,11 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
       />
 
       {/* ── Apple-Style Translucent Header ───────────────────────────────── */}
-      <header className="shrink-0 bg-white/90 backdrop-blur-md border-b border-neutral-200/80 transition-all z-50">
+      <header className="shrink-0 bg-white/90 backdrop-blur-md border-b border-neutral-200/80 transition-all z-50 sticky top-0">
         <div className="max-w-7xl mx-auto px-6 h-12 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setLocation("/")}
+              onClick={() => { setLocation("/"); setMobileMenuOpen(false); }}
               className="text-lg font-bold tracking-tight text-neutral-900 hover:opacity-80 transition-opacity"
             >
               ENGG
@@ -102,13 +103,88 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setLocation("/contact")}
-              className="bg-neutral-900 text-white hover:bg-black rounded-full px-4 py-1.5 text-xs font-medium transition-all duration-200 shadow-sm active:scale-95"
+              onClick={() => { setLocation("/contact"); setMobileMenuOpen(false); }}
+              className="hidden sm:inline-block bg-neutral-900 text-white hover:bg-black rounded-full px-4 py-1.5 text-xs font-medium transition-all duration-200 shadow-sm active:scale-95"
             >
               Start a Project
             </button>
+
+            {/* Mobile Hamburger Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-1.5 rounded-md text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 transition-colors focus:outline-none"
+              aria-label="Toggle navigation menu"
+            >
+              {mobileMenuOpen ? (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
           </div>
         </div>
+
+        {/* ── Responsive Mobile Navigation Menu Drawer ── */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-neutral-200 bg-white/95 backdrop-blur-md px-6 py-4 space-y-3 shadow-lg">
+            <button
+              onClick={() => { setLocation("/"); setMobileMenuOpen(false); }}
+              className={`block w-full text-left py-2 text-sm font-medium border-b border-neutral-100 ${location === "/" ? "text-neutral-900 font-bold" : "text-neutral-600"}`}
+            >
+              Home
+            </button>
+            <button
+              onClick={() => { setLocation("/about"); setMobileMenuOpen(false); }}
+              className={`block w-full text-left py-2 text-sm font-medium border-b border-neutral-100 ${location === "/about" ? "text-neutral-900 font-bold" : "text-neutral-600"}`}
+            >
+              About Studio
+            </button>
+            <button
+              onClick={() => { setLocation("/services"); setMobileMenuOpen(false); }}
+              className={`block w-full text-left py-2 text-sm font-medium border-b border-neutral-100 ${location.startsWith("/services") ? "text-neutral-900 font-bold" : "text-neutral-600"}`}
+            >
+              Services Matrix
+            </button>
+            <div className="pl-4 space-y-2 py-1 text-xs text-neutral-500">
+              <button onClick={() => { setLocation("/services/websites"); setMobileMenuOpen(false); }} className="block w-full text-left py-1 hover:text-neutral-900">
+                • Websites & Landing Pages
+              </button>
+              <button onClick={() => { setLocation("/services/web-apps"); setMobileMenuOpen(false); }} className="block w-full text-left py-1 hover:text-neutral-900">
+                • Web Applications & SaaS
+              </button>
+              <button onClick={() => { setLocation("/services/realtime-engines"); setMobileMenuOpen(false); }} className="block w-full text-left py-1 hover:text-neutral-900">
+                • Real-Time Engines
+              </button>
+              <button onClick={() => { setLocation("/services/custom-tools"); setMobileMenuOpen(false); }} className="block w-full text-left py-1 hover:text-neutral-900">
+                • Custom Tools
+              </button>
+            </div>
+            <button
+              onClick={() => { setLocation("/estimate"); setMobileMenuOpen(false); }}
+              className={`block w-full text-left py-2 text-sm font-medium border-b border-neutral-100 ${location === "/estimate" ? "text-neutral-900 font-bold" : "text-neutral-600"}`}
+            >
+              Builder & Estimator
+            </button>
+            <button
+              onClick={() => { setLocation("/hub"); setMobileMenuOpen(false); }}
+              className={`block w-full text-left py-2 text-sm font-medium border-b border-neutral-100 ${location === "/hub" ? "text-neutral-900 font-bold" : "text-neutral-600"}`}
+            >
+              Live Interactive Demo
+            </button>
+            <div className="pt-2">
+              <button
+                onClick={() => { setLocation("/contact"); setMobileMenuOpen(false); }}
+                className="w-full bg-neutral-900 text-white hover:bg-black rounded-full py-2.5 text-xs font-semibold text-center transition-all shadow-sm active:scale-95"
+              >
+                Start a Project
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* ── Sub-Page Navigation Bar (Rendered when in /services or sub-pages) ── */}
