@@ -58,9 +58,9 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
           <div className="flex items-center gap-3">
             <button
               onClick={() => { setLocation("/"); setMobileMenuOpen(false); }}
-              className="text-lg font-bold tracking-tight text-neutral-900 hover:opacity-80 transition-opacity"
+              className="flex items-center hover:opacity-80 transition-opacity"
             >
-              ENGG
+              <img src="/logo.png" alt="ENGG Logo" className="h-7 w-auto" />
             </button>
             <span className="hidden sm:inline-block h-3.5 w-[1px] bg-neutral-300" />
             <span className="hidden sm:inline-block text-[11px] font-medium text-neutral-500">
@@ -233,7 +233,7 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
       <footer className="shrink-0 bg-white border-t border-neutral-200 py-4 text-[11px] text-neutral-500">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
           <div>
-            <div className="font-bold text-neutral-900 text-sm mb-1">ENGG</div>
+            <div className="mb-1"><img src="/logo.png" alt="ENGG" className="h-7 w-auto" /></div>
             <p className="text-neutral-500 leading-snug text-[11px]">
               Independent custom software and web development studio.
             </p>
