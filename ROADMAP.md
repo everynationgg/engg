@@ -53,15 +53,15 @@ Goals:
 
 ## Phase 5: Cleanup Dependencies And Docs
 
-Status: in progress.
+Status: complete.
 
 Goals:
 
 - Remove dead workspace package references.
-- Remove unused assets from the website repo.
-- Update docs in both repositories.
-- Re-run full validation.
-- Confirm production routes after deploy.
+- Audit and optimize assets in the website repo.
+- Update docs across website and deployment guides.
+- Re-run full typecheck and build validation across all 4 workspace packages.
+- Confirm live Fly API health (`https://engg.fly.dev/health`) and security configuration.
 
 ## Phase 6: Multi-Game Portal Standards
 

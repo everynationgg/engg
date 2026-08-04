@@ -10,6 +10,15 @@ import { HUDFilters } from "@/components/common/HUDRenderer";
 import { AuthAccessPaused, ShopOffline } from "@/pages/AccessPaused";
 import { AUTH_PUBLIC_ACCESS_ENABLED, SHOP_ENABLED } from "@/lib/productAccess";
 
+const About = lazy(() => import("@/pages/About"));
+const ServicesPage = lazy(() => import("@/pages/ServicesPage"));
+const ServiceWebsites = lazy(() => import("@/pages/ServiceWebsites"));
+const ServiceWebApps = lazy(() => import("@/pages/ServiceWebApps"));
+const ServiceRealtime = lazy(() => import("@/pages/ServiceRealtime"));
+const ServiceCustomTools = lazy(() => import("@/pages/ServiceCustomTools"));
+const Estimator = lazy(() => import("@/pages/Estimator"));
+const ContactPage = lazy(() => import("@/pages/ContactPage"));
+
 const Shop = lazy(() => import("@/pages/Shop"));
 const Login = lazy(() => import("@/pages/Login"));
 const Register = lazy(() => import("@/pages/Register"));
@@ -33,8 +42,8 @@ const ResetPasswordRoute = AUTH_PUBLIC_ACCESS_ENABLED ? ResetPassword : AuthAcce
 function RouteLoadingFallback() {
   return (
     <div className="min-h-[40vh] flex items-center justify-center px-6 text-center">
-      <p className="font-orbitron text-[10px] uppercase tracking-[0.35em] text-cyan-300/70">
-        Loading node...
+      <p className="font-sans text-xs uppercase tracking-widest text-neutral-500">
+        Loading page...
       </p>
     </div>
   );
@@ -45,11 +54,19 @@ function Router() {
     <Suspense fallback={<RouteLoadingFallback />}>
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/about" component={About} />
+        <Route path="/services" component={ServicesPage} />
+        <Route path="/services/websites" component={ServiceWebsites} />
+        <Route path="/services/web-apps" component={ServiceWebApps} />
+        <Route path="/services/realtime-engines" component={ServiceRealtime} />
+        <Route path="/services/custom-tools" component={ServiceCustomTools} />
+        <Route path="/estimate" component={Estimator} />
+        <Route path="/contact" component={ContactPage} />
+        <Route path="/hub" component={Hub} />
         <Route path="/shop" component={ShopRoute} />
         <Route path="/login" component={LoginRoute} />
         <Route path="/register" component={RegisterRoute} />
         <Route path="/profile" component={ProfileRoute} />
-        <Route path="/hub" component={Hub} />
         <Route path="/verify" component={VerifyRoute} />
         <Route path="/forgot-password" component={ForgotPasswordRoute} />
         <Route path="/reset-password" component={ResetPasswordRoute} />
@@ -61,19 +78,25 @@ function Router() {
 
 function AppContent() {
   const [location] = useLocation();
-  const isHomePage = location === "/" || location === "";
+  const isStudioPage =
+    location === "/" ||
+    location === "" ||
+    location === "/about" ||
+    location.startsWith("/services") ||
+    location === "/estimate" ||
+    location === "/contact";
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-cyan-500/30 overflow-x-hidden">
+    <div className="min-h-screen bg-white text-[#1d1d1f] selection:bg-neutral-200 selection:text-black overflow-x-hidden">
       <HUDFilters />
       <SystemToastContainer />
-      {!isHomePage && (
+      {!isStudioPage && (
         <Suspense fallback={null}>
           <Navbar />
           <AlliesSidebar />
         </Suspense>
       )}
-      <div className={`${!isHomePage ? "pt-[100px] lg:pt-[120px]" : ""}`}>
+      <div className={`${!isStudioPage ? "pt-[100px] lg:pt-[120px]" : ""}`}>
         <Router />
       </div>
     </div>
