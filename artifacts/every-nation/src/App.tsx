@@ -9,6 +9,8 @@ import { UIProvider } from "@/context/UIContext";
 import { HUDFilters } from "@/components/common/HUDRenderer";
 import { AuthAccessPaused, ShopOffline } from "@/pages/AccessPaused";
 import { AUTH_PUBLIC_ACCESS_ENABLED, SHOP_ENABLED } from "@/lib/productAccess";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 const About = lazy(() => import("@/pages/About"));
 const ServicesPage = lazy(() => import("@/pages/ServicesPage"));
@@ -110,6 +112,8 @@ export default function App() {
         <UIProvider>
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
             <AppContent />
+            <Analytics />
+            <SpeedInsights />
           </WouterRouter>
         </UIProvider>
       </MessagingProvider>
