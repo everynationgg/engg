@@ -7,7 +7,7 @@ export default function About() {
 
   return (
     <StudioLayout>
-      <section className="py-24 max-w-4xl mx-auto px-6">
+      <section id="overview" className="py-20 sm:py-24 max-w-4xl mx-auto px-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-100 border border-neutral-200/80 mb-6 text-xs font-medium text-neutral-700">
           About ENGG Studio
         </div>
@@ -20,7 +20,7 @@ export default function About() {
           ENGG builds custom web applications, high-converting websites, real-time systems, and specialized digital tools. We partner directly with founders and companies to ship clean, production-ready code.
         </p>
 
-        <div className="space-y-12 border-t border-neutral-200 pt-12">
+        <div id="principles" className="space-y-12 border-t border-neutral-200 pt-12 scroll-mt-32">
           <div>
             <h2 className="text-2xl font-bold text-neutral-900 mb-3">Our Core Engineering Principles</h2>
             <p className="text-neutral-600 leading-relaxed text-base mb-6">
@@ -58,7 +58,7 @@ export default function About() {
             </div>
           </div>
 
-          <div className="bg-neutral-900 text-white rounded-3xl p-8 sm:p-12 text-center mt-16">
+          <div id="contact" className="bg-neutral-900 text-white rounded-3xl p-8 sm:p-12 text-center mt-16 scroll-mt-32">
             <h2 className="text-2xl sm:text-3xl font-bold mb-4">Ready to build your next web application?</h2>
             <p className="text-neutral-400 text-base max-w-xl mx-auto mb-8">
               Tell us about your project requirements and we will provide an architectural scope within 24 hours.

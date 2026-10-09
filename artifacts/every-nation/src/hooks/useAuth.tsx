@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from "react";
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -54,13 +54,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const isInitializingRef = useRef(false);
+  const hasInitializedRef = useRef(false);
 
   const refreshUser = useCallback(async () => {
     const currentToken = localStorage.getItem(STORAGE_KEY_TOKEN) || token;
     if (!currentToken) return;
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/auth/me`, {
         headers: { Authorization: `Bearer ${currentToken}` },
       });
 
@@ -96,10 +98,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [token]);
 
   const initAnonymous = useCallback(async () => {
-    if (isLoading || isLoggedIn || token) return;
+    if (isInitializingRef.current) return;
+    const currentToken = localStorage.getItem(STORAGE_KEY_TOKEN);
+    if (currentToken) return;
+
+    isInitializingRef.current = true;
     setIsLoading(true);
     try {
-      const resp = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/anonymous`, {
+      const apiUrl = import.meta.env.VITE_API_URL || "";
+      const resp = await fetch(`${apiUrl}/api/auth/anonymous`, {
         method: "POST",
       });
       if (resp.ok) {
@@ -111,15 +118,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUserId(data.id);
         setUsername(data.username);
         setIsLoggedIn(false); // They are "authenticated" but not "logged in" (no persistent account)
+      } else {
+        // Fallback local guest session so user isn't blocked by backend errors
+        const fallbackGuestId = `guest_${Math.random().toString(36).substring(2, 9)}`;
+        const fallbackUsername = `Guest_${Math.random().toString(36).substring(2, 6)}`;
+        localStorage.setItem(STORAGE_KEY_USER_ID, fallbackGuestId);
+        localStorage.setItem(STORAGE_KEY_USERNAME, fallbackUsername);
+        setUserId(fallbackGuestId);
+        setUsername(fallbackUsername);
+        setIsLoggedIn(false);
       }
     } catch (err) {
-      console.error("Anonymous init failed:", err);
+      console.warn("Anonymous server init unavailable, using local guest session:", err);
+      const fallbackGuestId = `guest_${Math.random().toString(36).substring(2, 9)}`;
+      const fallbackUsername = `Guest_${Math.random().toString(36).substring(2, 6)}`;
+      localStorage.setItem(STORAGE_KEY_USER_ID, fallbackGuestId);
+      localStorage.setItem(STORAGE_KEY_USERNAME, fallbackUsername);
+      setUserId(fallbackGuestId);
+      setUsername(fallbackUsername);
+      setIsLoggedIn(false);
     } finally {
       setIsLoading(false);
+      setIsInitialized(true);
     }
-  }, [isLoading, isLoggedIn, token]);
+  }, []);
 
   useEffect(() => {
+    if (hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
+
     const savedToken = localStorage.getItem(STORAGE_KEY_TOKEN);
     const savedUserId = localStorage.getItem(STORAGE_KEY_USER_ID);
     const savedUsername = localStorage.getItem(STORAGE_KEY_USERNAME);
@@ -145,10 +172,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!isGuest) {
         refreshUser();
       }
+      setIsInitialized(true);
     } else {
       initAnonymous();
     }
-    setIsInitialized(true);
   }, [refreshUser, initAnonymous]);
 
   const login = useCallback(async (email: string, password: string) => {

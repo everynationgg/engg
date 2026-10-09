@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -13,6 +13,10 @@ import {
   FaTwitter,
   FaGithub,
   FaYoutube,
+  FaChevronDown,
+  FaBriefcase,
+  FaTools,
+  FaRocket,
 } from "react-icons/fa";
 
 export default function HomeHeroNav() {
@@ -20,36 +24,78 @@ export default function HomeHeroNav() {
   const { isLoggedIn, user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [socialsModalOpen, setSocialsModalOpen] = useState(false);
+  const [aboutDropdownOpen, setAboutDropdownOpen] = useState(false);
+  const [mobileAboutExpanded, setMobileAboutExpanded] = useState(
+    location === "/about" ||
+      location.startsWith("/services") ||
+      location === "/estimate" ||
+      location === "/contact"
+  );
+  const aboutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const aboutContainerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        aboutContainerRef.current &&
+        !aboutContainerRef.current.contains(event.target as Node)
+      ) {
+        setAboutDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      if (aboutTimeoutRef.current) clearTimeout(aboutTimeoutRef.current);
+    };
+  }, []);
+
+  const handleAboutMouseEnter = () => {
+    if (aboutTimeoutRef.current) {
+      clearTimeout(aboutTimeoutRef.current);
+      aboutTimeoutRef.current = null;
+    }
+    setAboutDropdownOpen(true);
+  };
+
+  const handleAboutMouseLeave = () => {
+    aboutTimeoutRef.current = setTimeout(() => {
+      setAboutDropdownOpen(false);
+    }, 200);
+  };
+
+  const handleNavigate = (path: string) => {
+    setLocation(path);
+    setAboutDropdownOpen(false);
+    setMobileMenuOpen(false);
+  };
+
+  const isAboutActive =
+    location === "/about" ||
+    location.startsWith("/services") ||
+    location === "/estimate" ||
+    location === "/contact";
 
   const navItems = [
     {
       id: "home",
       label: "Home",
       icon: FaHome,
-      action: () => {
-        setLocation("/");
-        setMobileMenuOpen(false);
-      },
+      action: () => handleNavigate("/"),
       active: location === "/" || location === "",
     },
     {
       id: "about",
       label: "About",
       icon: FaInfo,
-      action: () => {
-        setLocation("/about");
-        setMobileMenuOpen(false);
-      },
-      active: location === "/about",
+      action: () => handleNavigate("/about"),
+      active: isAboutActive,
     },
     {
       id: "gaming",
       label: "Gaming",
       icon: FaGamepad,
-      action: () => {
-        setLocation("/hub");
-        setMobileMenuOpen(false);
-      },
+      action: () => handleNavigate("/hub"),
       active: location === "/hub",
     },
     {
@@ -81,7 +127,7 @@ export default function HomeHeroNav() {
           {/* Brand Logo - Preserves existing official ENGG logo */}
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setLocation("/")}
+              onClick={() => handleNavigate("/")}
               className="flex items-center hover:opacity-85 transition-opacity"
               aria-label="ENGG Home"
             >
@@ -101,6 +147,199 @@ export default function HomeHeroNav() {
           <nav className="hidden md:flex items-center gap-6">
             {navItems.map((item) => {
               const Icon = item.icon;
+              const isAbout = item.id === "about";
+
+              if (isAbout) {
+                return (
+                  <div
+                    key={item.id}
+                    ref={aboutContainerRef}
+                    className="relative flex flex-col items-center group py-1"
+                    onMouseEnter={handleAboutMouseEnter}
+                    onMouseLeave={handleAboutMouseLeave}
+                  >
+                    <button
+                      onClick={item.action}
+                      className="flex flex-col items-center focus:outline-none"
+                    >
+                      <div
+                        className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 shadow-xs ${
+                          item.active
+                            ? "bg-[#7c3aed] text-white ring-2 ring-[#7c3aed]/30 scale-105"
+                            : "bg-[#7c3aed]/15 text-[#7c3aed] group-hover:bg-[#7c3aed] group-hover:text-white group-hover:scale-105"
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex items-center gap-1 mt-1">
+                        <span
+                          className={`text-[10px] font-semibold tracking-tight transition-colors ${
+                            item.active
+                              ? "text-[#7c3aed] font-bold"
+                              : "text-neutral-600 group-hover:text-neutral-900"
+                          }`}
+                        >
+                          {item.label}
+                        </span>
+                        <FaChevronDown
+                          className={`w-2 h-2 transition-transform duration-200 ${
+                            aboutDropdownOpen
+                              ? "rotate-180 text-[#7c3aed]"
+                              : item.active
+                              ? "text-[#7c3aed]"
+                              : "text-neutral-400 group-hover:text-neutral-700"
+                          }`}
+                        />
+                      </div>
+                    </button>
+
+                    {/* Desktop Submenu Dropdown */}
+                    {aboutDropdownOpen && (
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-50 w-[340px] animate-in fade-in zoom-in-95 duration-150">
+                        <div className="bg-white/95 backdrop-blur-xl border border-neutral-200/90 rounded-2xl shadow-2xl p-3 text-left">
+                          {/* Top Header Badge */}
+                          <div className="flex items-center justify-between px-2 pb-2 mb-2 border-b border-neutral-100">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+                              Studio Navigation
+                            </span>
+                            <span className="text-[10px] font-semibold text-[#7c3aed] bg-[#7c3aed]/10 px-2 py-0.5 rounded-full">
+                              ENGG Studio
+                            </span>
+                          </div>
+
+                          <div className="space-y-1">
+                            {/* 1. About Overview */}
+                            <button
+                              onClick={() => handleNavigate("/about")}
+                              className={`w-full flex items-start gap-3 p-2.5 rounded-xl transition-all ${
+                                location === "/about"
+                                  ? "bg-[#7c3aed]/10 text-[#7c3aed]"
+                                  : "hover:bg-neutral-100/80 text-neutral-800"
+                              }`}
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-[#7c3aed]/15 text-[#7c3aed] flex items-center justify-center shrink-0 mt-0.5">
+                                <FaInfo className="w-3.5 h-3.5" />
+                              </div>
+                              <div>
+                                <div className="text-xs font-bold leading-tight">About Studio</div>
+                                <div className="text-[11px] text-neutral-500 leading-snug mt-0.5">
+                                  Independent engineering, team & core principles
+                                </div>
+                              </div>
+                            </button>
+
+                            {/* 2. Services Matrix */}
+                            <div className="p-2.5 rounded-xl hover:bg-neutral-50/80 transition-all border border-transparent hover:border-neutral-200/50">
+                              <button
+                                onClick={() => handleNavigate("/services")}
+                                className="w-full flex items-start gap-3 text-left group/svc"
+                              >
+                                <div className="w-8 h-8 rounded-lg bg-[#7c3aed]/15 text-[#7c3aed] flex items-center justify-center shrink-0 mt-0.5 group-hover/svc:bg-[#7c3aed] group-hover/svc:text-white transition-colors">
+                                  <FaBriefcase className="w-3.5 h-3.5" />
+                                </div>
+                                <div className="flex-1">
+                                  <div className="text-xs font-bold leading-tight flex items-center justify-between text-neutral-800 group-hover/svc:text-[#7c3aed]">
+                                    <span>Services Matrix</span>
+                                    <span className="text-[10px] font-normal text-neutral-400">View All →</span>
+                                  </div>
+                                  <div className="text-[11px] text-neutral-500 leading-snug mt-0.5">
+                                    Full-stack web apps, realtime & tools
+                                  </div>
+                                </div>
+                              </button>
+
+                              {/* Quick sub-service links */}
+                              <div className="grid grid-cols-2 gap-1.5 mt-2 pt-2 border-t border-neutral-100 pl-11">
+                                <button
+                                  onClick={() => handleNavigate("/services/websites")}
+                                  className={`text-[10px] text-left py-1 px-2 rounded-md hover:bg-neutral-200/70 transition-colors font-medium truncate ${
+                                    location === "/services/websites"
+                                      ? "bg-neutral-200/80 text-neutral-900 font-bold"
+                                      : "text-neutral-600"
+                                  }`}
+                                >
+                                  • Websites
+                                </button>
+                                <button
+                                  onClick={() => handleNavigate("/services/web-apps")}
+                                  className={`text-[10px] text-left py-1 px-2 rounded-md hover:bg-neutral-200/70 transition-colors font-medium truncate ${
+                                    location === "/services/web-apps"
+                                      ? "bg-neutral-200/80 text-neutral-900 font-bold"
+                                      : "text-neutral-600"
+                                  }`}
+                                >
+                                  • Web Apps & SaaS
+                                </button>
+                                <button
+                                  onClick={() => handleNavigate("/services/realtime-engines")}
+                                  className={`text-[10px] text-left py-1 px-2 rounded-md hover:bg-neutral-200/70 transition-colors font-medium truncate ${
+                                    location === "/services/realtime-engines"
+                                      ? "bg-neutral-200/80 text-neutral-900 font-bold"
+                                      : "text-neutral-600"
+                                  }`}
+                                >
+                                  • Real-Time Engines
+                                </button>
+                                <button
+                                  onClick={() => handleNavigate("/services/custom-tools")}
+                                  className={`text-[10px] text-left py-1 px-2 rounded-md hover:bg-neutral-200/70 transition-colors font-medium truncate ${
+                                    location === "/services/custom-tools"
+                                      ? "bg-neutral-200/80 text-neutral-900 font-bold"
+                                      : "text-neutral-600"
+                                  }`}
+                                >
+                                  • Custom Tools
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* 3. Builder & Estimator Tool */}
+                            <button
+                              onClick={() => handleNavigate("/estimate")}
+                              className={`w-full flex items-start gap-3 p-2.5 rounded-xl transition-all ${
+                                location === "/estimate"
+                                  ? "bg-[#7c3aed]/10 text-[#7c3aed]"
+                                  : "hover:bg-neutral-100/80 text-neutral-800"
+                              }`}
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-amber-500/15 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
+                                <FaTools className="w-3.5 h-3.5" />
+                              </div>
+                              <div>
+                                <div className="text-xs font-bold leading-tight">Builder & Estimator</div>
+                                <div className="text-[11px] text-neutral-500 leading-snug mt-0.5">
+                                  Scope calculator & instant architectural estimates
+                                </div>
+                              </div>
+                            </button>
+
+                            {/* 4. Contact / Start Project */}
+                            <button
+                              onClick={() => handleNavigate("/contact")}
+                              className={`w-full flex items-start gap-3 p-2.5 rounded-xl transition-all ${
+                                location === "/contact"
+                                  ? "bg-[#7c3aed]/10 text-[#7c3aed]"
+                                  : "hover:bg-neutral-100/80 text-neutral-800"
+                              }`}
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                                <FaRocket className="w-3.5 h-3.5" />
+                              </div>
+                              <div>
+                                <div className="text-xs font-bold leading-tight">Start a Project</div>
+                                <div className="text-[11px] text-neutral-500 leading-snug mt-0.5">
+                                  Partner directly with our engineering leads
+                                </div>
+                              </div>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
               return (
                 <button
                   key={item.id}
@@ -133,7 +372,7 @@ export default function HomeHeroNav() {
             <div className="ml-2">
               {isLoggedIn ? (
                 <button
-                  onClick={() => setLocation("/profile")}
+                  onClick={() => handleNavigate("/profile")}
                   className="bg-[#7c3aed] hover:bg-[#6d28d9] text-white rounded-full px-5 py-2 text-xs font-bold uppercase tracking-wider transition-all shadow-sm active:scale-95 flex items-center gap-2"
                 >
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -141,7 +380,7 @@ export default function HomeHeroNav() {
                 </button>
               ) : (
                 <button
-                  onClick={() => setLocation("/login")}
+                  onClick={() => handleNavigate("/login")}
                   className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white rounded-full px-6 py-2 text-xs font-bold uppercase tracking-wider transition-all shadow-md active:scale-95"
                 >
                   LOGIN
@@ -154,14 +393,14 @@ export default function HomeHeroNav() {
           <div className="flex items-center gap-2 md:hidden">
             {isLoggedIn ? (
               <button
-                onClick={() => setLocation("/profile")}
+                onClick={() => handleNavigate("/profile")}
                 className="bg-[#7c3aed] text-white rounded-full px-3 py-1.5 text-[11px] font-bold uppercase"
               >
                 Profile
               </button>
             ) : (
               <button
-                onClick={() => setLocation("/login")}
+                onClick={() => handleNavigate("/login")}
                 className="bg-[#8b5cf6] text-white rounded-full px-4 py-1.5 text-[11px] font-bold uppercase"
               >
                 LOGIN
@@ -179,9 +418,106 @@ export default function HomeHeroNav() {
 
         {/* Responsive Mobile Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-neutral-200 bg-white/95 backdrop-blur-md px-6 py-4 space-y-3 shadow-xl animate-in slide-in-from-top-2 duration-200">
+          <div className="md:hidden border-t border-neutral-200 bg-white/95 backdrop-blur-md px-6 py-4 space-y-3 shadow-xl max-h-[calc(100dvh-4rem)] overflow-y-auto animate-in slide-in-from-top-2 duration-200">
             {navItems.map((item) => {
               const Icon = item.icon;
+              const isAbout = item.id === "about";
+
+              if (isAbout) {
+                return (
+                  <div key={item.id} className="border-b border-neutral-100 pb-2">
+                    <div className="flex items-center justify-between w-full py-2">
+                      <button
+                        onClick={item.action}
+                        className="flex items-center gap-3 text-left group flex-1"
+                      >
+                        <div className="w-7 h-7 rounded-full bg-[#7c3aed]/15 text-[#7c3aed] flex items-center justify-center group-hover:bg-[#7c3aed] group-hover:text-white transition-colors">
+                          <Icon className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="text-sm font-semibold text-neutral-800">
+                          {item.label}
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => setMobileAboutExpanded(!mobileAboutExpanded)}
+                        className="p-1.5 text-neutral-500 hover:text-neutral-900 focus:outline-none"
+                        aria-label="Toggle About Submenu"
+                      >
+                        <FaChevronDown
+                          className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                            mobileAboutExpanded ? "rotate-180 text-[#7c3aed]" : ""
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Mobile Submenu Accordion */}
+                    {mobileAboutExpanded && (
+                      <div className="pl-10 pr-2 py-2 space-y-2 bg-neutral-50/80 rounded-xl mt-1 text-xs text-neutral-700">
+                        <button
+                          onClick={() => handleNavigate("/about")}
+                          className={`block w-full text-left py-1 font-semibold ${
+                            location === "/about" ? "text-[#7c3aed]" : "hover:text-neutral-900"
+                          }`}
+                        >
+                          • About Studio Overview
+                        </button>
+                        <button
+                          onClick={() => handleNavigate("/services")}
+                          className={`block w-full text-left py-1 font-semibold ${
+                            location === "/services" ? "text-[#7c3aed]" : "hover:text-neutral-900"
+                          }`}
+                        >
+                          • Services Matrix
+                        </button>
+                        <div className="pl-4 space-y-1.5 py-1 text-[11px] text-neutral-500 border-l border-neutral-200 ml-1">
+                          <button
+                            onClick={() => handleNavigate("/services/websites")}
+                            className="block w-full text-left hover:text-neutral-900"
+                          >
+                            Websites & Landing Pages
+                          </button>
+                          <button
+                            onClick={() => handleNavigate("/services/web-apps")}
+                            className="block w-full text-left hover:text-neutral-900"
+                          >
+                            Web Applications & SaaS
+                          </button>
+                          <button
+                            onClick={() => handleNavigate("/services/realtime-engines")}
+                            className="block w-full text-left hover:text-neutral-900"
+                          >
+                            Real-Time Engines
+                          </button>
+                          <button
+                            onClick={() => handleNavigate("/services/custom-tools")}
+                            className="block w-full text-left hover:text-neutral-900"
+                          >
+                            Custom Tools
+                          </button>
+                        </div>
+                        <button
+                          onClick={() => handleNavigate("/estimate")}
+                          className={`block w-full text-left py-1 font-semibold ${
+                            location === "/estimate" ? "text-[#7c3aed]" : "hover:text-neutral-900"
+                          }`}
+                        >
+                          • Builder & Estimator
+                        </button>
+                        <button
+                          onClick={() => handleNavigate("/contact")}
+                          className={`block w-full text-left py-1 font-semibold ${
+                            location === "/contact" ? "text-[#7c3aed]" : "hover:text-neutral-900"
+                          }`}
+                        >
+                          • Start a Project (Contact)
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
               return (
                 <button
                   key={item.id}

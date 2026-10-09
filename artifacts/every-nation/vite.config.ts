@@ -11,7 +11,10 @@ export default defineConfig(async ({ mode }) => {
   const rawPort = env.PORT || process.env.PORT || "5173";
   const port = Number(rawPort);
   const basePath = env.BASE_PATH || process.env.BASE_PATH || "/";
-  const apiUrl = env.VITE_API_URL || process.env.VITE_API_URL || DEFAULT_API_URL;
+  const apiUrl =
+    env.VITE_API_URL ||
+    process.env.VITE_API_URL ||
+    (mode === "production" ? DEFAULT_API_URL : "");
 
   return {
     base: basePath,
@@ -83,6 +86,18 @@ export default defineConfig(async ({ mode }) => {
       port,
       host: "0.0.0.0",
       allowedHosts: true,
+      proxy: {
+        "/api": {
+          target: "https://engg.fly.dev",
+          changeOrigin: true,
+          secure: false,
+        },
+        "/socket.io": {
+          target: "https://engg.fly.dev",
+          changeOrigin: true,
+          ws: true,
+        },
+      },
       fs: {
         strict: true,
         deny: ["**/.*"],
