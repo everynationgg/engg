@@ -1,27 +1,35 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { FaTerminal, FaEnvelope, FaArrowRight, FaKey } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  CinematicPageShell,
-  AccessGate,
-} from "@/components/common/PremiumVisuals";
-import { systemToast } from "@/components/common/SystemToast";
+  FaEnvelope,
+  FaArrowRight,
+  FaExclamationCircle,
+  FaCheckCircle,
+  FaSpinner,
+  FaArrowLeft,
+} from "react-icons/fa";
+import StudioLayout from "@/components/StudioLayout";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const reducedMotion = useReducedMotion();
-  const shouldReduceMotion = Boolean(reducedMotion);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email.trim()) {
+      setError("Please enter your registered email address.");
+      return;
+    }
+
     setLoading(true);
+    setError(null);
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/auth/request-password-reset`,
+        `${import.meta.env.VITE_API_URL || ""}/api/auth/request-password-reset`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -31,112 +39,134 @@ export default function ForgotPassword() {
 
       if (response.ok) {
         setSubmitted(true);
-        systemToast("Recovery_Signal_Sent", "success");
       } else {
-        systemToast("Protocol_Error: Target_Not_Found", "error");
+        const errorData = await response.json().catch(() => ({}));
+        setError(errorData.error || "Unable to send reset link. Please check the email address.");
       }
-    } catch (err) {
-      systemToast("Handshake_Timeout", "error");
+    } catch (err: any) {
+      setError("Network timeout. Please check your connection and try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <CinematicPageShell
-      pageLabel="AUTH_RECOVERY"
-      accentColor="rgba(6, 182, 212, 0.12)"
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{
-          duration: shouldReduceMotion ? 0 : 0.45,
-          ease: "easeOut",
-        }}
-        className="w-full max-w-[1080px] relative z-20 px-4 flex justify-center"
-      >
-        <AccessGate
-          title="Reset Cipher"
-          subtitle="Recovery_Protocol_Initialised"
-          icon={
-            <div className="relative flex items-center justify-center">
-              <FaKey
-                className={`text-2xl transition-colors duration-500 ${
-                  email.length > 5
-                    ? "text-cyan-400 drop-shadow-[0_0_8px_#00f3ff]"
-                    : "text-white/20"
-                }`}
-              />
-            </div>
-          }
-          accentColor="#00f3ff"
-          reducedMotion={shouldReduceMotion}
+    <StudioLayout>
+      <div className="min-h-[calc(100vh-16rem)] flex items-center justify-center py-12 sm:py-20 px-4 sm:px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+          className="w-full max-w-md"
         >
-          <div className="p-6 sm:p-8 md:p-10 flex flex-col gap-6">
+          {/* Card Container */}
+          <div className="bg-white rounded-3xl border border-neutral-200/90 shadow-xl p-8 sm:p-10">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center gap-2 mb-3">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#7c3aed] bg-[#7c3aed]/10 px-3 py-1 rounded-full">
+                  Password Recovery
+                </span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">
+                Reset Password
+              </h1>
+              <p className="text-sm text-neutral-500 mt-2">
+                Enter your registered email and we'll send you instructions to reset your password.
+              </p>
+            </div>
+
+            {/* Error Notification */}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, y: -6 }}
+                  animate={{ opacity: 1, height: "auto", y: 0 }}
+                  exit={{ opacity: 0, height: 0, y: -6 }}
+                  className="mb-6 bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm rounded-2xl p-4 flex items-start gap-3"
+                >
+                  <FaExclamationCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                  <span className="leading-snug">{error}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {!submitted ? (
-              <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-                <div className="flex flex-col gap-2">
-                  <label className="font-mono text-[11px] uppercase tracking-[0.4em] text-white/30 ml-1">
-                    Registered_ID
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 mb-1.5 ml-1">
+                    Registered Email Address
                   </label>
-                  <div className="flex items-center gap-4 bg-white/[0.01] border border-white/5 focus-within:border-cyan-500/30 focus-within:bg-cyan-500/[0.01] transition-all group">
-                    <div className="pl-4 text-white/20 group-focus-within:text-cyan-400 transition-colors pointer-events-none shrink-0">
-                      <FaEnvelope size={12} />
+                  <div className="relative flex items-center">
+                    <div className="absolute left-4 text-neutral-400 pointer-events-none">
+                      <FaEnvelope className="w-4 h-4" />
                     </div>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="flex-1 py-4 pr-4 bg-transparent font-mono text-[14px] tracking-wider text-white outline-none"
-                      placeholder="ACCESS_EMAIL"
+                      placeholder="name@example.com"
                       required
+                      autoComplete="email"
+                      className="w-full bg-[#f5f5f7] border border-neutral-300 focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/15 rounded-2xl pl-11 pr-4 py-3.5 text-sm font-medium text-neutral-900 placeholder-neutral-400 outline-none transition-all"
                     />
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-4">
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full h-13 bg-cyan-400/90 hover:bg-cyan-400 text-[#020408] transition-all duration-300 flex items-center justify-center gap-4 group cursor-pointer"
-                  >
-                    <span className="font-orbitron font-black tracking-[0.25em] text-[15px] uppercase">
-                      {loading ? "Transmitting..." : "Send_Recovery_Link"}
-                    </span>
-                    {!loading && (
-                      <FaArrowRight className="text-[11px] group-hover:translate-x-1 transition-transform" />
-                    )}
-                  </button>
-
-                  <Link
-                    href="/login"
-                    className="w-full h-11 border border-white/5 hover:border-white/10 text-white/30 hover:text-white/60 hover:bg-white/[0.01] transition-all font-mono text-[11px] uppercase tracking-widest flex items-center justify-center gap-3"
-                  >
-                    <FaTerminal className="text-[8px] opacity-40" />
-                    Return_to_Login
-                  </Link>
-                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full mt-2 bg-[#7c3aed] hover:bg-[#6d28d9] text-white rounded-2xl py-3.5 px-6 font-bold text-sm tracking-wide transition-all shadow-md hover:shadow-lg active:scale-98 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <>
+                      <FaSpinner className="w-4 h-4 animate-spin" />
+                      <span>Sending reset link...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Send Reset Link</span>
+                      <FaArrowRight className="w-3.5 h-3.5" />
+                    </>
+                  )}
+                </button>
               </form>
             ) : (
-              <div className="flex flex-col items-center gap-6 text-center">
-                <div className="w-full p-4 border border-cyan-500/10 bg-cyan-500/5">
-                  <p className="font-mono text-[11px] text-cyan-400/80 uppercase tracking-widest leading-relaxed">
-                    Recovery_Sequence_Initiated. Check your neural uplink
-                    (Email) for reset instructions.
-                  </p>
+              <div className="text-center py-4 space-y-4">
+                <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-xl">
+                  <FaCheckCircle />
                 </div>
+                <h3 className="text-lg font-bold text-neutral-900">Check Your Email</h3>
+                <p className="text-sm text-neutral-600 leading-relaxed">
+                  We've sent password reset instructions to{" "}
+                  <strong className="text-neutral-900">{email}</strong>. Please check your inbox and spam folder.
+                </p>
+                <div className="pt-2">
+                  <Link
+                    href="/login"
+                    className="inline-flex items-center gap-2 text-sm font-bold text-[#7c3aed] hover:text-[#6d28d9]"
+                  >
+                    <FaArrowLeft className="w-3.5 h-3.5" />
+                    <span>Return to Sign In</span>
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {!submitted && (
+              <div className="mt-8 pt-6 border-t border-neutral-200/80 text-center">
                 <Link
                   href="/login"
-                  className="w-full h-11 border border-white/10 text-white hover:bg-white/5 transition-all font-orbitron text-[13px] font-black uppercase tracking-[0.25em] flex items-center justify-center"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-600 hover:text-neutral-900 transition-colors"
                 >
-                  Acknowledge
+                  <FaArrowLeft className="w-3.5 h-3.5" />
+                  <span>Back to Sign In</span>
                 </Link>
               </div>
             )}
           </div>
-        </AccessGate>
-      </motion.div>
-    </CinematicPageShell>
+        </motion.div>
+      </div>
+    </StudioLayout>
   );
 }

@@ -1,20 +1,25 @@
 import { useState } from "react";
 import { useLocation, Link } from "wouter";
-import { motion, useReducedMotion } from "framer-motion";
-import { FaFingerprint, FaLock, FaArrowRight } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  CinematicPageShell,
-  AccessGate,
-} from "@/components/common/PremiumVisuals";
-import { systemToast } from "@/components/common/SystemToast";
+  FaLock,
+  FaArrowRight,
+  FaExclamationCircle,
+  FaCheckCircle,
+  FaSpinner,
+  FaEye,
+  FaEyeSlash,
+} from "react-icons/fa";
+import StudioLayout from "@/components/StudioLayout";
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [, setLocation] = useLocation();
-  const reducedMotion = useReducedMotion();
-  const shouldReduceMotion = Boolean(reducedMotion);
 
   // Get token from URL
   const queryParams = new URLSearchParams(window.location.search);
@@ -22,15 +27,31 @@ export default function ResetPassword() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!token) {
+      setError("Reset token is missing or expired. Please request a new link.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+
+    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+      setError("Password must contain at least one letter and one number.");
+      return;
+    }
+
     if (password !== confirmPassword) {
-      systemToast("Cipher_Mismatch: Verification_Failed", "error");
+      setError("Passwords do not match. Please verify.");
       return;
     }
 
     setLoading(true);
+    setError(null);
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/auth/reset-password`,
+        `${import.meta.env.VITE_API_URL || ""}/api/auth/reset-password`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -39,124 +60,167 @@ export default function ResetPassword() {
       );
 
       if (response.ok) {
-        systemToast("Cipher_Updated: Uplink_Restored", "success");
-        setTimeout(() => setLocation("/login"), 2000);
+        setSuccess(true);
+        setTimeout(() => setLocation("/login"), 2500);
       } else {
-        systemToast("Link_Expired: Token_Invalid", "error");
+        const errorData = await response.json().catch(() => ({}));
+        setError(errorData.error || "The reset link is invalid or has expired.");
       }
-    } catch (err) {
-      systemToast("Handshake_Timeout", "error");
+    } catch (err: any) {
+      setError("Failed to reset password. Please check your network and try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <CinematicPageShell
-      pageLabel="CIPHER_RESET"
-      accentColor="rgba(6, 182, 212, 0.12)"
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{
-          duration: shouldReduceMotion ? 0 : 0.45,
-          ease: "easeOut",
-        }}
-        className="w-full max-w-[1080px] relative z-20 px-4 flex justify-center"
-      >
-        <AccessGate
-          title="Cipher Reset"
-          subtitle="Define_New_Credential"
-          icon={
-            <div className="relative flex items-center justify-center">
-              <FaFingerprint
-                className={`text-2xl transition-colors duration-500 ${
-                  password.length > 5
-                    ? "text-cyan-400 drop-shadow-[0_0_8px_#00f3ff]"
-                    : "text-white/20"
-                }`}
-              />
-            </div>
-          }
-          accentColor="#00f3ff"
-          reducedMotion={shouldReduceMotion}
+    <StudioLayout>
+      <div className="min-h-[calc(100vh-16rem)] flex items-center justify-center py-12 sm:py-20 px-4 sm:px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+          className="w-full max-w-md"
         >
-          <div className="p-6 sm:p-8 md:p-10 flex flex-col gap-6">
-            <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-              <div className="flex flex-col gap-5">
-                <div className="flex flex-col gap-2">
-                  <label className="font-mono text-[11px] uppercase tracking-[0.4em] text-white/30 ml-1">
-                    New_Access_Cipher
+          {/* Card Container */}
+          <div className="bg-white rounded-3xl border border-neutral-200/90 shadow-xl p-8 sm:p-10">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center gap-2 mb-3">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#7c3aed] bg-[#7c3aed]/10 px-3 py-1 rounded-full">
+                  Account Security
+                </span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">
+                Create New Password
+              </h1>
+              <p className="text-sm text-neutral-500 mt-2">
+                Set a secure new password for your ENGG account.
+              </p>
+            </div>
+
+            {/* Error Notification */}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, y: -6 }}
+                  animate={{ opacity: 1, height: "auto", y: 0 }}
+                  exit={{ opacity: 0, height: 0, y: -6 }}
+                  className="mb-6 bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm rounded-2xl p-4 flex items-start gap-3"
+                >
+                  <FaExclamationCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                  <span className="leading-snug">{error}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {!success ? (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* New Password */}
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 mb-1.5 ml-1">
+                    New Password
                   </label>
-                  <div className="flex items-center bg-white/[0.01] border border-white/5 focus-within:border-cyan-500/30 focus-within:bg-cyan-500/[0.01] transition-all group">
-                    <div className="pl-4 pr-3 text-white/20 group-focus-within:text-cyan-400 transition-colors pointer-events-none shrink-0">
-                      <FaLock size={12} />
+                  <div className="relative flex items-center">
+                    <div className="absolute left-4 text-neutral-400 pointer-events-none">
+                      <FaLock className="w-4 h-4" />
                     </div>
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="flex-1 py-4 pr-4 bg-transparent font-mono text-[14px] tracking-[0.34em] text-white outline-none"
-                      placeholder="••••••••"
+                      placeholder="At least 6 characters"
                       required
+                      minLength={6}
+                      className="w-full bg-[#f5f5f7] border border-neutral-300 focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/15 rounded-2xl pl-11 pr-12 py-3.5 text-sm font-medium text-neutral-900 placeholder-neutral-400 outline-none transition-all"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="absolute right-4 text-neutral-400 hover:text-neutral-700 focus:outline-none p-1"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? (
+                        <FaEyeSlash className="w-4 h-4" />
+                      ) : (
+                        <FaEye className="w-4 h-4" />
+                      )}
+                    </button>
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-2">
-                  <label className="font-mono text-[11px] uppercase tracking-[0.4em] text-white/30 ml-1">
-                    Confirm_Cipher
+                {/* Confirm Password */}
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 mb-1.5 ml-1">
+                    Confirm New Password
                   </label>
-                  <div className="flex items-center bg-white/[0.01] border border-white/5 focus-within:border-cyan-500/30 focus-within:bg-cyan-500/[0.01] transition-all group">
-                    <div className="pl-4 pr-3 text-white/20 group-focus-within:text-cyan-400 transition-colors pointer-events-none shrink-0">
-                      <FaLock size={12} />
+                  <div className="relative flex items-center">
+                    <div className="absolute left-4 text-neutral-400 pointer-events-none">
+                      <FaLock className="w-4 h-4" />
                     </div>
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="flex-1 py-4 pr-4 bg-transparent font-mono text-[14px] tracking-[0.34em] text-white outline-none"
-                      placeholder="••••••••"
+                      placeholder="Re-enter your password"
                       required
+                      minLength={6}
+                      className="w-full bg-[#f5f5f7] border border-neutral-300 focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/15 rounded-2xl pl-11 pr-4 py-3.5 text-sm font-medium text-neutral-900 placeholder-neutral-400 outline-none transition-all"
                     />
                   </div>
                 </div>
-              </div>
 
-              <div className="flex flex-col gap-4">
+                {/* Submit CTA */}
                 <button
                   type="submit"
                   disabled={loading || !token}
-                  className="w-full h-13 bg-cyan-400/90 hover:bg-cyan-400 text-[#020408] transition-all duration-300 flex items-center justify-center gap-4 group cursor-pointer disabled:opacity-50"
+                  className="w-full mt-3 bg-[#7c3aed] hover:bg-[#6d28d9] text-white rounded-2xl py-3.5 px-6 font-bold text-sm tracking-wide transition-all shadow-md hover:shadow-lg active:scale-98 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  <span className="font-orbitron font-black tracking-[0.25em] text-[15px] uppercase">
-                    {loading ? "Updating..." : "Confirm_Reset"}
-                  </span>
-                  {!loading && (
-                    <FaArrowRight className="text-[11px] group-hover:translate-x-1 transition-transform" />
+                  {loading ? (
+                    <>
+                      <FaSpinner className="w-4 h-4 animate-spin" />
+                      <span>Saving new password...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Reset Password</span>
+                      <FaArrowRight className="w-3.5 h-3.5" />
+                    </>
                   )}
                 </button>
-
-                {!token && (
-                  <div className="border border-red-500/20 bg-red-500/5 p-3 text-center">
-                    <span className="font-mono text-[11px] uppercase text-red-400 tracking-wider">
-                      Invalid_Handshake: Token_Missing
-                    </span>
-                  </div>
-                )}
-
-                <Link
-                  href="/login"
-                  className="font-mono text-[11px] uppercase text-white/20 hover:text-white transition-colors tracking-widest text-center mt-2"
-                >
-                  Abort_Process
-                </Link>
+              </form>
+            ) : (
+              <div className="text-center py-4 space-y-4">
+                <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-xl">
+                  <FaCheckCircle />
+                </div>
+                <h3 className="text-lg font-bold text-neutral-900">Password Updated!</h3>
+                <p className="text-sm text-neutral-600 leading-relaxed">
+                  Your password has been changed successfully. Redirecting you to sign in...
+                </p>
+                <div className="pt-2">
+                  <Link
+                    href="/login"
+                    className="inline-flex items-center gap-2 text-sm font-bold text-[#7c3aed] hover:text-[#6d28d9]"
+                  >
+                    <span>Go to Sign In immediately</span>
+                    <FaArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
               </div>
-            </form>
+            )}
+
+            <div className="mt-8 pt-6 border-t border-neutral-200/80 text-center">
+              <Link
+                href="/login"
+                className="text-sm font-semibold text-neutral-600 hover:text-neutral-900 transition-colors"
+              >
+                Back to Sign In
+              </Link>
+            </div>
           </div>
-        </AccessGate>
-      </motion.div>
-    </CinematicPageShell>
+        </motion.div>
+      </div>
+    </StudioLayout>
   );
 }

@@ -81,10 +81,19 @@ function AppContent() {
     location.startsWith("/about") ||
     location === "/who-we-are" ||
     location === "/what-we-do" ||
-    location === "/mission-and-vision";
+    location === "/mission-and-vision" ||
+    location === "/login" ||
+    location === "/register" ||
+    location === "/forgot-password" ||
+    location === "/reset-password" ||
+    location === "/verify";
 
   return (
-    <div className="min-h-screen bg-white text-[#1d1d1f] selection:bg-neutral-200 selection:text-black overflow-x-hidden">
+    <div
+      className={`min-h-screen ${
+        isStudioPage ? "bg-white text-[#1d1d1f]" : "bg-[#020408] text-white"
+      } selection:bg-neutral-200 selection:text-black overflow-x-hidden`}
+    >
       <HUDFilters />
       <SystemToastContainer />
       {!isStudioPage && (
