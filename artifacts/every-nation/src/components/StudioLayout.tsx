@@ -56,85 +56,54 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
       {/* ── Unified Top Navigation Bar (Identical to Home page) ─────────────── */}
       <HomeHeroNav />
 
-      {/* ── Sub-Page Navigation Bar (Rendered when in /about) ── */}
-      {location === "/about" && (
+      {/* ── Sub-Page Navigation Bar (Rendered for About pages) ── */}
+      {(location.startsWith("/about") ||
+        location === "/who-we-are" ||
+        location === "/what-we-do" ||
+        location === "/mission-and-vision") && (
         <div className="shrink-0 bg-[#f5f5f7] border-b border-neutral-200/80 py-2.5 px-4 sm:px-6 text-xs font-medium text-neutral-600 overflow-x-auto sticky top-16 z-30 backdrop-blur-md bg-white/90 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-          <div className="max-w-7xl mx-auto flex items-center gap-4 sm:gap-6 min-w-max">
+          <div className="max-w-7xl mx-auto flex items-center gap-3 sm:gap-4 min-w-max">
             <span className="text-neutral-400 font-bold uppercase tracking-wider text-[10px]">About:</span>
             <button
               onClick={() => {
-                setLocation("/about");
+                setLocation("/about/who-we-are");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className="text-neutral-900 font-bold underline whitespace-nowrap"
+              className={`px-3 py-1 rounded-full transition-all whitespace-nowrap ${
+                location === "/about" ||
+                location === "/about/who-we-are" ||
+                location === "/who-we-are"
+                  ? "bg-[#7c3aed] text-white font-bold shadow-xs"
+                  : "hover:text-neutral-900 hover:bg-neutral-200/50"
+              }`}
             >
-              Overview
+              1. Who We Are
             </button>
             <button
               onClick={() => {
-                const el = document.getElementById("principles");
-                el?.scrollIntoView({ behavior: "smooth" });
+                setLocation("/about/what-we-do");
+                window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className="hover:text-neutral-900 whitespace-nowrap"
+              className={`px-3 py-1 rounded-full transition-all whitespace-nowrap ${
+                location === "/about/what-we-do" || location === "/what-we-do"
+                  ? "bg-[#7c3aed] text-white font-bold shadow-xs"
+                  : "hover:text-neutral-900 hover:bg-neutral-200/50"
+              }`}
             >
-              Core Principles
+              2. What We Do
             </button>
             <button
-              onClick={() => setLocation("/services")}
-              className="hover:text-neutral-900 whitespace-nowrap"
+              onClick={() => {
+                setLocation("/about/mission-and-vision");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className={`px-3 py-1 rounded-full transition-all whitespace-nowrap ${
+                location === "/about/mission-and-vision" || location === "/mission-and-vision"
+                  ? "bg-[#7c3aed] text-white font-bold shadow-xs"
+                  : "hover:text-neutral-900 hover:bg-neutral-200/50"
+              }`}
             >
-              Services
-            </button>
-            <button
-              onClick={() => setLocation("/estimate")}
-              className="hover:text-neutral-900 whitespace-nowrap"
-            >
-              Builder Tool
-            </button>
-            <button
-              onClick={() => setLocation("/contact")}
-              className="hover:text-neutral-900 whitespace-nowrap"
-            >
-              Contact
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── Sub-Page Navigation Bar (Rendered when in /services or sub-pages) ── */}
-      {location.startsWith("/services") && (
-        <div className="shrink-0 bg-[#f5f5f7] border-b border-neutral-200/80 py-2.5 px-4 sm:px-6 text-xs font-medium text-neutral-600 overflow-x-auto sticky top-16 z-30 backdrop-blur-md bg-white/90 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-          <div className="max-w-7xl mx-auto flex items-center gap-4 sm:gap-6 min-w-max">
-            <span className="text-neutral-400 font-bold uppercase tracking-wider text-[10px]">Services:</span>
-            <button
-              onClick={() => setLocation("/services")}
-              className={`hover:text-neutral-900 whitespace-nowrap ${location === "/services" ? "text-neutral-900 font-bold underline" : ""}`}
-            >
-              Overview
-            </button>
-            <button
-              onClick={() => setLocation("/services/websites")}
-              className={`hover:text-neutral-900 whitespace-nowrap ${location === "/services/websites" ? "text-neutral-900 font-bold underline" : ""}`}
-            >
-              Websites
-            </button>
-            <button
-              onClick={() => setLocation("/services/web-apps")}
-              className={`hover:text-neutral-900 whitespace-nowrap ${location === "/services/web-apps" ? "text-neutral-900 font-bold underline" : ""}`}
-            >
-              Web Apps & SaaS
-            </button>
-            <button
-              onClick={() => setLocation("/services/realtime-engines")}
-              className={`hover:text-neutral-900 whitespace-nowrap ${location === "/services/realtime-engines" ? "text-neutral-900 font-bold underline" : ""}`}
-            >
-              Real-Time Engines
-            </button>
-            <button
-              onClick={() => setLocation("/services/custom-tools")}
-              className={`hover:text-neutral-900 whitespace-nowrap ${location === "/services/custom-tools" ? "text-neutral-900 font-bold underline" : ""}`}
-            >
-              Custom Tools
+              3. Mission & Vision
             </button>
           </div>
         </div>

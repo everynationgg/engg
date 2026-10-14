@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaDiscord, FaCompass, FaBriefcase, FaGamepad, FaCode, FaRocket, FaTools } from "react-icons/fa";
+import { FaDiscord, FaCompass, FaGamepad, FaCode, FaRocket, FaTools, FaUsers } from "react-icons/fa";
 import HomeHeroNav from "@/components/home/HomeHeroNav";
 import HomeValueDock from "@/components/home/HomeValueDock";
 
@@ -39,11 +39,11 @@ export default function Home() {
           hasBadge: true,
         },
         {
-          label: "WORK WITH US",
-          icon: FaBriefcase,
-          iconColor: "text-[#f97316]",
+          label: "WHO WE ARE",
+          icon: FaUsers,
+          iconColor: "text-[#7c3aed]",
           style: "glass-white",
-          action: () => setLocation("/contact"),
+          action: () => setLocation("/about/who-we-are"),
           hasBadge: false,
         },
       ],
@@ -95,25 +95,25 @@ export default function Home() {
         "Smarter systems, better experiences, endless possibilities. Interactive product configurators, step-by-step logic builders, and automated utilities.",
       buttons: [
         {
-          label: "OPEN BUILDER TOOL",
-          icon: FaTools,
+          label: "VISIEN DISCOVERY",
+          icon: FaRocket,
           style: "primary-purple",
-          action: () => setLocation("/estimate"),
+          action: () => window.open("https://visien-gray.vercel.app/", "_blank", "noopener,noreferrer"),
           hasBadge: true,
         },
         {
-          label: "CUSTOM TOOLS MATRIX",
-          icon: FaCode,
+          label: "WHAT WE DO",
+          icon: FaTools,
           style: "glass-white",
-          action: () => setLocation("/services/custom-tools"),
+          action: () => setLocation("/about/what-we-do"),
           hasBadge: true,
         },
         {
-          label: "WORK WITH US",
-          icon: FaBriefcase,
-          iconColor: "text-[#f97316]",
+          label: "JOIN DISCORD",
+          icon: FaDiscord,
+          iconColor: "text-[#5865F2]",
           style: "glass-white",
-          action: () => setLocation("/contact"),
+          action: () => window.open("https://discord.gg/everynation", "_blank", "noopener,noreferrer"),
           hasBadge: false,
         },
       ],
@@ -130,25 +130,25 @@ export default function Home() {
         "Web. Mobile. Scalable. Built for the future. We architect production SaaS dashboards, bespoke web applications, high-performance APIs, and modern digital tools.",
       buttons: [
         {
-          label: "START A PROJECT",
-          icon: FaBriefcase,
+          label: "WHAT WE DO",
+          icon: FaRocket,
           style: "primary-purple",
-          action: () => setLocation("/contact"),
+          action: () => setLocation("/about/what-we-do"),
           hasBadge: true,
         },
         {
-          label: "BUILDER ESTIMATOR",
+          label: "LAUNCH VISIEN",
           icon: FaTools,
           style: "glass-white",
-          action: () => setLocation("/estimate"),
+          action: () => window.open("https://visien-gray.vercel.app/", "_blank", "noopener,noreferrer"),
           hasBadge: true,
         },
         {
-          label: "SERVICES MATRIX",
-          icon: FaCode,
-          iconColor: "text-[#f97316]",
+          label: "CENTRAL GAMING HUB",
+          icon: FaGamepad,
+          iconColor: "text-[#7c3aed]",
           style: "glass-white",
-          action: () => setLocation("/services"),
+          action: () => setLocation("/hub"),
           hasBadge: false,
         },
       ],
@@ -218,7 +218,7 @@ export default function Home() {
 
       {/* ── 2. Center Stage with Extended Dual-Zone Studio Backdrop ───────── */}
       <main
-        className="flex-1 relative flex flex-col justify-end items-center px-4 sm:px-6 pb-1 sm:pb-1.5 lg:pb-2 2xl:pb-2 select-none bg-no-repeat bg-white bg-cover bg-[position:center_-25px] lg:bg-[position:center_-45px] 2xl:bg-[position:center_-50px] min-h-[500px] sm:min-h-[540px] lg:min-h-0"
+        className="flex-1 relative flex flex-col justify-end items-center px-4 sm:px-6 pb-1 sm:pb-1.5 lg:pb-2 2xl:pb-2 select-none bg-no-repeat bg-white bg-cover bg-[position:center_22px] sm:bg-[position:center_top] lg:bg-[position:center_-45px] 2xl:bg-[position:center_-50px] min-h-[500px] sm:min-h-[540px] lg:min-h-0"
         style={{
           backgroundImage: `url('/images/home/home-dual-studio-master.jpg?v=5')`,
         }}

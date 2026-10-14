@@ -13,13 +13,9 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 
 const About = lazy(() => import("@/pages/About"));
-const ServicesPage = lazy(() => import("@/pages/ServicesPage"));
-const ServiceWebsites = lazy(() => import("@/pages/ServiceWebsites"));
-const ServiceWebApps = lazy(() => import("@/pages/ServiceWebApps"));
-const ServiceRealtime = lazy(() => import("@/pages/ServiceRealtime"));
-const ServiceCustomTools = lazy(() => import("@/pages/ServiceCustomTools"));
-const Estimator = lazy(() => import("@/pages/Estimator"));
-const ContactPage = lazy(() => import("@/pages/ContactPage"));
+const WhoWeAre = lazy(() => import("@/pages/about/WhoWeAre"));
+const WhatWeDo = lazy(() => import("@/pages/about/WhatWeDo"));
+const MissionVision = lazy(() => import("@/pages/about/MissionVision"));
 
 const Shop = lazy(() => import("@/pages/Shop"));
 const Login = lazy(() => import("@/pages/Login"));
@@ -57,13 +53,12 @@ function Router() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/about" component={About} />
-        <Route path="/services" component={ServicesPage} />
-        <Route path="/services/websites" component={ServiceWebsites} />
-        <Route path="/services/web-apps" component={ServiceWebApps} />
-        <Route path="/services/realtime-engines" component={ServiceRealtime} />
-        <Route path="/services/custom-tools" component={ServiceCustomTools} />
-        <Route path="/estimate" component={Estimator} />
-        <Route path="/contact" component={ContactPage} />
+        <Route path="/about/who-we-are" component={WhoWeAre} />
+        <Route path="/about/what-we-do" component={WhatWeDo} />
+        <Route path="/about/mission-and-vision" component={MissionVision} />
+        <Route path="/who-we-are" component={WhoWeAre} />
+        <Route path="/what-we-do" component={WhatWeDo} />
+        <Route path="/mission-and-vision" component={MissionVision} />
         <Route path="/hub" component={Hub} />
         <Route path="/shop" component={ShopRoute} />
         <Route path="/login" component={LoginRoute} />
@@ -83,10 +78,10 @@ function AppContent() {
   const isStudioPage =
     location === "/" ||
     location === "" ||
-    location === "/about" ||
-    location.startsWith("/services") ||
-    location === "/estimate" ||
-    location === "/contact";
+    location.startsWith("/about") ||
+    location === "/who-we-are" ||
+    location === "/what-we-do" ||
+    location === "/mission-and-vision";
 
   return (
     <div className="min-h-screen bg-white text-[#1d1d1f] selection:bg-neutral-200 selection:text-black overflow-x-hidden">
