@@ -218,36 +218,36 @@ export default function Home() {
 
       {/* ── 2. Center Stage with Extended Dual-Zone Studio Backdrop ───────── */}
       <main
-        className="flex-1 relative flex flex-col justify-end items-center px-4 sm:px-6 pb-2.5 sm:pb-3 lg:pb-3.5 2xl:pb-8 select-none bg-no-repeat bg-white bg-cover bg-[position:center_14%] 2xl:bg-[position:center_16%] min-h-[500px] sm:min-h-[540px] lg:min-h-0"
+        className="flex-1 relative flex flex-col justify-end items-center px-4 sm:px-6 pb-1 sm:pb-1.5 lg:pb-2 2xl:pb-2 select-none bg-no-repeat bg-white bg-cover bg-[position:center_-25px] lg:bg-[position:center_-45px] 2xl:bg-[position:center_-50px] min-h-[500px] sm:min-h-[540px] lg:min-h-0"
         style={{
           backgroundImage: `url('/images/home/home-dual-studio-master.jpg?v=5')`,
         }}
       >
-        {/* ── Swipeable / Draggable Stage Content ───────────────────────── */}
+        {/* ── Swipeable / Draggable Stage Content (Pure Floating, Zero White Box) ── */}
         <div className="relative z-10 max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl w-full mx-auto flex flex-col items-center text-center mt-auto">
-          {/* ── The 5 Pagination Dots (Drag indicator) ─────────────────── */}
-          <div className="flex items-center gap-1.5 2xl:gap-2 mb-1.5 sm:mb-2 2xl:mb-3 bg-white/85 backdrop-blur-md px-3 2xl:px-4 py-0.5 2xl:py-1 rounded-full border border-neutral-200/80 shadow-xs">
+          {/* ── The 4 Pagination Dots Pill (Compact Indicator) ───────────── */}
+          <div className="flex items-center gap-1.5 2xl:gap-2 mb-1 sm:mb-1.5 bg-white/85 backdrop-blur-md px-2.5 2xl:px-3 py-0.5 rounded-full border border-neutral-200/80 shadow-2xs">
             {slides.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => handleGoTo(idx)}
                 aria-label={`Go to slide ${idx + 1}`}
-                className={`h-1.5 sm:h-2 2xl:h-2.5 rounded-full transition-all duration-300 ${
+                className={`h-1.5 sm:h-1.5 2xl:h-2 rounded-full transition-all duration-300 ${
                   activeIdx === idx
-                    ? "w-5 sm:w-6 2xl:w-8 bg-[#f97316] shadow-xs"
-                    : "w-1.5 sm:w-2 2xl:w-2.5 bg-neutral-300 hover:bg-neutral-400"
+                    ? "w-4 sm:w-5 2xl:w-6 bg-[#f97316] shadow-xs"
+                    : "w-1.5 sm:w-1.5 2xl:w-2 bg-neutral-300 hover:bg-neutral-400"
                 }`}
               />
             ))}
           </div>
 
-          {/* Interactive Drag & Swipe Card */}
+          {/* Interactive Drag & Swipe Floating Content */}
           <motion.div
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.15}
             onDragEnd={handleDragEnd}
-            className="w-full cursor-grab active:cursor-grabbing focus:outline-none"
+            className="w-full cursor-grab active:cursor-grabbing focus:outline-none flex flex-col items-center"
           >
             <AnimatePresence mode="wait" custom={direction}>
               <motion.div
@@ -260,12 +260,12 @@ export default function Home() {
                 className="w-full flex flex-col items-center"
               >
                 {/* Spaced Eyebrow Title */}
-                <span className="text-[10px] sm:text-xs 2xl:text-sm font-semibold tracking-[0.25em] text-neutral-600 mb-1 2xl:mb-1.5 uppercase">
+                <span className="text-[9px] sm:text-[10px] 2xl:text-xs font-semibold tracking-[0.25em] text-neutral-600 mb-0.5 2xl:mb-1 uppercase drop-shadow-[0_1px_1px_rgba(255,255,255,0.9)]">
                   {currentSlide.eyebrow}
                 </span>
 
                 {/* Triple-Value Proposition Headline (Single line at all viewports, zero EN icon overlap) */}
-                <h1 className="text-[clamp(1.1rem,2.8vw+0.4rem,3.85rem)] font-black tracking-tight leading-none mb-1.5 sm:mb-2 2xl:mb-3 flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2 lg:gap-2.5 whitespace-nowrap">
+                <h1 className="text-[clamp(1.1rem,1.8vw+0.2rem,2.45rem)] font-black tracking-tight leading-none mb-1 sm:mb-1.5 2xl:mb-1.5 flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2 lg:gap-2 whitespace-nowrap drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]">
                   {currentSlide.headlineParts.map((part, i) => (
                     <span key={i} className={part.color}>
                       {part.text}
@@ -274,14 +274,14 @@ export default function Home() {
                 </h1>
 
                 {/* Mission Subtitle */}
-                <p className="text-xs sm:text-[13px] 2xl:text-base text-neutral-600 font-normal max-w-md sm:max-w-lg lg:max-w-xl 2xl:max-w-2xl mx-auto leading-relaxed mb-2.5 sm:mb-3 lg:mb-3.5 2xl:mb-5">
+                <p className="text-[11px] sm:text-xs 2xl:text-[13px] text-neutral-700 font-medium max-w-md sm:max-w-lg lg:max-w-xl mx-auto leading-normal mb-2 sm:mb-2.5 2xl:mb-3 drop-shadow-[0_1px_1px_rgba(255,255,255,0.9)]">
                   {currentSlide.subtitle}
                 </p>
 
                 {/* 3 Action Pill Buttons */}
                 <div
                   onPointerDown={(e) => e.stopPropagation()}
-                  className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3.5 2xl:gap-4 w-full"
+                  className="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5 2xl:gap-3 w-full"
                 >
                   {currentSlide.buttons.map((btn, bIdx) => {
                     const Icon = btn.icon;
@@ -291,16 +291,16 @@ export default function Home() {
                       <button
                         key={bIdx}
                         onClick={btn.action}
-                        className={`min-h-[40px] sm:min-h-[44px] 2xl:min-h-[50px] px-4.5 sm:px-5.5 2xl:px-7 py-2 2xl:py-3 rounded-full text-xs 2xl:text-sm font-bold uppercase tracking-wider transition-all duration-200 shadow-md active:scale-95 flex items-center justify-center gap-2 ${
+                        className={`min-h-[36px] sm:min-h-[38px] 2xl:min-h-[42px] px-4 sm:px-5 2xl:px-6 py-1.5 2xl:py-2 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider transition-all duration-200 shadow-md active:scale-95 flex items-center justify-center gap-2 ${
                           isPrimary
                             ? "bg-[#7c3aed] hover:bg-[#6d28d9] text-white shadow-[#7c3aed]/20"
                             : "bg-white/90 hover:bg-white text-neutral-800 border border-neutral-200/90 hover:border-neutral-300 shadow-sm"
                         }`}
                       >
-                        <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 2xl:w-4.5 2xl:h-4.5 ${btn.iconColor || (isPrimary ? "text-white" : "text-neutral-700")}`} />
+                        <Icon className={`w-3.5 h-3.5 sm:w-3.5 sm:h-3.5 2xl:w-4 2xl:h-4 ${btn.iconColor || (isPrimary ? "text-white" : "text-neutral-700")}`} />
                         <span>{btn.label}</span>
                         {btn.hasBadge && (
-                          <span className={`text-[10px] 2xl:text-xs ${isPrimary ? "text-white/80" : "text-neutral-400"}`}>
+                          <span className={`text-[9px] 2xl:text-[10px] ${isPrimary ? "text-white/80" : "text-neutral-400"}`}>
                             ⬡
                           </span>
                         )}

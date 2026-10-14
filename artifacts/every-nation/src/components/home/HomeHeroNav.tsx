@@ -123,7 +123,7 @@ export default function HomeHeroNav() {
   return (
     <>
       <header className="shrink-0 w-full bg-white/90 backdrop-blur-md border-b border-neutral-200/80 z-40 sticky top-0 transition-all">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <div className="max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 2xl:px-10 h-16 flex items-center justify-between">
           {/* Brand Logo - Preserves existing official ENGG logo */}
           <div className="flex items-center gap-3">
             <button
