@@ -1,5 +1,5 @@
 import { Switch, Route, useLocation, Router as WouterRouter } from "wouter";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import Home from "@/pages/Home";
 import { AuthProvider } from "@/hooks/useAuth";
 
@@ -19,7 +19,6 @@ const MissionVision = lazy(() => import("@/pages/about/MissionVision"));
 
 const Shop = lazy(() => import("@/pages/Shop"));
 const Marketplace = lazy(() => import("@/pages/Marketplace"));
-const Visien = lazy(() => import("@/pages/Visien"));
 const Login = lazy(() => import("@/pages/Login"));
 const Register = lazy(() => import("@/pages/Register"));
 const Profile = lazy(() => import("@/pages/Profile"));
@@ -30,7 +29,19 @@ const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 const Navbar = lazy(() => import("@/components/Navbar"));
 const AlliesSidebar = lazy(() => import("@/components/AlliesSidebar"));
-import VisienFloatingWidget from "@/components/visien/VisienFloatingWidget";
+
+function VisienRedirect() {
+  useEffect(() => {
+    window.location.replace("https://visien-gray.vercel.app/");
+  }, []);
+  return (
+    <div className="min-h-[40vh] flex items-center justify-center px-6 text-center">
+      <p className="font-sans text-xs uppercase tracking-widest text-neutral-500">
+        Redirecting to VISIEN...
+      </p>
+    </div>
+  );
+}
 
 const ShopRoute = SHOP_ENABLED ? Shop : ShopOffline;
 const LoginRoute = AUTH_PUBLIC_ACCESS_ENABLED ? Login : AuthAccessPaused;
@@ -63,7 +74,8 @@ function Router() {
         <Route path="/what-we-do" component={WhatWeDo} />
         <Route path="/mission-and-vision" component={MissionVision} />
         <Route path="/marketplace" component={Marketplace} />
-        <Route path="/visien" component={Visien} />
+        <Route path="/visien" component={VisienRedirect} />
+        <Route path="/visein" component={VisienRedirect} />
         <Route path="/hub" component={Hub} />
         <Route path="/shop" component={ShopRoute} />
         <Route path="/login" component={LoginRoute} />
@@ -103,7 +115,6 @@ function AppContent() {
     >
       <HUDFilters />
       <SystemToastContainer />
-      <VisienFloatingWidget />
       {!isStudioPage && (
         <Suspense fallback={null}>
           <Navbar />
