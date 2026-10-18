@@ -232,11 +232,10 @@ export default function Home() {
                 key={idx}
                 onClick={() => handleGoTo(idx)}
                 aria-label={`Go to slide ${idx + 1}`}
-                className={`h-1.5 sm:h-1.5 2xl:h-2 rounded-full transition-all duration-300 ${
-                  activeIdx === idx
+                className={`h-1.5 sm:h-1.5 2xl:h-2 rounded-full transition-all duration-300 ${activeIdx === idx
                     ? "w-4 sm:w-5 2xl:w-6 bg-[#f97316] shadow-xs"
                     : "w-1.5 sm:w-1.5 2xl:w-2 bg-neutral-300 hover:bg-neutral-400"
-                }`}
+                  }`}
               />
             ))}
           </div>
@@ -291,11 +290,10 @@ export default function Home() {
                       <button
                         key={bIdx}
                         onClick={btn.action}
-                        className={`min-h-[36px] sm:min-h-[38px] 2xl:min-h-[42px] px-4 sm:px-5 2xl:px-6 py-1.5 2xl:py-2 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider transition-all duration-200 shadow-md active:scale-95 flex items-center justify-center gap-2 ${
-                          isPrimary
+                        className={`min-h-[36px] sm:min-h-[38px] 2xl:min-h-[42px] px-4 sm:px-5 2xl:px-6 py-1.5 2xl:py-2 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider transition-all duration-200 shadow-md active:scale-95 flex items-center justify-center gap-2 ${isPrimary
                             ? "bg-[#7c3aed] hover:bg-[#6d28d9] text-white shadow-[#7c3aed]/20"
                             : "bg-white/90 hover:bg-white text-neutral-800 border border-neutral-200/90 hover:border-neutral-300 shadow-sm"
-                        }`}
+                          }`}
                       >
                         <Icon className={`w-3.5 h-3.5 sm:w-3.5 sm:h-3.5 2xl:w-4 2xl:h-4 ${btn.iconColor || (isPrimary ? "text-white" : "text-neutral-700")}`} />
                         <span>{btn.label}</span>

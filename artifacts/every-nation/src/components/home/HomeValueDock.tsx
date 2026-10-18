@@ -1,6 +1,6 @@
 import React from "react";
 import { useLocation } from "wouter";
-import { FaUsers, FaGamepad, FaBrain, FaCode } from "react-icons/fa";
+import { FaUsers, FaGamepad, FaRobot, FaStore } from "react-icons/fa";
 import SiteSubFooter from "@/components/common/SiteSubFooter";
 
 interface HomeValueDockProps {
@@ -18,6 +18,7 @@ export default function HomeValueDock({ activeSlide, onSelectSlide }: HomeValueD
       desc: "Connect, play, and grow with gamers worldwide.",
       icon: FaUsers,
       slideIndex: 0,
+      badge: "Social",
       linkAction: () => onSelectSlide(0),
     },
     {
@@ -26,23 +27,26 @@ export default function HomeValueDock({ activeSlide, onSelectSlide }: HomeValueD
       desc: "All games. All players. One epic experience.",
       icon: FaGamepad,
       slideIndex: 1,
-      linkAction: () => onSelectSlide(1),
+      badge: "Portal",
+      linkAction: () => setLocation("/hub"),
     },
     {
       id: "ai",
-      title: "AI & AUTOMATION",
-      desc: "Smarter systems, better experiences, endless possibilities.",
-      icon: FaBrain,
+      title: "AI & VISIEN",
+      desc: "AI consultation, idea-to-blueprint & project tracker.",
+      icon: FaRobot,
       slideIndex: 2,
-      linkAction: () => onSelectSlide(2),
+      badge: "VISIEN AI",
+      linkAction: () => window.open("https://visien-gray.vercel.app/", "_blank", "noopener,noreferrer"),
     },
     {
       id: "solutions",
-      title: "SOFTWARE SOLUTIONS",
-      desc: "Web. Mobile. Scalable. Built for the future.",
-      icon: FaCode,
+      title: "SOFTWARE & APK STORE",
+      desc: "Direct mobile APKs, web apps & bespoke software.",
+      icon: FaStore,
       slideIndex: 3,
-      linkAction: () => onSelectSlide(3),
+      badge: "Marketplace",
+      linkAction: () => setLocation("/marketplace"),
     },
   ];
 

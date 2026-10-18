@@ -17,6 +17,26 @@
       "source": "/end/:path*",
       "destination": "/errant-night/:path*",
       "permanent": false
+    },
+    {
+      "source": "/visien",
+      "destination": "https://visien-gray.vercel.app/",
+      "permanent": false
+    },
+    {
+      "source": "/visien/:path*",
+      "destination": "https://visien-gray.vercel.app/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/visein",
+      "destination": "https://visien-gray.vercel.app/",
+      "permanent": false
+    },
+    {
+      "source": "/visein/:path*",
+      "destination": "https://visien-gray.vercel.app/:path*",
+      "permanent": false
     }
   ],
   "rewrites": [

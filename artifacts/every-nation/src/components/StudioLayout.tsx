@@ -61,7 +61,7 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
         location === "/who-we-are" ||
         location === "/what-we-do" ||
         location === "/mission-and-vision") && (
-        <div className="shrink-0 bg-[#f5f5f7] border-b border-neutral-200/80 py-2.5 px-4 sm:px-6 text-xs font-medium text-neutral-600 overflow-x-auto sticky top-16 z-30 backdrop-blur-md bg-white/90 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className="shrink-0 bg-white/90 backdrop-blur-md border-b border-neutral-200/80 shadow-2xs py-2.5 px-4 sm:px-6 text-xs font-medium text-neutral-600 overflow-x-auto sticky top-16 z-30 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           <div className="max-w-7xl mx-auto flex items-center gap-3 sm:gap-4 min-w-max">
             <span className="text-neutral-400 font-bold uppercase tracking-wider text-[10px]">About:</span>
             <button
