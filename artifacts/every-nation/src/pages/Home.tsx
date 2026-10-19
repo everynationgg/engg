@@ -218,13 +218,13 @@ export default function Home() {
 
       {/* ── 2. Center Stage with Extended Dual-Zone Studio Backdrop ───────── */}
       <main
-        className="flex-1 relative flex flex-col justify-end items-center px-4 sm:px-6 pb-1 sm:pb-1.5 lg:pb-2 2xl:pb-2 select-none bg-no-repeat bg-white bg-cover bg-[position:center_22px] sm:bg-[position:center_top] lg:bg-[position:center_-42px] 2xl:bg-[position:center_-120px] min-[2200px]:bg-[position:center_-200px] min-h-[500px] sm:min-h-[540px] lg:min-h-0"
+        className="flex-1 relative flex flex-col justify-end items-center px-4 sm:px-6 pb-1 sm:pb-1.5 lg:pb-2 2xl:pb-2 select-none home-stage-backdrop min-h-[500px] sm:min-h-[540px] lg:min-h-0"
         style={{
-          backgroundImage: `url('/images/home/home-dual-studio-master.webp?v=13')`,
+          backgroundImage: `url('/images/home/home-dual-studio-master.webp?v=15')`,
         }}
       >
         {/* Soft floor ambient gradient to ensure crystal-clear text readability over floor reflections */}
-        <div className="absolute inset-x-0 bottom-0 h-44 sm:h-52 bg-gradient-to-t from-white via-white/50 to-transparent pointer-events-none z-0" />
+        <div className="absolute inset-x-0 bottom-0 h-48 sm:h-56 lg:h-64 2xl:h-80 bg-gradient-to-t from-white via-white/60 to-transparent pointer-events-none z-0" />
 
         {/* ── Swipeable / Draggable Stage Content (Pure Floating, Zero White Box) ── */}
         <div className="relative z-10 max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl w-full mx-auto flex flex-col items-center text-center mt-auto">

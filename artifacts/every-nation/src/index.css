@@ -205,3 +205,79 @@ input::placeholder {
   90% { opacity: 1; }
   100% { transform: translateY(500%); opacity: 0; }
 }
+
+/* ============= HOME CENTER STAGE BACKDROP ============= */
+.home-stage-backdrop {
+  background-repeat: no-repeat;
+  background-color: #ffffff;
+  background-size: cover;
+  background-position: center 22px;
+}
+
+@media (min-width: 640px) {
+  .home-stage-backdrop {
+    background-position: center top;
+  }
+}
+
+@media (min-width: 1024px) {
+  .home-stage-backdrop {
+    background-position: center -45px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .home-stage-backdrop {
+    background-position: center -80px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .home-stage-backdrop {
+    background-position: center -140px;
+  }
+}
+
+@media (min-width: 1700px) {
+  .home-stage-backdrop {
+    background-position: center -180px;
+  }
+}
+
+@media (min-width: 2000px) {
+  .home-stage-backdrop {
+    background-position: center -230px;
+  }
+}
+
+@media (min-width: 2400px) {
+  .home-stage-backdrop {
+    background-position: center -280px;
+  }
+}
+
+/* Wide / Ultrawide viewports (ratio >= 1.6) where width is larger relative to height */
+@media (min-width: 1400px) and (min-aspect-ratio: 16/10) {
+  .home-stage-backdrop {
+    background-position: center -130px;
+  }
+}
+
+@media (min-width: 1700px) and (min-aspect-ratio: 16/10) {
+  .home-stage-backdrop {
+    background-position: center -200px;
+  }
+}
+
+@media (min-width: 2000px) and (min-aspect-ratio: 16/10) {
+  .home-stage-backdrop {
+    background-position: center -260px;
+  }
+}
+
+@media (min-width: 2400px) and (min-aspect-ratio: 16/10) {
+  .home-stage-backdrop {
+    background-position: center -310px;
+  }
+}
+
