@@ -24,7 +24,6 @@ import {
   Eye,
   EyeOff,
   ShoppingBag,
-  ArrowLeft,
   RefreshCw,
   Clock,
   Activity as ActivityIcon,
@@ -407,17 +406,7 @@ export default function Profile() {
               </div>
 
               {/* Footer */}
-              <div className="p-4 border-t border-neutral-200 space-y-2">
-                <button
-                  onClick={() => {
-                    setMobileSidebarOpen(false);
-                    setLocation("/");
-                  }}
-                  className="w-full flex items-center space-x-2 px-3 py-2 rounded-lg text-xs font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 cursor-pointer"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Return to Home</span>
-                </button>
+              <div className="p-4 border-t border-neutral-200">
                 <button
                   onClick={handleSignOut}
                   className="w-full flex items-center space-x-2 px-3 py-2 rounded-lg text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer"
@@ -443,16 +432,17 @@ export default function Profile() {
             <div className="flex items-center justify-between">
               <button
                 onClick={() => setLocation("/")}
-                className="flex items-center space-x-2.5 hover:opacity-85 transition-opacity text-left cursor-pointer"
+                className="flex items-center space-x-2.5 hover:opacity-85 transition-opacity text-left cursor-pointer group"
                 aria-label="Every Nation GG Home"
+                title="Return to engg.online homepage"
               >
                 <img
                   src="/logo.png"
                   alt="Every Nation GG"
-                  className="h-8 w-auto object-contain shrink-0"
+                  className="h-8 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
                 />
                 <div>
-                  <div className="font-extrabold text-sm tracking-tight text-neutral-900 leading-none">
+                  <div className="font-extrabold text-sm tracking-tight text-neutral-900 leading-none group-hover:text-[#7c3aed] transition-colors">
                     EVERY NATION
                   </div>
                   <div className="text-[10px] tracking-wider text-neutral-500 uppercase font-mono mt-1">
@@ -474,14 +464,14 @@ export default function Profile() {
             <div className="flex flex-col items-center space-y-3">
               <button
                 onClick={() => setLocation("/")}
-                className="hover:opacity-85 transition-opacity cursor-pointer flex items-center justify-center"
+                className="hover:opacity-85 transition-opacity cursor-pointer flex items-center justify-center group"
                 aria-label="Every Nation GG Home"
-                title="Back to engg.online"
+                title="Return to engg.online homepage"
               >
                 <img
                   src="/logo.png"
                   alt="Every Nation GG"
-                  className="h-7 w-auto object-contain"
+                  className="h-7 w-auto object-contain group-hover:scale-105 transition-transform"
                 />
               </button>
               <button
@@ -493,17 +483,6 @@ export default function Profile() {
                 <PanelLeft className="w-5 h-5 text-neutral-600 hover:text-[#7c3aed] transition-colors" />
               </button>
             </div>
-          )}
-
-          {/* Quick link back (only when expanded) */}
-          {!isSidebarCollapsed && (
-            <button
-              onClick={() => setLocation("/")}
-              className="mt-3 flex items-center space-x-1.5 text-xs text-neutral-500 hover:text-[#7c3aed] transition-colors cursor-pointer group"
-            >
-              <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
-              <span>Back to engg.online</span>
-            </button>
           )}
         </div>
 
