@@ -218,9 +218,9 @@ export default function Home() {
 
       {/* ── 2. Center Stage with Extended Dual-Zone Studio Backdrop ───────── */}
       <main
-        className="flex-1 relative flex flex-col justify-end items-center px-4 sm:px-6 pb-1 sm:pb-1.5 lg:pb-2 2xl:pb-2 select-none bg-no-repeat bg-white bg-cover bg-[position:center_22px] sm:bg-[position:center_top] lg:bg-[position:center_-42px] 2xl:bg-[position:center_-45px] min-h-[500px] sm:min-h-[540px] lg:min-h-0"
+        className="flex-1 relative flex flex-col justify-end items-center px-4 sm:px-6 pb-1 sm:pb-1.5 lg:pb-2 2xl:pb-2 select-none bg-no-repeat bg-white bg-cover bg-[position:center_22px] sm:bg-[position:center_top] lg:bg-[position:center_-42px] 2xl:bg-[position:center_-120px] min-[2200px]:bg-[position:center_-200px] min-h-[500px] sm:min-h-[540px] lg:min-h-0"
         style={{
-          backgroundImage: `url('/images/home/home-dual-studio-master.webp?v=12')`,
+          backgroundImage: `url('/images/home/home-dual-studio-master.webp?v=13')`,
         }}
       >
         {/* Soft floor ambient gradient to ensure crystal-clear text readability over floor reflections */}
