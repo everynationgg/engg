@@ -26,6 +26,7 @@ export default function Home() {
       buttons: [
         {
           label: "JOIN DISCORD",
+          mobileLabel: "DISCORD",
           icon: FaDiscord,
           style: "primary-purple",
           action: () => window.open("https://discord.gg/everynation", "_blank", "noopener,noreferrer"),
@@ -33,6 +34,7 @@ export default function Home() {
         },
         {
           label: "EXPLORE ENOS",
+          mobileLabel: "EXPLORE ENOS",
           icon: FaCompass,
           style: "glass-white",
           action: () => setLocation("/hub"),
@@ -40,6 +42,7 @@ export default function Home() {
         },
         {
           label: "WHO WE ARE",
+          mobileLabel: "WHO WE ARE",
           icon: FaUsers,
           iconColor: "text-[#7c3aed]",
           style: "glass-white",
@@ -61,6 +64,7 @@ export default function Home() {
       buttons: [
         {
           label: "PLAY ERRANT NIGHT",
+          mobileLabel: "ERRANT NIGHT",
           icon: FaGamepad,
           style: "primary-purple",
           action: () => setLocation("/errant-night"),
@@ -68,6 +72,7 @@ export default function Home() {
         },
         {
           label: "CENTRAL GAMING HUB",
+          mobileLabel: "GAMING HUB",
           icon: FaCompass,
           style: "glass-white",
           action: () => setLocation("/hub"),
@@ -75,6 +80,7 @@ export default function Home() {
         },
         {
           label: "JOIN DISCORD",
+          mobileLabel: "DISCORD",
           icon: FaDiscord,
           iconColor: "text-[#5865F2]",
           style: "glass-white",
@@ -96,6 +102,7 @@ export default function Home() {
       buttons: [
         {
           label: "VISIEN DISCOVERY",
+          mobileLabel: "VISIEN AI",
           icon: FaRocket,
           style: "primary-purple",
           action: () => window.open("https://visien-gray.vercel.app/", "_blank", "noopener,noreferrer"),
@@ -103,6 +110,7 @@ export default function Home() {
         },
         {
           label: "WHAT WE DO",
+          mobileLabel: "WHAT WE DO",
           icon: FaTools,
           style: "glass-white",
           action: () => setLocation("/about/what-we-do"),
@@ -110,6 +118,7 @@ export default function Home() {
         },
         {
           label: "JOIN DISCORD",
+          mobileLabel: "DISCORD",
           icon: FaDiscord,
           iconColor: "text-[#5865F2]",
           style: "glass-white",
@@ -131,6 +140,7 @@ export default function Home() {
       buttons: [
         {
           label: "WHAT WE DO",
+          mobileLabel: "WHAT WE DO",
           icon: FaRocket,
           style: "primary-purple",
           action: () => setLocation("/about/what-we-do"),
@@ -138,6 +148,7 @@ export default function Home() {
         },
         {
           label: "LAUNCH VISIEN",
+          mobileLabel: "VISIEN AI",
           icon: FaTools,
           style: "glass-white",
           action: () => window.open("https://visien-gray.vercel.app/", "_blank", "noopener,noreferrer"),
@@ -145,6 +156,7 @@ export default function Home() {
         },
         {
           label: "CENTRAL GAMING HUB",
+          mobileLabel: "GAMING HUB",
           icon: FaGamepad,
           iconColor: "text-[#7c3aed]",
           style: "glass-white",
@@ -218,13 +230,13 @@ export default function Home() {
 
       {/* ── 2. Center Stage with Extended Dual-Zone Studio Backdrop ───────── */}
       <main
-        className="sm:flex-1 flex-initial relative flex flex-col justify-start sm:justify-end items-center px-2.5 sm:px-6 pt-[52vw] sm:pt-0 pb-3 sm:pb-1.5 lg:pb-1 2xl:pb-1 select-none home-stage-backdrop min-h-0 sm:min-h-[580px] lg:min-h-0"
+        className="sm:flex-1 flex-initial relative flex flex-col justify-end items-center px-2.5 sm:px-6 h-[445px] sm:h-auto pt-0 pb-2.5 sm:pb-1.5 lg:pb-1 2xl:pb-1 select-none home-stage-backdrop min-h-0 sm:min-h-[580px] lg:min-h-0"
         style={{
           backgroundImage: `url('/images/home/home-dual-studio-master.webp?v=17')`,
         }}
       >
         {/* Soft floor ambient gradient to ensure crystal-clear text readability over floor reflections */}
-        <div className="absolute inset-x-0 bottom-0 h-36 sm:h-56 lg:h-64 2xl:h-80 bg-gradient-to-t from-white via-white/60 to-transparent pointer-events-none z-0" />
+        <div className="hidden sm:block absolute inset-x-0 bottom-0 h-56 lg:h-64 2xl:h-80 bg-gradient-to-t from-white via-white/60 to-transparent pointer-events-none z-0" />
 
         {/* ── Swipeable / Draggable Stage Content (Pure Floating, Zero White Box) ── */}
         <div className="relative z-10 max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl w-full mx-auto flex flex-col items-center text-center mt-0 sm:mt-auto">
@@ -276,14 +288,14 @@ export default function Home() {
                 </h1>
 
                 {/* Mission Subtitle */}
-                <p className="text-[10px] sm:text-xs 2xl:text-[13px] text-neutral-700 font-medium max-w-xs sm:max-w-lg lg:max-w-xl mx-auto leading-normal mb-1.5 sm:mb-2.5 2xl:mb-3 drop-shadow-[0_1px_1px_rgba(255,255,255,0.9)]">
+                <p className="text-[10px] sm:text-xs 2xl:text-[13px] text-neutral-700 font-medium max-w-xs sm:max-w-lg lg:max-w-xl mx-auto leading-normal line-clamp-2 sm:line-clamp-none mb-1.5 sm:mb-2.5 2xl:mb-3 drop-shadow-[0_1px_1px_rgba(255,255,255,0.9)]">
                   {currentSlide.subtitle}
                 </p>
 
                 {/* 3 Action Pill Buttons */}
                 <div
                   onPointerDown={(e) => e.stopPropagation()}
-                  className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5 2xl:gap-3 w-full"
+                  className="flex flex-wrap items-center justify-center gap-1 sm:gap-2.5 2xl:gap-3 w-full"
                 >
                   {currentSlide.buttons.map((btn, bIdx) => {
                     const Icon = btn.icon;
@@ -299,7 +311,16 @@ export default function Home() {
                           }`}
                       >
                         <Icon className={`w-3 h-3 sm:w-3.5 sm:h-3.5 2xl:w-4 2xl:h-4 ${btn.iconColor || (isPrimary ? "text-white" : "text-neutral-700")}`} />
-                        <span>{btn.label}</span>
+                        <span>
+                          {btn.mobileLabel ? (
+                            <>
+                              <span className="inline sm:hidden">{btn.mobileLabel}</span>
+                              <span className="hidden sm:inline">{btn.label}</span>
+                            </>
+                          ) : (
+                            btn.label
+                          )}
+                        </span>
                         {btn.hasBadge && (
                           <span className={`text-[8px] sm:text-[9px] 2xl:text-[10px] ${isPrimary ? "text-white/80" : "text-neutral-400"}`}>
                             ⬡
