@@ -229,9 +229,17 @@ export default function Profile() {
     return (
       <div className="min-h-screen bg-[#f8fafc] text-neutral-900 flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white border border-neutral-200/90 rounded-3xl p-8 sm:p-10 text-center shadow-xl relative overflow-hidden">
-          <div className="w-16 h-16 rounded-2xl bg-[#7c3aed]/10 text-[#7c3aed] flex items-center justify-center mx-auto mb-6">
-            <Lock className="w-8 h-8" />
-          </div>
+          <button
+            onClick={() => setLocation("/")}
+            className="hover:opacity-85 transition-opacity mx-auto mb-6 block cursor-pointer"
+            aria-label="Every Nation GG"
+          >
+            <img
+              src="/logo.png"
+              alt="Every Nation GG"
+              className="h-12 w-auto object-contain mx-auto"
+            />
+          </button>
           <h2 className="text-2xl font-extrabold tracking-tight text-neutral-900 mb-2">
             ENGG Member Center
           </h2>
@@ -290,12 +298,20 @@ export default function Profile() {
           >
             <PanelLeft className="w-5 h-5 text-neutral-700" />
           </button>
-          <div className="flex items-center space-x-2">
-            <span className="font-extrabold tracking-tight text-neutral-900 text-base">ENGG</span>
+          <button
+            onClick={() => setLocation("/")}
+            className="flex items-center space-x-2 cursor-pointer hover:opacity-85 transition-opacity"
+            aria-label="Every Nation GG"
+          >
+            <img
+              src="/logo.png"
+              alt="Every Nation GG"
+              className="h-7 w-auto object-contain"
+            />
             <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-50 text-[#7c3aed] border border-purple-200/70">
-              Dashboard
+              Member
             </span>
-          </div>
+          </button>
         </div>
 
         <div className="flex items-center space-x-2">
@@ -332,12 +348,28 @@ export default function Profile() {
             >
               {/* Header */}
               <div className="p-4 border-b border-neutral-200 flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <span className="font-black text-lg tracking-wider text-neutral-900">ENGG</span>
-                  <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-50 text-[#7c3aed] font-bold border border-purple-200">
-                    Member
-                  </span>
-                </div>
+                <button
+                  onClick={() => {
+                    setMobileSidebarOpen(false);
+                    setLocation("/");
+                  }}
+                  className="flex items-center space-x-2.5 text-left cursor-pointer hover:opacity-85 transition-opacity"
+                  aria-label="Every Nation GG"
+                >
+                  <img
+                    src="/logo.png"
+                    alt="Every Nation GG"
+                    className="h-7 w-auto object-contain"
+                  />
+                  <div>
+                    <span className="font-extrabold text-sm tracking-tight text-neutral-900 leading-none block">
+                      EVERY NATION
+                    </span>
+                    <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-mono mt-0.5 block">
+                      Member Center
+                    </span>
+                  </div>
+                </button>
                 <button
                   onClick={() => setMobileSidebarOpen(false)}
                   className="p-1.5 text-neutral-500 hover:text-neutral-900 rounded-lg hover:bg-neutral-100 cursor-pointer"
@@ -406,41 +438,62 @@ export default function Profile() {
         }`}
       >
         {/* Brand Header */}
-        <div className={`border-b border-neutral-200/80 ${isSidebarCollapsed ? "p-4" : "p-5"}`}>
-          <div className="flex items-center justify-between">
-            <div className={`flex items-center space-x-2.5 ${isSidebarCollapsed ? "hidden" : "flex"}`}>
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#7c3aed] to-indigo-600 flex items-center justify-center font-black text-white text-xs shadow-xs">
-                EG
-              </div>
-              <div>
-                <div className="font-extrabold text-sm tracking-tight text-neutral-900 leading-none">
-                  EVERY NATION
+        <div className={`border-b border-neutral-200/80 ${isSidebarCollapsed ? "py-4 px-2" : "p-5"}`}>
+          {!isSidebarCollapsed ? (
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => setLocation("/")}
+                className="flex items-center space-x-2.5 hover:opacity-85 transition-opacity text-left cursor-pointer"
+                aria-label="Every Nation GG Home"
+              >
+                <img
+                  src="/logo.png"
+                  alt="Every Nation GG"
+                  className="h-8 w-auto object-contain shrink-0"
+                />
+                <div>
+                  <div className="font-extrabold text-sm tracking-tight text-neutral-900 leading-none">
+                    EVERY NATION
+                  </div>
+                  <div className="text-[10px] tracking-wider text-neutral-500 uppercase font-mono mt-1">
+                    Member Center
+                  </div>
                 </div>
-                <div className="text-[10px] tracking-wider text-neutral-500 uppercase font-mono mt-1">
-                  Member Center
-                </div>
-              </div>
+              </button>
+
+              <button
+                onClick={toggleSidebar}
+                className="p-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors cursor-pointer"
+                title="Collapse Sidebar"
+                aria-label="Collapse Sidebar"
+              >
+                <PanelLeft className="w-5 h-5 text-neutral-600 hover:text-[#7c3aed] transition-colors" />
+              </button>
             </div>
-
-            {/* In collapsed mode: mini logo icon */}
-            {isSidebarCollapsed && (
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#7c3aed] to-indigo-600 flex items-center justify-center font-black text-white text-xs shadow-xs mx-auto">
-                EG
-              </div>
-            )}
-
-            {/* The PanelLeft Toggle Button */}
-            <button
-              onClick={toggleSidebar}
-              className={`p-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors cursor-pointer ${
-                isSidebarCollapsed ? "mt-3 mx-auto block" : ""
-              }`}
-              title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-              aria-label={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-            >
-              <PanelLeft className="w-5 h-5 text-neutral-600 hover:text-[#7c3aed] transition-colors" />
-            </button>
-          </div>
+          ) : (
+            <div className="flex flex-col items-center space-y-3">
+              <button
+                onClick={() => setLocation("/")}
+                className="hover:opacity-85 transition-opacity cursor-pointer flex items-center justify-center"
+                aria-label="Every Nation GG Home"
+                title="Back to engg.online"
+              >
+                <img
+                  src="/logo.png"
+                  alt="Every Nation GG"
+                  className="h-7 w-auto object-contain"
+                />
+              </button>
+              <button
+                onClick={toggleSidebar}
+                className="p-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors cursor-pointer"
+                title="Expand Sidebar"
+                aria-label="Expand Sidebar"
+              >
+                <PanelLeft className="w-5 h-5 text-neutral-600 hover:text-[#7c3aed] transition-colors" />
+              </button>
+            </div>
+          )}
 
           {/* Quick link back (only when expanded) */}
           {!isSidebarCollapsed && (
