@@ -10,7 +10,7 @@ export default function SiteSubFooter({ className = "" }: SiteSubFooterProps) {
 
   return (
     <div
-      className={`shrink-0 border-t border-white/5 bg-black/95 py-2.5 px-4 sm:px-6 2xl:px-10 text-[10px] 2xl:text-xs text-neutral-400 select-none z-30 ${className}`}
+      className={`shrink-0 border-t border-white/5 bg-black/95 pt-2.5 pb-4 sm:py-2.5 px-4 sm:px-6 2xl:px-10 text-[10px] 2xl:text-xs text-neutral-400 select-none z-30 ${className}`}
     >
       <div className="max-w-7xl 2xl:max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
         {/* Left Mini Brand */}

@@ -211,73 +211,83 @@ input::placeholder {
   background-repeat: no-repeat;
   background-color: #ffffff;
   background-size: cover;
-  background-position: center 22px;
+  background-position: center top;
 }
 
 @media (min-width: 640px) {
   .home-stage-backdrop {
+    background-size: cover;
     background-position: center top;
   }
 }
 
 @media (min-width: 1024px) {
   .home-stage-backdrop {
-    background-position: center -45px;
+    background-position: center -40px;
   }
 }
 
 @media (min-width: 1280px) {
   .home-stage-backdrop {
-    background-position: center -80px;
+    background-position: center -70px;
   }
 }
 
 @media (min-width: 1536px) {
   .home-stage-backdrop {
-    background-position: center -140px;
+    background-position: center -110px;
   }
 }
 
 @media (min-width: 1700px) {
   .home-stage-backdrop {
-    background-position: center -180px;
+    background-position: center -140px;
   }
 }
 
 @media (min-width: 2000px) {
   .home-stage-backdrop {
-    background-position: center -230px;
+    background-position: center -165px;
   }
 }
 
 @media (min-width: 2400px) {
   .home-stage-backdrop {
-    background-position: center -280px;
+    background-position: center -190px;
   }
 }
 
 /* Wide / Ultrawide viewports (ratio >= 1.6) where width is larger relative to height */
-@media (min-width: 1400px) and (min-aspect-ratio: 16/10) {
+@media (min-width: 1400px) and (max-width: 1449px) and (min-aspect-ratio: 16/10) {
   .home-stage-backdrop {
-    background-position: center -130px;
+    background-position: center -95px;
   }
 }
 
-@media (min-width: 1700px) and (min-aspect-ratio: 16/10) {
+/* 1080p at 125% DPI Zoom & Laptops (1450px - 1699px with wide ratio) */
+@media (min-width: 1450px) and (max-width: 1699px) and (min-aspect-ratio: 16/10) {
   .home-stage-backdrop {
-    background-position: center -200px;
+    background-position: center -145px;
   }
 }
 
+/* 1080p Desktop viewports at 100% zoom (1700px - 1999px): shifted to clear carousel dots without touching 2K */
+@media (min-width: 1700px) and (max-width: 1999px) and (min-aspect-ratio: 16/10) {
+  .home-stage-backdrop {
+    background-position: center -160px;
+  }
+}
+
+/* 2K and above (2000px+): PRESERVED AND UNTOUCHED */
 @media (min-width: 2000px) and (min-aspect-ratio: 16/10) {
   .home-stage-backdrop {
-    background-position: center -260px;
+    background-position: center -165px;
   }
 }
 
 @media (min-width: 2400px) and (min-aspect-ratio: 16/10) {
   .home-stage-backdrop {
-    background-position: center -310px;
+    background-position: center -195px;
   }
 }
 
