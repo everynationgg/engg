@@ -225,7 +225,7 @@ router.post("/auth/register", authLimit, async (req, res) => {
     try {
       await sendEmail({
         to: sanitizedEmail,
-        subject: "EN_PROTOCOL: Identity Synchronization Key",
+        subject: "Verify your Every Nation account",
         html: generateVerificationEmailHTML(sanitizedUsername, verificationToken),
       });
     } catch (emailError) {
@@ -545,7 +545,7 @@ router.post(["/auth/resend", "/auth/resend-verification-email"], authLimit, auth
     try {
       await sendEmail({
         to: user.email,
-        subject: "EN_PROTOCOL: Identity Synchronization Key (Resend)",
+        subject: "Your Every Nation verification code",
         html: generateVerificationEmailHTML(user.username, verificationToken),
       });
       res.json({ success: true, message: "Verification code sent" });
@@ -601,11 +601,11 @@ router.post("/auth/request-password-reset", resetLimit, identifierResetLimit, as
     });
 
     // Send password reset email
-    const resetLink = `${process.env.FRONTEND_URL || "http://localhost:5173"}/reset-password?token=${resetToken}`;
+    const resetLink = `${process.env.FRONTEND_URL || "https://www.engg.online"}/reset-password?token=${resetToken}`;
     try {
       await sendEmail({
         to: user.email,
-        subject: "Reset your Errant Night password",
+        subject: "Reset your Every Nation password",
         html: generatePasswordResetEmailHTML(user.username, resetLink),
       });
       
@@ -793,10 +793,10 @@ router.post("/auth/recover-request", async (req, res) => {
       expiresAt: expiresAt,
     });
 
-    const html = generateVerificationEmailHTML("Identity Restoration", code);
+    const html = generateVerificationEmailHTML("Account Recovery", code);
     await sendEmail({
       to: cleanEmail,
-      subject: "[ LOCKDOWN ] Identity Restoration Code",
+      subject: "Every Nation account recovery code",
       html,
     });
 
