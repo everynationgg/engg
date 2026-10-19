@@ -220,7 +220,7 @@ export default function Home() {
       <main
         className="flex-1 relative flex flex-col justify-end items-center px-4 sm:px-6 pb-1 sm:pb-1.5 lg:pb-2 2xl:pb-2 select-none bg-no-repeat bg-white bg-cover bg-[position:center_22px] sm:bg-[position:center_top] lg:bg-[position:center_-45px] 2xl:bg-[position:center_-50px] min-h-[500px] sm:min-h-[540px] lg:min-h-0"
         style={{
-          backgroundImage: `url('/images/home/home-dual-studio-master.jpg?v=5')`,
+          backgroundImage: `url('/images/home/home-dual-studio-master.webp?v=9')`,
         }}
       >
         {/* ── Swipeable / Draggable Stage Content (Pure Floating, Zero White Box) ── */}
