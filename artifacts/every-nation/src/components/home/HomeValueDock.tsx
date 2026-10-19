@@ -1,5 +1,4 @@
 import React from "react";
-import { useLocation } from "wouter";
 import { FaUsers, FaGamepad, FaRobot, FaStore } from "react-icons/fa";
 import SiteSubFooter from "@/components/common/SiteSubFooter";
 
@@ -9,8 +8,6 @@ interface HomeValueDockProps {
 }
 
 export default function HomeValueDock({ activeSlide, onSelectSlide }: HomeValueDockProps) {
-  const [, setLocation] = useLocation();
-
   const pillars = [
     {
       id: "community",
@@ -28,7 +25,7 @@ export default function HomeValueDock({ activeSlide, onSelectSlide }: HomeValueD
       icon: FaGamepad,
       slideIndex: 1,
       badge: "Portal",
-      linkAction: () => setLocation("/hub"),
+      linkAction: () => onSelectSlide(1),
     },
     {
       id: "ai",
@@ -37,7 +34,7 @@ export default function HomeValueDock({ activeSlide, onSelectSlide }: HomeValueD
       icon: FaRobot,
       slideIndex: 2,
       badge: "VISIEN AI",
-      linkAction: () => window.open("https://visien-gray.vercel.app/", "_blank", "noopener,noreferrer"),
+      linkAction: () => onSelectSlide(2),
     },
     {
       id: "solutions",
@@ -46,7 +43,7 @@ export default function HomeValueDock({ activeSlide, onSelectSlide }: HomeValueD
       icon: FaStore,
       slideIndex: 3,
       badge: "Marketplace",
-      linkAction: () => setLocation("/marketplace"),
+      linkAction: () => onSelectSlide(3),
     },
   ];
 
@@ -62,7 +59,8 @@ export default function HomeValueDock({ activeSlide, onSelectSlide }: HomeValueD
             <button
               key={pillar.id}
               onClick={pillar.linkAction}
-              className={`text-center px-2 sm:px-6 2xl:px-8 py-2 2xl:py-3 group transition-all duration-200 focus:outline-none flex flex-col items-center justify-center ${
+              aria-label={`Switch to ${pillar.title} slide`}
+              className={`text-center px-2 sm:px-6 2xl:px-8 py-2 2xl:py-3 group transition-all duration-200 focus:outline-none flex flex-col items-center justify-center cursor-pointer ${
                 idx % 2 === 0 ? "border-r border-white/10 lg:border-r-0" : ""
               } ${
                 idx < pillars.length - 1 ? "lg:border-r lg:border-white/10" : ""
