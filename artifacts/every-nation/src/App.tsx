@@ -111,11 +111,7 @@ function AppContent() {
   return (
     <div
       className={`min-h-screen ${
-        isStudioPage
-          ? location === "/profile"
-            ? "bg-[#0b0e17] text-slate-100"
-            : "bg-white text-[#1d1d1f]"
-          : "bg-[#020408] text-white"
+        isStudioPage ? "bg-[#fbfbfd] text-[#1d1d1f]" : "bg-[#020408] text-white"
       } selection:bg-neutral-200 selection:text-black overflow-x-clip`}
     >
       <HUDFilters />
