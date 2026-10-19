@@ -267,14 +267,14 @@ input::placeholder {
 /* 1080p at 125% DPI Zoom & Laptops (1450px - 1699px with wide ratio) */
 @media (min-width: 1450px) and (max-width: 1699px) and (min-aspect-ratio: 16/10) {
   .home-stage-backdrop {
-    background-position: center -145px;
+    background-position: center -165px;
   }
 }
 
 /* 1080p Desktop viewports at 100% zoom (1700px - 1999px): shifted to clear carousel dots without touching 2K */
 @media (min-width: 1700px) and (max-width: 1999px) and (min-aspect-ratio: 16/10) {
   .home-stage-backdrop {
-    background-position: center -160px;
+    background-position: center -175px;
   }
 }
 
