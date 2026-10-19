@@ -681,24 +681,12 @@ export default function Profile() {
       <main className="flex-1 min-w-0 bg-[#f8fafc] overflow-y-auto">
         {/* Top Header Breadcrumb Bar (Desktop) */}
         <div className="hidden lg:flex items-center justify-between px-8 py-4 border-b border-neutral-200/80 bg-white/80 backdrop-blur-md sticky top-0 z-30 shadow-xs">
-          <div className="flex items-center space-x-3">
-            {/* The PanelLeft toggle button on desktop top bar */}
-            <button
-              onClick={toggleSidebar}
-              className="p-1.5 text-neutral-500 hover:text-[#7c3aed] rounded-lg hover:bg-neutral-100 transition-colors cursor-pointer"
-              title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-              aria-label={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-            >
-              <PanelLeft className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center space-x-2 text-xs">
-              <span className="text-neutral-400 font-mono">DASHBOARD</span>
-              <span className="text-neutral-300">/</span>
-              <span className="text-[#7c3aed] font-bold uppercase tracking-wider">
-                {activeTab}
-              </span>
-            </div>
+          <div className="flex items-center space-x-2 text-xs">
+            <span className="text-neutral-400 font-mono">DASHBOARD</span>
+            <span className="text-neutral-300">/</span>
+            <span className="text-[#7c3aed] font-bold uppercase tracking-wider">
+              {activeTab}
+            </span>
           </div>
 
           <div className="flex items-center space-x-3">
