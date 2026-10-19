@@ -1,5 +1,5 @@
-app = "errant-night-api"
-primary_region = "hkg"
+app = "engg"
+primary_region = "sin"
 
 [http_service]
   internal_port = 10000

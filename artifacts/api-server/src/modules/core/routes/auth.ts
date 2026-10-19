@@ -617,9 +617,9 @@ router.post("/auth/request-password-reset", resetLimit, identifierResetLimit, as
       });
 
       return res.json({ success: true, message: "If the account exists, recovery instructions have been sent." });
-    } catch (emailError) {
+    } catch (emailError: any) {
       logger.error({ emailError, email }, "Failed to send password reset email");
-      return res.status(500).json({ error: "Failed to send reset email" });
+      return res.status(500).json({ error: emailError?.message || "Failed to send reset email" });
     }
   } catch (error) {
     console.error("Password reset request error:", error);
