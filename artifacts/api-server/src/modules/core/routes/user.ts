@@ -3,6 +3,7 @@ import { db, usersTable, creditTransactionsTable, gameResultsTable, playerStatsT
 import { eq, desc, sql } from "drizzle-orm";
 import { authMiddleware, registeredOnly, type AuthRequest } from "../auth/middleware";
 import { logger } from "../../../lib/logger.js";
+import { hashPassword, comparePassword } from "../../../lib/auth.js";
 import crypto from "node:crypto";
 
 const router: IRouter = Router();
@@ -97,6 +98,60 @@ router.get("/user/profile", authMiddleware, async (req: AuthRequest, res) => {
   } catch (error) {
     logger.error({ error }, "Failed to fetch user profile");
     res.status(500).json({ error: "Failed to fetch profile data" });
+  }
+});
+
+router.post("/user/update-password", authMiddleware, registeredOnly, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const { currentPassword, newPassword } = req.body || {};
+    if (!currentPassword || !newPassword) {
+      res.status(400).json({ error: "Current password and new password are required" });
+      return;
+    }
+
+    if (typeof newPassword !== "string" || newPassword.length < 6) {
+      res.status(400).json({ error: "New password must be at least 6 characters" });
+      return;
+    }
+
+    if (!/[a-zA-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      res.status(400).json({ error: "New password must contain at least one letter and one number" });
+      return;
+    }
+
+    const [user] = await db
+      .select({ id: usersTable.id, passwordHash: usersTable.passwordHash })
+      .from(usersTable)
+      .where(eq(usersTable.id, userId))
+      .limit(1);
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    const isValid = await comparePassword(currentPassword, user.passwordHash);
+    if (!isValid) {
+      res.status(400).json({ error: "Incorrect current password" });
+      return;
+    }
+
+    const newHash = await hashPassword(newPassword);
+    await db
+      .update(usersTable)
+      .set({ passwordHash: newHash })
+      .where(eq(usersTable.id, userId));
+
+    res.json({ success: true, message: "Password updated successfully" });
+  } catch (error) {
+    logger.error({ error }, "Failed to update password");
+    res.status(500).json({ error: "Failed to update password" });
   }
 });
 
