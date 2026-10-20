@@ -19,7 +19,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { login, isLoggedIn } = useAuth();
+  const { login, devLogin, isLoggedIn } = useAuth();
   const [, setLocation] = useLocation();
 
   if (isLoggedIn) {
@@ -172,6 +172,35 @@ export default function Login() {
                   </>
                 )}
               </button>
+
+              {/* Local Dev Instant Login Button (Visible on Localhost Only) */}
+              {typeof window !== "undefined" && (
+                window.location.hostname === "localhost" ||
+                window.location.hostname === "127.0.0.1" ||
+                window.location.hostname.startsWith("192.168.")
+              ) && (
+                <div className="pt-2">
+                  <div className="relative flex py-2 items-center">
+                    <div className="flex-grow border-t border-neutral-200"></div>
+                    <span className="flex-shrink mx-3 text-[11px] font-mono uppercase text-neutral-400">
+                      Localhost Fast-Pass
+                    </span>
+                    <div className="flex-grow border-t border-neutral-200"></div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      devLogin("meowionly", "meowionly@everynation.gg");
+                      const searchParams = new URLSearchParams(window.location.search);
+                      const redirectTarget = searchParams.get("redirect") || "/profile";
+                      setLocation(redirectTarget);
+                    }}
+                    className="w-full bg-purple-50 hover:bg-purple-100 text-[#7c3aed] border border-purple-200 hover:border-purple-300 rounded-2xl py-3 px-4 font-bold text-xs tracking-wide transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>⚡ Instant Dev Login (meowionly)</span>
+                  </button>
+                </div>
+              )}
             </form>
 
             {/* Register Footer */}

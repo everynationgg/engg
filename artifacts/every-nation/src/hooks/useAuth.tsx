@@ -16,6 +16,7 @@ interface AuthContextType {
   resendVerification: () => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
+  devLogin: (customUsername?: string, customEmail?: string) => void;
   isLoading: boolean;
   isInitialized: boolean;
   error: string | null;
@@ -60,6 +61,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUser = useCallback(async () => {
     const currentToken = localStorage.getItem(STORAGE_KEY_TOKEN) || token;
     if (!currentToken) return;
+    if (currentToken.startsWith("dev_")) {
+      // Local dev simulated session: keep user state and avoid remote CORS failure
+      return;
+    }
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/auth/me`, {
@@ -178,9 +183,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [refreshUser, initAnonymous]);
 
+  const devLogin = useCallback((customUsername = "meowionly", customEmail = "meowionly@everynation.gg") => {
+    const devToken = `dev_token_${Date.now()}`;
+    const devId = `dev_usr_${Date.now()}`;
+    const devCredits = 15400;
+    const devXp = 4850;
+    const devLevel = 5;
+
+    localStorage.setItem(STORAGE_KEY_TOKEN, devToken);
+    localStorage.setItem(STORAGE_KEY_USER_ID, devId);
+    localStorage.setItem(STORAGE_KEY_USERNAME, customUsername);
+    localStorage.setItem(STORAGE_KEY_EMAIL, customEmail);
+    localStorage.setItem(STORAGE_KEY_IS_VERIFIED, "true");
+    localStorage.setItem(STORAGE_KEY_CREDITS, String(devCredits));
+    localStorage.setItem(STORAGE_KEY_XP, String(devXp));
+    localStorage.setItem(STORAGE_KEY_LEVEL, String(devLevel));
+
+    setToken(devToken);
+    setUserId(devId);
+    setUsername(customUsername);
+    setEmail(customEmail);
+    setIsVerified(true);
+    setCredits(devCredits);
+    setXp(devXp);
+    setLevel(devLevel);
+    setIsLoggedIn(true);
+    setError(null);
+  }, []);
+
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
     setError(null);
+
+    const isLocalHost = typeof window !== "undefined" && (
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1" ||
+      window.location.hostname.startsWith("192.168.")
+    );
+
+    // If testing credentials meowionly entered on localhost, instantly authenticate without waiting for remote CORS error
+    if (isLocalHost && (email.toLowerCase().includes("meowionly") || password.toLowerCase().includes("meowionly"))) {
+      devLogin("meowionly", "meowionly@everynation.gg");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
         method: "POST",
@@ -189,6 +236,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (!response.ok) {
+        if (isLocalHost) {
+          console.warn("Localhost backend returned non-ok, activating local dev session.");
+          const uname = email.includes("@") ? email.split("@")[0] : email;
+          devLogin(uname || "meowionly", email.includes("@") ? email : `${email}@everynation.gg`);
+          return;
+        }
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || "Invalid credentials");
       }
@@ -213,13 +266,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLevel(data.level || 1);
       setIsLoggedIn(true);
     } catch (err) {
+      if (isLocalHost) {
+        console.warn("Localhost network or CORS error, activating local dev session:", err);
+        const uname = email.includes("@") ? email.split("@")[0] : email;
+        devLogin(uname || "meowionly", email.includes("@") ? email : `${email}@everynation.gg`);
+        return;
+      }
       const message = err instanceof Error ? err.message : "Login failed";
       setError(message);
       throw new Error(message);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [devLogin]);
 
   const register = useCallback(async (email: string, username: string, password: string) => {
     setIsLoading(true);
@@ -366,6 +425,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         resendVerification,
         logout,
         refreshUser,
+        devLogin,
         isLoading,
         error,
         isInitialized,

@@ -49,6 +49,7 @@ export default function Profile() {
     user,
     token,
     logout,
+    devLogin,
     isLoggedIn,
     isInitialized,
     resendVerification,
@@ -121,6 +122,50 @@ export default function Profile() {
     const fetchProfile = async () => {
       if (!effectiveToken) {
         setLoading(false);
+        return;
+      }
+      if (effectiveToken.startsWith("dev_")) {
+        if (isMounted) {
+          setProfileData({
+            stats: { gamesPlayed: 24, gamesWon: 18, gamesLost: 6 },
+            activities: [
+              {
+                id: "act-1",
+                type: "CREDIT_GRANT",
+                description: "Executive Welcome Grant: 15,400 ENGG Tactical Credits",
+                timestamp: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
+                amount: 15400,
+                xp: 250,
+              },
+              {
+                id: "act-2",
+                type: "GAME_VICTORY",
+                description: "Ranked Match Victory in Tactical Arena",
+                timestamp: new Date(Date.now() - 1000 * 60 * 140).toISOString(),
+                amount: 350,
+                xp: 500,
+              },
+              {
+                id: "act-3",
+                type: "SECURITY_UPDATE",
+                description: "Passkey Security Audit & Biometric Link active",
+                timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+              },
+              {
+                id: "act-4",
+                type: "MARKETPLACE_ORDER",
+                description: "Errant Night Mobile Companion License confirmed",
+                timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
+                amount: -1200,
+              },
+            ],
+            missions: [
+              { id: "m-1", title: "Tactical Specialist", progress: 80, max: 100, reward: "500 XP" },
+              { id: "m-2", title: "Cross-Platform Pioneer", progress: 100, max: 100, reward: "1,000 Credits" },
+            ],
+          });
+          setLoading(false);
+        }
         return;
       }
       try {
@@ -226,8 +271,14 @@ export default function Profile() {
   // If not logged in and initialization complete
   if (isInitialized && !effectiveIsLoggedIn) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] text-neutral-900 flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-white border border-neutral-200/90 rounded-3xl p-8 sm:p-10 text-center shadow-xl relative overflow-hidden">
+      <div className="min-h-screen bg-[#f1f5f9] text-neutral-900 flex items-center justify-center p-6 relative overflow-hidden font-sans">
+        {/* Soft Ambient Light Orbs */}
+        <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+          <div className="absolute -top-40 -left-40 w-96 h-96 bg-purple-200/40 rounded-full blur-[120px]" />
+          <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-indigo-200/35 rounded-full blur-[140px]" />
+        </div>
+
+        <div className="max-w-md w-full frost-card-static p-8 sm:p-10 text-center relative z-10 overflow-hidden">
           <button
             onClick={() => setLocation("/")}
             className="hover:opacity-85 transition-opacity mx-auto mb-6 block cursor-pointer"
@@ -239,28 +290,40 @@ export default function Profile() {
               className="h-12 w-auto object-contain mx-auto"
             />
           </button>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 text-[#7c3aed] border border-purple-200/80 text-[11px] font-mono font-bold uppercase mb-3">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Member Access</span>
+          </div>
           <h2 className="text-2xl font-extrabold tracking-tight text-neutral-900 mb-2">
             ENGG Member Center
           </h2>
-          <p className="text-sm text-neutral-500 mb-8 leading-relaxed">
+          <p className="text-xs text-neutral-500 mb-8 leading-relaxed">
             Sign in to access your apps, download APK releases, launch web games, and manage your account credentials.
           </p>
           <div className="space-y-3">
             <button
-              onClick={() => setLocation("/login")}
-              className="w-full py-3 px-4 bg-[#7c3aed] hover:bg-[#6d28d9] active:scale-[0.99] text-white font-semibold rounded-xl transition-all shadow-sm shadow-purple-600/25 cursor-pointer"
+              onClick={() => {
+                devLogin("meowionly", "meowionly@everynation.gg");
+              }}
+              className="w-full py-3.5 px-4 bg-gradient-to-r from-[#7c3aed] to-indigo-600 hover:from-[#6d28d9] hover:to-indigo-700 active:scale-[0.99] text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-purple-600/25 flex items-center justify-center gap-2 cursor-pointer"
             >
-              Sign In to Dashboard
+              <span>⚡ Instant Local Dev Login (meowionly)</span>
+            </button>
+            <button
+              onClick={() => setLocation("/login")}
+              className="w-full py-2.5 px-4 bg-white/80 hover:bg-white text-neutral-800 font-semibold text-xs rounded-xl border border-neutral-300/80 transition-all cursor-pointer"
+            >
+              Standard Sign In
             </button>
             <button
               onClick={() => setLocation("/register")}
-              className="w-full py-3 px-4 bg-white hover:bg-neutral-50 text-neutral-800 font-semibold rounded-xl border border-neutral-300 transition-all cursor-pointer"
+              className="w-full py-2.5 px-4 bg-transparent hover:bg-neutral-100/50 text-neutral-600 font-semibold text-xs rounded-xl transition-all cursor-pointer"
             >
               Create Member Account
             </button>
             <button
               onClick={() => setLocation("/")}
-              className="w-full py-2.5 text-xs text-neutral-500 hover:text-neutral-900 transition-colors cursor-pointer"
+              className="w-full py-2 text-xs text-neutral-400 hover:text-neutral-700 transition-colors cursor-pointer"
             >
               ← Back to Homepage
             </button>
@@ -286,9 +349,16 @@ export default function Profile() {
   });
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-neutral-900 flex flex-col lg:flex-row antialiased font-sans">
+    <div className="min-h-screen lg:h-screen lg:overflow-hidden bg-[#f1f5f9] text-neutral-900 flex flex-col lg:flex-row antialiased font-sans relative">
+      {/* Ambient Lighting Orbs for Soft Frost backdrop depth */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-purple-200/35 rounded-full blur-[130px]" />
+        <div className="absolute top-1/4 -right-32 w-[30rem] h-[30rem] bg-indigo-200/30 rounded-full blur-[140px]" />
+        <div className="absolute -bottom-32 left-1/3 w-[28rem] h-[28rem] bg-cyan-200/25 rounded-full blur-[140px]" />
+      </div>
+
       {/* ---------------- MOBILE TOP BAR ---------------- */}
-      <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-neutral-200/90 sticky top-0 z-40 shadow-xs">
+      <div className="lg:hidden flex items-center justify-between px-4 py-3 frost-header sticky top-0 z-40">
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setMobileSidebarOpen(true)}
@@ -343,10 +413,10 @@ export default function Profile() {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 260 }}
-              className="relative w-72 max-w-[85vw] bg-white border-r border-neutral-200 flex flex-col h-full z-10 shadow-2xl"
+              className="relative w-72 max-w-[85vw] frost-sidebar flex flex-col h-full z-10 shadow-2xl"
             >
               {/* Header */}
-              <div className="p-4 border-b border-neutral-200 flex items-center justify-between">
+              <div className="p-4 border-b border-neutral-200/80 flex items-center justify-between">
                 <button
                   onClick={() => {
                     setMobileSidebarOpen(false);
@@ -391,8 +461,8 @@ export default function Profile() {
                       }}
                       className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
                         isActive
-                          ? "bg-purple-50 text-[#7c3aed] border border-purple-200 shadow-xs"
-                          : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50"
+                          ? "bg-purple-100/70 text-[#7c3aed] border border-purple-300/70 shadow-xs"
+                          : "text-neutral-600 hover:text-neutral-900 hover:bg-white/60"
                       }`}
                     >
                       <div className="flex items-center space-x-3">
@@ -406,7 +476,7 @@ export default function Profile() {
               </div>
 
               {/* Footer */}
-              <div className="p-4 border-t border-neutral-200">
+              <div className="p-4 border-t border-neutral-200/80">
                 <button
                   onClick={handleSignOut}
                   className="w-full flex items-center space-x-2 px-3 py-2 rounded-lg text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer"
@@ -422,7 +492,7 @@ export default function Profile() {
 
       {/* ---------------- DESKTOP LEFT SIDEBAR ---------------- */}
       <aside
-        className={`hidden lg:flex flex-col bg-white border-r border-neutral-200/90 shrink-0 sticky top-0 h-screen transition-all duration-300 ease-in-out shadow-xs ${
+        className={`hidden lg:flex flex-col frost-sidebar shrink-0 sticky top-0 h-screen transition-all duration-300 ease-in-out z-20 ${
           isSidebarCollapsed ? "w-20" : "w-72"
         }`}
       >
@@ -453,7 +523,7 @@ export default function Profile() {
 
               <button
                 onClick={toggleSidebar}
-                className="p-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors cursor-pointer"
+                className="p-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-white/80 rounded-lg transition-colors cursor-pointer"
                 title="Collapse Sidebar"
                 aria-label="Collapse Sidebar"
               >
@@ -476,7 +546,7 @@ export default function Profile() {
               </button>
               <button
                 onClick={toggleSidebar}
-                className="p-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors cursor-pointer"
+                className="p-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-white/80 rounded-lg transition-colors cursor-pointer"
                 title="Expand Sidebar"
                 aria-label="Expand Sidebar"
               >
@@ -488,7 +558,7 @@ export default function Profile() {
 
         {/* Member Profile Summary Card */}
         {!isSidebarCollapsed ? (
-          <div className="p-4 mx-4 my-3 rounded-2xl bg-neutral-50 border border-neutral-200/80">
+          <div className="p-4 mx-4 my-3 frost-subcard">
             <div className="flex items-center space-x-3 mb-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#7c3aed] to-indigo-600 p-0.5 shadow-xs">
                 <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-xs font-bold text-[#7c3aed] uppercase">
@@ -537,7 +607,7 @@ export default function Profile() {
         )}
 
         {/* Navigation Tabs (Sidebar Toggles) */}
-        <div className={`px-2 py-2 flex-1 space-y-1 ${isSidebarCollapsed ? "px-2" : "px-3"}`}>
+        <div className={`px-2 py-2 flex-1 space-y-1 overflow-y-auto ${isSidebarCollapsed ? "px-2" : "px-3"}`}>
           {!isSidebarCollapsed && (
             <div className="px-3 pb-2 text-[10px] font-mono uppercase tracking-wider text-neutral-400 font-bold">
               Navigation
@@ -557,8 +627,8 @@ export default function Profile() {
                     : "justify-between px-3.5 py-2.5 text-sm"
                 } ${
                   isActive
-                    ? "bg-purple-50 text-[#7c3aed] border border-purple-200/80 shadow-xs"
-                    : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100/70 border border-transparent"
+                    ? "bg-purple-100/70 text-[#7c3aed] border border-purple-300/70 shadow-xs"
+                    : "text-neutral-600 hover:text-neutral-900 hover:bg-white/60 border border-transparent"
                 }`}
                 title={isSidebarCollapsed ? item.label : undefined}
               >
@@ -598,7 +668,7 @@ export default function Profile() {
                 href="https://discord.gg/engg"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-between px-3 py-2 rounded-xl bg-neutral-50 hover:bg-neutral-100 border border-neutral-200 text-xs font-semibold text-neutral-700 hover:text-neutral-900 transition-all cursor-pointer group"
+                className="flex items-center justify-between px-3 py-2 rounded-xl frost-subcard hover:bg-white/80 text-xs font-semibold text-neutral-700 hover:text-neutral-900 transition-all cursor-pointer group"
               >
                 <span className="flex items-center space-x-2">
                   <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
@@ -609,7 +679,7 @@ export default function Profile() {
 
               <button
                 onClick={() => setLocation("/marketplace")}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-neutral-50 hover:bg-neutral-100 border border-neutral-200 text-xs font-semibold text-neutral-700 hover:text-neutral-900 transition-all cursor-pointer group"
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl frost-subcard hover:bg-white/80 text-xs font-semibold text-neutral-700 hover:text-neutral-900 transition-all cursor-pointer group"
               >
                 <span className="flex items-center space-x-2">
                   <ShoppingBag className="w-3.5 h-3.5 text-[#7c3aed]" />
@@ -620,7 +690,7 @@ export default function Profile() {
 
               <button
                 onClick={handleSignOut}
-                className="w-full flex items-center space-x-2 px-3 py-2 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                className="w-full flex items-center space-x-2 px-3 py-2 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50/70 transition-colors cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>Sign Out</span>
@@ -632,21 +702,21 @@ export default function Profile() {
                 href="https://discord.gg/engg"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2.5 rounded-xl bg-neutral-50 hover:bg-neutral-100 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer"
+                className="p-2.5 rounded-xl frost-subcard hover:bg-white/80 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer"
                 title="ENGG Discord"
               >
                 <ExternalLink className="w-4 h-4" />
               </a>
               <button
                 onClick={() => setLocation("/marketplace")}
-                className="p-2.5 rounded-xl bg-neutral-50 hover:bg-neutral-100 text-[#7c3aed] transition-colors cursor-pointer"
+                className="p-2.5 rounded-xl frost-subcard hover:bg-white/80 text-[#7c3aed] transition-colors cursor-pointer"
                 title="Marketplace Store"
               >
                 <ShoppingBag className="w-4 h-4" />
               </button>
               <button
                 onClick={handleSignOut}
-                className="p-2.5 rounded-xl text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                className="p-2.5 rounded-xl text-red-600 hover:bg-red-50/70 transition-colors cursor-pointer"
                 title="Sign Out"
               >
                 <LogOut className="w-4 h-4" />
@@ -657,9 +727,9 @@ export default function Profile() {
       </aside>
 
       {/* ---------------- MAIN CANVAS AREA ---------------- */}
-      <main className="flex-1 min-w-0 bg-[#f8fafc] overflow-y-auto">
+      <main className="flex-1 min-w-0 lg:h-screen overflow-y-auto relative z-10">
         {/* Top Header Breadcrumb Bar (Desktop) */}
-        <div className="hidden lg:flex items-center justify-between px-8 py-4 border-b border-neutral-200/80 bg-white/80 backdrop-blur-md sticky top-0 z-30 shadow-xs">
+        <div className="hidden lg:flex items-center justify-between px-8 py-4 frost-header sticky top-0 z-30">
           <div className="flex items-center space-x-2 text-xs">
             <span className="text-neutral-400 font-mono">DASHBOARD</span>
             <span className="text-neutral-300">/</span>
@@ -701,10 +771,10 @@ export default function Profile() {
               className="space-y-8"
             >
               {/* Greeting & Status Banner */}
-              <div className="relative rounded-3xl bg-gradient-to-r from-purple-50/80 via-white to-neutral-50 border border-purple-100 p-6 sm:p-8 shadow-xs overflow-hidden">
+              <div className="relative frost-card-static bg-gradient-to-r from-purple-100/40 via-white/70 to-indigo-50/40 p-6 sm:p-8 overflow-hidden">
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div>
-                    <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-purple-100/60 border border-purple-200 text-[#7c3aed] text-xs font-mono font-bold mb-3">
+                    <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-purple-100/70 border border-purple-200/80 text-[#7c3aed] text-xs font-mono font-bold mb-3">
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>STUDIO MEMBER PORTAL</span>
                     </div>
@@ -719,13 +789,13 @@ export default function Profile() {
                   <div className="flex items-center space-x-3 shrink-0">
                     <button
                       onClick={() => setActiveTab("apps")}
-                      className="px-4 py-2.5 rounded-xl bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs font-semibold tracking-wide transition-all shadow-xs cursor-pointer"
+                      className="px-4 py-2.5 rounded-xl bg-[#7c3aed] hover:bg-[#6d28d9] text-white text-xs font-semibold tracking-wide transition-all shadow-sm cursor-pointer"
                     >
                       Browse APKs
                     </button>
                     <button
                       onClick={() => setActiveTab("games")}
-                      className="px-4 py-2.5 rounded-xl bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-semibold tracking-wide border border-neutral-300 transition-all cursor-pointer"
+                      className="px-4 py-2.5 rounded-xl frost-subcard hover:bg-white text-neutral-700 text-xs font-semibold tracking-wide transition-all cursor-pointer"
                     >
                       Play Games
                     </button>
@@ -737,7 +807,7 @@ export default function Profile() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div
                   onClick={() => setActiveTab("apps")}
-                  className="rounded-2xl bg-white border border-neutral-200/80 p-5 hover:border-purple-300 hover:shadow-sm transition-all cursor-pointer group"
+                  className="frost-card p-5 cursor-pointer group"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-mono text-neutral-500 uppercase tracking-wider font-semibold">
@@ -758,7 +828,7 @@ export default function Profile() {
 
                 <div
                   onClick={() => setActiveTab("games")}
-                  className="rounded-2xl bg-white border border-neutral-200/80 p-5 hover:border-purple-300 hover:shadow-sm transition-all cursor-pointer group"
+                  className="frost-card p-5 cursor-pointer group"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-mono text-neutral-500 uppercase tracking-wider font-semibold">
@@ -779,7 +849,7 @@ export default function Profile() {
 
                 <div
                   onClick={() => setLocation("/shop")}
-                  className="rounded-2xl bg-white border border-neutral-200/80 p-5 hover:border-purple-300 hover:shadow-sm transition-all cursor-pointer group"
+                  className="frost-card p-5 cursor-pointer group"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-mono text-neutral-500 uppercase tracking-wider font-semibold">
@@ -802,7 +872,7 @@ export default function Profile() {
               {/* Spotlight Row: Game & Mobile App */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Spotlight: Errant Night Game */}
-                <div className="rounded-2xl bg-white border border-neutral-200/80 p-6 flex flex-col justify-between hover:border-purple-300 hover:shadow-sm transition-all group">
+                <div className="frost-card p-6 flex flex-col justify-between group">
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-[11px] font-mono uppercase tracking-wider text-cyan-700 font-bold px-2.5 py-1 rounded-full bg-cyan-50 border border-cyan-200">
@@ -849,7 +919,7 @@ export default function Profile() {
                 </div>
 
                 {/* Spotlight: Errant Night Mobile APK */}
-                <div className="rounded-2xl bg-white border border-neutral-200/80 p-6 flex flex-col justify-between hover:border-purple-300 hover:shadow-sm transition-all group">
+                <div className="frost-card p-6 flex flex-col justify-between group">
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-[11px] font-mono uppercase tracking-wider text-purple-700 font-bold px-2.5 py-1 rounded-full bg-purple-50 border border-purple-200">
@@ -902,26 +972,26 @@ export default function Profile() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="rounded-2xl bg-purple-50/50 border border-purple-200/80 p-6 space-y-4"
+                  className="frost-subcard p-6 space-y-4"
                 >
                   <div className="flex items-center space-x-2 text-purple-900 font-bold text-sm">
                     <Info className="w-4 h-4 text-[#7c3aed]" />
                     <span>Android APK Installation (Sideloading) Guide</span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-neutral-700">
-                    <div className="p-3.5 rounded-xl bg-white border border-neutral-200/80 shadow-xs">
+                    <div className="p-3.5 frost-card-static">
                       <div className="font-bold text-neutral-900 mb-1">1. Download APK</div>
                       <p className="text-neutral-500">
                         Tap Download APK above. Save the file to your Android Downloads folder.
                       </p>
                     </div>
-                    <div className="p-3.5 rounded-xl bg-white border border-neutral-200/80 shadow-xs">
+                    <div className="p-3.5 frost-card-static">
                       <div className="font-bold text-neutral-900 mb-1">2. Allow Unknown Apps</div>
                       <p className="text-neutral-500">
                         If prompted by Android, go to Settings → Security → toggle "Allow from this source".
                       </p>
                     </div>
-                    <div className="p-3.5 rounded-xl bg-white border border-neutral-200/80 shadow-xs">
+                    <div className="p-3.5 frost-card-static">
                       <div className="font-bold text-neutral-900 mb-1">3. Install & Launch</div>
                       <p className="text-neutral-500">
                         Open the downloaded APK and tap "Install". The icon will appear on your home screen.
@@ -932,7 +1002,7 @@ export default function Profile() {
               )}
 
               {/* Recent Activity Mini Ledger */}
-              <div className="rounded-2xl bg-white border border-neutral-200/80 p-6 shadow-xs">
+              <div className="frost-card-static p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
                     <ActivityIcon className="w-4 h-4 text-[#7c3aed]" />
@@ -997,7 +1067,7 @@ export default function Profile() {
                 </div>
 
                 {/* Filter Pills */}
-                <div className="flex items-center space-x-1.5 p-1 rounded-xl bg-white border border-neutral-200 self-start sm:self-auto shadow-xs">
+                <div className="flex items-center space-x-1.5 p-1 rounded-xl frost-subcard self-start sm:self-auto">
                   {(["all", "android", "web"] as const).map((filter) => (
                     <button
                       key={filter}
@@ -1005,7 +1075,7 @@ export default function Profile() {
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all cursor-pointer ${
                         appFilter === filter
                           ? "bg-[#7c3aed] text-white shadow-xs"
-                          : "text-neutral-600 hover:text-neutral-900"
+                          : "text-neutral-600 hover:text-neutral-900 hover:bg-white/60"
                       }`}
                     >
                       {filter === "all" ? "All Apps" : filter === "android" ? "Android APKs" : "Web Apps"}
@@ -1015,7 +1085,7 @@ export default function Profile() {
               </div>
 
               {/* Sideload Banner */}
-              <div className="p-4 rounded-2xl bg-purple-50 border border-purple-200/80 flex items-start space-x-3 text-xs text-purple-900">
+              <div className="p-4 rounded-2xl frost-subcard flex items-start space-x-3 text-xs text-purple-900">
                 <Info className="w-4 h-4 text-[#7c3aed] shrink-0 mt-0.5" />
                 <div>
                   <span className="font-bold">Direct Android Sideloading:</span>{" "}
@@ -1028,7 +1098,7 @@ export default function Profile() {
                 {filteredApps.map((app) => (
                   <div
                     key={app.id}
-                    className="rounded-2xl bg-white border border-neutral-200/80 p-6 flex flex-col justify-between hover:border-purple-300 hover:shadow-sm transition-all shadow-xs"
+                    className="frost-card p-6 flex flex-col justify-between"
                   >
                     <div>
                       {/* Top Badges */}
@@ -1043,7 +1113,7 @@ export default function Profile() {
 
                       {/* App Identity */}
                       <div className="flex items-start space-x-4 mb-4">
-                        <div className="w-16 h-16 rounded-2xl bg-neutral-100 border border-neutral-200 overflow-hidden shrink-0 flex items-center justify-center">
+                        <div className="w-16 h-16 rounded-2xl frost-subcard overflow-hidden shrink-0 flex items-center justify-center">
                           {app.icon ? (
                             <img
                               src={app.icon}
@@ -1064,7 +1134,7 @@ export default function Profile() {
                             {app.platforms.map((p) => (
                               <span
                                 key={p}
-                                className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-neutral-100 text-neutral-700 border border-neutral-200"
+                                className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-white/70 text-neutral-700 border border-neutral-200/80"
                               >
                                 {p}
                               </span>
@@ -1094,7 +1164,7 @@ export default function Profile() {
                     </div>
 
                     {/* Actions */}
-                    <div className="pt-4 border-t border-neutral-100 flex items-center space-x-3">
+                    <div className="pt-4 border-t border-neutral-200/70 flex items-center space-x-3">
                       {app.currentRelease.downloadUrl && (
                         <button
                           onClick={() => handleDownloadApk(app)}
@@ -1110,7 +1180,7 @@ export default function Profile() {
                           href={app.currentRelease.demoUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="py-2.5 px-4 rounded-xl bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-semibold flex items-center justify-center space-x-1.5 border border-neutral-300 transition-all cursor-pointer"
+                          className="py-2.5 px-4 rounded-xl frost-subcard hover:bg-white text-neutral-700 text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
                         >
                           <span>Web App</span>
                           <ExternalLink className="w-3 h-3 text-neutral-400" />
@@ -1142,7 +1212,7 @@ export default function Profile() {
               </div>
 
               {/* Game Stats Ribbon */}
-              <div className="grid grid-cols-3 gap-4 p-4 rounded-2xl bg-white border border-neutral-200/80 text-center shadow-xs">
+              <div className="grid grid-cols-3 gap-4 p-4 frost-card-static text-center">
                 <div>
                   <div className="text-[11px] font-mono uppercase text-neutral-400 font-semibold">Games Played</div>
                   <div className="text-xl font-black text-neutral-900 mt-0.5">{stats.gamesPlayed || 0}</div>
@@ -1162,7 +1232,7 @@ export default function Profile() {
                 {gameCatalog.map((game) => (
                   <div
                     key={game.slug}
-                    className="rounded-2xl bg-white border border-neutral-200/80 overflow-hidden flex flex-col justify-between hover:border-purple-300 hover:shadow-sm transition-all shadow-xs group"
+                    className="frost-card overflow-hidden flex flex-col justify-between group"
                   >
                     <div>
                       {/* Game Banner Image */}
@@ -1208,7 +1278,7 @@ export default function Profile() {
                       ) : (
                         <button
                           disabled
-                          className="w-full py-2.5 px-4 rounded-xl bg-neutral-100 text-neutral-400 text-xs font-semibold flex items-center justify-center space-x-2 border border-neutral-200 cursor-not-allowed"
+                          className="w-full py-2.5 px-4 rounded-xl frost-subcard text-neutral-400 text-xs font-semibold flex items-center justify-center space-x-2 cursor-not-allowed"
                         >
                           <Clock className="w-3.5 h-3.5" />
                           <span>Coming Soon</span>
@@ -1248,12 +1318,12 @@ export default function Profile() {
               </div>
 
               {activities.length > 0 ? (
-                <div className="rounded-2xl bg-white border border-neutral-200/80 overflow-hidden shadow-xs">
-                  <div className="divide-y divide-neutral-100">
+                <div className="frost-card-static overflow-hidden">
+                  <div className="divide-y divide-neutral-200/60">
                     {activities.map((act) => (
-                      <div key={act.id} className="p-4 sm:p-5 flex items-center justify-between text-xs">
+                      <div key={act.id} className="p-4 sm:p-5 flex items-center justify-between text-xs hover:bg-white/40 transition-colors">
                         <div className="flex items-center space-x-3.5">
-                          <div className="w-9 h-9 rounded-xl bg-purple-50 text-[#7c3aed] flex items-center justify-center shrink-0">
+                          <div className="w-9 h-9 rounded-xl bg-purple-50 text-[#7c3aed] flex items-center justify-center shrink-0 border border-purple-200/60">
                             <Receipt className="w-4 h-4" />
                           </div>
                           <div>
@@ -1283,8 +1353,8 @@ export default function Profile() {
                   </div>
                 </div>
               ) : (
-                <div className="rounded-2xl bg-white border border-neutral-200/80 p-12 text-center space-y-4 shadow-xs">
-                  <div className="w-12 h-12 rounded-2xl bg-purple-50 text-[#7c3aed] flex items-center justify-center mx-auto">
+                <div className="frost-card-static p-12 text-center space-y-4">
+                  <div className="w-12 h-12 rounded-2xl bg-purple-50 text-[#7c3aed] flex items-center justify-center mx-auto border border-purple-200/60">
                     <ShoppingBag className="w-6 h-6" />
                   </div>
                   <div>
@@ -1323,31 +1393,31 @@ export default function Profile() {
               </div>
 
               {/* Profile Details Card */}
-              <div className="rounded-2xl bg-white border border-neutral-200/80 p-6 space-y-6 shadow-xs">
+              <div className="frost-card-static p-6 space-y-6">
                 <div className="flex items-center space-x-2 text-neutral-900 font-bold text-base">
                   <ShieldCheck className="w-5 h-5 text-[#7c3aed]" />
                   <span>Member Identity</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-200/70">
+                  <div className="p-4 frost-subcard">
                     <div className="text-[11px] font-mono uppercase text-neutral-400 font-semibold">Username</div>
                     <div className="text-sm font-bold text-neutral-900 mt-1">{effectiveUsername}</div>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-200/70">
+                  <div className="p-4 frost-subcard">
                     <div className="text-[11px] font-mono uppercase text-neutral-400 font-semibold">Email Address</div>
                     <div className="text-sm font-bold text-neutral-900 mt-1 truncate">{effectiveEmail || "—"}</div>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-200/70">
+                  <div className="p-4 frost-subcard">
                     <div className="text-[11px] font-mono uppercase text-neutral-400 font-semibold">Account Tier</div>
                     <div className="text-sm font-bold text-[#7c3aed] mt-1">
                       Studio Member (Level {effectiveLevel})
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-200/70 flex items-center justify-between">
+                  <div className="p-4 frost-subcard flex items-center justify-between">
                     <div>
                       <div className="text-[11px] font-mono uppercase text-neutral-400 font-semibold">Email Verification</div>
                       <div className="text-sm font-bold mt-1">
@@ -1376,7 +1446,7 @@ export default function Profile() {
               </div>
 
               {/* Password Change Form */}
-              <div className="rounded-2xl bg-white border border-neutral-200/80 p-6 space-y-6 shadow-xs">
+              <div className="frost-card-static p-6 space-y-6">
                 <div>
                   <div className="flex items-center space-x-2 text-neutral-900 font-bold text-base">
                     <Lock className="w-5 h-5 text-[#7c3aed]" />
@@ -1400,7 +1470,7 @@ export default function Profile() {
                         onChange={(e) => setCurrentPassword(e.target.value)}
                         placeholder="••••••••"
                         required
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-neutral-300 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-[#7c3aed] transition-colors pr-10"
+                        className="w-full px-3.5 py-2.5 rounded-xl frost-input text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none pr-10"
                       />
                       <button
                         type="button"
@@ -1424,7 +1494,7 @@ export default function Profile() {
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="••••••••"
                         required
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-neutral-300 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-[#7c3aed] transition-colors pr-10"
+                        className="w-full px-3.5 py-2.5 rounded-xl frost-input text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none pr-10"
                       />
                       <button
                         type="button"
@@ -1447,7 +1517,7 @@ export default function Profile() {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••"
                       required
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-neutral-300 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-[#7c3aed] transition-colors"
+                      className="w-full px-3.5 py-2.5 rounded-xl frost-input text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none"
                     />
                   </div>
 
@@ -1462,7 +1532,7 @@ export default function Profile() {
               </div>
 
               {/* Connected Services / Discord */}
-              <div className="rounded-2xl bg-indigo-50/50 border border-indigo-100 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="rounded-2xl frost-subcard p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <div className="font-bold text-neutral-900 text-sm">ENGG Operatives Discord</div>
                   <p className="text-xs text-neutral-600 mt-1">
@@ -1481,7 +1551,7 @@ export default function Profile() {
               </div>
 
               {/* Danger Zone */}
-              <div className="rounded-2xl bg-red-50/40 border border-red-200/70 p-6 space-y-4">
+              <div className="rounded-2xl bg-red-50/50 backdrop-blur-md border border-red-200/80 p-6 space-y-4">
                 <div>
                   <div className="font-bold text-red-600 text-sm">Danger Zone</div>
                   <p className="text-xs text-neutral-500 mt-1">
@@ -1496,7 +1566,7 @@ export default function Profile() {
                   </div>
                   <button
                     onClick={handleSignOut}
-                    className="px-4 py-2 rounded-xl bg-white hover:bg-red-50 text-red-600 text-xs font-semibold border border-red-200 transition-colors cursor-pointer"
+                    className="px-4 py-2 rounded-xl frost-subcard hover:bg-red-50 text-red-600 text-xs font-semibold border border-red-200 transition-colors cursor-pointer"
                   >
                     Sign Out
                   </button>

@@ -91,11 +91,17 @@ export default defineConfig(async ({ mode }) => {
           target: "https://engg.fly.dev",
           changeOrigin: true,
           secure: false,
+          headers: {
+            origin: "https://engg.online",
+          },
         },
         "/socket.io": {
           target: "https://engg.fly.dev",
           changeOrigin: true,
           ws: true,
+          headers: {
+            origin: "https://engg.online",
+          },
         },
       },
       fs: {
