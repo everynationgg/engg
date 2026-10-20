@@ -52,7 +52,7 @@ export default function Navbar() {
             </div>
             <div className="hidden sm:flex flex-col border-l border-white/10 pl-3">
               <span className="font-orbitron font-black text-sm tracking-[0.2em] text-white/90">EVERY_NATION</span>
-              <span className="font-mono text-[10px] text-white/20 uppercase tracking-[0.4em]">Unit_01</span>
+              <span className="font-mono text-[10px] text-white/30 uppercase tracking-[0.3em]">Digital Studio</span>
             </div>
           </Link>
 

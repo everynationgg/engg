@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,6 +21,15 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const { login, devLogin, isLoggedIn } = useAuth();
   const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem("lp_email");
+      if (cached && cached.toLowerCase().endsWith("@everynation.gg")) {
+        localStorage.removeItem("lp_email");
+      }
+    }
+  }, []);
 
   if (isLoggedIn) {
     setLocation("/profile");
@@ -190,7 +199,7 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => {
-                      devLogin("meowionly", "meowionly@everynation.gg");
+                      devLogin("meowionly", "");
                       const searchParams = new URLSearchParams(window.location.search);
                       const redirectTarget = searchParams.get("redirect") || "/profile";
                       setLocation(redirectTarget);

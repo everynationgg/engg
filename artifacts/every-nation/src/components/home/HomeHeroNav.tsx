@@ -18,14 +18,22 @@ import {
   FaLayerGroup,
   FaStore,
   FaRobot,
+  FaUser,
+  FaSignOutAlt,
+  FaCoins,
+  FaShieldAlt,
+  FaMobileAlt,
+  FaShoppingBag,
+  FaArrowRight,
 } from "react-icons/fa";
 
 export default function HomeHeroNav() {
   const [location, setLocation] = useLocation();
-  const { isLoggedIn, user } = useAuth();
+  const { isLoggedIn, user, username, credits, level, email, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [socialsModalOpen, setSocialsModalOpen] = useState(false);
   const [aboutDropdownOpen, setAboutDropdownOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [mobileAboutExpanded, setMobileAboutExpanded] = useState(
     location.startsWith("/about") ||
     location === "/who-we-are" ||
@@ -34,6 +42,15 @@ export default function HomeHeroNav() {
   );
   const aboutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const aboutContainerRef = useRef<HTMLDivElement | null>(null);
+  const userTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const userContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const effectiveUsername = user?.username || username || "meowionly";
+  const effectiveEmail = (user?.email && !user.email.toLowerCase().endsWith("@everynation.gg")) 
+    ? user.email 
+    : (email && !email.toLowerCase().endsWith("@everynation.gg") ? email : "");
+  const effectiveCredits = user?.credits ?? credits ?? 15400;
+  const effectiveLevel = user?.level ?? level ?? 5;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -43,11 +60,18 @@ export default function HomeHeroNav() {
       ) {
         setAboutDropdownOpen(false);
       }
+      if (
+        userContainerRef.current &&
+        !userContainerRef.current.contains(event.target as Node)
+      ) {
+        setUserDropdownOpen(false);
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       if (aboutTimeoutRef.current) clearTimeout(aboutTimeoutRef.current);
+      if (userTimeoutRef.current) clearTimeout(userTimeoutRef.current);
     };
   }, []);
 
@@ -65,9 +89,30 @@ export default function HomeHeroNav() {
     }, 200);
   };
 
+  const handleUserMouseEnter = () => {
+    if (userTimeoutRef.current) {
+      clearTimeout(userTimeoutRef.current);
+      userTimeoutRef.current = null;
+    }
+    setUserDropdownOpen(true);
+  };
+
+  const handleUserMouseLeave = () => {
+    userTimeoutRef.current = setTimeout(() => {
+      setUserDropdownOpen(false);
+    }, 220);
+  };
+
+  const handleSignOut = () => {
+    setUserDropdownOpen(false);
+    setMobileMenuOpen(false);
+    logout();
+  };
+
   const handleNavigate = (path: string) => {
     setLocation(path);
     setAboutDropdownOpen(false);
+    setUserDropdownOpen(false);
     setMobileMenuOpen(false);
   };
 
@@ -318,20 +363,113 @@ export default function HomeHeroNav() {
               );
             })}
 
-            {/* Login / Profile CTA Pill Button */}
-            <div className="ml-2">
+            {/* User Account Menu Pill */}
+            <div ref={userContainerRef} className="relative ml-2">
               {isLoggedIn ? (
-                <button
-                  onClick={() => handleNavigate("/profile")}
-                  className="bg-[#7c3aed] hover:bg-[#6d28d9] text-white rounded-full px-5 py-2 text-xs font-bold uppercase tracking-wider transition-all shadow-sm active:scale-95 flex items-center gap-2"
-                >
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>{user?.username || "Profile"}</span>
-                </button>
+                <>
+                  <button
+                    onClick={() => setUserDropdownOpen((prev) => !prev)}
+                    onMouseEnter={handleUserMouseEnter}
+                    onMouseLeave={handleUserMouseLeave}
+                    className="bg-[#7c3aed] hover:bg-[#6d28d9] text-white rounded-full pl-2 pr-3.5 py-1.5 text-xs font-semibold tracking-wide transition-all shadow-xs active:scale-95 flex items-center gap-2 cursor-pointer"
+                    aria-label="User Account Menu"
+                    aria-expanded={userDropdownOpen}
+                  >
+                    <div className="w-5 h-5 rounded-full bg-white/25 flex items-center justify-center text-[10px] font-bold text-white uppercase shrink-0">
+                      {effectiveUsername.charAt(0)}
+                    </div>
+                    <span className="max-w-[120px] truncate">{effectiveUsername}</span>
+                    <FaChevronDown
+                      className={`w-2.5 h-2.5 transition-transform duration-200 shrink-0 ${
+                        userDropdownOpen ? "rotate-180 text-white" : "text-white/70"
+                      }`}
+                    />
+                  </button>
+
+                  {/* Account Menu Dropdown */}
+                  {userDropdownOpen && (
+                    <div
+                      onMouseEnter={handleUserMouseEnter}
+                      onMouseLeave={handleUserMouseLeave}
+                      className="absolute top-full right-0 pt-2 z-50 w-[260px] animate-in fade-in zoom-in-95 duration-150"
+                    >
+                      <div className="bg-white/95 backdrop-blur-2xl border border-neutral-200/80 rounded-2xl shadow-xl p-3 text-left">
+                        {/* 1. Header: Avatar + User Info */}
+                        <div className="flex items-center gap-3 p-1.5 pb-2.5 border-b border-neutral-100">
+                          <div className="w-9 h-9 rounded-full bg-[#7c3aed] text-white flex items-center justify-center text-xs font-bold uppercase shrink-0 shadow-xs">
+                            {effectiveUsername.charAt(0)}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-bold text-sm text-neutral-900 truncate">
+                              {effectiveUsername}
+                            </div>
+                            <div className="text-xs text-neutral-500 font-medium">
+                              Level {effectiveLevel} • {effectiveCredits.toLocaleString()} Credits
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 2. Navigation Links */}
+                        <div className="py-1 space-y-0.5">
+                          <button
+                            onClick={() => handleNavigate("/profile")}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100/80 transition-colors text-xs font-semibold cursor-pointer"
+                          >
+                            <FaUser className="w-3.5 h-3.5 text-neutral-400" />
+                            <span>Profile Overview</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleNavigate("/profile?tab=apps")}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100/80 transition-colors text-xs font-semibold cursor-pointer"
+                          >
+                            <FaMobileAlt className="w-3.5 h-3.5 text-neutral-400" />
+                            <span>Apps & Downloads</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleNavigate("/profile?tab=games")}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100/80 transition-colors text-xs font-semibold cursor-pointer"
+                          >
+                            <FaGamepad className="w-3.5 h-3.5 text-neutral-400" />
+                            <span>Games Library</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleNavigate("/marketplace")}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100/80 transition-colors text-xs font-semibold cursor-pointer"
+                          >
+                            <FaShoppingBag className="w-3.5 h-3.5 text-neutral-400" />
+                            <span>Store</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleNavigate("/profile?tab=security")}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100/80 transition-colors text-xs font-semibold cursor-pointer"
+                          >
+                            <FaShieldAlt className="w-3.5 h-3.5 text-neutral-400" />
+                            <span>Settings & Security</span>
+                          </button>
+                        </div>
+
+                        {/* 3. Footer: Sign Out */}
+                        <div className="pt-1.5 border-t border-neutral-100">
+                          <button
+                            onClick={handleSignOut}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-red-600 hover:bg-red-50/80 transition-colors text-xs font-semibold cursor-pointer"
+                          >
+                            <FaSignOutAlt className="w-3.5 h-3.5" />
+                            <span>Sign Out</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <button
                   onClick={() => handleNavigate("/login")}
-                  className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white rounded-full px-6 py-2 text-xs font-bold uppercase tracking-wider transition-all shadow-md active:scale-95"
+                  className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white rounded-full px-6 py-2 text-xs font-bold uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer"
                 >
                   LOGIN
                 </button>
@@ -343,15 +481,18 @@ export default function HomeHeroNav() {
           <div className="flex items-center gap-2 md:hidden">
             {isLoggedIn ? (
               <button
-                onClick={() => handleNavigate("/profile")}
-                className="bg-[#7c3aed] text-white rounded-full px-3 py-1.5 text-[11px] font-bold uppercase"
+                onClick={() => setMobileMenuOpen((prev) => !prev)}
+                className="bg-[#7c3aed] text-white rounded-full pl-2 pr-3 py-1.5 text-[11px] font-semibold flex items-center gap-1.5 cursor-pointer"
               >
-                Profile
+                <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-[9px] font-bold text-white uppercase shrink-0">
+                  {effectiveUsername.charAt(0)}
+                </div>
+                <span>{effectiveUsername}</span>
               </button>
             ) : (
               <button
                 onClick={() => handleNavigate("/login")}
-                className="bg-[#8b5cf6] text-white rounded-full px-4 py-1.5 text-[11px] font-bold uppercase"
+                className="bg-[#8b5cf6] text-white rounded-full px-4 py-1.5 text-[11px] font-bold uppercase cursor-pointer"
               >
                 LOGIN
               </button>
@@ -453,6 +594,36 @@ export default function HomeHeroNav() {
                 </button>
               );
             })}
+
+            {/* Mobile Logged In Operative Card */}
+            {isLoggedIn && (
+              <div className="pt-3 mt-2 border-t border-neutral-200/80 space-y-2">
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-purple-50/70 border border-purple-100">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-[#7c3aed] text-white flex items-center justify-center text-xs font-bold uppercase">
+                      {effectiveUsername.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-neutral-900">{effectiveUsername}</div>
+                      <div className="text-[10px] text-[#7c3aed] font-semibold">{effectiveCredits.toLocaleString()} Credits</div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleNavigate("/profile")}
+                    className="text-xs font-bold text-[#7c3aed] px-2.5 py-1 rounded-lg bg-white shadow-2xs"
+                  >
+                    Profile
+                  </button>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="w-full flex items-center justify-center gap-2 p-2 rounded-xl text-red-600 bg-red-50 text-xs font-bold"
+                >
+                  <FaSignOutAlt className="w-3 h-3" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            )}
           </div>
         )}
       </header>

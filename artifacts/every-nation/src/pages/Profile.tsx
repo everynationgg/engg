@@ -56,6 +56,14 @@ export default function Profile() {
     refreshUser,
   } = useAuth();
 
+  // One-time cleanup for any lingering fake @everynation.gg email in localStorage
+  if (typeof window !== "undefined") {
+    const rawStored = localStorage.getItem("lp_email");
+    if (rawStored && rawStored.toLowerCase().endsWith("@everynation.gg")) {
+      localStorage.removeItem("lp_email");
+    }
+  }
+
   // Instant auth hydration from localStorage to prevent reload race condition
   const storedToken = typeof window !== "undefined" ? localStorage.getItem("lp_auth_token") : null;
   const storedUserId = typeof window !== "undefined" ? localStorage.getItem("lp_user_id") : null;
@@ -69,8 +77,11 @@ export default function Profile() {
   const hasLocalAuth = Boolean(storedToken) && !Boolean(storedUserId?.startsWith("guest_"));
   const effectiveIsLoggedIn = isLoggedIn || hasLocalAuth;
   const effectiveToken = token || storedToken;
-  const effectiveUsername = user?.username || storedUsername || "Operative";
-  const effectiveEmail = user?.email || storedEmail || "";
+  const effectiveUsername = user?.username || storedUsername || "Member";
+  const cleanEmail = (user?.email && !user.email.toLowerCase().endsWith("@everynation.gg"))
+    ? user.email
+    : (storedEmail && !storedEmail.toLowerCase().endsWith("@everynation.gg") ? storedEmail : "");
+  const effectiveEmail = cleanEmail;
   const effectiveIsVerified = user?.isVerified ?? storedIsVerified;
   const effectiveCredits = user?.credits ?? storedCredits;
   const effectiveLevel = user?.level ?? storedLevel;
@@ -94,10 +105,30 @@ export default function Profile() {
     });
   };
 
-  const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
+  const [activeTab, setActiveTab] = useState<DashboardTab>(() => {
+    if (typeof window !== "undefined") {
+      const param = new URLSearchParams(window.location.search).get("tab");
+      if (param && ["overview", "apps", "games", "purchases", "security"].includes(param)) {
+        return param as DashboardTab;
+      }
+    }
+    return "overview";
+  });
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const param = new URLSearchParams(window.location.search).get("tab");
+      if (param && ["overview", "apps", "games", "purchases", "security"].includes(param)) {
+        setActiveTab(param as DashboardTab);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState<{
+    user?: { createdAt?: string; currentStreak?: number };
     stats?: { gamesPlayed?: number; gamesWon?: number; gamesLost?: number };
     activities?: Activity[];
     missions?: any[];
@@ -116,6 +147,19 @@ export default function Profile() {
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [isResendingVerify, setIsResendingVerify] = useState(false);
 
+  // Streamer privacy: mask email by default
+  const [showFullEmail, setShowFullEmail] = useState(false);
+
+  const maskEmail = (str: string) => {
+    if (!str) return "Not connected";
+    const parts = str.split("@");
+    if (parts.length !== 2) return str;
+    const name = parts[0];
+    const domain = parts[1];
+    if (name.length <= 2) return `${name[0]}•••@${domain}`;
+    return `${name[0]}${"•".repeat(Math.min(name.length - 2, 6))}${name[name.length - 1]}@${domain}`;
+  };
+
   // Fetch profile details with effectiveToken
   useEffect(() => {
     let isMounted = true;
@@ -127,6 +171,7 @@ export default function Profile() {
       if (effectiveToken.startsWith("dev_")) {
         if (isMounted) {
           setProfileData({
+            user: { createdAt: "2026-10-01T00:00:00.000Z" },
             stats: { gamesPlayed: 24, gamesWon: 18, gamesLost: 6 },
             activities: [
               {
@@ -290,7 +335,7 @@ export default function Profile() {
               className="h-12 w-auto object-contain mx-auto"
             />
           </button>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 text-[#7c3aed] border border-purple-200/80 text-[11px] font-mono font-bold uppercase mb-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 text-[#7c3aed] border border-purple-200/80 text-xs font-semibold uppercase tracking-wider mb-3">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Member Access</span>
           </div>
@@ -303,7 +348,7 @@ export default function Profile() {
           <div className="space-y-3">
             <button
               onClick={() => {
-                devLogin("meowionly", "meowionly@everynation.gg");
+                devLogin("meowionly", "");
               }}
               className="w-full py-3.5 px-4 bg-gradient-to-r from-[#7c3aed] to-indigo-600 hover:from-[#6d28d9] hover:to-indigo-700 active:scale-[0.99] text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-purple-600/25 flex items-center justify-center gap-2 cursor-pointer"
             >
@@ -334,11 +379,11 @@ export default function Profile() {
   }
 
   const navItems = [
-    { id: "overview", num: "01", label: "Overview", icon: LayoutDashboard },
-    { id: "apps", num: "02", label: "My Apps", icon: Smartphone },
-    { id: "games", num: "03", label: "My Games", icon: Gamepad2 },
-    { id: "purchases", num: "04", label: "Purchases & Orders", icon: Receipt },
-    { id: "security", num: "05", label: "Account & Security", icon: ShieldCheck },
+    { id: "overview", label: "Overview", icon: LayoutDashboard },
+    { id: "apps", label: "Apps & Downloads", icon: Smartphone },
+    { id: "games", label: "Games Library", icon: Gamepad2 },
+    { id: "purchases", label: "Purchases & Orders", icon: Receipt },
+    { id: "security", label: "Settings & Security", icon: ShieldCheck },
   ] as const;
 
   const filteredApps = MARKETPLACE_APPS.filter((app) => {
@@ -434,7 +479,7 @@ export default function Profile() {
                     <span className="font-extrabold text-sm tracking-tight text-neutral-900 leading-none block">
                       EVERY NATION
                     </span>
-                    <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-mono mt-0.5 block">
+                    <span className="text-[10px] uppercase tracking-wider text-neutral-400 font-semibold mt-0.5 block">
                       Member Center
                     </span>
                   </div>
@@ -469,7 +514,6 @@ export default function Profile() {
                         <Icon className={`w-4 h-4 ${isActive ? "text-[#7c3aed]" : "text-neutral-500"}`} />
                         <span>{item.label}</span>
                       </div>
-                      <span className="text-[11px] font-mono text-neutral-400">{item.num}</span>
                     </button>
                   );
                 })}
@@ -515,7 +559,7 @@ export default function Profile() {
                   <div className="font-extrabold text-sm tracking-tight text-neutral-900 leading-none group-hover:text-[#7c3aed] transition-colors">
                     EVERY NATION
                   </div>
-                  <div className="text-[10px] tracking-wider text-neutral-500 uppercase font-mono mt-1">
+                  <div className="text-[10px] tracking-wider text-neutral-400 uppercase font-semibold mt-1">
                     Member Center
                   </div>
                 </div>
@@ -569,26 +613,16 @@ export default function Profile() {
                 <div className="font-bold text-sm text-neutral-900 truncate">
                   {effectiveUsername}
                 </div>
-                <div className="text-xs text-neutral-500 truncate">{effectiveEmail}</div>
+                <div className="text-xs text-neutral-500 font-medium">Level {effectiveLevel} Member</div>
               </div>
             </div>
 
-            {/* Status & Credits Row */}
+            {/* Credits Row */}
             <div className="pt-2 border-t border-neutral-200/80 flex items-center justify-between text-xs">
-              <div className="flex items-center space-x-1.5">
-                {effectiveIsVerified ? (
-                  <span className="inline-flex items-center text-emerald-700 text-[11px] font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                    <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-600" /> Verified
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center text-amber-700 text-[11px] font-semibold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                    <AlertCircle className="w-3 h-3 mr-1 text-amber-600" /> Unverified
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center space-x-1 font-mono font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 text-[11px]">
-                <Coins className="w-3 h-3 text-amber-600" />
-                <span>{effectiveCredits.toLocaleString()} CR</span>
+              <span className="text-neutral-500 font-medium">Credits</span>
+              <div className="flex items-center space-x-1.5 font-bold text-neutral-900 bg-amber-50/80 px-2.5 py-0.5 rounded-full border border-amber-200/70 text-xs">
+                <Coins className="w-3.5 h-3.5 text-amber-600" />
+                <span>{effectiveCredits.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -609,7 +643,7 @@ export default function Profile() {
         {/* Navigation Tabs (Sidebar Toggles) */}
         <div className={`px-2 py-2 flex-1 space-y-1 overflow-y-auto ${isSidebarCollapsed ? "px-2" : "px-3"}`}>
           {!isSidebarCollapsed && (
-            <div className="px-3 pb-2 text-[10px] font-mono uppercase tracking-wider text-neutral-400 font-bold">
+            <div className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-neutral-400">
               Navigation
             </div>
           )}
@@ -641,16 +675,6 @@ export default function Profile() {
                   {!isSidebarCollapsed && <span>{item.label}</span>}
                 </div>
 
-                {!isSidebarCollapsed && (
-                  <span
-                    className={`text-[11px] font-mono transition-colors ${
-                      isActive ? "text-[#7c3aed] font-bold" : "text-neutral-400 group-hover:text-neutral-600"
-                    }`}
-                  >
-                    {item.num}
-                  </span>
-                )}
-
                 {/* Collapsed active indicator bar */}
                 {isSidebarCollapsed && isActive && (
                   <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-[#7c3aed] rounded-l" />
@@ -670,10 +694,7 @@ export default function Profile() {
                 rel="noopener noreferrer"
                 className="flex items-center justify-between px-3 py-2 rounded-xl frost-subcard hover:bg-white/80 text-xs font-semibold text-neutral-700 hover:text-neutral-900 transition-all cursor-pointer group"
               >
-                <span className="flex items-center space-x-2">
-                  <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                  <span>ENGG Discord</span>
-                </span>
+                <span>ENGG Discord Community</span>
                 <ExternalLink className="w-3.5 h-3.5 text-neutral-400 group-hover:text-neutral-600" />
               </a>
 
@@ -730,11 +751,11 @@ export default function Profile() {
       <main className="flex-1 min-w-0 lg:h-screen overflow-y-auto relative z-10">
         {/* Top Header Breadcrumb Bar (Desktop) */}
         <div className="hidden lg:flex items-center justify-between px-8 py-4 frost-header sticky top-0 z-30">
-          <div className="flex items-center space-x-2 text-xs">
-            <span className="text-neutral-400 font-mono">DASHBOARD</span>
+          <div className="flex items-center space-x-2 text-xs font-medium">
+            <span className="text-neutral-400">Dashboard</span>
             <span className="text-neutral-300">/</span>
-            <span className="text-[#7c3aed] font-bold uppercase tracking-wider">
-              {activeTab}
+            <span className="text-[#7c3aed] font-semibold">
+              {navItems.find((n) => n.id === activeTab)?.label || activeTab}
             </span>
           </div>
 
@@ -774,15 +795,11 @@ export default function Profile() {
               <div className="relative frost-card-static bg-gradient-to-r from-purple-100/40 via-white/70 to-indigo-50/40 p-6 sm:p-8 overflow-hidden">
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div>
-                    <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-purple-100/70 border border-purple-200/80 text-[#7c3aed] text-xs font-mono font-bold mb-3">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>STUDIO MEMBER PORTAL</span>
-                    </div>
                     <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">
-                      Welcome back, {effectiveUsername} 👋
+                      Welcome back, {effectiveUsername}
                     </h1>
                     <p className="text-sm text-neutral-600 mt-2 max-w-xl leading-relaxed">
-                      All your Every Nation studio releases, downloadable Android APKs, and browser games ready at your fingertips.
+                      Access your games, downloaded Android APKs, and purchases.
                     </p>
                   </div>
 
@@ -810,7 +827,7 @@ export default function Profile() {
                   className="frost-card p-5 cursor-pointer group"
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-mono text-neutral-500 uppercase tracking-wider font-semibold">
+                    <span className="text-xs font-medium text-neutral-500">
                       Apps in Catalog
                     </span>
                     <div className="w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center group-hover:scale-105 transition-transform">
@@ -831,7 +848,7 @@ export default function Profile() {
                   className="frost-card p-5 cursor-pointer group"
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-mono text-neutral-500 uppercase tracking-wider font-semibold">
+                    <span className="text-xs font-medium text-neutral-500">
                       Playable Games
                     </span>
                     <div className="w-9 h-9 rounded-xl bg-purple-50 text-[#7c3aed] flex items-center justify-center group-hover:scale-105 transition-transform">
@@ -852,8 +869,8 @@ export default function Profile() {
                   className="frost-card p-5 cursor-pointer group"
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-mono text-neutral-500 uppercase tracking-wider font-semibold">
-                      ENGG Credits
+                    <span className="text-xs font-medium text-neutral-500">
+                      Credits Balance
                     </span>
                     <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-105 transition-transform">
                       <Coins className="w-4 h-4" />
@@ -875,7 +892,7 @@ export default function Profile() {
                 <div className="frost-card p-6 flex flex-col justify-between group">
                   <div>
                     <div className="flex items-center justify-between mb-4">
-                      <span className="text-[11px] font-mono uppercase tracking-wider text-cyan-700 font-bold px-2.5 py-1 rounded-full bg-cyan-50 border border-cyan-200">
+                      <span className="text-[11px] font-semibold text-cyan-700 px-2.5 py-0.5 rounded-full bg-cyan-50 border border-cyan-200">
                         Continue Playing
                       </span>
                       <span className="text-xs text-neutral-500">Web Build • Live</span>
@@ -897,13 +914,13 @@ export default function Profile() {
                           Errant Night
                         </h3>
                         <p className="text-xs text-neutral-500">
-                          Neural Defense Protocol & Network Simulator
+                          Tactical Defense & Strategy Game
                         </p>
                       </div>
                     </div>
 
                     <p className="text-xs text-neutral-600 leading-relaxed mb-6">
-                      Engage tactical real-time defense against neural incursions. Trace anomalies and defend the network with your operative squad.
+                      Engage tactical real-time defense against incoming anomalies. Upgrade defenses and protect core sectors directly in your browser.
                     </p>
                   </div>
 
@@ -922,7 +939,7 @@ export default function Profile() {
                 <div className="frost-card p-6 flex flex-col justify-between group">
                   <div>
                     <div className="flex items-center justify-between mb-4">
-                      <span className="text-[11px] font-mono uppercase tracking-wider text-purple-700 font-bold px-2.5 py-1 rounded-full bg-purple-50 border border-purple-200">
+                      <span className="text-[11px] font-semibold text-purple-700 px-2.5 py-0.5 rounded-full bg-purple-50 border border-purple-200">
                         Mobile Release
                       </span>
                       <span className="text-xs text-neutral-500">Android APK • v1.3.4</span>
@@ -937,13 +954,13 @@ export default function Profile() {
                           Errant Night Mobile APK
                         </h3>
                         <p className="text-xs text-neutral-500">
-                          48.2 MB • Low latency WebGL renderer
+                          48.2 MB • Android 9.0+
                         </p>
                       </div>
                     </div>
 
                     <p className="text-xs text-neutral-600 leading-relaxed mb-6">
-                      Touch-optimized radar sweep, haptic feedback triggers, and zero-dropout WebSocket lobby synchronization.
+                      Touch-optimized controls, fast loading, and smooth performance on mobile Android devices.
                     </p>
                   </div>
 
@@ -1028,11 +1045,11 @@ export default function Profile() {
                         </div>
                         {act.amount !== undefined && (
                           <div
-                            className={`font-mono font-bold ${
+                            className={`font-semibold text-xs ${
                               act.amount >= 0 ? "text-emerald-600" : "text-neutral-600"
                             }`}
                           >
-                            {act.amount >= 0 ? `+${act.amount}` : act.amount} CR
+                            {act.amount >= 0 ? `+${act.amount.toLocaleString()}` : act.amount.toLocaleString()} Credits
                           </div>
                         )}
                       </div>
@@ -1328,10 +1345,10 @@ export default function Profile() {
                           </div>
                           <div>
                             <div className="font-semibold text-neutral-900">{act.description}</div>
-                            <div className="text-[11px] text-neutral-400 font-mono flex items-center space-x-2 mt-0.5">
+                            <div className="text-xs text-neutral-400 flex items-center space-x-2 mt-0.5">
                               <span>{new Date(act.timestamp).toLocaleDateString()}</span>
                               <span>•</span>
-                              <span className="uppercase text-[#7c3aed] font-bold">{act.type}</span>
+                              <span className="uppercase text-[#7c3aed] font-semibold text-[11px]">{act.type}</span>
                             </div>
                           </div>
                         </div>
@@ -1339,11 +1356,11 @@ export default function Profile() {
                         <div className="text-right">
                           {act.amount !== undefined && (
                             <div
-                              className={`font-mono font-bold ${
+                              className={`font-semibold text-xs ${
                                 act.amount >= 0 ? "text-emerald-600" : "text-neutral-700"
                               }`}
                             >
-                              {act.amount >= 0 ? `+${act.amount}` : act.amount} CR
+                              {act.amount >= 0 ? `+${act.amount.toLocaleString()}` : act.amount.toLocaleString()} Credits
                             </div>
                           )}
                           <span className="text-[10px] text-emerald-600 font-semibold">Completed</span>
@@ -1401,38 +1418,83 @@ export default function Profile() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="p-4 frost-subcard">
-                    <div className="text-[11px] font-mono uppercase text-neutral-400 font-semibold">Username</div>
+                    <div className="text-xs font-medium text-neutral-400">Username</div>
                     <div className="text-sm font-bold text-neutral-900 mt-1">{effectiveUsername}</div>
                   </div>
 
                   <div className="p-4 frost-subcard">
-                    <div className="text-[11px] font-mono uppercase text-neutral-400 font-semibold">Email Address</div>
-                    <div className="text-sm font-bold text-neutral-900 mt-1 truncate">{effectiveEmail || "—"}</div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs font-medium text-neutral-400">Email Address</div>
+                      {effectiveEmail ? (
+                        <button
+                          type="button"
+                          onClick={() => setShowFullEmail((prev) => !prev)}
+                          className="flex items-center space-x-1 text-[11px] text-[#7c3aed] hover:text-[#6d28d9] font-medium transition-colors cursor-pointer"
+                          title={showFullEmail ? "Hide email for streamer privacy" : "Show full email"}
+                        >
+                          {showFullEmail ? (
+                            <>
+                              <EyeOff className="w-3.5 h-3.5" />
+                              <span>Hide</span>
+                            </>
+                          ) : (
+                            <>
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>Show</span>
+                            </>
+                          )}
+                        </button>
+                      ) : null}
+                    </div>
+                    <div className="text-sm font-bold mt-1 truncate">
+                      {effectiveEmail ? (
+                        <span className="text-neutral-900">
+                          {showFullEmail ? effectiveEmail : maskEmail(effectiveEmail)}
+                        </span>
+                      ) : (
+                        <span className="text-neutral-400 font-normal italic">
+                          Not connected
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="p-4 frost-subcard">
-                    <div className="text-[11px] font-mono uppercase text-neutral-400 font-semibold">Account Tier</div>
-                    <div className="text-sm font-bold text-[#7c3aed] mt-1">
-                      Studio Member (Level {effectiveLevel})
+                    <div className="text-xs font-medium text-neutral-400">Member Since</div>
+                    <div className="text-sm font-bold text-neutral-900 mt-1">
+                      {profileData?.user?.createdAt
+                        ? new Date(profileData.user.createdAt).toLocaleDateString(undefined, {
+                            month: "long",
+                            year: "numeric",
+                          })
+                        : "October 2026"}
                     </div>
                   </div>
 
                   <div className="p-4 frost-subcard flex items-center justify-between">
                     <div>
-                      <div className="text-[11px] font-mono uppercase text-neutral-400 font-semibold">Email Verification</div>
+                      <div className="text-xs font-medium text-neutral-400">
+                        {effectiveEmail ? "Email Verification" : "Account Status"}
+                      </div>
                       <div className="text-sm font-bold mt-1">
-                        {effectiveIsVerified ? (
-                          <span className="text-emerald-600 flex items-center">
-                            <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Verified
-                          </span>
+                        {effectiveEmail ? (
+                          effectiveIsVerified ? (
+                            <span className="text-emerald-600 flex items-center">
+                              <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Verified
+                            </span>
+                          ) : (
+                            <span className="text-amber-600 flex items-center">
+                              <AlertCircle className="w-3.5 h-3.5 mr-1" /> Unverified
+                            </span>
+                          )
                         ) : (
-                          <span className="text-amber-600 flex items-center">
-                            <AlertCircle className="w-3.5 h-3.5 mr-1" /> Unverified
+                          <span className="text-emerald-600 flex items-center">
+                            <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Active Member
                           </span>
                         )}
                       </div>
                     </div>
-                    {!effectiveIsVerified && (
+                    {effectiveEmail && !effectiveIsVerified && (
                       <button
                         onClick={handleResendVerification}
                         disabled={isResendingVerify}
@@ -1534,7 +1596,7 @@ export default function Profile() {
               {/* Connected Services / Discord */}
               <div className="rounded-2xl frost-subcard p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <div className="font-bold text-neutral-900 text-sm">ENGG Operatives Discord</div>
+                  <div className="font-bold text-neutral-900 text-sm">ENGG Discord Community</div>
                   <p className="text-xs text-neutral-600 mt-1">
                     Connect with fellow players, share feedback on new APK builds, and participate in tournaments.
                   </p>

@@ -155,7 +155,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const savedToken = localStorage.getItem(STORAGE_KEY_TOKEN);
     const savedUserId = localStorage.getItem(STORAGE_KEY_USER_ID);
     const savedUsername = localStorage.getItem(STORAGE_KEY_USERNAME);
-    const savedEmail = localStorage.getItem(STORAGE_KEY_EMAIL);
+    let savedEmail = localStorage.getItem(STORAGE_KEY_EMAIL);
+    if (savedEmail && savedEmail.toLowerCase().endsWith("@everynation.gg")) {
+      localStorage.removeItem(STORAGE_KEY_EMAIL);
+      savedEmail = null;
+    }
     const savedIsVerified = localStorage.getItem(STORAGE_KEY_IS_VERIFIED) === "true";
     const savedCredits = parseInt(localStorage.getItem(STORAGE_KEY_CREDITS) || "0", 10);
     const savedXp = parseInt(localStorage.getItem(STORAGE_KEY_XP) || "0", 10);
@@ -183,7 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [refreshUser, initAnonymous]);
 
-  const devLogin = useCallback((customUsername = "meowionly", customEmail = "meowionly@everynation.gg") => {
+  const devLogin = useCallback((customUsername = "meowionly", customEmail = "") => {
     const devToken = `dev_token_${Date.now()}`;
     const devId = `dev_usr_${Date.now()}`;
     const devCredits = 15400;
@@ -193,7 +197,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY_TOKEN, devToken);
     localStorage.setItem(STORAGE_KEY_USER_ID, devId);
     localStorage.setItem(STORAGE_KEY_USERNAME, customUsername);
-    localStorage.setItem(STORAGE_KEY_EMAIL, customEmail);
+    if (customEmail) {
+      localStorage.setItem(STORAGE_KEY_EMAIL, customEmail);
+    } else {
+      localStorage.removeItem(STORAGE_KEY_EMAIL);
+    }
     localStorage.setItem(STORAGE_KEY_IS_VERIFIED, "true");
     localStorage.setItem(STORAGE_KEY_CREDITS, String(devCredits));
     localStorage.setItem(STORAGE_KEY_XP, String(devXp));
@@ -202,7 +210,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(devToken);
     setUserId(devId);
     setUsername(customUsername);
-    setEmail(customEmail);
+    setEmail(customEmail || null);
     setIsVerified(true);
     setCredits(devCredits);
     setXp(devXp);
@@ -223,7 +231,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // If testing credentials meowionly entered on localhost, instantly authenticate without waiting for remote CORS error
     if (isLocalHost && (email.toLowerCase().includes("meowionly") || password.toLowerCase().includes("meowionly"))) {
-      devLogin("meowionly", "meowionly@everynation.gg");
+      const realEmail = email.includes("@") ? email : "";
+      devLogin("meowionly", realEmail);
       setIsLoading(false);
       return;
     }
@@ -239,7 +248,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (isLocalHost) {
           console.warn("Localhost backend returned non-ok, activating local dev session.");
           const uname = email.includes("@") ? email.split("@")[0] : email;
-          devLogin(uname || "meowionly", email.includes("@") ? email : `${email}@everynation.gg`);
+          const actualEmail = email.includes("@") ? email : "";
+          devLogin(uname || "meowionly", actualEmail);
           return;
         }
         const errorData = await response.json().catch(() => ({}));
@@ -269,7 +279,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (isLocalHost) {
         console.warn("Localhost network or CORS error, activating local dev session:", err);
         const uname = email.includes("@") ? email.split("@")[0] : email;
-        devLogin(uname || "meowionly", email.includes("@") ? email : `${email}@everynation.gg`);
+        const actualEmail = email.includes("@") ? email : "";
+        devLogin(uname || "meowionly", actualEmail);
         return;
       }
       const message = err instanceof Error ? err.message : "Login failed";
