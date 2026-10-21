@@ -10,6 +10,18 @@ import { gameCatalog } from "@/lib/gameCatalog";
 
 const STORAGE_KEY_LAST_DAILY = "lp_last_daily_claim";
 
+function detectMotionProfile(): "reduced" | "mobile" | "desktop" {
+  if (typeof window === "undefined") return "desktop";
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return "reduced";
+  }
+  const isSmallScreen = window.innerWidth < 768;
+  const isCoarseTablet =
+    window.innerWidth < 1024 &&
+    window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+  return isSmallScreen || isCoarseTablet ? "mobile" : "desktop";
+}
+
 export default function Hub() {
   const { token, refreshUser, isLoggedIn } = useAuth();
   const [, setLocation] = useLocation();
@@ -23,11 +35,7 @@ export default function Hub() {
   });
   const [motionProfile, setMotionProfile] = useState<"reduced" | "mobile" | "desktop" | null>(() => {
     if (typeof window === "undefined") return null;
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mediaQuery.matches) return "reduced";
-    const isMobileDevice =
-      window.innerWidth < 1024 || "ontouchstart" in window || navigator.maxTouchPoints > 0;
-    return isMobileDevice ? "mobile" : "desktop";
+    return detectMotionProfile();
   });
 
   useEffect(() => {
@@ -38,26 +46,13 @@ export default function Hub() {
       const currentWidth = window.innerWidth;
       if (!force && currentWidth === lastWidth) return;
       lastWidth = currentWidth;
-
-      if (mediaQuery.matches) {
-        setMotionProfile("reduced");
-      } else {
-        const isMobileDevice =
-          currentWidth < 1024 || "ontouchstart" in window || navigator.maxTouchPoints > 0;
-        setMotionProfile(isMobileDevice ? "mobile" : "desktop");
-      }
+      setMotionProfile(detectMotionProfile());
     };
 
     handleUpdate(true);
 
     const mediaChangeListener = () => {
-      if (mediaQuery.matches) {
-        setMotionProfile("reduced");
-      } else {
-        const isMobileDevice =
-          window.innerWidth < 1024 || "ontouchstart" in window || navigator.maxTouchPoints > 0;
-        setMotionProfile(isMobileDevice ? "mobile" : "desktop");
-      }
+      setMotionProfile(detectMotionProfile());
     };
 
     const handleResize = () => {

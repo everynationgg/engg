@@ -487,53 +487,35 @@ function WorldPaintOverlay({
 
   return (
     <div className="fixed inset-0 z-[15] overflow-hidden pointer-events-none">
-      {/* Expanding radial wash ring from center */}
+      {/* Expanding radial paint wave ring from center portal */}
       <motion.div
-        className="fixed left-1/2 top-[42%] -translate-x-1/2 -translate-y-1/2 rounded-full border-2"
+        className="fixed left-1/2 top-[44%] -translate-x-1/2 -translate-y-1/2 rounded-full border-2"
         style={{
           borderColor: theme.accent,
-          boxShadow: `0 0 50px ${theme.accent}, inset 0 0 30px ${theme.accent}`,
-          width: "100px",
-          height: "100px",
+          boxShadow: `0 0 60px ${theme.accent}, inset 0 0 36px ${theme.accent}`,
+          width: "110px",
+          height: "110px",
         }}
-        initial={{ scale: 0.1, opacity: 0.8 }}
-        animate={{ scale: isMobile ? 12 : 26, opacity: 0 }}
-        transition={{ duration: 1.1, ease: "easeOut" }}
+        initial={{ scale: 0.15, opacity: 0.9 }}
+        animate={{ scale: isMobile ? 14 : 26, opacity: 0 }}
+        transition={{ duration: 0.95, ease: [0.16, 1, 0.3, 1] }}
       />
 
-      {/* Mobile-specific expanding radial wash filled overlay */}
-      {isMobile && (
-        <motion.div
-          className="fixed inset-0 z-[14]"
-          style={{
-            background: `radial-gradient(circle at 50% 42%, ${theme.accent} 0%, ${theme.accent}22 35%, transparent 70%)`,
-          }}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: [0, 0.9, 0], scale: [0.8, 2.5] }}
-          transition={{ duration: 1.1, ease: "easeOut" }}
-        />
-      )}
+      {/* Secondary wet-paint splatter pulse from center */}
+      <motion.div
+        className="fixed left-1/2 top-[44%] -translate-x-1/2 -translate-y-1/2 rounded-full"
+        style={{
+          background: `radial-gradient(circle, transparent 42%, ${theme.accent}66 58%, transparent 72%)`,
+          width: "160px",
+          height: "160px",
+        }}
+        initial={{ scale: 0.2, opacity: 0.85 }}
+        animate={{ scale: isMobile ? 10 : 18, opacity: 0 }}
+        transition={{ duration: 0.88, ease: "easeOut" }}
+      />
 
       {sceneKind === "space-anomaly" && (
         <>
-          {isMobile ? (
-            /* Smooth GPU-accelerated scanline sweep */
-            <motion.div
-              className="fixed left-0 w-full h-[6px] bg-cyan-400/95 shadow-[0_0_24px_#22d3ee] z-[16]"
-              style={{ top: 0 }}
-              initial={{ y: "-10vh" }}
-              animate={{ y: "110vh" }}
-              transition={{ duration: 0.95, ease: "easeInOut" }}
-            />
-          ) : (
-            <motion.div
-              className="fixed left-0 w-full h-[5px] bg-cyan-400/90 shadow-[0_0_20px_rgba(34,211,238,1)]"
-              initial={{ top: "-10%" }}
-              animate={{ top: "110%" }}
-              transition={{ duration: 0.95, ease: "easeInOut" }}
-            />
-          )}
-
           {elements.map((el) => (
             <motion.div
               key={el.id}
@@ -545,11 +527,11 @@ function WorldPaintOverlay({
                 color: "#ffffff",
                 width: `${(el.size ?? 4) * 3.5}px`,
                 height: `${(el.size ?? 4) * 1.5}px`,
-                boxShadow: `0 0 10px ${el.color}`,
+                boxShadow: `0 0 12px ${el.color}`,
               }}
               initial={{ scale: 0.1, opacity: 0 }}
-              animate={{ scale: [0.1, 1.3, 0], opacity: [0, 1, 0], x: [0, el.xDest ?? 0], y: [0, el.yDest ?? 0] }}
-              transition={{ duration: 0.8, delay: el.delay, ease: "easeOut" }}
+              animate={{ scale: [0.1, 1.35, 0], opacity: [0, 1, 0], x: [0, el.xDest ?? 0], y: [0, el.yDest ?? 0] }}
+              transition={{ duration: 0.82, delay: el.delay, ease: "easeOut" }}
             >
               {el.char}
             </motion.div>
@@ -559,32 +541,14 @@ function WorldPaintOverlay({
 
       {sceneKind === "nether-depths" && (
         <>
-          {isMobile ? (
-            /* Ash glow wash */
-            <motion.div
-              className="fixed inset-0 bg-gradient-to-b from-[#120614]/80 via-[#070209]/95 to-black pointer-events-none z-[13]"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0, 0.95, 0] }}
-              transition={{ duration: 1.2, ease: "easeInOut" }}
-            />
-          ) : (
-            /* Full-screen cave darkness expansion */
-            <motion.div
-              className="fixed inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,rgba(18,6,20,0.85)_100%)]"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0, 0.9, 0] }}
-              transition={{ duration: 1.1 }}
-            />
-          )}
-
           <motion.div
-            className="fixed left-1/2 top-[42%] -translate-x-1/2 -translate-y-1/2 border border-purple-500/40 rounded-full flex items-center justify-center font-orbitron text-[8px] sm:text-[10px] text-purple-300/60 uppercase tracking-[0.3em] z-[16]"
+            className="fixed left-1/2 top-[44%] -translate-x-1/2 -translate-y-1/2 border border-purple-500/45 rounded-full flex items-center justify-center font-orbitron text-[8px] sm:text-[10px] text-purple-300/60 uppercase tracking-[0.3em] z-[16]"
             style={{ width: "200px", height: "200px" }}
-            initial={{ scale: 0.1, rotate: 0, opacity: 0.9 }}
-            animate={{ scale: isMobile ? 4 : 10, rotate: 180, opacity: 0 }}
-            transition={{ duration: 1.1, ease: "easeOut" }}
+            initial={{ scale: 0.15, rotate: 0, opacity: 0.9 }}
+            animate={{ scale: isMobile ? 4.5 : 10, rotate: 180, opacity: 0 }}
+            transition={{ duration: 0.95, ease: "easeOut" }}
           >
-            <span className="border border-yellow-500/20 rounded-full w-[80%] h-[80%] absolute" />
+            <span className="border border-yellow-500/25 rounded-full w-[80%] h-[80%] absolute" />
             ENGRAVED NETHER
           </motion.div>
 
@@ -602,7 +566,7 @@ function WorldPaintOverlay({
               }}
               initial={{ scale: 0.1, opacity: 0 }}
               animate={{ scale: [0.1, 1.4, 0], opacity: [0, 0.85, 0], y: [0, el.yDest ?? -70] }}
-              transition={{ duration: 1.1, delay: el.delay, ease: "easeOut" }}
+              transition={{ duration: 0.95, delay: el.delay, ease: "easeOut" }}
             />
           ))}
         </>
@@ -610,48 +574,13 @@ function WorldPaintOverlay({
 
       {sceneKind === "orbital-lock" && (
         <>
-          {isMobile ? (
-            <>
-              {/* Tactical grid overlay */}
-              <motion.div
-                className="fixed inset-0 bg-[linear-gradient(rgba(249,115,22,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(249,115,22,0.05)_1px,transparent_1px)] bg-[size:30px_30px] pointer-events-none z-[13]"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: [0, 0.8, 0] }}
-                transition={{ duration: 1.0 }}
-              />
-              {/* Tactical laser line sweep */}
-              <motion.div
-                className="fixed left-0 w-full h-[3px] bg-orange-500/90 shadow-[0_0_18px_#f97316] z-[16]"
-                style={{ top: 0 }}
-                initial={{ y: "-10vh" }}
-                animate={{ y: "110vh" }}
-                transition={{ duration: 0.95, ease: "easeInOut" }}
-              />
-              {/* Tactical haze wash */}
-              <motion.div
-                className="fixed inset-0 bg-gradient-to-b from-orange-950/20 via-transparent to-orange-950/30 pointer-events-none z-[13]"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: [0, 0.7, 0] }}
-                transition={{ duration: 1.1, ease: "easeInOut" }}
-              />
-            </>
-          ) : (
-            <>
-              <motion.div
-                className="fixed inset-0 bg-[linear-gradient(rgba(249,115,22,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(249,115,22,0.06)_1px,transparent_1px)] bg-[size:40px_40px]"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: [0, 0.8, 0] }}
-                transition={{ duration: 1.0 }}
-              />
-              <motion.div
-                className="fixed left-1/2 top-[42%] -translate-x-1/2 -translate-y-1/2 bg-gradient-to-t from-orange-950/20 via-transparent to-transparent pointer-events-none rounded-full blur-3xl"
-                style={{ width: "280px", height: "280px" }}
-                initial={{ scale: 0.1, opacity: 0.8 }}
-                animate={{ scale: 7, opacity: 0 }}
-                transition={{ duration: 1.0, ease: "easeOut" }}
-              />
-            </>
-          )}
+          <motion.div
+            className="fixed left-1/2 top-[44%] -translate-x-1/2 -translate-y-1/2 bg-gradient-to-t from-orange-950/25 via-transparent to-transparent pointer-events-none rounded-full blur-3xl"
+            style={{ width: "280px", height: "280px" }}
+            initial={{ scale: 0.15, opacity: 0.85 }}
+            animate={{ scale: 7.5, opacity: 0 }}
+            transition={{ duration: 0.92, ease: "easeOut" }}
+          />
 
           {elements.map((el) => (
             <motion.div
@@ -677,89 +606,257 @@ function WorldPaintOverlay({
   );
 }
 
+type PaintStage = "seed" | "creep" | "full";
+type PaintLayerRole = "world" | "frontier";
+
+const PAINT_CENTER_X = 50;
+const PAINT_CENTER_Y = 44;
+const PAINT_VERTEX_COUNT = 24;
+
+// 24-vertex radial organic tendril weights (15 degrees apart).
+// Even indices are outward crawling paint tendrils; odd indices are valleys between tendrils.
+const SPACE_TENDRIL_WEIGHTS = [
+  1.38, 0.54, 1.12, 0.62, 1.46, 0.50,
+  1.18, 0.64, 1.40, 0.52, 1.08, 0.60,
+  1.42, 0.52, 1.14, 0.63, 1.48, 0.50,
+  1.20, 0.61, 1.36, 0.54, 1.10, 0.59,
+];
+
+const NETHER_TENDRIL_WEIGHTS = [
+  1.48, 0.48, 0.96, 0.46, 1.42, 0.52,
+  1.52, 0.47, 1.02, 0.50, 1.38, 0.48,
+  1.46, 0.50, 0.98, 0.45, 1.50, 0.51,
+  1.40, 0.49, 1.00, 0.47, 1.44, 0.50,
+];
+
+const ORBITAL_TENDRIL_WEIGHTS = [
+  1.34, 0.64, 1.16, 0.60, 1.40, 0.62,
+  1.26, 0.66, 1.36, 0.61, 1.18, 0.64,
+  1.34, 0.64, 1.16, 0.60, 1.40, 0.62,
+  1.26, 0.66, 1.36, 0.61, 1.18, 0.64,
+];
+
+function buildPaintPolygon(
+  sceneKind: WorldSceneKind,
+  stage: PaintStage,
+  role: PaintLayerRole,
+): string {
+  const weights =
+    sceneKind === "space-anomaly"
+      ? SPACE_TENDRIL_WEIGHTS
+      : sceneKind === "nether-depths"
+        ? NETHER_TENDRIL_WEIGHTS
+        : ORBITAL_TENDRIL_WEIGHTS;
+
+  const baseRadius =
+    stage === "seed"
+      ? role === "frontier"
+        ? 2.2
+        : 1.4
+      : stage === "creep"
+        ? role === "frontier"
+          ? 31.5
+          : 27.5
+        : role === "frontier"
+          ? 210
+          : 190;
+
+  const angleOffset =
+    sceneKind === "space-anomaly"
+      ? -Math.PI / 18
+      : sceneKind === "nether-depths"
+        ? Math.PI / 12
+        : 0;
+
+  const points: string[] = [];
+  for (let i = 0; i < PAINT_VERTEX_COUNT; i++) {
+    const theta = (i * 2 * Math.PI) / PAINT_VERTEX_COUNT + angleOffset;
+    const weight = weights[i % weights.length];
+    const roleBoost = role === "frontier" && i % 2 === 0 ? 1.08 : 1.0;
+    const r = baseRadius * weight * roleBoost;
+    const x = PAINT_CENTER_X + Math.cos(theta) * r;
+    const y = PAINT_CENTER_Y + Math.sin(theta) * r * 1.08;
+    points.push(`${x.toFixed(2)}% ${y.toFixed(2)}%`);
+  }
+
+  return `polygon(${points.join(", ")})`;
+}
+
+function getWetPaintGradient(sceneKind: WorldSceneKind, theme: GameTheme): string {
+  if (sceneKind === "space-anomaly") {
+    return `radial-gradient(circle at 50% 44%, #ecfeff 0%, #67e8f9 24%, ${theme.accent} 52%, #0284c7 78%, #083344 100%), conic-gradient(from 0deg at 50% 44%, #22d3ee, #38bdf8, #a5f3fc, #0284c7, #22d3ee, #67e8f9, #0369a1, #22d3ee)`;
+  }
+  if (sceneKind === "nether-depths") {
+    return `radial-gradient(circle at 50% 44%, #fef08a 0%, #f59e0b 26%, ${theme.accent} 56%, #6b21a8 82%, #1e0536 100%), conic-gradient(from 45deg at 50% 44%, #a855f7, #f59e0b, #c084fc, #7e22ce, #fbbf24, #9333ea, #f59e0b, #a855f7)`;
+  }
+  return `radial-gradient(circle at 50% 44%, #fff7ed 0%, #fb923c 26%, ${theme.accent} 54%, #ea580c 78%, #22d3ee 98%), conic-gradient(from 90deg at 50% 44%, #f97316, #fbbf24, #ea580c, #22d3ee, #f97316, #fdba74, #c2410c, #f97316)`;
+}
+
 function WorldCanvasTransition({
   activeGame,
   activeTheme,
   activeIndex,
+  hoveredIndex,
   games,
   motionProfile,
 }: {
   activeGame: GameCatalogItem;
   activeTheme: GameTheme;
   activeIndex: number;
+  hoveredIndex: number | null;
   games: readonly GameCatalogItem[];
   motionProfile: MotionProfile;
 }) {
-  const [prevGame, setPrevGame] = useState<GameCatalogItem | null>(null);
-  const [prevTheme, setPrevTheme] = useState<GameTheme | null>(null);
-  const [currentGame, setCurrentGame] = useState<GameCatalogItem>(activeGame);
-  const [currentTheme, setCurrentTheme] = useState<GameTheme>(activeTheme);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [transitionProgress, setTransitionProgress] = useState(false);
-  const prevIndexRef = useRef(activeIndex);
+  const [baseGame, setBaseGame] = useState<GameCatalogItem>(activeGame);
+  const [paintGame, setPaintGame] = useState<GameCatalogItem | null>(null);
+  const [paintStage, setPaintStage] = useState<PaintStage>("seed");
+  const [burstKey, setBurstKey] = useState(0);
+
+  const baseGameRef = useRef<GameCatalogItem>(activeGame);
+  const paintGameRef = useRef<GameCatalogItem | null>(null);
+  const paintStageRef = useRef<PaintStage>("seed");
+  const surgeTimerRef = useRef<number | null>(null);
+  const retractTimerRef = useRef<number | null>(null);
+  const rafRef = useRef<number | null>(null);
+
+  const clearTimers = useCallback(() => {
+    if (surgeTimerRef.current !== null) {
+      window.clearTimeout(surgeTimerRef.current);
+      surgeTimerRef.current = null;
+    }
+    if (retractTimerRef.current !== null) {
+      window.clearTimeout(retractTimerRef.current);
+      retractTimerRef.current = null;
+    }
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
-    let timer: number | null = null;
-    let rafId: number | null = null;
-    if (prevIndexRef.current !== activeIndex) {
-      const oldGame = games[prevIndexRef.current];
-      setPrevGame(oldGame);
-      setPrevTheme(getTheme(oldGame));
-      setCurrentGame(activeGame);
-      setCurrentTheme(activeTheme);
-      setIsTransitioning(true);
-      setTransitionProgress(false);
-      prevIndexRef.current = activeIndex;
+    return () => clearTimers();
+  }, [clearTimers]);
 
-      rafId = requestAnimationFrame(() => {
-        rafId = requestAnimationFrame(() => {
-          setTransitionProgress(true);
+  // Stage 2: Full-Screen Paint Surge when activeGame changes (Click / Next / Prev / Keyboard Arrow)
+  useEffect(() => {
+    if (activeGame.slug === baseGameRef.current.slug) {
+      return;
+    }
+
+    clearTimers();
+
+    const wasAlreadyCreepingThisGame =
+      paintGameRef.current?.slug === activeGame.slug && paintStageRef.current === "creep";
+
+    if (wasAlreadyCreepingThisGame) {
+      paintStageRef.current = "full";
+      setPaintStage("full");
+      setBurstKey((k) => k + 1);
+    } else {
+      if (paintStageRef.current === "full" && paintGameRef.current) {
+        baseGameRef.current = paintGameRef.current;
+        setBaseGame(paintGameRef.current);
+      }
+
+      paintGameRef.current = activeGame;
+      paintStageRef.current = "seed";
+      setPaintGame(activeGame);
+      setPaintStage("seed");
+      setBurstKey((k) => k + 1);
+
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = requestAnimationFrame(() => {
+          paintStageRef.current = "full";
+          setPaintStage("full");
         });
       });
-
-      timer = window.setTimeout(() => {
-        setIsTransitioning(false);
-        setPrevGame(null);
-        setPrevTheme(null);
-        setTransitionProgress(false);
-      }, 1250); // clean transition end independent of child animation complete events
     }
-    return () => {
-      if (timer !== null) {
-        window.clearTimeout(timer);
-      }
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-      }
-    };
-  }, [activeIndex, activeGame, activeTheme, games]);
 
-  const clipPaths = useMemo(() => {
-    const kind = getSceneKind(getTheme(currentGame));
-    if (kind === "space-anomaly") {
-      // Errant Night: horizontal signal tear/rift
-      return {
-        initial: "polygon(0% 42%, 20% 41%, 40% 43%, 60% 41%, 80% 42%, 100% 41%, 100% 42%, 80% 43%, 60% 42%, 40% 44%, 20% 42%, 0% 43%)",
-        animate: "polygon(0% 0%, 20% 0%, 40% 0%, 60% 0%, 80% 0%, 100% 0%, 100% 100%, 80% 100%, 60% 100%, 40% 100%, 20% 100%, 0% 100%)",
-      };
-    } else if (kind === "nether-depths") {
-      // Engraved Nether: jagged diagonal rune cracks
-      return {
-        initial: "polygon(0% 42%, 30% 20%, 50% 65%, 70% 30%, 100% 42%, 100% 43%, 70% 31%, 50% 66%, 30% 21%, 0% 43%)",
-        animate: "polygon(0% 0%, 0% 0%, 50% 0%, 100% 0%, 100% 100%, 100% 100%, 75% 100%, 50% 100%, 0% 100%, 0% 100%)",
-      };
-    } else {
-      // Epsilon Nine: expanding hexagonal/tactical breach (non-degenerate initial state to prevent browser GPU flicker)
-      return {
-        initial: "polygon(50% 41.9%, 50.1% 41.9%, 50.1% 42.1%, 50% 42.1%, 49.9% 42.1%, 49.9% 41.9%, 50% 41.9%, 50% 41.9%)",
-        animate: "polygon(50% -50%, 150% 0%, 150% 150%, 50% 250%, -50% 150%, -50% 0%, 50% -50%, 50% -50%)",
-      };
+    surgeTimerRef.current = window.setTimeout(() => {
+      baseGameRef.current = activeGame;
+      paintGameRef.current = null;
+      paintStageRef.current = "seed";
+      setBaseGame(activeGame);
+      setPaintStage("seed");
+      setPaintGame(null);
+      surgeTimerRef.current = null;
+    }, 1020);
+  }, [activeGame, activeIndex, clearTimers]);
+
+  // Stage 1: Center Paint Creep when hovering a non-active game card or Next/Prev trigger
+  useEffect(() => {
+    if (paintStageRef.current === "full") {
+      return;
     }
-  }, [currentGame]);
+
+    const hoveredGame =
+      hoveredIndex !== null && hoveredIndex !== activeIndex
+        ? (games[hoveredIndex] ?? null)
+        : null;
+
+    if (hoveredGame && hoveredGame.slug !== baseGameRef.current.slug) {
+      if (retractTimerRef.current !== null) {
+        window.clearTimeout(retractTimerRef.current);
+        retractTimerRef.current = null;
+      }
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+
+      if (paintGameRef.current?.slug === hoveredGame.slug) {
+        paintStageRef.current = "creep";
+        setPaintStage("creep");
+      } else {
+        paintGameRef.current = hoveredGame;
+        paintStageRef.current = "seed";
+        setPaintGame(hoveredGame);
+        setPaintStage("seed");
+
+        rafRef.current = requestAnimationFrame(() => {
+          rafRef.current = requestAnimationFrame(() => {
+            if (paintStageRef.current !== "full") {
+              paintStageRef.current = "creep";
+              setPaintStage("creep");
+            }
+          });
+        });
+      }
+    } else if (!hoveredGame && paintStageRef.current === "creep") {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      paintStageRef.current = "seed";
+      setPaintStage("seed");
+
+      retractTimerRef.current = window.setTimeout(() => {
+        if (paintStageRef.current === "seed") {
+          paintGameRef.current = null;
+          setPaintGame(null);
+        }
+        retractTimerRef.current = null;
+      }, 460);
+    }
+  }, [hoveredIndex, activeIndex, games]);
 
   const isReduced = motionProfile === "reduced" || motionProfile === null;
-  const useOpacityTransition = motionProfile === "mobile";
-  const canvasBackground = currentTheme.backgroundBase;
+  const baseTheme = useMemo(() => getTheme(baseGame), [baseGame]);
+  const paintTheme = useMemo(() => (paintGame ? getTheme(paintGame) : null), [paintGame]);
+  const paintSceneKind = useMemo(
+    () => (paintTheme ? getSceneKind(paintTheme) : "default"),
+    [paintTheme],
+  );
+
+  const worldClipPath = useMemo(
+    () => buildPaintPolygon(paintSceneKind, paintStage, "world"),
+    [paintSceneKind, paintStage],
+  );
+  const frontierClipPath = useMemo(
+    () => buildPaintPolygon(paintSceneKind, paintStage, "frontier"),
+    [paintSceneKind, paintStage],
+  );
 
   if (isReduced) {
     return (
@@ -772,67 +869,78 @@ function WorldCanvasTransition({
     );
   }
 
-  return (
-    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-black" style={{ backgroundColor: canvasBackground }}>
-      {/* 1. Previous Base Layer */}
-      {isTransitioning && prevGame && prevTheme && (
-        <PortalWorldScene
-          game={prevGame}
-          theme={prevTheme}
-          motionProfile={motionProfile}
-          isTransitionActive={true}
-        />
-      )}
+  const worldTransition =
+    paintStage === "full"
+      ? "clip-path 0.94s cubic-bezier(0.16, 1, 0.3, 1)"
+      : paintStage === "creep"
+        ? "clip-path 0.56s cubic-bezier(0.16, 1, 0.3, 1)"
+        : "clip-path 0.42s cubic-bezier(0.4, 0, 0.2, 1)";
 
-      {/* 2. Next Paint-Reveal Layer */}
-      {isTransitioning ? (
-        useOpacityTransition ? (
-          <motion.div
-            key={`paint-target-${currentGame.slug}`}
-            className="fixed inset-0 z-[1]"
-            initial={{ opacity: 0.001 }}
-            animate={{ opacity: transitionProgress ? 1 : 0.001 }}
-            transition={{ duration: 0.95, ease: "easeOut" }}
-          >
-            <PortalWorldScene
-              game={currentGame}
-              theme={currentTheme}
-              motionProfile={motionProfile}
-              isTransitionActive={true}
-            />
-          </motion.div>
-        ) : (
+  const frontierTransition =
+    paintStage === "full"
+      ? "clip-path 0.84s cubic-bezier(0.16, 1, 0.3, 1)"
+      : paintStage === "creep"
+        ? "clip-path 0.52s cubic-bezier(0.16, 1, 0.3, 1)"
+        : "clip-path 0.44s cubic-bezier(0.4, 0, 0.2, 1)";
+
+  return (
+    <div
+      className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-black"
+      style={{ backgroundColor: baseTheme.backgroundBase }}
+    >
+      {/* 1. Settled Base World Layer */}
+      <PortalWorldScene
+        game={baseGame}
+        theme={baseTheme}
+        motionProfile={motionProfile}
+        isTransitionActive={paintStage === "full"}
+      />
+
+      {/* 2. Center-Outward Crawling Paint Layer (Stage 1 Hover Creep & Stage 2 Full Takeover) */}
+      {paintGame && paintTheme && (
+        <div
+          key={`paint-crawl-${paintGame.slug}`}
+          className="fixed inset-0 z-[1] pointer-events-none"
+          style={{
+            filter: `drop-shadow(0 0 18px ${paintTheme.accent}) drop-shadow(0 0 42px ${paintTheme.accent}99)`,
+          }}
+        >
+          {/* Leading Wet-Paint Tendril Frontier */}
           <div
-            key={`paint-target-${currentGame.slug}`}
             className="fixed inset-0 z-[1]"
             style={{
-              clipPath: transitionProgress ? clipPaths.animate : clipPaths.initial,
-              opacity: transitionProgress ? 1 : 0.1,
-              transition: "clip-path 1.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1)",
+              clipPath: frontierClipPath,
+              transition: frontierTransition,
+              background: getWetPaintGradient(paintSceneKind, paintTheme),
+              willChange: "clip-path",
+            }}
+          />
+
+          {/* 100% Opaque Incoming World Scene Painted Inside the Tendrils */}
+          <div
+            className="fixed inset-0 z-[2]"
+            style={{
+              clipPath: worldClipPath,
+              transition: worldTransition,
+              willChange: "clip-path",
             }}
           >
             <PortalWorldScene
-              game={currentGame}
-              theme={currentTheme}
+              game={paintGame}
+              theme={paintTheme}
               motionProfile={motionProfile}
-              isTransitionActive={true}
+              isTransitionActive={paintStage === "full"}
             />
           </div>
-        )
-      ) : (
-        <PortalWorldScene
-          game={currentGame}
-          theme={currentTheme}
-          motionProfile={motionProfile}
-          isTransitionActive={false}
-        />
+        </div>
       )}
 
-      {/* 3. Paint Wave & Particle Overlay */}
-      {isTransitioning && (
+      {/* 3. Radial Paint Burst & Splatter Particles on Full Surge */}
+      {paintStage === "full" && paintGame && (
         <WorldPaintOverlay
-          fromGame={prevGame}
-          toGame={currentGame}
+          key={`paint-burst-${paintGame.slug}-${burstKey}`}
+          fromGame={baseGame}
+          toGame={paintGame}
           motionProfile={motionProfile}
         />
       )}
@@ -1221,15 +1329,10 @@ function PortalWorldScene({
           }
         `}
       </style>
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={`world-scene-${game.slug}`}
-          className="absolute inset-0"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: reducedMotion ? 0 : 0.5 }}
-        >
+      <div
+        key={`world-scene-${game.slug}`}
+        className="absolute inset-0"
+      >
           <WorldSceneLayer name="base" style={worldBackgroundStyle}>
             {null}
           </WorldSceneLayer>
@@ -1755,8 +1858,7 @@ function PortalWorldScene({
               />
             ))}
           </WorldSceneLayer>
-        </motion.div>
-      </AnimatePresence>
+      </div>
     </div>
   );
 }
@@ -2127,6 +2229,7 @@ export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
     }
     return 0;
   });
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [enteringGame, setEnteringGame] = useState<GameCatalogItem | null>(null);
   const entryTimerRef = useRef<number | null>(null);
   const launchPendingRef = useRef(false);
@@ -2139,6 +2242,16 @@ export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
   const activeSceneKind = useMemo(() => getSceneKind(activeTheme), [activeTheme]);
   const enteringTheme = useMemo(() => (enteringGame ? getTheme(enteringGame) : null), [enteringGame]);
   const isLaunchable = isLaunchableGame(activeGame);
+
+  const prevIndex = (activeIndex - 1 + games.length) % games.length;
+  const nextIndex = (activeIndex + 1) % games.length;
+  const prevGame = games[prevIndex] ?? games[0];
+  const nextGame = games[nextIndex] ?? games[0];
+  const prevTheme = useMemo(() => getTheme(prevGame), [prevGame]);
+  const nextTheme = useMemo(() => getTheme(nextGame), [nextGame]);
+  const hoveredGame =
+    hoveredIndex !== null && hoveredIndex !== activeIndex ? (games[hoveredIndex] ?? null) : null;
+  const hoveredTheme = useMemo(() => (hoveredGame ? getTheme(hoveredGame) : null), [hoveredGame]);
 
   const [displayGame, setDisplayGame] = useState<GameCatalogItem>(activeGame);
   const [detailsOpacity, setDetailsOpacity] = useState(1);
@@ -2187,16 +2300,28 @@ export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
     }
   }, [activeIndex]);
 
-  const setWrappedIndex = (nextIndex: number) => {
+  const setWrappedIndex = (nextIdx: number) => {
     if (launchPendingRef.current) return;
 
     const total = games.length;
-    setActiveIndex((nextIndex + total) % total);
+    const resolved = (nextIdx + total) % total;
+    setHoveredIndex(null);
+    setActiveIndex(resolved);
   };
 
   const selectGame = (index: number) => {
     if (!launchPendingRef.current) {
+      setHoveredIndex(null);
       setActiveIndex(index);
+    }
+  };
+
+  const previewGameHover = (index: number | null) => {
+    if (launchPendingRef.current) return;
+    if (index === null || index === activeIndex) {
+      setHoveredIndex(null);
+    } else {
+      setHoveredIndex(index);
     }
   };
 
@@ -2285,6 +2410,7 @@ export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
         activeGame={activeGame}
         activeTheme={activeTheme}
         activeIndex={activeIndex}
+        hoveredIndex={hoveredIndex}
         games={games}
         motionProfile={motionProfile}
       />
@@ -2333,8 +2459,10 @@ export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
 
         <div className="relative z-10 flex-1 min-h-0 flex items-center justify-center w-full py-2 sm:py-4">
           <div
-            className="pointer-events-none absolute left-1/2 top-1/2 h-[min(90vw,55vh,520px)] w-[min(90vw,55vh,520px)] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-55 blur-3xl"
-            style={{ background: `radial-gradient(circle, ${activeTheme.accentSoft}, transparent 68%)` }}
+            className="pointer-events-none absolute left-1/2 top-1/2 h-[min(90vw,55vh,520px)] w-[min(90vw,55vh,520px)] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-55 blur-3xl transition-colors duration-500"
+            style={{
+              background: `radial-gradient(circle, ${(hoveredTheme ?? activeTheme).accentSoft}, transparent 68%)`,
+            }}
             aria-hidden="true"
           />
 
@@ -2343,11 +2471,45 @@ export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
             aria-hidden="true"
           >
             <PortalFragments
-              particles={activeTheme.particles}
-              accent={activeTheme.accent}
+              particles={(hoveredTheme ?? activeTheme).particles}
+              accent={(hoveredTheme ?? activeTheme).accent}
               reducedMotion={motionProfile !== "desktop"}
             />
           </div>
+
+          {/* Left Flanking World Node (Hover = Center Paint Creep, Click = Full Paint Takeover) */}
+          <button
+            type="button"
+            onClick={() => selectGame(prevIndex)}
+            onMouseEnter={() => previewGameHover(prevIndex)}
+            onMouseLeave={() => previewGameHover(null)}
+            onFocus={() => previewGameHover(prevIndex)}
+            onBlur={() => previewGameHover(null)}
+            aria-label={`Preview or switch to ${prevGame.title}`}
+            className="group hidden lg:flex flex-col items-end gap-2 mr-8 xl:mr-14 px-4 py-3 border bg-black/45 backdrop-blur-md text-right transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-300/60"
+            style={{
+              borderColor: hoveredIndex === prevIndex ? prevTheme.accent : "rgba(255,255,255,0.14)",
+              boxShadow:
+                hoveredIndex === prevIndex
+                  ? `0 0 32px ${prevTheme.accent}55, inset 0 0 20px ${prevTheme.accent}22`
+                  : "0 8px 30px rgba(0,0,0,0.5)",
+              clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)",
+            }}
+          >
+            <span className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.28em] text-white/50 group-hover:text-white/90">
+              <ChevronLeft className="h-3.5 w-3.5" style={{ color: prevTheme.accent }} />
+              <span>Prev World</span>
+            </span>
+            <span className="font-orbitron text-xs font-black uppercase tracking-[0.16em] text-white">
+              {prevGame.title}
+            </span>
+            <span
+              className="font-mono text-[9px] uppercase tracking-[0.2em]"
+              style={{ color: prevTheme.accent }}
+            >
+              {hoveredIndex === prevIndex ? "Click to Paint World" : "Hover to Creep"}
+            </span>
+          </button>
 
           <motion.div
             key={`portal-${activeGame.slug}`}
@@ -2604,13 +2766,74 @@ export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
               <PortalLeakParticles game={activeGame} accent={activeTheme.accent} reducedMotion={motionProfile !== "desktop"} />
             </motion.button>
           </motion.div>
+
+          {/* Right Flanking World Node (Hover = Center Paint Creep, Click = Full Paint Takeover) */}
+          <button
+            type="button"
+            onClick={() => selectGame(nextIndex)}
+            onMouseEnter={() => previewGameHover(nextIndex)}
+            onMouseLeave={() => previewGameHover(null)}
+            onFocus={() => previewGameHover(nextIndex)}
+            onBlur={() => previewGameHover(null)}
+            aria-label={`Preview or switch to ${nextGame.title}`}
+            className="group hidden lg:flex flex-col items-start gap-2 ml-8 xl:ml-14 px-4 py-3 border bg-black/45 backdrop-blur-md text-left transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-300/60"
+            style={{
+              borderColor: hoveredIndex === nextIndex ? nextTheme.accent : "rgba(255,255,255,0.14)",
+              boxShadow:
+                hoveredIndex === nextIndex
+                  ? `0 0 32px ${nextTheme.accent}55, inset 0 0 20px ${nextTheme.accent}22`
+                  : "0 8px 30px rgba(0,0,0,0.5)",
+              clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
+            }}
+          >
+            <span className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.28em] text-white/50 group-hover:text-white/90">
+              <span>Next World</span>
+              <ChevronRight className="h-3.5 w-3.5" style={{ color: nextTheme.accent }} />
+            </span>
+            <span className="font-orbitron text-xs font-black uppercase tracking-[0.16em] text-white">
+              {nextGame.title}
+            </span>
+            <span
+              className="font-mono text-[9px] uppercase tracking-[0.2em]"
+              style={{ color: nextTheme.accent }}
+            >
+              {hoveredIndex === nextIndex ? "Click to Paint World" : "Hover to Creep"}
+            </span>
+          </button>
         </div>
 
         <div className="relative z-20 flex w-full max-w-[920px] flex-col items-center gap-2 sm:gap-3 shrink-0">
+          {/* Active Paint Creep Preview Banner */}
+          <div className="h-5 flex items-center justify-center">
+            {hoveredGame && hoveredTheme ? (
+              <div
+                className="inline-flex items-center gap-2 rounded-full border bg-black/65 px-3.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.26em] text-white backdrop-blur-md"
+                style={{
+                  borderColor: `${hoveredTheme.accent}88`,
+                  boxShadow: `0 0 20px ${hoveredTheme.accent}44`,
+                }}
+              >
+                <span
+                  className="h-2 w-2 rounded-full animate-pulse"
+                  style={{ backgroundColor: hoveredTheme.accent, boxShadow: `0 0 10px ${hoveredTheme.accent}` }}
+                />
+                <span>
+                  Paint Creeping: <strong style={{ color: hoveredTheme.accent }}>{hoveredGame.title}</strong> — Click to Paint Full Page
+                </span>
+              </div>
+            ) : (
+              <span className="font-mono text-[9px] uppercase tracking-[0.28em] text-white/35">
+                Hover another world to creep paint from center • Click to paint full page
+              </span>
+            )}
+          </div>
+
           <div className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-stretch gap-2">
             <button
               type="button"
               onClick={() => setWrappedIndex(activeIndex - 1)}
+              onMouseEnter={() => previewGameHover(prevIndex)}
+              onMouseLeave={() => previewGameHover(null)}
               className="grid h-11 w-11 shrink-0 place-items-center border border-white/10 bg-black/35 text-white/70 backdrop-blur-sm transition hover:border-white/25 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-300/60"
               aria-label="Previous game"
             >
@@ -2633,6 +2856,7 @@ export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
               {games.map((game, index) => {
                 const theme = getTheme(game);
                 const isActive = index === activeIndex;
+                const isHovered = index === hoveredIndex && !isActive;
                 const isLocked = game.status !== "online";
                 const stateLabel = game.status === "online" ? "Live" : statusCopy[game.status];
                 return (
@@ -2640,11 +2864,17 @@ export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
                     key={game.slug}
                     type="button"
                     onClick={() => selectGame(index)}
-                    onFocus={() => selectGame(index)}
-                    onMouseEnter={() => selectGame(index)}
+                    onMouseEnter={() => previewGameHover(index)}
+                    onMouseLeave={() => previewGameHover(null)}
+                    onFocus={() => previewGameHover(index)}
+                    onBlur={() => previewGameHover(null)}
                     className={cn(
                       "relative min-h-11 sm:min-h-14 min-w-0 flex-1 overflow-hidden border bg-black/35 px-2 py-2 text-left backdrop-blur-sm transition duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-300/60",
-                      isActive ? "border-white/35 text-white" : "border-white/10 opacity-72 hover:opacity-100",
+                      isActive
+                        ? "border-white/35 text-white"
+                        : isHovered
+                          ? "border-white/30 text-white opacity-100"
+                          : "border-white/10 opacity-72 hover:opacity-100",
                       isLocked && "opacity-55",
                     )}
                     style={{
@@ -2656,7 +2886,13 @@ export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
                           boxShadow: `0 0 32px ${theme.accent}66, inset 0 0 26px ${theme.accent}26`,
                           background: `linear-gradient(135deg, ${theme.accentSoft}, rgba(0,0,0,0.34) 54%, ${theme.accent}1a)`,
                         }
-                        : {}),
+                        : isHovered
+                          ? {
+                            borderColor: `${theme.accent}88`,
+                            boxShadow: `0 0 22px ${theme.accent}44, inset 0 0 18px ${theme.accent}1a`,
+                            background: `linear-gradient(135deg, ${theme.accent}22, rgba(0,0,0,0.45) 60%)`,
+                          }
+                          : {}),
                     }}
                     aria-pressed={isActive}
                   >
@@ -2717,6 +2953,8 @@ export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
             <button
               type="button"
               onClick={() => setWrappedIndex(activeIndex + 1)}
+              onMouseEnter={() => previewGameHover(nextIndex)}
+              onMouseLeave={() => previewGameHover(null)}
               className="grid h-11 w-11 shrink-0 place-items-center border border-white/10 bg-black/35 text-white/70 backdrop-blur-sm transition hover:border-white/25 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-300/60"
               aria-label="Next game"
             >
