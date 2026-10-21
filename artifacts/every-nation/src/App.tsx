@@ -13,9 +13,6 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 
 const About = lazy(() => import("@/pages/About"));
-const WhoWeAre = lazy(() => import("@/pages/about/WhoWeAre"));
-const WhatWeDo = lazy(() => import("@/pages/about/WhatWeDo"));
-const MissionVision = lazy(() => import("@/pages/about/MissionVision"));
 
 const Shop = lazy(() => import("@/pages/Shop"));
 const Marketplace = lazy(() => import("@/pages/Marketplace"));
@@ -67,12 +64,12 @@ function Router() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/about" component={About} />
-        <Route path="/about/who-we-are" component={WhoWeAre} />
-        <Route path="/about/what-we-do" component={WhatWeDo} />
-        <Route path="/about/mission-and-vision" component={MissionVision} />
-        <Route path="/who-we-are" component={WhoWeAre} />
-        <Route path="/what-we-do" component={WhatWeDo} />
-        <Route path="/mission-and-vision" component={MissionVision} />
+        <Route path="/about/who-we-are" component={About} />
+        <Route path="/about/what-we-do" component={About} />
+        <Route path="/about/mission-and-vision" component={About} />
+        <Route path="/who-we-are" component={About} />
+        <Route path="/what-we-do" component={About} />
+        <Route path="/mission-and-vision" component={About} />
         <Route path="/marketplace" component={Marketplace} />
         <Route path="/visien" component={ProjectStudioRedirect} />
         <Route path="/visein" component={ProjectStudioRedirect} />
