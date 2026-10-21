@@ -2737,14 +2737,15 @@ export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
             </span>
           </div>
 
-          <div className="relative flex justify-center">
+          <div className="relative flex flex-col sm:flex-row items-center justify-center gap-3">
             <span
               className="pointer-events-none absolute -top-5 left-1/2 h-5 w-px -translate-x-1/2"
               style={{ background: `linear-gradient(180deg, ${activeTheme.accent}, transparent)` }}
               aria-hidden="true"
             />
             {isLaunchable ? (
-              <button
+              <>
+                <button
                 type="button"
                 onClick={() => beginLaunch(activeGame)}
                 disabled={Boolean(enteringGame)}
@@ -2775,6 +2776,20 @@ export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
                 <Play className="relative h-5 w-5 shrink-0" />
                 <span className="relative">{getLaunchLabel(activeGame)}</span>
               </button>
+              {activeGame.androidApkUrl && (
+                <a
+                  href="/marketplace"
+                  className="inline-flex h-11 sm:h-14 w-full sm:w-auto items-center justify-center gap-2 border border-cyan-500/40 bg-cyan-950/40 hover:bg-cyan-900/50 px-5 sm:px-6 font-orbitron text-[11px] sm:text-[13px] font-bold uppercase tracking-[0.24em] text-cyan-300 backdrop-blur-sm transition duration-200 hover:scale-[1.02]"
+                  style={{
+                    clipPath:
+                      "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))",
+                  }}
+                  title="Get Android APK from Marketplace"
+                >
+                  <span>Get APK</span>
+                </a>
+              )}
+              </>
             ) : (
               <button
                 type="button"

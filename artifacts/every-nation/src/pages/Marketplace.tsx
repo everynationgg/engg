@@ -55,12 +55,16 @@ export default function MarketplacePage() {
     }, 4500);
 
     if (app.currentRelease.downloadUrl) {
-      const a = document.createElement("a");
-      a.href = app.currentRelease.downloadUrl;
-      a.download = `${app.id}-${app.currentRelease.version}.apk`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      if (app.currentRelease.downloadUrl.startsWith("http")) {
+        window.location.assign(app.currentRelease.downloadUrl);
+      } else {
+        const a = document.createElement("a");
+        a.href = app.currentRelease.downloadUrl;
+        a.download = `${app.id}-${app.currentRelease.version}.apk`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
     }
   };
 
