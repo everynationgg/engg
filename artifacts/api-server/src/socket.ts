@@ -11,13 +11,19 @@ import { verifyToken } from "./lib/auth.js";
  * and register all game event handlers.
  */
 export function attachSocketIO(httpServer: HttpServer): SocketIOServer {
-  const envOrigins = (process.env.ALLOWED_ORIGINS || "").split(",").filter(Boolean);
+  const envOrigins = (process.env.ALLOWED_ORIGINS || "")
+    .split(",")
+    .map((s) => s.trim().replace(/\/$/, ""))
+    .filter(Boolean);
   const defaultAllowedOrigins = new Set([
     "https://every-nation.vercel.app",
     "https://errant-night.vercel.app",
     "https://engg.online",
     "https://www.engg.online",
     "https://end.engg.online",
+    "https://localhost",
+    "capacitor://localhost",
+    "http://localhost",
   ]);
 
   const corsOrigin = (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
@@ -27,23 +33,23 @@ export function attachSocketIO(httpServer: HttpServer): SocketIOServer {
       return;
     }
 
+    const cleanOrigin = origin.replace(/\/$/, "");
+
     const allowed =
-      /^https?:\/\/.*\.vercel\.app\/?$/.test(origin)
-      || /^https?:\/\/.*\.fly\.dev\/?$/.test(origin)
-      || defaultAllowedOrigins.has(origin)
-      || defaultAllowedOrigins.has(origin.replace(/\/$/, ""))
-      || envOrigins.includes(origin);
+      /^https?:\/\/.*\.vercel\.app$/.test(cleanOrigin)
+      || /^https?:\/\/.*\.fly\.dev$/.test(cleanOrigin)
+      || /^https?:\/\/localhost(:\d+)?$/.test(cleanOrigin)
+      || /^capacitor:\/\/localhost$/.test(cleanOrigin)
+      || defaultAllowedOrigins.has(cleanOrigin)
+      || envOrigins.includes(cleanOrigin);
 
     if (!allowed) {
       logger.warn({ origin }, "CORS blocked for origin");
-    }
-
-    if (allowed) {
-      callback(null, true);
+      callback(new Error(`CORS blocked for origin: ${origin}`));
       return;
     }
 
-    callback(new Error(`CORS blocked for origin: ${origin}`));
+    callback(null, true);
   };
 
   const io = new SocketIOServer(httpServer, {

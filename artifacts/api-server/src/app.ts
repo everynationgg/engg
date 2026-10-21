@@ -79,20 +79,30 @@ const DEFAULT_ALLOWED_ORIGINS = new Set([
   "https://engg.online",
   "https://www.engg.online",
   "https://end.engg.online",
+  "https://every-nation.vercel.app",
+  "https://errant-night.vercel.app",
+  "https://localhost",
+  "capacitor://localhost",
+  "http://localhost",
 ]);
 
 function isAllowedOrigin(origin?: string): boolean {
   if (!origin) return true; // Non-browser clients / health probes
 
-  if (/\.vercel\.app$/.test(origin)) return true;
-  if (DEFAULT_ALLOWED_ORIGINS.has(origin)) return true;
+  const cleanOrigin = origin.replace(/\/$/, "");
+
+  if (/\.vercel\.app$/.test(cleanOrigin)) return true;
+  if (/^https?:\/\/.*\.fly\.dev$/.test(cleanOrigin)) return true;
+  if (/^https?:\/\/localhost(:\d+)?$/.test(cleanOrigin)) return true;
+  if (/^capacitor:\/\/localhost$/.test(cleanOrigin)) return true;
+  if (DEFAULT_ALLOWED_ORIGINS.has(cleanOrigin)) return true;
 
   const envOrigins = (process.env.ALLOWED_ORIGINS ?? "")
     .split(",")
-    .map((s) => s.trim())
+    .map((s) => s.trim().replace(/\/$/, ""))
     .filter(Boolean);
 
-  return envOrigins.includes(origin);
+  return envOrigins.includes(cleanOrigin);
 }
 
 // CORS - allow explicit custom domains plus *.vercel.app previews.
