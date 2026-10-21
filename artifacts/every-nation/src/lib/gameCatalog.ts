@@ -51,7 +51,7 @@ export const gameCatalog = [
     status: "online",
     legacyPaths: ["/end"],
     externalOrigin: "https://errant-night-yogs-projects-cee6471c.vercel.app",
-    androidApkUrl: "https://github.com/everynationgg/engg/releases/download/v1.0.0-beta/ErrantNight-debug.apk",
+    androidApkUrl: "https://github.com/everynationgg/engg/releases/download/v1.0.0-beta/ErrantNight-release.apk",
     theme: {
       accent: "#22d3ee",
       accentSoft: "rgba(34, 211, 238, 0.18)",

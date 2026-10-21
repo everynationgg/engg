@@ -45,8 +45,8 @@ export const MARKETPLACE_APPS: MarketplaceApp[] = [
     currentRelease: {
       version: "v1.0.0-beta",
       releaseDate: "October 2026",
-      apkSize: "101.8 MB",
-      downloadUrl: "https://github.com/everynationgg/engg/releases/download/v1.0.0-beta/ErrantNight-debug.apk",
+      apkSize: "100.8 MB",
+      downloadUrl: "https://github.com/everynationgg/engg/releases/download/v1.0.0-beta/ErrantNight-release.apk",
       demoUrl: "https://www.engg.online/errant-night",
       minAndroidVersion: "Android 8.0 (Oreo) or higher",
       whatsNew: [
