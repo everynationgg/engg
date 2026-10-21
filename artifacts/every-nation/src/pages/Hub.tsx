@@ -207,7 +207,7 @@ export default function Hub() {
           </header>
 
           {/* Daily Login Reward */}
-          {isLoggedIn && (
+          {isLoggedIn && !claimed && (
             <div className="relative z-30 shrink-0 mb-3 sm:mb-4 w-full">
               <TacticalSlate>
                 <div className="p-3 sm:p-4 flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-6">
