@@ -160,6 +160,7 @@ export default function ResetPassword() {
                     />
                     <button
                       type="button"
+                      tabIndex={-1}
                       onClick={() => setShowPassword((prev) => !prev)}
                       className="absolute right-4 text-neutral-400 hover:text-neutral-700 focus:outline-none p-1 cursor-pointer"
                       aria-label={showPassword ? "Hide password" : "Show password"}

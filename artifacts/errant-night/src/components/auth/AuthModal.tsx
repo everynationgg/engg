@@ -172,6 +172,7 @@ export default function AuthModal({ onClose, onSuccess }: AuthModalProps) {
                     {mode === "login" && (
                       <button
                         type="button"
+                        tabIndex={-1}
                         onClick={() => setShowForgotPassword(true)}
                         className="font-mono text-[8px] uppercase text-amber-500/60 hover:text-amber-500 transition-colors"
                       >

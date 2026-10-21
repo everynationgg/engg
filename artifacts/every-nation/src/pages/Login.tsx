@@ -130,19 +130,8 @@ export default function Login() {
               </div>
 
               {/* Password */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5 ml-1">
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700">
-                    Password
-                  </label>
-                  <Link
-                    href="/forgot-password"
-                    className="text-xs font-semibold text-[#7c3aed] hover:text-[#6d28d9] transition-colors"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-                <div className="relative flex items-center">
+              <div className="flex flex-col">
+                <div className="relative flex items-center order-2">
                   <div className="absolute left-4 text-neutral-400 pointer-events-none">
                     <FaLock className="w-4 h-4" />
                   </div>
@@ -157,6 +146,7 @@ export default function Login() {
                   />
                   <button
                     type="button"
+                    tabIndex={-1}
                     onClick={() => setShowPassword((prev) => !prev)}
                     className="absolute right-4 text-neutral-400 hover:text-neutral-700 focus:outline-none p-1 cursor-pointer"
                     aria-label={showPassword ? "Hide password" : "Show password"}
@@ -167,6 +157,18 @@ export default function Login() {
                       <FaEye className="w-4 h-4" />
                     )}
                   </button>
+                </div>
+                <div className="flex items-center justify-between mb-1.5 ml-1 order-1">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700">
+                    Password
+                  </label>
+                  <Link
+                    href="/forgot-password"
+                    tabIndex={-1}
+                    className="text-xs font-semibold text-[#7c3aed] hover:text-[#6d28d9] transition-colors"
+                  >
+                    Forgot password?
+                  </Link>
                 </div>
               </div>
 

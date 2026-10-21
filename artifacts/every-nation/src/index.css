@@ -161,17 +161,17 @@
 
 /* ============= FORMS & INPUTS ============= */
 
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-input:-webkit-autofill:active {
+.tactical-input:-webkit-autofill,
+.tactical-input:-webkit-autofill:hover,
+.tactical-input:-webkit-autofill:focus,
+.tactical-input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0 1000px #020408 inset !important;
   -webkit-text-fill-color: #fff !important;
   caret-color: #fff !important;
   transition: background-color 5000s ease-in-out 0s;
 }
 
-input::placeholder {
+.tactical-input::placeholder {
   color: rgba(255, 255, 255, 0.2);
   letter-spacing: 0.2em;
 }
