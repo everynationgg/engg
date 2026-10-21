@@ -57,20 +57,12 @@
       "destination": "https://engg.fly.dev/socket.io/:path*"
     },
     {
-      "source": "/errant-night/assets/:path*",
-      "destination": "https://errant-night-yogs-projects-cee6471c.vercel.app/assets/:path*"
-    },
-    {
-      "source": "/errant-night/",
-      "destination": "https://errant-night-yogs-projects-cee6471c.vercel.app/errant-night/"
-    },
-    {
       "source": "/errant-night",
-      "destination": "https://errant-night-yogs-projects-cee6471c.vercel.app/errant-night"
+      "destination": "/errant-night/index.html"
     },
     {
       "source": "/errant-night/:path*",
-      "destination": "https://errant-night-yogs-projects-cee6471c.vercel.app/errant-night/:path*"
+      "destination": "/errant-night/index.html"
     },
     {
       "source": "/((?!api|socket.io|errant-night).*)",

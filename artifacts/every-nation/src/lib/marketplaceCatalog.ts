@@ -54,9 +54,9 @@ export const MARKETPLACE_APPS: MarketplaceApp[] = [
       demoUrl: "/errant-night",
       minAndroidVersion: "Android 8.0 (Oreo) or higher",
       whatsNew: [
+        "Unified Web + Android cross-play on the same real-time game rooms",
         "Native Android package powered by Capacitor 7 & Android SDK 35",
         "Complete role reveal and airlock ejection animations",
-        "Low-latency real-time multiplayer lobbies via Socket.IO",
         "Touch-optimized ship controls, safe-area layout, and solo practice bots",
       ],
     },

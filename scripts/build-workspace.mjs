@@ -41,10 +41,15 @@ const buildsMainSite = mode === "all" || mode === "landing";
 
 if (buildsMainSite) {
   runBuild("@workspace/every-nation", "/");
+  runBuild("@workspace/errant-night", "/errant-night/");
 }
 
 if (buildsMainSite) {
   const dist = resolve(root, "dist");
   rmSync(dist, { recursive: true, force: true });
   copyDist(resolve(root, "artifacts/every-nation/dist/public"), dist);
+  copyDist(
+    resolve(root, "artifacts/errant-night/dist/public"),
+    resolve(dist, "errant-night"),
+  );
 }

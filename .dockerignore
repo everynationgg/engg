@@ -8,8 +8,9 @@
 .gitignore
 .vscode
 
-
 artifacts/end
+artifacts/errant-night
+artifacts/every-nation
 mockup-sandbox
 attached_assets
 scripts/
