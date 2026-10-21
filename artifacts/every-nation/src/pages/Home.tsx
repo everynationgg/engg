@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaDiscord, FaCompass, FaGamepad, FaRocket, FaTools, FaUsers, FaStore } from "react-icons/fa";
 import HomeHeroNav from "@/components/home/HomeHeroNav";
 import HomeValueDock from "@/components/home/HomeValueDock";
-import { DISCORD_INVITE_URL, PROJECT_STUDIO_URL, launchErrantNight } from "@/lib/externalLinks";
+import { DISCORD_INVITE_URL, VISIEN_AI_URL, launchErrantNight } from "@/lib/externalLinks";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -20,10 +20,10 @@ export default function Home() {
       headlineParts: [
         { text: "Gaming.", color: "text-[#7c3aed]" },
         { text: "Community.", color: "text-neutral-900" },
-        { text: "Studio.", color: "text-[#f97316]" },
+        { text: "Innovation.", color: "text-[#f97316]" },
       ],
       subtitle:
-        "Connect, play, and build with players worldwide. We are an independent game studio, player community, and software engineering team.",
+        "Connect, play, and build with players worldwide. Every Nation GG unites multiplayer games, the ENOS hub, VISIEN AI discovery, and custom software engineering.",
       buttons: [
         {
           label: "JOIN DISCORD",
@@ -33,8 +33,8 @@ export default function Home() {
           action: () => window.open(DISCORD_INVITE_URL, "_blank", "noopener,noreferrer"),
         },
         {
-          label: "EXPLORE GAMES",
-          mobileLabel: "GAMES",
+          label: "EXPLORE ENOS",
+          mobileLabel: "EXPLORE ENOS",
           icon: FaCompass,
           style: "glass-white",
           action: () => setLocation("/hub"),
@@ -51,14 +51,14 @@ export default function Home() {
     },
     {
       id: "gaming",
-      eyebrow: "G A M I N G   H U B",
+      eyebrow: "E N O S   G A M I N G   H U B",
       headlineParts: [
         { text: "Multiplayer.", color: "text-[#7c3aed]" },
-        { text: "Social.", color: "text-neutral-900" },
+        { text: "High-Stakes.", color: "text-neutral-900" },
         { text: "Real-Time.", color: "text-[#f97316]" },
       ],
       subtitle:
-        "Jump straight into live matches. Crew vs. Alien social deduction in Errant Night, tactical card battles in Engraved Nether, and community lobbies.",
+        "Jump straight into live cross-play matches. Crew vs. Alien social deduction in Errant Night, tactical card battles in Engraved Nether, and unified ENOS lobbies.",
       buttons: [
         {
           label: "PLAY ERRANT NIGHT",
@@ -68,8 +68,8 @@ export default function Home() {
           action: () => launchErrantNight(),
         },
         {
-          label: "GAME HUB",
-          mobileLabel: "GAME HUB",
+          label: "EXPLORE ENOS HUB",
+          mobileLabel: "ENOS HUB",
           icon: FaCompass,
           style: "glass-white",
           action: () => setLocation("/hub"),
@@ -85,22 +85,22 @@ export default function Home() {
       ],
     },
     {
-      id: "project-studio",
-      eyebrow: "P R O J E C T   S T U D I O",
+      id: "visien-ai",
+      eyebrow: "A I   &   V I S I E N",
       headlineParts: [
-        { text: "Scope.", color: "text-[#7c3aed]" },
-        { text: "Prototype.", color: "text-neutral-900" },
-        { text: "Ship.", color: "text-[#f97316]" },
+        { text: "Vision.", color: "text-[#7c3aed]" },
+        { text: "Blueprint.", color: "text-neutral-900" },
+        { text: "Automated.", color: "text-[#f97316]" },
       ],
       subtitle:
-        "Plan your web or mobile application with clear technical specifications, interactive roadmaps, and direct collaboration with our engineers.",
+        "Vision Inspired by Story and Idea. Work with Enos AI inside VISIEN Discovery to turn your concept into a structured technical blueprint, timeline, and tracked build.",
       buttons: [
         {
-          label: "START A PROJECT",
-          mobileLabel: "START PROJECT",
+          label: "VISIEN DISCOVERY",
+          mobileLabel: "VISIEN AI",
           icon: FaRocket,
           style: "primary-purple",
-          action: () => window.open(PROJECT_STUDIO_URL, "_blank", "noopener,noreferrer"),
+          action: () => window.open(VISIEN_AI_URL, "_blank", "noopener,noreferrer"),
         },
         {
           label: "WHAT WE DO",
@@ -121,14 +121,14 @@ export default function Home() {
     },
     {
       id: "software-solutions",
-      eyebrow: "A P P S   &   S O F T W A R E",
+      eyebrow: "S O F T W A R E   &   A P K   S T O R E",
       headlineParts: [
         { text: "Web.", color: "text-[#7c3aed]" },
         { text: "Mobile.", color: "text-neutral-900" },
-        { text: "Built to Last.", color: "text-[#f97316]" },
+        { text: "Scalable.", color: "text-[#f97316]" },
       ],
       subtitle:
-        "Download official Android builds or explore the custom web applications, client portals, and multiplayer systems built by our studio.",
+        "Download official Android APK builds, explore our Marketplace showcase, or commission custom web and mobile software engineered around how you work.",
       buttons: [
         {
           label: "BROWSE MARKETPLACE",
@@ -138,19 +138,19 @@ export default function Home() {
           action: () => setLocation("/marketplace"),
         },
         {
+          label: "LAUNCH VISIEN AI",
+          mobileLabel: "VISIEN AI",
+          icon: FaRocket,
+          style: "glass-white",
+          action: () => window.open(VISIEN_AI_URL, "_blank", "noopener,noreferrer"),
+        },
+        {
           label: "WHAT WE DO",
           mobileLabel: "WHAT WE DO",
           icon: FaTools,
-          style: "glass-white",
-          action: () => setLocation("/about/what-we-do"),
-        },
-        {
-          label: "GAME HUB",
-          mobileLabel: "GAME HUB",
-          icon: FaGamepad,
           iconColor: "text-[#7c3aed]",
           style: "glass-white",
-          action: () => setLocation("/hub"),
+          action: () => setLocation("/about/what-we-do"),
         },
       ],
     },
@@ -209,7 +209,7 @@ export default function Home() {
         x: { type: "spring" as const, stiffness: 350, damping: 30 },
         opacity: { duration: 0.2 },
       },
-    }),
+    },
   };
 
   return (

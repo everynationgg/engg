@@ -17,6 +17,7 @@ import {
   FaChevronDown,
   FaCompass,
   FaLayerGroup,
+  FaRobot,
   FaStore,
   FaUser,
   FaSignOutAlt,
@@ -147,9 +148,9 @@ export default function HomeHeroNav() {
       active: location === "/marketplace",
     },
     {
-      id: "studio",
-      label: "Project Studio",
-      icon: FaLayerGroup,
+      id: "visien",
+      label: "VISIEN AI",
+      icon: FaRobot,
       action: () => {
         window.open(PROJECT_STUDIO_URL, "_blank", "noopener,noreferrer");
         setMobileMenuOpen(false);
@@ -286,7 +287,7 @@ export default function HomeHeroNav() {
                               <div>
                                 <div className="text-xs font-bold leading-tight">1. Who We Are</div>
                                 <div className="text-[11px] text-neutral-500 leading-snug mt-0.5">
-                                  Our story, our community &amp; the founders
+                                  Our vision, ENOS ecosystem &amp; the founders
                                 </div>
                               </div>
                             </button>
@@ -306,7 +307,7 @@ export default function HomeHeroNav() {
                               <div>
                                 <div className="text-xs font-bold leading-tight">2. What We Do</div>
                                 <div className="text-[11px] text-neutral-500 leading-snug mt-0.5">
-                                  Multiplayer games, community &amp; custom software
+                                  VISIEN AI, bespoke IT solutions &amp; multiplayer games
                                 </div>
                               </div>
                             </button>
@@ -326,7 +327,7 @@ export default function HomeHeroNav() {
                               <div>
                                 <div className="text-xs font-bold leading-tight">3. Mission &amp; Vision</div>
                                 <div className="text-[11px] text-neutral-500 leading-snug mt-0.5">
-                                  Our core values &amp; long-term direction
+                                  Purpose-driven innovation &amp; long-term value
                                 </div>
                               </div>
                             </button>

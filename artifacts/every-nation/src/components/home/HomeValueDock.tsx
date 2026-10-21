@@ -1,5 +1,5 @@
 import React from "react";
-import { FaUsers, FaGamepad, FaLayerGroup, FaStore } from "react-icons/fa";
+import { FaUsers, FaGamepad, FaRobot, FaStore } from "react-icons/fa";
 import SiteSubFooter from "@/components/common/SiteSubFooter";
 
 interface HomeValueDockProps {
@@ -12,7 +12,7 @@ export default function HomeValueDock({ activeSlide, onSelectSlide }: HomeValueD
     {
       id: "community",
       title: "STRONG COMMUNITY",
-      desc: "Connect, play, and build with players worldwide.",
+      desc: "Connect, play, and grow with gamers worldwide.",
       icon: FaUsers,
       slideIndex: 0,
       badge: "Social",
@@ -20,26 +20,26 @@ export default function HomeValueDock({ activeSlide, onSelectSlide }: HomeValueD
     },
     {
       id: "gaming",
-      title: "GAMING HUB",
-      desc: "Live multiplayer games, social deduction & card battles.",
+      title: "ENOS GAMING HUB",
+      desc: "Live cross-play games, social deduction & card battles.",
       icon: FaGamepad,
       slideIndex: 1,
-      badge: "Games",
+      badge: "ENOS",
       linkAction: () => onSelectSlide(1),
     },
     {
-      id: "studio",
-      title: "PROJECT STUDIO",
-      desc: "Interactive project scoping, roadmaps & client portal.",
-      icon: FaLayerGroup,
+      id: "ai",
+      title: "AI & VISIEN",
+      desc: "Enos AI discovery, idea-to-blueprint & project tracker.",
+      icon: FaRobot,
       slideIndex: 2,
-      badge: "Studio",
+      badge: "VISIEN AI",
       linkAction: () => onSelectSlide(2),
     },
     {
       id: "solutions",
-      title: "APPS & MARKETPLACE",
-      desc: "Official Android APKs, web apps & custom software.",
+      title: "SOFTWARE & APK STORE",
+      desc: "Official Android APKs, web apps & bespoke software.",
       icon: FaStore,
       slideIndex: 3,
       badge: "Marketplace",

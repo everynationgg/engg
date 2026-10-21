@@ -2,14 +2,17 @@ import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import StudioLayout from "@/components/StudioLayout";
-import { DISCORD_INVITE_URL, PROJECT_STUDIO_URL, launchErrantNight } from "@/lib/externalLinks";
+import { DISCORD_INVITE_URL, VISIEN_AI_URL, launchErrantNight } from "@/lib/externalLinks";
 import {
   FaArrowLeft,
   FaArrowRight,
   FaLaptopCode,
+  FaServer,
+  FaRobot,
   FaGamepad,
+  FaTools,
   FaUsers,
-  FaLayerGroup,
+  FaSlidersH,
   FaExternalLinkAlt,
   FaCheckCircle,
 } from "react-icons/fa";
@@ -24,102 +27,178 @@ export function WhatWeDoContent({ onNavigate }: { onNavigate: (path: string) => 
 
   const capabilities = [
     {
-      id: "games",
+      id: "products",
       num: "01",
-      title: "Original Multiplayer Games",
-      shortTitle: "Multiplayer Games",
-      badge: "Web + Android Cross-Play",
-      icon: FaGamepad,
-      summary: "Real-time social deduction and tactical browser & mobile games.",
-      paragraphs: [
-        "We design, build, and host original multiplayer games backed by our own low-latency Socket.IO engine. Our flagship title, Errant Night, pits a deep-space crew against a hidden Alien impostor across tense night-action and emergency-voting phases.",
-        "Alongside Errant Night, we develop tactical browser games like Engraved Nether and maintain a unified player profile system so your account, friends list, match stats, and credits carry across our releases.",
-      ],
-      deliverables: [
-        "Errant Night (12+ Roles, Web & Android APK Cross-Play)",
-        "Engraved Nether (Tactical 3x3 Grid Card Battler)",
-        "Authoritative Socket.IO Rooms & Reconnection Recovery",
-        "Unified Studio Account, Friends List & Daily Rewards",
-      ],
-      techStack: ["React 19", "TypeScript", "Socket.IO", "Capacitor 7", "Android SDK 35"],
-      cta: {
-        label: "Play Errant Night",
-        action: () => launchErrantNight(),
-        secondaryLabel: "Open Game Hub",
-        secondaryAction: () => onNavigate("/hub"),
-      },
-    },
-    {
-      id: "software",
-      num: "02",
-      title: "Custom Web & Mobile Engineering",
-      shortTitle: "Custom Engineering",
-      badge: "Full-Stack Production",
+      title: "Custom Digital Products & Platforms",
+      badge: "ENOS & Web Platforms",
       icon: FaLaptopCode,
-      summary: "Production web apps, business portals, and native Android builds.",
+      summary: "Digital products and platforms designed around specific purposes, audiences, and experiences.",
       paragraphs: [
-        "Not every business or creator fits inside an off-the-shelf template. We partner with clients to design and engineer custom web applications, customer portals, booking & inventory systems, and Android APK builds tailored to how they actually work.",
-        "Our stack centers on modern, battle-tested technologies—React, TypeScript, Node.js, PostgreSQL, Drizzle ORM, and Capacitor—delivering fast load times, clean interfaces, and maintainable architecture.",
+        "We conceptualize and develop digital products designed around specific purposes, audiences, and experiences—including the ENOS platform, web applications, productivity tools, and interactive systems that help users accomplish more.",
+        "We value thoughtful functionality, usability, and flexibility. Where appropriate, we go beyond generic implementations by building features, workflows, and experiences tailored to their intended users.",
       ],
       deliverables: [
-        "Custom Client Portals, Dashboards & Booking Systems",
-        "REST & Real-Time WebSocket APIs on Node.js + PostgreSQL",
-        "Responsive Web Apps & Packaged Android APK Releases",
-        "Clean TypeScript Codebases Built for Long-Term Maintenance",
+        "ENOS Unified Account, Wallet & Portal Ecosystem",
+        "Custom Web Platforms & Interactive Applications",
+        "Cross-Platform Web & Android Experiences",
+        "Tailored User Workflows & Design Systems",
       ],
-      techStack: ["React", "TypeScript", "Node.js", "PostgreSQL", "Drizzle ORM", "Tailwind CSS"],
+      techStack: ["ENOS Platform", "React 19", "TypeScript", "Tailwind CSS", "Capacitor 7"],
       cta: {
-        label: "Browse Marketplace",
-        action: () => onNavigate("/marketplace"),
+        label: "Explore ENOS Hub",
+        action: () => onNavigate("/hub"),
+        secondaryLabel: "Browse Marketplace",
+        secondaryAction: () => onNavigate("/marketplace"),
       },
     },
     {
-      id: "scoping",
-      num: "03",
-      title: "Project Scoping & Architecture Studio",
-      shortTitle: "Project Studio",
-      badge: "Interactive Blueprints",
-      icon: FaLayerGroup,
-      summary: "Turn product ideas into clear technical specs, milestones, and roadmaps.",
+      id: "services",
+      num: "02",
+      title: "Bespoke IT Services & VISIEN Discovery",
+      badge: "VISIEN AI",
+      icon: FaServer,
+      summary: "Custom workflows, specialized applications, and connected systems built around how you operate.",
       paragraphs: [
-        "Software projects succeed when the scope is clear before a single line of production code is written. Through our interactive Project Studio, we help founders and teams map out user flows, select the right technical architecture, and break builds into transparent milestones.",
-        "Clients can review specifications, track active development chapters, and collaborate directly with our engineering team from prototype to launch.",
+        "Not every problem can be solved by an off-the-shelf product. Individuals and businesses often need a custom workflow, specialized application, connected system, or digital solution built around how they actually operate.",
+        "Our reach spans individuals, entrepreneurs, small businesses, and growing organizations. Through the VISIEN AI Discovery Platform (Vision Inspired by Story and Idea), clients work with Enos AI to turn their concept into a clear architectural blueprint and track project milestones in real time.",
       ],
       deliverables: [
-        "Interactive Feature & User-Flow Scoping",
-        "Database Schema & API Contract Planning",
-        "Milestone Breakdown with Transparent Deliverables",
-        "Direct Collaboration with Yog & Meowi",
+        "VISIEN AI Guided Discovery & Blueprint Generation",
+        "Bespoke Business Portals, Booking & POS Systems",
+        "Live Session & Milestone Tracking (VISIEN Companion)",
+        "Accessible Personal Attention for Small & Growing Teams",
       ],
-      techStack: ["System Architecture", "UI/UX Wireframing", "API Design", "Milestone Planning"],
+      techStack: ["VISIEN AI", "Enos AI Guide", "Node.js", "PostgreSQL", "Drizzle ORM"],
+      highlight: {
+        title: "VISIEN AI Discovery Platform",
+        desc: "Vision Inspired by Story and Idea — Turn ideas into architectural blueprints through Enos AI-guided discovery.",
+        link: VISIEN_AI_URL,
+      },
       cta: {
-        label: "Open Project Studio",
-        action: () => window.open(PROJECT_STUDIO_URL, "_blank", "noopener,noreferrer"),
+        label: "Launch VISIEN AI",
+        action: () => window.open(VISIEN_AI_URL, "_blank", "noopener,noreferrer"),
+        isExternal: true,
+        secondaryLabel: "View Showcase Apps",
+        secondaryAction: () => onNavigate("/marketplace"),
+      },
+    },
+    {
+      id: "ai",
+      num: "03",
+      title: "Artificial Intelligence & Automation",
+      badge: "Enos AI & Smart Tools",
+      icon: FaRobot,
+      summary: "Practical AI-powered experiences and automation that solve real needs.",
+      paragraphs: [
+        "Artificial intelligence creates opportunities to make technology more capable, responsive, and useful. ENGG develops AI-powered experiences—such as VISIEN AI and our Enos AI conversational guide—that support users, streamline project scoping, and introduce smarter ways to interact with software.",
+        "We see AI as a practical capability rather than a feature added for novelty. Combined with thoughtful automation, our goal is to reduce repetitive work, improve consistency, and help individuals and organizations accomplish more.",
+      ],
+      deliverables: [
+        "Enos AI Conversational Discovery & Scoping Assistant",
+        "Automated Blueprint, Timeline & Architecture Structuring",
+        "Intelligent Game Bots & Interactive Voice/TTS Systems",
+        "Workflow Automation for Client Business Operations",
+      ],
+      techStack: ["VISIEN AI", "Enos AI", "Automated Workflows", "Intelligent Configurators"],
+      cta: {
+        label: "Try VISIEN Discovery",
+        action: () => window.open(VISIEN_AI_URL, "_blank", "noopener,noreferrer"),
         isExternal: true,
       },
     },
     {
-      id: "community",
+      id: "gaming",
       num: "04",
-      title: "Player Community & Live Events",
-      shortTitle: "Player Community",
-      badge: "Live Lobbies & Discord",
-      icon: FaUsers,
-      summary: "Active Discord lobbies, playtests, and community-driven updates.",
+      title: "Gaming & Interactive Experiences",
+      badge: "Web + Android Cross-Play",
+      icon: FaGamepad,
+      summary: "Original multiplayer games, progression systems, and connected player experiences.",
       paragraphs: [
-        "Games and digital tools are always better when built alongside an active community. Our Discord server and in-platform friend system connect players for custom lobbies, weekend tournaments, and early feature playtests.",
-        "Player feedback directly shapes our balance patches, new role designs, and quality-of-life updates.",
+        "Gaming is a flagship pillar of the ENGG ecosystem. It brings together technology, creativity, entertainment, competition, and shared experiences that encourage people to participate and connect.",
+        "Our games—including Errant Night (real-time sci-fi social deduction for Web and Android APK) and Engraved Nether (tactical grid card battles)—connect directly to the ENOS hub for shared accounts, credits, achievements, and live lobbies.",
       ],
       deliverables: [
-        "Custom Lobbies & Universal Room Invite Links",
-        "In-App Friends List, Presence & Direct Messaging",
-        "Community Playtests & Role Balance Updates",
-        "Direct Developer Access on Discord",
+        "Errant Night (12+ Roles, Unified Web & Android APK Cross-Play)",
+        "Engraved Nether (Tactical 3x3 Card Battler)",
+        "ENOS Progression, Daily Rewards, Credits & Achievements",
+        "Real-Time Socket.IO Lobbies & Universal Room Invite Links",
       ],
-      techStack: ["Discord Community", "Live Matchmaking", "Player Telemetry", "Open Playtests"],
+      techStack: ["Socket.IO", "React 19", "Capacitor 7", "Android SDK 35", "ENOS Hub"],
+      cta: {
+        label: "Play Errant Night",
+        action: () => launchErrantNight(),
+        secondaryLabel: "Open ENOS Hub",
+        secondaryAction: () => onNavigate("/hub"),
+      },
+    },
+    {
+      id: "tools",
+      num: "05",
+      title: "Digital Tools & Practical Technology",
+      badge: "Focused Utilities",
+      icon: FaTools,
+      summary: "Streamlined digital tools that remove friction and give users more control.",
+      paragraphs: [
+        "We create tools that make digital tasks easier, address specific challenges, and provide practical capabilities—either as standalone products or integrated into the ENOS and VISIEN platforms.",
+        "Useful technology does not always need to be complicated. Often, the most valuable solution removes unnecessary steps, simplifies a workflow, or gives users direct control over how they work.",
+      ],
+      deliverables: [
+        "Standalone Web Utilities & Companion Mobile APKs",
+        "ENOS Portal Deck & Cross-Device Session Sync",
+        "Streamlined Admin, Audit & Operations Dashboards",
+        "Lightweight, Fast-Loading Interfaces",
+      ],
+      techStack: ["TypeScript", "Vite", "REST APIs", "Mobile Companion APKs"],
+      cta: {
+        label: "Explore Marketplace",
+        action: () => onNavigate("/marketplace"),
+      },
+    },
+    {
+      id: "community",
+      num: "06",
+      title: "Community & Connected Experiences",
+      badge: "Discord & Allies",
+      icon: FaUsers,
+      summary: "Shared environments where players, creators, and clients connect and collaborate.",
+      paragraphs: [
+        "Technology is not only about what people use; it is also about how people connect. Community creates opportunities for shared experiences, collaboration, learning, and participation.",
+        "Through our Discord server and the built-in ENOS Allies & messaging system, players and clients can join live gaming sessions, exchange ideas, and directly shape what ENGG builds next.",
+      ],
+      deliverables: [
+        "Active Every Nation GG Discord Server & Playtests",
+        "ENOS Allies System with Real-Time Presence & Direct Chat",
+        "Community Lobbies, Events & Feedback Channels",
+        "Connected Experience Across Games & Studio Products",
+      ],
+      techStack: ["Discord Community", "ENOS Allies", "Live Presence", "Direct Messaging"],
       cta: {
         label: "Join Our Discord",
         action: () => window.open(DISCORD_INVITE_URL, "_blank", "noopener,noreferrer"),
+        isExternal: true,
+      },
+    },
+    {
+      id: "customization",
+      num: "07",
+      title: "Customization at the Core",
+      badge: "Tailored by Design",
+      icon: FaSlidersH,
+      summary: "Pushing beyond fixed templates to shape technology around real requirements.",
+      paragraphs: [
+        "Across everything we do, customization remains a defining principle. We explore what is possible when products and services are shaped around real requirements rather than limited to fixed templates.",
+        "We want ENGG to be the place people turn to when existing tools are not enough, when an idea needs a technical foundation, or when a particular need calls for a more personal approach.",
+      ],
+      deliverables: [
+        "Personalized Workflows & Custom Feature Engineering",
+        "Flexible Scope Scaled to Individuals, Startups & Businesses",
+        "Direct Collaboration with Yog & Meowi",
+        "Long-Term Adaptability as Your Needs Grow",
+      ],
+      techStack: ["Bespoke Architecture", "VISIEN AI Scoping", "Tailored UI/UX", "Modular Code"],
+      cta: {
+        label: "Start with VISIEN AI",
+        action: () => window.open(VISIEN_AI_URL, "_blank", "noopener,noreferrer"),
         isExternal: true,
       },
     },
@@ -133,10 +212,10 @@ export function WhatWeDoContent({ onNavigate }: { onNavigate: (path: string) => 
       {/* Category Pill */}
       <div className="flex items-center gap-2 mb-4">
         <span className="text-[11px] font-bold uppercase tracking-wider text-[#7c3aed] bg-[#7c3aed]/10 px-3 py-1 rounded-full">
-          PHASE 02 • ABOUT EVERY NATION
+          PHASE 02 • ABOUT EVERY NATION GG
         </span>
         <span className="text-xs text-neutral-400">•</span>
-        <span className="text-xs font-semibold text-neutral-500">Capabilities &amp; Products</span>
+        <span className="text-xs font-semibold text-neutral-500">Part 2 of 3</span>
       </div>
 
       {/* Page Title & Tagline */}
@@ -144,20 +223,20 @@ export function WhatWeDoContent({ onNavigate }: { onNavigate: (path: string) => 
         WHAT WE DO
       </h1>
       <p className="text-xl sm:text-2xl font-medium text-[#7c3aed] leading-snug mb-6">
-        Multiplayer Games, Custom Software, and Community Tools.
+        One Ecosystem. Multiple Possibilities.
       </p>
 
       {/* Intro */}
       <div className="space-y-4 text-base sm:text-lg text-neutral-700 leading-relaxed max-w-4xl border-b border-neutral-200 pb-10 mb-10">
         <p>
-          Every Nation operates at the intersection of interactive entertainment and custom software engineering. Select any pillar below to inspect what we build, the technology behind it, and how you can jump in.
+          ENGG brings together technology, digital products, customized services, VISIEN AI, gaming, and community. Select any of our 7 capabilities below to explore how our ecosystem works.
         </p>
       </div>
 
       {/* Interactive Split-Screen Capability Inspector */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-14 items-start">
-        {/* Left Column: 4 Selectable Capability Cards */}
-        <div className="lg:col-span-5 flex flex-col gap-3">
+        {/* Left Column: 7 Selectable Capability Cards */}
+        <div className="lg:col-span-5 flex flex-col gap-2.5">
           {capabilities.map((cap, idx) => {
             const Icon = cap.icon;
             const isSelected = idx === selectedIndex;
@@ -165,14 +244,14 @@ export function WhatWeDoContent({ onNavigate }: { onNavigate: (path: string) => 
               <button
                 key={cap.id}
                 onClick={() => setSelectedIndex(idx)}
-                className={`w-full text-left rounded-2xl p-5 border transition-all cursor-pointer flex items-start gap-4 ${
+                className={`w-full text-left rounded-2xl p-4 border transition-all cursor-pointer flex items-center gap-3.5 ${
                   isSelected
                     ? "bg-neutral-900 text-white border-neutral-900 shadow-md"
                     : "bg-[#f5f5f7] text-neutral-800 border-neutral-200/80 hover:bg-neutral-100 hover:border-neutral-300"
                 }`}
               >
                 <div
-                  className={`w-11 h-11 rounded-xl flex items-center justify-center text-lg shrink-0 transition-colors ${
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center text-base shrink-0 transition-colors ${
                     isSelected
                       ? "bg-[#7c3aed] text-white"
                       : "bg-[#7c3aed]/15 text-[#7c3aed]"
@@ -181,13 +260,13 @@ export function WhatWeDoContent({ onNavigate }: { onNavigate: (path: string) => 
                   <Icon />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2 mb-1">
+                  <div className="flex items-center justify-between gap-2 mb-0.5">
                     <span
                       className={`text-[10px] font-extrabold uppercase tracking-wider ${
                         isSelected ? "text-purple-300" : "text-[#7c3aed]"
                       }`}
                     >
-                      Pillar {cap.num}
+                      Capability {cap.num}
                     </span>
                     <span
                       className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
@@ -199,16 +278,9 @@ export function WhatWeDoContent({ onNavigate }: { onNavigate: (path: string) => 
                       {cap.badge}
                     </span>
                   </div>
-                  <h2 className="font-bold text-base leading-snug mb-1">
+                  <h2 className="font-bold text-sm sm:text-base leading-snug truncate">
                     {cap.title}
                   </h2>
-                  <p
-                    className={`text-xs leading-relaxed line-clamp-2 ${
-                      isSelected ? "text-neutral-300" : "text-neutral-500"
-                    }`}
-                  >
-                    {cap.summary}
-                  </p>
                 </div>
               </button>
             );
@@ -216,7 +288,7 @@ export function WhatWeDoContent({ onNavigate }: { onNavigate: (path: string) => 
         </div>
 
         {/* Right Column: Animated Live Inspector Panel */}
-        <div className="lg:col-span-7">
+        <div className="lg:col-span-7 lg:sticky lg:top-32">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeCap.id}
@@ -235,7 +307,7 @@ export function WhatWeDoContent({ onNavigate }: { onNavigate: (path: string) => 
                     </div>
                     <div>
                       <span className="text-[11px] font-bold tracking-wider text-[#7c3aed] uppercase">
-                        Pillar {activeCap.num} of 04 • {activeCap.badge}
+                        Capability {activeCap.num} of 07 • {activeCap.badge}
                       </span>
                       <h3 className="text-xl sm:text-2xl font-extrabold text-neutral-900 tracking-tight">
                         {activeCap.title}
@@ -254,10 +326,33 @@ export function WhatWeDoContent({ onNavigate }: { onNavigate: (path: string) => 
                   ))}
                 </div>
 
+                {/* Optional VISIEN Highlight Box */}
+                {activeCap.highlight && (
+                  <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white rounded-2xl p-5 border border-purple-200 shadow-2xs">
+                    <div>
+                      <div className="text-xs font-extrabold uppercase tracking-wider text-[#7c3aed]">
+                        {activeCap.highlight.title}
+                      </div>
+                      <div className="text-xs text-neutral-600 mt-1 leading-relaxed">
+                        {activeCap.highlight.desc}
+                      </div>
+                    </div>
+                    <a
+                      href={activeCap.highlight.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-xs font-bold text-[#7c3aed] hover:bg-[#7c3aed] hover:text-white whitespace-nowrap bg-[#7c3aed]/10 px-4 py-2.5 rounded-full transition-colors shrink-0"
+                    >
+                      <span>Launch VISIEN</span>
+                      <FaExternalLinkAlt className="w-2.5 h-2.5" />
+                    </a>
+                  </div>
+                )}
+
                 {/* Deliverables Box */}
                 <div className="bg-white rounded-2xl p-5 border border-neutral-200/80 mb-6">
                   <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 mb-3">
-                    What We Ship in This Pillar
+                    Key Capabilities &amp; Deliverables
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     {activeCap.deliverables.map((item) => (
@@ -275,7 +370,7 @@ export function WhatWeDoContent({ onNavigate }: { onNavigate: (path: string) => 
                 {/* Tech Stack Pills */}
                 <div className="mb-7">
                   <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 mb-2">
-                    Core Stack &amp; Tools
+                    Ecosystem &amp; Technologies
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {activeCap.techStack.map((tech) => (
@@ -290,7 +385,7 @@ export function WhatWeDoContent({ onNavigate }: { onNavigate: (path: string) => 
                 </div>
               </div>
 
-              {/* Actions + Next Pillar cycler */}
+              {/* Actions + Next Capability cycler */}
               <div className="pt-5 border-t border-neutral-200/80 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2.5">
                   <button
@@ -321,7 +416,7 @@ export function WhatWeDoContent({ onNavigate }: { onNavigate: (path: string) => 
                   className="text-xs font-bold text-neutral-600 hover:text-neutral-900 inline-flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-neutral-200/60 transition-colors cursor-pointer"
                 >
                   <span>
-                    Next Pillar ({capabilities[(selectedIndex + 1) % capabilities.length].num})
+                    Next Capability ({capabilities[(selectedIndex + 1) % capabilities.length].num})
                   </span>
                   <FaArrowRight className="w-2.5 h-2.5" />
                 </button>
@@ -339,10 +434,10 @@ export function WhatWeDoContent({ onNavigate }: { onNavigate: (path: string) => 
               Up Next • Phase 03 of 03
             </span>
             <h3 className="text-xl sm:text-2xl font-extrabold text-white mt-1">
-              Mission, Vision &amp; Studio Principles
+              Mission, Vision &amp; Guiding Principles
             </h3>
             <p className="text-sm text-neutral-300 mt-1 max-w-xl">
-              See our long-term horizon and the four core engineering principles behind everything we release.
+              Discover our guiding purpose and long-term vision for the Every Nation GG ecosystem.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto shrink-0">

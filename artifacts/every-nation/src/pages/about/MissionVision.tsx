@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import StudioLayout from "@/components/StudioLayout";
+import { VISIEN_AI_URL } from "@/lib/externalLinks";
 import {
   FaArrowLeft,
   FaCompass,
@@ -10,6 +11,7 @@ import {
   FaCheckCircle,
   FaShieldAlt,
   FaChevronRight,
+  FaRobot,
 } from "react-icons/fa";
 
 interface MissionVisionProps {
@@ -20,17 +22,17 @@ interface MissionVisionProps {
 const HORIZON_TABS = [
   {
     id: "mission",
-    badge: "Our Purpose Today",
+    badge: "Guiding Purpose",
     title: "OUR MISSION",
     icon: FaCompass,
     headline:
-      "To create memorable multiplayer games, welcoming player communities, and dependable custom software that help people connect, play, and get real work done.",
+      "To make technology accessible, reliable, and deeply personal by creating customizable digital products, intelligent tools, and bespoke IT services that empower individuals, businesses, and communities.",
     detail:
-      "Whether we are shipping a new role update for Errant Night or building a custom web application for a partner business, our standard is the same: understand the goal clearly, engineer it cleanly, and make the experience effortless for the end user.",
+      "Through innovation, practical problem-solving, and meaningful relationships, we transform ideas into useful solutions tailored to the people who use them. Whether developing our own products—like ENOS, VISIEN AI, and Errant Night—or working toward a customized solution for a client, we aim to understand the problem, explore what is possible, and build something that makes a difference.",
     commitments: [
-      "Zero pay-to-win or bloated dark patterns in our games",
-      "Direct cross-play between Web browsers and Android APK builds",
-      "Custom client software engineered from clean, maintainable TypeScript",
+      "Customizable digital products & the connected ENOS platform",
+      "Intelligent discovery & project planning through VISIEN AI",
+      "Bespoke IT services tailored to individuals, startups & businesses",
     ],
   },
   {
@@ -39,66 +41,66 @@ const HORIZON_TABS = [
     title: "OUR VISION",
     icon: FaEye,
     headline:
-      "To grow Every Nation into a trusted independent studio known for original multiplayer games and high-craft custom software—serving players, creators, and businesses of every size without losing our personal touch.",
+      "To become a trusted, all-in-one technology ecosystem connecting gaming, artificial intelligence, digital products, services, and community—serving organizations of every scale without leaving individuals and smaller businesses behind.",
     detail:
-      "As our catalog of games and client software expands, we remain committed to keeping our games accessible, our engineering transparent, and our community at the center of everything we ship.",
+      "We envision an ENGG that continues to expand its products, capabilities, and reach while remaining grounded in accessibility, reliability, customization, and personal connection. Our long-term ambition is to establish ENGG as a dependable destination where ideas can grow into lasting digital experiences.",
     commitments: [
-      "Expanding our catalog of original browser & mobile multiplayer titles",
-      "Long-term technical partnerships with founders and growing businesses",
-      "Open community development driven by real player feedback",
+      "An all-in-one ecosystem uniting ENOS, VISIEN AI, games & custom software",
+      "Growing to serve any scale while keeping personal attention for small teams",
+      "Fostering an active community where people and technology move forward together",
     ],
   },
   {
     id: "standard",
-    badge: "Engineering Standard",
-    title: "OUR QUALITY BAR",
+    badge: "How We Deliver",
+    title: "OUR ECOSYSTEM PROMISE",
     icon: FaShieldAlt,
     headline:
-      "Every release—whether a ten-player social deduction lobby or a client business portal—is built to be fast, resilient, and straightforward to use.",
+      "Every product and client solution in the Every Nation GG ecosystem is built with purpose, shaped around real users, and engineered to stand on its own.",
     detail:
-      "We test our systems under real multiplayer load, keep our bundle sizes lean, and ensure that accounts, credits, and real-time sessions stay synchronized across every device.",
+      "From Enos AI guiding a founder through their first technical blueprint in VISIEN to ten players sharing a cross-play lobby in Errant Night, we hold every release to the same standard of clarity, reliability, and craft.",
     commitments: [
-      "Sub-second page transitions and low-latency Socket.IO state sync",
-      "Strict server-side validation and secure account recovery flows",
-      "Responsive layouts tuned for both desktop monitors and mobile screens",
+      "Unified Web & Android cross-play backed by real-time infrastructure",
+      "Transparent project blueprints & milestone tracking via VISIEN AI",
+      "Clean, maintainable engineering designed to evolve over time",
     ],
   },
 ];
 
 const PRINCIPLES = [
   {
-    id: "craft",
-    title: "Craft Over Hype",
-    desc: "We focus on responsive gameplay, clear user interfaces, and reliable engineering rather than buzzwords or bloated features.",
+    id: "personal",
+    title: "Personal & Customizable by Design",
+    desc: "We do not believe every person or business should have to settle for fixed templates when their goals and workflows are unique.",
     inPractice:
-      "In Practice: We stripped out heavy unused libraries and buzzword filler across our platform, cutting bundle overhead while focusing 100% on fast load times and clear typography.",
+      "In Practice: Through VISIEN AI and our bespoke IT services, we scope and tailor every workflow, interface, and architecture around the specific person or organization we are serving.",
   },
   {
-    id: "tailored",
-    title: "Tailored to Real Needs",
-    desc: "Every game mode and client application is shaped around the people actually using it—from small teams to global lobbies.",
+    id: "practical-ai",
+    title: "Practical AI & Intelligent Tools",
+    desc: "We treat artificial intelligence and automation as practical capabilities that solve real problems rather than novelty buzzwords.",
     inPractice:
-      "In Practice: Through our Project Studio and custom engineering work, we scope every client workflow from scratch rather than forcing businesses into rigid templates.",
+      "In Practice: Inside VISIEN Discovery, our Enos AI assistant guides founders and business owners step-by-step from raw concept to a structured technical blueprint and live project tracker.",
   },
   {
     id: "accessible",
-    title: "Accessible Across Devices",
-    desc: "Our games and web tools are designed to run smoothly across desktop browsers, mobile web, and Android devices.",
+    title: "Accessible Across Every Scale & Device",
+    desc: "A small idea deserves thoughtful consideration just as much as an enterprise project, and our experiences run where people actually are.",
     inPractice:
-      "In Practice: Errant Night runs from a unified codebase across Web (engg.online/errant-night) and native Android APK—allowing mobile and PC players to share the exact same room code.",
+      "In Practice: Errant Night and our ENOS platform run seamlessly across desktop web browsers and native Android APK builds with full real-time cross-play.",
   },
   {
-    id: "community",
-    title: "Community Connected",
-    desc: "We build in the open with our players and clients, shipping continuous improvements backed by direct feedback.",
+    id: "connected",
+    title: "One Connected Ecosystem",
+    desc: "Gaming, AI, digital products, and community reinforce one another under the Every Nation GG umbrella.",
     inPractice:
-      "In Practice: Our built-in Allies sidebar, live lobby browser, and Discord community let players squad up, message friends in real time, and shape upcoming updates.",
+      "In Practice: Your ENOS identity connects your games library, credits, allies list, and marketplace downloads in one unified portal.",
   },
 ];
 
 export function MissionVisionContent({ onNavigate }: { onNavigate: (path: string) => void }) {
   const [activeHorizonId, setActiveHorizonId] = useState("mission");
-  const [selectedPrincipleId, setSelectedPrincipleId] = useState("craft");
+  const [selectedPrincipleId, setSelectedPrincipleId] = useState("personal");
 
   const activeHorizon =
     HORIZON_TABS.find((t) => t.id === activeHorizonId) ?? HORIZON_TABS[0];
@@ -109,10 +111,10 @@ export function MissionVisionContent({ onNavigate }: { onNavigate: (path: string
       {/* Category Pill */}
       <div className="flex items-center gap-2 mb-4">
         <span className="text-[11px] font-bold uppercase tracking-wider text-[#7c3aed] bg-[#7c3aed]/10 px-3 py-1 rounded-full">
-          PHASE 03 • ABOUT EVERY NATION
+          PHASE 03 • ABOUT EVERY NATION GG
         </span>
         <span className="text-xs text-neutral-400">•</span>
-        <span className="text-xs font-semibold text-neutral-500">Horizon &amp; Studio Principles</span>
+        <span className="text-xs font-semibold text-neutral-500">Part 3 of 3</span>
       </div>
 
       {/* Page Title */}
@@ -120,7 +122,7 @@ export function MissionVisionContent({ onNavigate }: { onNavigate: (path: string
         MISSION AND VISION
       </h1>
       <p className="text-xl sm:text-2xl font-medium text-[#7c3aed] leading-snug mb-8">
-        Built for Players. Engineered to Last.
+        Purpose-Driven Innovation. Grounded in Long-Term Value.
       </p>
 
       {/* Interactive Horizon Switcher Tabs */}
@@ -209,12 +211,8 @@ export function MissionVisionContent({ onNavigate }: { onNavigate: (path: string
                   : "bg-white border-neutral-200/80"
               }`}
             >
-              <div
-                className={`text-[11px] font-bold uppercase tracking-wider mb-3 ${
-                  activeHorizon.id === "vision" ? "text-neutral-400" : "text-neutral-400"
-                }`}
-              >
-                Core Commitments
+              <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 mb-3">
+                Core Pillars of {activeHorizon.title}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {activeHorizon.commitments.map((c) => (
@@ -247,13 +245,13 @@ export function MissionVisionContent({ onNavigate }: { onNavigate: (path: string
       <div className="mb-14">
         <div className="mb-6">
           <span className="text-[11px] font-bold uppercase tracking-wider text-[#7c3aed]">
-            Interactive Principles
+            Interactive Philosophy
           </span>
           <h3 className="text-xl sm:text-2xl font-extrabold text-neutral-900 tracking-tight mt-1">
-            STUDIO PRINCIPLES IN PRACTICE
+            HOW OUR PHILOSOPHY WORKS IN PRACTICE
           </h3>
           <p className="text-sm text-neutral-500 mt-1">
-            Click any principle below to inspect how we apply it in our live games and client software.
+            Click any principle below to see how VISIEN AI, ENOS, and our games put it into action.
           </p>
         </div>
 
@@ -320,10 +318,10 @@ export function MissionVisionContent({ onNavigate }: { onNavigate: (path: string
               Profile Complete • Phase 03 of 03
             </span>
             <h3 className="text-xl sm:text-2xl font-extrabold text-white mt-1">
-              Ready to Jump In?
+              Explore the Every Nation GG Ecosystem
             </h3>
             <p className="text-sm text-neutral-300 mt-1 max-w-xl">
-              Launch into our live multiplayer Game Hub or browse our custom apps and Android APK releases in the Marketplace.
+              Jump into the ENOS Gaming Hub or launch VISIEN AI to turn your own idea into a working blueprint.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto shrink-0">
@@ -335,11 +333,18 @@ export function MissionVisionContent({ onNavigate }: { onNavigate: (path: string
               <span>Phase 02</span>
             </button>
             <button
+              onClick={() => window.open(VISIEN_AI_URL, "_blank", "noopener,noreferrer")}
+              className="inline-flex items-center justify-center gap-2.5 bg-white text-neutral-900 hover:bg-neutral-100 px-5 py-3.5 rounded-full text-xs font-bold transition-all cursor-pointer"
+            >
+              <FaRobot className="w-3.5 h-3.5 text-[#7c3aed]" />
+              <span>Launch VISIEN AI</span>
+            </button>
+            <button
               onClick={() => onNavigate("/hub")}
               className="inline-flex items-center justify-center gap-3 bg-[#7c3aed] hover:bg-[#6d28d9] text-white px-6 py-3.5 rounded-full text-sm font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
             >
               <FaGamepad className="w-4 h-4" />
-              <span>Explore Game Hub</span>
+              <span>Explore ENOS Hub</span>
             </button>
           </div>
         </div>

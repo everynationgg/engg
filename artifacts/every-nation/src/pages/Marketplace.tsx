@@ -129,7 +129,7 @@ export default function MarketplacePage() {
               className="inline-flex items-center gap-1.5 text-xs text-[#7c3aed] hover:text-[#6d28d9] font-bold bg-purple-50 hover:bg-purple-100 px-3.5 py-1.5 rounded-full border border-purple-200 transition-colors cursor-pointer"
             >
               <FaTools className="text-[#7c3aed]" />
-              <span>Scope a Custom Project with Our Studio →</span>
+              <span>Launch VISIEN AI Discovery Platform →</span>
             </button>
           </div>
         </div>
@@ -479,7 +479,7 @@ export default function MarketplacePage() {
                 }}
                 className="bg-purple-50 text-[#7c3aed] hover:bg-purple-100 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer"
               >
-                Scope Similar Project
+                Scope with VISIEN AI
               </button>
             </div>
           </div>

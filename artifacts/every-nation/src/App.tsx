@@ -34,7 +34,7 @@ function ProjectStudioRedirect() {
   return (
     <div className="min-h-[40vh] flex items-center justify-center px-6 text-center">
       <p className="font-sans text-xs uppercase tracking-widest text-neutral-500">
-        Opening Project Studio...
+        Redirecting to VISIEN AI...
       </p>
     </div>
   );

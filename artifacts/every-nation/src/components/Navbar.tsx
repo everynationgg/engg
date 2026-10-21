@@ -24,7 +24,7 @@ export default function Navbar() {
 
   const navLinks = [
     { name: "Home", href: "/" },
-    { name: "Game Hub", href: "/hub" },
+    { name: "ENOS Hub", href: "/hub" },
     { name: "Marketplace", href: "/marketplace" },
     { name: "About", href: "/about/who-we-are" },
     ...(SHOP_ENABLED ? [{ name: "Credit Store", href: "/shop" }] : []),
@@ -51,7 +51,7 @@ export default function Navbar() {
               EVERY NATION
             </span>
             <span className="font-sans text-[10px] text-white/50 uppercase tracking-wider">
-              Games &amp; Studio
+              ENOS // Gaming Hub
             </span>
           </div>
         </Link>

@@ -6,10 +6,10 @@ import {
   FaArrowRight,
   FaUsers,
   FaGamepad,
+  FaRobot,
   FaCode,
-  FaComments,
   FaCheckCircle,
-  FaLayerGroup,
+  FaLightbulb,
   FaServer,
   FaRocket,
 } from "react-icons/fa";
@@ -21,72 +21,72 @@ interface WhoWeAreProps {
 
 const STUDIO_HIGHLIGHTS = [
   {
-    id: "games",
+    id: "enos",
     icon: FaGamepad,
-    title: "Original Multiplayer Games",
-    metric: "Web + Android Cross-Play",
-    desc: "We design and operate real-time social and tactical games like Errant Night and Engraved Nether—built for instant browser and Android play.",
+    title: "ENOS & Multiplayer Gaming",
+    metric: "ENOS Hub • Web + Android",
+    desc: "Our unified Every Nation Operating System (ENOS) connects players across live multiplayer titles like Errant Night and Engraved Nether with one shared identity.",
   },
   {
-    id: "community",
-    icon: FaComments,
-    title: "Player-First Community",
-    metric: "Live Lobbies & Events",
-    desc: "Every Nation started with players. Our Discord and Game Hub bring friends together for nightly lobbies, playtests, and community tournaments.",
+    id: "visien",
+    icon: FaRobot,
+    title: "VISIEN AI & Automation",
+    metric: "Enos AI Guided Discovery",
+    desc: "Vision Inspired by Story and Idea. VISIEN AI uses our conversational Enos AI guide to turn raw ideas into architectural blueprints, roadmaps, and live project tracking.",
   },
   {
-    id: "software",
+    id: "bespoke",
     icon: FaCode,
-    title: "Custom Software Engineering",
-    metric: "Full-Stack Web & Mobile",
-    desc: "Alongside our games, we partner with founders, creators, and businesses to design and ship dependable custom web and mobile software.",
+    title: "Bespoke Digital Products & IT",
+    metric: "Tailored Web & Mobile",
+    desc: "We don't force people or businesses into fixed templates. We engineer custom web platforms, mobile APKs, and digital tools shaped around real workflows.",
   },
 ];
 
 const BUILD_STAGES = [
   {
     step: "01",
-    title: "Product Vision & Game Design",
-    lead: "Led by Yog • Founder & Product Lead",
-    icon: FaLayerGroup,
+    title: "Vision, Concepts & VISIEN AI Discovery",
+    lead: "Led by Yog • Founder & Vision Lead",
+    icon: FaLightbulb,
     summary:
-      "Every game and client application starts with clear rules, intuitive user flows, and zero filler.",
+      "Defining why a product should exist, who it should serve, and how it should feel—powered by VISIEN AI.",
     detail:
-      "Before writing production code, we map out exactly how the product should feel in the hands of real people—whether balancing 12+ hidden roles and night-phase abilities in Errant Night or scoping a custom business portal with a client.",
+      "Every initiative begins with understanding the person or organization behind a need. Whether conceptualizing original games and the ENOS ecosystem or guiding clients through VISIEN AI (with our Enos AI discovery assistant), Yog shapes raw ideas into purposeful, personalized product blueprints.",
     deliverables: [
-      "Core game mechanics, role balance & win conditions",
-      "Clean, high-contrast UI/UX wireframes & component systems",
-      "Interactive technical specifications via Project Studio",
+      "VISIEN AI & Enos AI guided concept-to-blueprint discovery",
+      "Original game concepts, role systems & user experiences",
+      "Tailored product workflows designed beyond generic templates",
     ],
   },
   {
     step: "02",
-    title: "Full-Stack & Real-Time Engineering",
-    lead: "Led by Meowi • Co-Founder & Lead Engineer",
+    title: "Technical Foundation & Implementation",
+    lead: "Led by Meowi • Technical Partner",
     icon: FaServer,
     summary:
-      "Turning game rules and product blueprints into fast, resilient production architecture.",
+      "Translating ENGG's concepts and VISIEN blueprints into functioning, resilient digital systems.",
     detail:
-      "We engineer authoritative multiplayer servers and full-stack web & mobile applications using React 19, TypeScript, Node.js, Socket.IO, PostgreSQL, and Capacitor 7—built so browser and Android players share the exact same real-time rooms.",
+      "Ideas require thoughtful technical foundations to become reality. Working alongside Yog, Meowi engineers the full-stack systems, real-time Socket.IO game servers, PostgreSQL data models, and native Android APK builds that bring ENOS, Errant Night, and client solutions to life.",
     deliverables: [
-      "Authoritative Socket.IO multiplayer rooms & reconnection recovery",
-      "PostgreSQL + Drizzle ORM data models & REST APIs",
-      "Unified Web + native Android APK builds from one codebase",
+      "Full-stack React, TypeScript, Node.js & PostgreSQL systems",
+      "Real-time multiplayer state sync & cross-play Android APKs",
+      "Bespoke client web applications, portals & practical tools",
     ],
   },
   {
     step: "03",
-    title: "Live Operations & Community Iteration",
-    lead: "Joint Studio Operations • Yog & Meowi",
+    title: "The Connected ENOS Ecosystem & Community",
+    lead: "Yog & Meowi • Long-Term Evolution",
     icon: FaRocket,
     summary:
-      "Shipping regularly, testing openly with our community, and standing behind what we build.",
+      "Products, AI tools, bespoke services, and player communities reinforcing one another.",
     detail:
-      "Launch is just the beginning. We host live game servers, run Discord playtests with our community, ship balance and quality-of-life updates, and support our business clients as their operations grow.",
+      "ENGG is built for the long term. Through the ENOS hub, our Discord community, and VISIEN project tracking, our games, AI tools, and custom software evolve continuously alongside the individuals, creators, and businesses who use them.",
     deliverables: [
-      "Unified Every Nation account (Credits, XP, Friends & Achievements)",
-      "Direct APK distribution & instant browser play",
-      "Ongoing balance updates, performance tuning & client support",
+      "Unified ENOS identity, credits, allies & cross-game progression",
+      "Live VISIEN milestone tracking & ongoing client iteration",
+      "Active Discord community, playtests & continuous updates",
     ],
   },
 ];
@@ -96,38 +96,40 @@ const FOUNDERS = [
     id: "yog",
     initial: "Y",
     name: "Yog",
-    roleBadge: "Founder & Product Lead",
+    roleBadge: "Founder & Vision Lead",
     badgeClass: "text-[#7c3aed] bg-[#7c3aed]/10 border-[#7c3aed]/20",
     avatarClass: "bg-neutral-900 text-white",
-    subtitle: "Game Design, Product Direction & Studio Strategy",
+    subtitle: "Founder & Vision Lead • Creator of VISIEN AI & ENOS",
     bio: [
-      "Yog leads product vision, game design, and user experience across Every Nation. From designing the core social deduction mechanics and role interactions in Errant Night to scoping custom client applications, Yog focuses on how every screen, rule, and workflow feels in the hands of real users.",
-      "Rather than settling for generic templates, Yog works closely with players and clients to define what makes a project worth building—ensuring that our games stay tense and replayable, and our client software solves real operational problems cleanly.",
+      "Yog is the mind behind ENGG's direction, concepts, and ambitions. Yog drives the vision, conceptualizes products and services—including VISIEN AI and the ENOS ecosystem—shapes user experiences, and determines how individual ideas contribute to the wider Every Nation GG ecosystem.",
+      "From imagining new digital experiences to defining how products should function and feel, Yog considers both the end user and the broader product vision. The objective is not simply to create something that works, but to understand why it should exist, who it should serve, and how it can deliver meaningful value.",
+      "For Yog, ENGG is an evolving ecosystem in which products, services, gaming, AI, and community complement one another with a consistent philosophy: build with purpose, make technology personal, and leave room for ideas to become more than they were initially imagined to be.",
     ],
     focusAreas: [
-      "Social Deduction & Tactical Game Mechanics",
-      "Product Scoping & Client Discovery",
-      "Interface Clarity & Design Systems",
-      "Community Playtesting & Direction",
+      "VISIEN AI & Enos AI Concept",
+      "ENOS Ecosystem & Product Strategy",
+      "Game Design & User Experience",
+      "Bespoke Client Customization",
     ],
   },
   {
     id: "meowi",
     initial: "M",
     name: "Meowi",
-    roleBadge: "Co-Founder & Lead Engineer",
+    roleBadge: "Technical Partner",
     badgeClass: "text-emerald-700 bg-emerald-50 border-emerald-200",
     avatarClass: "bg-[#7c3aed] text-white",
-    subtitle: "Full-Stack Architecture, Multiplayer Systems & Mobile Builds",
+    subtitle: "Technical Partner • Systems & Full-Stack Engineering",
     bio: [
-      "Meowi architects the engineering foundations that power Every Nation's games and software. Working across React, TypeScript, Node.js, Socket.IO, PostgreSQL, and Android Capacitor, Meowi turns game rules and product blueprints into fast, resilient production systems.",
-      "From real-time multiplayer state synchronization and reconnection handling to database design and mobile APK packaging, Meowi ensures that everything the studio designs is built on solid, maintainable code.",
+      "Meowi is the technical partner who helps transform ENGG's ideas and concepts into functioning digital experiences. Working alongside Yog, Meowi contributes to the development and implementation that turn plans into practical products, tools, and services.",
+      "Ideas require more than imagination to become reality. They need technical foundations, thoughtful implementation, problem-solving, and a willingness to work through the challenges of building digital systems. Meowi helps bridge the gap between what ENGG envisions and what can be delivered.",
+      "Together, Yog and Meowi represent two complementary sides of the same ambition: defining what should be built and working toward making it possible.",
     ],
     focusAreas: [
-      "Real-Time Socket.IO Game Engines",
-      "React 19, TypeScript & Node.js APIs",
-      "PostgreSQL & Drizzle ORM Architecture",
-      "Android Capacitor APK Packaging",
+      "Full-Stack Web & Mobile Systems",
+      "ENOS & Real-Time Multiplayer Engines",
+      "Database & API Architecture",
+      "Android Capacitor APK Builds",
     ],
   },
 ];
@@ -144,10 +146,10 @@ export function WhoWeAreContent({ onNavigate }: { onNavigate: (path: string) => 
       {/* Breadcrumb / Phase Tag */}
       <div className="flex items-center gap-2 mb-4">
         <span className="text-[11px] font-bold uppercase tracking-wider text-[#7c3aed] bg-[#7c3aed]/10 px-3 py-1 rounded-full">
-          PHASE 01 • ABOUT EVERY NATION
+          PHASE 01 • ABOUT EVERY NATION GG
         </span>
         <span className="text-xs text-neutral-400">•</span>
-        <span className="text-xs font-semibold text-neutral-500">Studio Identity &amp; Founders</span>
+        <span className="text-xs font-semibold text-neutral-500">Part 1 of 3</span>
       </div>
 
       {/* Page Title & Subtitle */}
@@ -155,16 +157,19 @@ export function WhoWeAreContent({ onNavigate }: { onNavigate: (path: string) => 
         WHO WE ARE
       </h1>
       <p className="text-xl sm:text-2xl font-medium text-[#7c3aed] leading-snug mb-8">
-        An Independent Game Studio, Player Community, and Software Team.
+        Built on Ideas. Driven by People. Powered by Technology.
       </p>
 
       {/* Core Narrative */}
       <div className="space-y-5 text-base sm:text-lg text-neutral-700 leading-relaxed max-w-4xl mb-12">
-        <p className="text-lg sm:text-xl font-medium text-neutral-900 leading-relaxed">
-          Every Nation (ENGG) began with a simple conviction: great games and great software come from teams that actually care about the people using them.
+        <p className="text-lg sm:text-xl font-normal text-neutral-900 leading-relaxed">
+          Every Nation GG (ENGG) is a growing technology and digital innovation studio built on the belief that technology should be personal, accessible, and adaptable to the people who use it.
         </p>
         <p>
-          What started as a close-knit gaming community has grown into an independent studio where we build our own multiplayer titles—such as <strong>Errant Night</strong>, our real-time sci-fi social deduction game, and <strong>Engraved Nether</strong>, our tactical grid card battler—while also engineering custom web and mobile applications for clients.
+          Through multiplayer gaming, our unified <strong>ENOS</strong> platform, <strong>VISIEN AI</strong> guided project discovery, and bespoke IT solutions, we bring multiple areas of technology together under one connected ecosystem. At the heart of ENGG is a commitment to personalization: we do not believe every person, creator, or business should have to settle for off-the-shelf templates simply because they are readily available.
+        </p>
+        <p className="font-medium text-neutral-900">
+          A small idea deserves thoughtful consideration just as much as a large-scale project. ENGG is built for the long term—to be a dependable technology partner, a creator of original games and AI tools, and a place where ideas develop into real, working solutions.
         </p>
       </div>
 
@@ -199,13 +204,13 @@ export function WhoWeAreContent({ onNavigate }: { onNavigate: (path: string) => 
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
           <div>
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#7c3aed]">
-              Interactive Workflow
+              Interactive Ecosystem Flow
             </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight mt-1">
-              HOW EVERY NATION BUILDS
+              HOW ENGG TURNS VISION INTO REALITY
             </h2>
             <p className="text-sm sm:text-base text-neutral-500 mt-1">
-              Click each stage below to see how an idea moves from concept to live production.
+              Click each stage below to explore how VISIEN AI, engineering, and ENOS work together.
             </p>
           </div>
           <div className="flex items-center gap-1.5 bg-[#f5f5f7] p-1.5 rounded-full border border-neutral-200/80 self-start">
@@ -305,7 +310,7 @@ export function WhoWeAreContent({ onNavigate }: { onNavigate: (path: string) => 
 
               <div className="lg:w-80 shrink-0 bg-white rounded-2xl p-5 border border-neutral-200/80">
                 <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 mb-3">
-                  Stage {activeStage.step} Deliverables
+                  Stage {activeStage.step} Focus
                 </div>
                 <ul className="space-y-2.5 mb-5">
                   {activeStage.deliverables.map((d) => (
@@ -334,18 +339,18 @@ export function WhoWeAreContent({ onNavigate }: { onNavigate: (path: string) => 
         </AnimatePresence>
       </div>
 
-      {/* The Founders Section */}
+      {/* The People Behind ENGG */}
       <div className="pt-14 pb-12">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-8 h-8 rounded-lg bg-[#7c3aed]/15 text-[#7c3aed] flex items-center justify-center font-bold text-sm">
             <FaUsers className="w-4 h-4" />
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">
-            THE FOUNDERS
+            THE PEOPLE BEHIND ENGG
           </h2>
         </div>
         <p className="text-neutral-500 text-sm sm:text-base mb-8 max-w-2xl">
-          Product direction and hands-on engineering working side by side. Click either founder card to highlight their core specialties.
+          Two complementary sides of the same ambition: defining what should be built and working toward making it possible.
         </p>
 
         {/* Leaders Grid */}
@@ -422,10 +427,10 @@ export function WhoWeAreContent({ onNavigate }: { onNavigate: (path: string) => 
               Up Next • Phase 02 of 03
             </span>
             <h3 className="text-xl sm:text-2xl font-extrabold text-white mt-1">
-              What We Do: Games, Software &amp; Studio Capabilities
+              What We Do: One Ecosystem. Multiple Possibilities.
             </h3>
             <p className="text-sm text-neutral-300 mt-1 max-w-xl">
-              Explore our interactive capability showcase—from real-time multiplayer games to custom web &amp; Android engineering.
+              Explore our 7 core capabilities—including VISIEN AI discovery, ENOS gaming, AI automation, and bespoke IT solutions.
             </p>
           </div>
           <button
