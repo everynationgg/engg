@@ -207,6 +207,8 @@ export function createSession(sessionId: string, hostPlayer: Player): VersionedS
       discussionTime: 60,
       votingTime: 30,
     },
+    isPublic: true,
+    difficulty: "medium",
     phase: "lobby",
     players: [hostPlayer],
     rolesAssigned: {},
@@ -386,4 +388,41 @@ export function stopHeartbeat(sessionId: string) {
 
 export function cancelAdvanceTick(sessionId: string) {
   stopHeartbeat(sessionId);
+}
+
+
+export interface PublicLobbyInfo {
+  sessionId: string;
+  hostName: string;
+  playerCount: number;
+  maxPlayers: number;
+  phase: string;
+  isPublic: boolean;
+  difficulty: "easy" | "medium" | "hard" | "extreme";
+  createdAt: number;
+}
+
+export function listPublicSessions(): PublicLobbyInfo[] {
+  const lobbies: PublicLobbyInfo[] = [];
+  for (const session of sessionCache.values()) {
+    if (
+      session.status !== "closed" &&
+      session.joinable !== false &&
+      session.isPublic !== false &&
+      session.phase === "lobby"
+    ) {
+      const host = session.players.find((p) => p.isHost) || session.players[0];
+      lobbies.push({
+        sessionId: session.sessionId,
+        hostName: host?.name || "Operative",
+        playerCount: session.players.length,
+        maxPlayers: 10,
+        phase: session.phase,
+        isPublic: true,
+        difficulty: (session.difficulty as any) || "medium",
+        createdAt: session.createdAt || Date.now(),
+      });
+    }
+  }
+  return lobbies;
 }

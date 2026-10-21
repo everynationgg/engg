@@ -19,7 +19,8 @@ import {
   CAS_SKIP, 
   cancelRemovePlayer,
   addPlayerToSession,
-  scheduleGraceExpiry
+  scheduleGraceExpiry,
+  listPublicSessions
 } from "../sessions.js";
 import { 
   reconnectPlayer, 
@@ -33,6 +34,7 @@ import {
   interruptGame,
   resumeFromInterrupt
 } from "../engine.js";
+import { addBot, removeBot, type BotDifficulty } from "../ai-bot.js";
 import { checkRateLimit } from "../../../../lib/rate-limit.js";
 import { issuePlayerToken, verifyPlayerToken } from "../../../../lib/auth.js";
 import { phaseUpdate, graceUpdate, chatSystemMessage, logGameEvent } from "../emitters.js";
@@ -545,5 +547,123 @@ export function registerSessionHandlers(
       });
     }
   });
-}
 
+  socket.on("list_public_lobbies", async (_data, ack) => {
+    try {
+      const lobbies = listPublicSessions();
+      ack?.({ success: true, lobbies });
+    } catch (err) {
+      ack?.({ success: false, error: "Failed to list public lobbies" });
+    }
+  });
+
+  socket.on("toggle_public_lobby", async (data, ack) => {
+    const { sessionId, isPublic } = (data || {});
+    if (!sessionId) {
+      ack?.({ success: false, error: "Missing sessionId" });
+      return;
+    }
+    const cas = await withCasRetry(sessionId, (session) => {
+      const caller = session.players.find(
+        (p) => p.id === socket.id || (state.currentPlayerId && p.playerId === state.currentPlayerId)
+      );
+      if (!caller?.isHost) return CAS_SKIP;
+      session.isPublic = typeof isPublic === "boolean" ? isPublic : !session.isPublic;
+      return session.isPublic;
+    });
+
+    if (!cas) {
+      ack?.({ success: false, error: "Only the host can toggle lobby visibility" });
+      return;
+    }
+
+    phaseUpdate(io, sessionId, cas.session);
+    chatSystemMessage(io, sessionId, `Mission sector visibility set to ${cas.result ? "PUBLIC 🌐" : "PRIVATE 🔒"}`);
+    ack?.({ success: true, isPublic: cas.result });
+  });
+
+  socket.on("add_bot", async (data, ack) => {
+    const { sessionId, difficulty } = (data || {});
+    if (!sessionId) {
+      ack?.({ success: false, error: "Missing sessionId" });
+      return;
+    }
+
+    let addedBot = null;
+    const cas = await withCasRetry(sessionId, (session) => {
+      const caller = session.players.find(
+        (p) => p.id === socket.id || (state.currentPlayerId && p.playerId === state.currentPlayerId)
+      );
+      if (!caller?.isHost) return CAS_SKIP;
+      if (session.phase !== "lobby") return CAS_SKIP;
+      addedBot = addBot(session, difficulty || session.difficulty || "medium");
+      if (!addedBot) return CAS_SKIP;
+      return addedBot;
+    });
+
+    if (!cas) {
+      ack?.({ success: false, error: "Could not add bot (lobby full or not host)" });
+      return;
+    }
+
+    phaseUpdate(io, sessionId, cas.session);
+    chatSystemMessage(io, sessionId, `${addedBot.name} joined the crew (${(difficulty || cas.session.difficulty || "medium").toUpperCase()})`);
+    ack?.({ success: true, bot: addedBot });
+  });
+
+  socket.on("remove_bot", async (data, ack) => {
+    const { sessionId, botId } = (data || {});
+    if (!sessionId || !botId) {
+      ack?.({ success: false, error: "Missing required fields" });
+      return;
+    }
+
+    const cas = await withCasRetry(sessionId, (session) => {
+      const caller = session.players.find(
+        (p) => p.id === socket.id || (state.currentPlayerId && p.playerId === state.currentPlayerId)
+      );
+      if (!caller?.isHost) return CAS_SKIP;
+      const ok = removeBot(session, botId);
+      return ok ? true : CAS_SKIP;
+    });
+
+    if (!cas) {
+      ack?.({ success: false, error: "Bot removal failed" });
+      return;
+    }
+
+    phaseUpdate(io, sessionId, cas.session);
+    chatSystemMessage(io, sessionId, "Bot unit deactivated and removed.");
+    ack?.({ success: true });
+  });
+
+  socket.on("set_difficulty", async (data, ack) => {
+    const { sessionId, difficulty } = (data || {});
+    if (!sessionId || !difficulty) {
+      ack?.({ success: false, error: "Missing parameters" });
+      return;
+    }
+
+    const cas = await withCasRetry(sessionId, (session) => {
+      const caller = session.players.find(
+        (p) => p.id === socket.id || (state.currentPlayerId && p.playerId === state.currentPlayerId)
+      );
+      if (!caller?.isHost) return CAS_SKIP;
+      session.difficulty = difficulty;
+      for (const p of session.players) {
+        if (p.isBot) p.botDifficulty = difficulty;
+      }
+      return difficulty;
+    });
+
+    if (!cas) {
+      ack?.({ success: false, error: "Only host can set mission difficulty" });
+      return;
+    }
+
+    phaseUpdate(io, sessionId, cas.session);
+    chatSystemMessage(io, sessionId, `Mission difficulty set to ${difficulty.toUpperCase()}`);
+    ack?.({ success: true, difficulty });
+  });
+
+}

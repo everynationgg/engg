@@ -18,6 +18,12 @@ import {
 import { syncUserAchievements } from "../../core/routes/achievements.js";
 import { logAudit } from "../../../lib/audit.js";
 import type { MaybeSession } from "./types.js";
+import {
+  handleBotRoleReveal,
+  handleBotOrbitActions,
+  handleBotDiscussionChat,
+  handleBotVoting,
+} from "./ai-bot.js";
 
 export async function handleSaveConflict(
   io: SocketIOServer,
@@ -156,6 +162,7 @@ export async function advanceGameFlow(
   
   // ── PHASE: ROLE REVEAL ──
   if (session.phase === "role_reveal") {
+    handleBotRoleReveal(session);
     const REVEAL_TIMEOUT = 25_000;
     
     // Check if everyone who is CURRENTLY connected has acknowledged.
@@ -183,6 +190,7 @@ export async function advanceGameFlow(
 
   // ── PHASE: ORBIT ACTION ──
   if (session.phase === "orbit_action") {
+    handleBotOrbitActions(session);
     const ORBIT_TIMEOUT_MS = 90_000;
 
     // Check if everyone who is CURRENTLY connected has submitted.
@@ -242,6 +250,7 @@ export async function advanceGameFlow(
 
   // ── PHASE: DISCUSSION ──
   if (session.phase === "discussion") {
+    handleBotDiscussionChat(io, session, timeInPhase);
     const discussionTime = (session.settings?.discussionTime || 120) * 1000;
 
     if (timeInPhase >= discussionTime) {
@@ -263,6 +272,7 @@ export async function advanceGameFlow(
 
   // ── PHASE: VOTING ──
   if (session.phase === "voting") {
+    handleBotVoting(session);
     const VOTING_TIMEOUT = 45_000;
     const voteCount = Object.keys(session.votes).length;
 

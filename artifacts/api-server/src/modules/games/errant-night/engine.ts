@@ -34,6 +34,8 @@ export interface Player {
   connectionStatus?: PlayerConnectionStatus;
   /** Set to true when the player explicitly quits (bypasses grace). */
   didQuit?: boolean;
+  isBot?: boolean;
+  botDifficulty?: "easy" | "medium" | "hard" | "extreme";
 }
 
 export type GamePhase =
@@ -139,6 +141,8 @@ export interface PrivateFeedback {
  */
 export interface GameState {
   sessionId: string;
+  isPublic?: boolean;
+  difficulty?: "easy" | "medium" | "hard" | "extreme";
   settings: GameSettings;
   phase: GamePhase;
   phaseStartedAt: number | null;
