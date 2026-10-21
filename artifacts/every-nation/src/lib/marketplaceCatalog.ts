@@ -1,11 +1,14 @@
 export type AppPlatform = "android" | "web" | "desktop" | "ios-pwa";
 
-export type AppCategory = "all" | "mobile" | "games" | "ai" | "tools";
+export type AppCategory = "all" | "games" | "mobile" | "tools";
+
+export type ReleaseAvailability = "apk-available" | "web-live" | "coming-soon";
 
 export interface AppRelease {
   version: string;
   releaseDate: string;
   apkSize: string;
+  availability: ReleaseAvailability;
   downloadUrl?: string;
   demoUrl?: string;
   minAndroidVersion?: string;
@@ -21,7 +24,7 @@ export interface MarketplaceApp {
   bannerImage: string;
   category: AppCategory;
   platforms: AppPlatform[];
-  badge: "Featured" | "Official Release" | "Beta APK" | "Showcase Demo";
+  badge: "Featured" | "Official Release" | "Beta APK" | "Web App";
   badgeColor: string;
   currentRelease: AppRelease;
   features: string[];
@@ -32,10 +35,10 @@ export interface MarketplaceApp {
 export const MARKETPLACE_APPS: MarketplaceApp[] = [
   {
     id: "errant-night-mobile",
-    name: "Errant Night Mobile",
-    tagline: "Neural Defense & Network Infiltration Protocol",
+    name: "Errant Night",
+    tagline: "Multiplayer Sci-Fi Social Deduction — Crew vs. Alien",
     description:
-      "ENGG's signature high-stakes tactical social deduction and digital network defense simulator, engineered for mobile. Trace anomalies through cyber nodes, isolate infected units, and coordinate real-time defense with your squad.",
+      "Every Nation's signature multiplayer social deduction game for Android and Web. Step aboard a failing deep-space vessel, use your role abilities during the blackout phase, debate with the crew, and vote out the Alien before the ship falls.",
     icon: "/ERRANT.png",
     bannerImage: "/images/hub/errant-night.webp",
     category: "games",
@@ -46,159 +49,161 @@ export const MARKETPLACE_APPS: MarketplaceApp[] = [
       version: "v1.0.0-beta",
       releaseDate: "October 2026",
       apkSize: "100.8 MB",
+      availability: "apk-available",
       downloadUrl: "https://github.com/everynationgg/engg/releases/download/v1.0.0-beta/ErrantNight-release.apk",
-      demoUrl: "https://www.engg.online/errant-night",
+      demoUrl: "/errant-night",
       minAndroidVersion: "Android 8.0 (Oreo) or higher",
       whatsNew: [
-        "Native Android container powered by Capacitor 7 & Android SDK 35",
-        "Complete offline role reveal and eviction cinematic animations",
-        "Low-latency real-time multiplayer room sync connected to engg.fly.dev",
-        "Touch-optimized controls, safe-area layout, and responsive mobile HUD",
+        "Native Android package powered by Capacitor 7 & Android SDK 35",
+        "Complete role reveal and airlock ejection animations",
+        "Low-latency real-time multiplayer lobbies via Socket.IO",
+        "Touch-optimized ship controls, safe-area layout, and solo practice bots",
       ],
     },
     features: [
-      "Real-time multiplayer lobbies powered by Socket.IO on Fly.io",
-      "Dynamic procedural hacking terminal mini-games",
-      "Instant push voice & text broadcast alerts",
-      "Offline practice simulation mode with AI infiltrators",
+      "Real-time multiplayer lobbies with private room codes",
+      "12+ unique Crew, Alien, and Chaotic roles with night-phase abilities",
+      "Live ship system sabotage, repair tasks, and emergency voting",
+      "Solo practice mode with crewmate bots",
     ],
     techStack: ["React 19", "Capacitor 7", "Android SDK 35", "Socket.IO", "TypeScript", "Tailwind CSS"],
-    highlights: ["60 FPS Mobile Target", "101.8 MB Offline Cinematics", "Direct Multiplayer"],
-  },
-  {
-    id: "visien-client-companion",
-    name: "VISIEN Discovery Mobile",
-    tagline: "Vision Inspired by Story and Idea",
-    description:
-      "Our AI-guided discovery and project-planning companion for business owners and creators. Brainstorm custom app concepts, scope architectural blueprints, calculate cost timelines, and track your ongoing software builds in real time.",
-    icon: "/logo.png",
-    bannerImage: "/images/home/home-dual-studio-master.jpg",
-    category: "ai",
-    platforms: ["android", "web"],
-    badge: "Featured",
-    badgeColor: "bg-[#7c3aed]/20 text-[#7c3aed] border-[#7c3aed]/30",
-    currentRelease: {
-      version: "v2.1.0",
-      releaseDate: "October 2026",
-      apkSize: "18.5 MB",
-      downloadUrl: "/downloads/visien-mobile-v2.1.0.apk",
-      demoUrl: "https://visien-gray.vercel.app/",
-      minAndroidVersion: "Android 9.0 (Pie) or higher",
-      whatsNew: [
-        "Full interactive Enos AI conversational customer assistant",
-        "One-tap session tracker by token or client code (e.g. 929-909)",
-        "Instant export of technical architecture PDF blueprints",
-        "Push notifications for project milestone transitions",
-      ],
-    },
-    features: [
-      "Enos AI interactive guide with live conversational advice",
-      "Interactive Chapter progress through Concept, UX, Tech, and Budget",
-      "Direct milestone updates and client feedback approvals",
-      "Instant sync across web and mobile sessions",
-    ],
-    techStack: ["React 19", "Gemini 2.5 Flash", "Supabase", "Tailwind CSS", "Capacitor"],
-    highlights: ["AI Guided", "Live Project Status", "Offline Session Cache"],
-  },
-  {
-    id: "engg-deck-authenticator",
-    name: "ENGG Portal Deck",
-    tagline: "Studio Identity, Credit Vault & Unit Access Companion",
-    description:
-      "The official mobile companion for the Every Nation GG portal. Manage your player unit identity, redeem credits, access private game servers, verify device logins, and connect with your team allies on the go.",
-    icon: "/logo.png",
-    bannerImage: "/images/hub/epsilon.webp",
-    category: "tools",
-    platforms: ["android", "web"],
-    badge: "Beta APK",
-    badgeColor: "bg-amber-500/20 text-amber-500 border-amber-500/30",
-    currentRelease: {
-      version: "v1.0.8-beta",
-      releaseDate: "September 2026",
-      apkSize: "22.1 MB",
-      downloadUrl: "/downloads/engg-portal-deck-v1.0.8.apk",
-      demoUrl: "/hub",
-      minAndroidVersion: "Android 8.1 or higher",
-      whatsNew: [
-        "Biometric fingerprint / face unlock for rapid portal authorization",
-        "Live ally status feed and encrypted push notifications",
-        "Direct credit balance top-up via PayPal & Stripe sandbox",
-        "Dark cyberpunk HUD interface with battery-saving OLED mode",
-      ],
-    },
-    features: [
-      "Fast cryptographic QR code login for desktop sessions",
-      "Encrypted cloud backup for unit credentials",
-      "Interactive credit transaction ledger and redemption codes",
-      "Low battery consumption background listener",
-    ],
-    techStack: ["React 19", "Drizzle ORM", "Web Cryptography API", "Tailwind CSS"],
-    highlights: ["Biometric Auth", "Instant Device Sync", "22 MB APK"],
+    highlights: ["60 FPS Mobile Target", "Cross-Play Web & Android", "Real-Time Lobbies"],
   },
   {
     id: "engraved-nether-companion",
-    name: "Engraved Nether: Tactical Deck",
-    tagline: "Sub-Surface Tactical Battle & Resource Extraction",
+    name: "Engraved Nether",
+    tagline: "Fast-Paced Tactical Grid Card Battles",
     description:
-      "Descend into ancient encrypted vaults. Collect rare extraction matter, equip mystical runes, and engage in high-strategy card duels against rivals and ancient sentinels.",
+      "Build a custom deck of elemental rune cards and challenge players or solo guardians on a 3x3 tactical grid. Capture adjacent cards through directional power comparisons, chain elemental combos, and climb the leaderboard.",
     icon: "/hub_engraved.webp",
     bannerImage: "/images/hub/engraved-nether-ruins.webp",
     category: "games",
-    platforms: ["android", "web"],
+    platforms: ["web", "android"],
     badge: "Official Release",
     badgeColor: "bg-fuchsia-500/20 text-fuchsia-400 border-fuchsia-500/30",
     currentRelease: {
       version: "v1.1.2",
       releaseDate: "August 2026",
-      apkSize: "36.4 MB",
-      downloadUrl: "/downloads/engraved-nether-v1.1.2.apk",
+      apkSize: "Web App (Android APK Soon)",
+      availability: "web-live",
       demoUrl: "https://triple-triad-theta.vercel.app",
-      minAndroidVersion: "Android 8.0 or higher",
+      minAndroidVersion: "Playable in any mobile or desktop browser",
       whatsNew: [
-        "12 new ancient Nether glyph cards and relic combinations",
-        "Smooth card drag-and-drop mechanics with tactile audio effects",
-        "Global rank leaderboards with seasonal rewards",
+        "12 new Nether glyph cards and relic synergies",
+        "Smooth card placement physics and tactile sound design",
+        "Ranked match progression and custom deck loadouts",
       ],
     },
     features: [
-      "PvP and PvE tactical board battles",
-      "Dynamic deck builder with synergies and relic bonuses",
-      "Cross-platform match sync between mobile and browser",
+      "Strategic 3x3 grid card battles with elemental modifiers",
+      "Custom deck builder with card rarity tiers",
+      "Instant browser play on desktop and mobile devices",
     ],
-    techStack: ["Next.js / Vite", "Framer Motion", "Tailwind CSS", "Canvas FX"],
-    highlights: ["Deck Builder", "Cross-Platform Match", "36 MB APK"],
+    techStack: ["React", "Framer Motion", "Tailwind CSS", "Canvas FX"],
+    highlights: ["Instant Web Play", "Deck Builder", "Tactical Grid Combat"],
+  },
+  {
+    id: "visien-client-companion",
+    name: "Project Scoper & Client Portal",
+    tagline: "Interactive Software Scoping, Roadmaps & Build Tracker",
+    description:
+      "Our studio's interactive project planning and client portal. Map out web or mobile application requirements, generate technical specifications, estimate delivery milestones, and follow active development progress in real time.",
+    icon: "/logo.png",
+    bannerImage: "/images/home/home-dual-studio-master.jpg",
+    category: "tools",
+    platforms: ["web", "android"],
+    badge: "Featured",
+    badgeColor: "bg-[#7c3aed]/20 text-[#7c3aed] border-[#7c3aed]/30",
+    currentRelease: {
+      version: "v2.1.0",
+      releaseDate: "October 2026",
+      apkSize: "Web Portal",
+      availability: "web-live",
+      demoUrl: "https://visien-gray.vercel.app/",
+      minAndroidVersion: "Web application (Desktop & Mobile browsers)",
+      whatsNew: [
+        "Guided project scoping across product goals, UX flows, and architecture",
+        "Session lookup by project reference code",
+        "Exportable technical specification & milestone summary",
+        "Live milestone tracking for active studio clients",
+      ],
+    },
+    features: [
+      "Step-by-step interactive project scoping workflow",
+      "Clear breakdown of scope, features, tech stack, and timeline",
+      "Direct milestone review and client sign-off",
+      "Responsive across desktop and mobile browsers",
+    ],
+    techStack: ["React 19", "TypeScript", "Supabase", "Tailwind CSS"],
+    highlights: ["Project Blueprints", "Live Build Tracker", "Client Portal"],
+  },
+  {
+    id: "engg-deck-authenticator",
+    name: "Every Nation Player Hub",
+    tagline: "Account Profile, Match History, Friends & Daily Rewards",
+    description:
+      "Your central Every Nation player dashboard. Manage your studio profile, track match statistics across Errant Night, connect with friends, claim daily login credits, and launch directly into live game lobbies.",
+    icon: "/logo.png",
+    bannerImage: "/images/hub/epsilon.webp",
+    category: "tools",
+    platforms: ["web", "android"],
+    badge: "Web App",
+    badgeColor: "bg-amber-500/20 text-amber-500 border-amber-500/30",
+    currentRelease: {
+      version: "v1.0.8",
+      releaseDate: "September 2026",
+      apkSize: "Web App (Android Companion Soon)",
+      availability: "web-live",
+      demoUrl: "/hub",
+      minAndroidVersion: "Web application (Android companion in development)",
+      whatsNew: [
+        "Unified account sign-in across the studio website and Errant Night",
+        "Real-time friends list and direct messaging",
+        "Daily login credit rewards and match history tracking",
+        "Instant one-click launch into live games",
+      ],
+    },
+    features: [
+      "Single sign-on identity across Every Nation games",
+      "Real-time friends list and direct chat",
+      "Credit balance, daily rewards, and achievement tracking",
+      "Direct game launcher for Errant Night and Engraved Nether",
+    ],
+    techStack: ["React 19", "Drizzle ORM", "Socket.IO", "Tailwind CSS"],
+    highlights: ["Unified Profile", "Friends & Chat", "Daily Rewards"],
   },
   {
     id: "omniflow-pos-mobile",
-    name: "OmniFlow Client & POS Engine",
-    tagline: "Showcase: Custom Business Inquiries, Orders & POS App",
+    name: "OmniFlow Operations & POS Suite",
+    tagline: "Studio Showcase: Custom Inventory, Orders & Retail POS",
     description:
-      "A demonstration of the bespoke mobile enterprise applications Every Nation GG engineers for clients. Features real-time stock scanning, appointment scheduling, customer inquiry routing, and offline receipt printing.",
+      "A live architecture showcase of the custom business software Every Nation builds for retail and service clients. Demonstrates real-time inventory scanning, appointment booking, order routing, and receipt generation.",
     icon: "/logo.png",
     bannerImage: "/images/home/home-dual-studio-master.jpg",
     category: "mobile",
-    platforms: ["android", "web"],
-    badge: "Showcase Demo",
+    platforms: ["web", "android"],
+    badge: "Web App",
     badgeColor: "bg-emerald-500/20 text-emerald-500 border-emerald-500/30",
     currentRelease: {
       version: "v2.0.1-demo",
       releaseDate: "October 2026",
-      apkSize: "16.8 MB",
-      downloadUrl: "/downloads/omniflow-pos-demo-v2.0.1.apk",
-      demoUrl: "/visien",
-      minAndroidVersion: "Android 9.0 or higher",
+      apkSize: "Client Showcase",
+      availability: "coming-soon",
+      demoUrl: "https://visien-gray.vercel.app/",
+      minAndroidVersion: "Custom client deployment",
       whatsNew: [
-        "Camera barcode & QR code scanner integration",
-        "Instant WhatsApp and Telegram order alert dispatch",
-        "Automatic offline SQLite cache with cloud sync",
+        "Barcode & QR inventory lookup workflow",
+        "Automated customer order status notifications",
+        "Offline-first local caching with PostgreSQL cloud sync",
       ],
     },
     features: [
-      "Built for retail stores, repair shops, clinics & consultation firms",
-      "Self-service customer portal with order progress tracking",
-      "Customizable branding, color schemes, and field editors",
+      "Tailored for retail shops, service centers, clinics, and studios",
+      "Self-service customer order status portal",
+      "Custom branding, role permissions, and reporting exports",
     ],
-    techStack: ["React 19", "SQLite / PostgreSQL", "Zod", "Tailwind CSS"],
-    highlights: ["Enterprise Ready", "Bespoke Demo", "Fast & Lightweight"],
+    techStack: ["React 19", "PostgreSQL", "Zod", "Tailwind CSS"],
+    highlights: ["Custom Software Showcase", "Retail & Service Ready", "Fast & Reliable"],
   },
 ];
+export const ERRAT_NIGHT_APK_RELEASE = MARKETPLACE_APPS[0].currentRelease;

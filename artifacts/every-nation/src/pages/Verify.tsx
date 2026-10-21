@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,6 +20,7 @@ export default function Verify() {
   const [resendSuccess, setResendSuccess] = useState(false);
   const { verify, resendVerification, user } = useAuth();
   const [, setLocation] = useLocation();
+  const attemptedUrlTokenRef = useRef(false);
 
   useEffect(() => {
     if (user?.isVerified) {
@@ -29,7 +30,8 @@ export default function Verify() {
 
     const searchParams = new URLSearchParams(window.location.search);
     const token = searchParams.get("token");
-    if (token && !loading && !user?.isVerified) {
+    if (token && !attemptedUrlTokenRef.current && !user?.isVerified) {
+      attemptedUrlTokenRef.current = true;
       setCode(token);
       (async () => {
         setLoading(true);
@@ -37,14 +39,18 @@ export default function Verify() {
         try {
           await verify(token);
           setLocation("/profile");
-        } catch (err: any) {
-          setError(err.message || "Auto-verification failed. Please enter the code manually.");
+        } catch (err: unknown) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Auto-verification failed. Please enter your 6-digit code manually."
+          );
         } finally {
           setLoading(false);
         }
       })();
     }
-  }, [user, setLocation, verify]);
+  }, [user?.isVerified, setLocation, verify]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,8 +64,8 @@ export default function Verify() {
     try {
       await verify(code.trim());
       setLocation("/profile");
-    } catch (err: any) {
-      setError(err.message || "Invalid or expired verification code.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Invalid or expired verification code.");
     } finally {
       setLoading(false);
     }
@@ -72,8 +78,12 @@ export default function Verify() {
     try {
       await resendVerification();
       setResendSuccess(true);
-    } catch (err: any) {
-      setError(err.message || "Failed to resend code. Please try again in a few moments.");
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to resend code. Please try again in a few moments."
+      );
     } finally {
       setResending(false);
     }
@@ -101,7 +111,7 @@ export default function Verify() {
                 Verify Your Email
               </h1>
               <p className="text-sm text-neutral-500 mt-2">
-                We've sent a 6-digit code to your email. Enter it below to activate your account.
+                We&apos;ve sent a 6-digit code to your email. Enter it below to verify your account.
               </p>
             </div>
 
@@ -131,7 +141,7 @@ export default function Verify() {
                 >
                   <FaCheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <span className="leading-snug">
-                    A fresh verification code has been dispatched to your email!
+                    A new verification code has been sent to your email.
                   </span>
                 </motion.div>
               )}
@@ -154,6 +164,7 @@ export default function Verify() {
                     placeholder="123456"
                     maxLength={6}
                     required
+                    autoComplete="one-time-code"
                     className="w-full bg-[#f5f5f7] border border-neutral-300 focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/15 rounded-2xl pl-11 pr-4 py-3.5 text-center font-mono text-xl tracking-[0.4em] font-bold text-neutral-900 placeholder-neutral-300 outline-none transition-all uppercase"
                   />
                 </div>

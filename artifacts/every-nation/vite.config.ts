@@ -5,6 +5,7 @@ import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
 const DEFAULT_API_URL = "https://engg.fly.dev";
+const DEFAULT_GAME_URL = "https://errant-night-yogs-projects-cee6471c.vercel.app";
 
 export default defineConfig(async ({ mode }) => {
   const env = loadEnv(mode, import.meta.dirname, "");
@@ -15,6 +16,8 @@ export default defineConfig(async ({ mode }) => {
     env.VITE_API_URL ||
     process.env.VITE_API_URL ||
     (mode === "production" ? DEFAULT_API_URL : "");
+  const proxyTarget = env.VITE_LOCAL_API_URL || process.env.VITE_LOCAL_API_URL || DEFAULT_API_URL;
+  const gameProxyTarget = env.VITE_LOCAL_GAME_URL || process.env.VITE_LOCAL_GAME_URL || DEFAULT_GAME_URL;
 
   return {
     base: basePath,
@@ -60,12 +63,6 @@ export default defineConfig(async ({ mode }) => {
             if (id.includes("node_modules/react") || id.includes("node_modules/react-dom")) {
               return "react-vendor";
             }
-            if (
-              id.includes("node_modules/three") ||
-              id.includes("node_modules/@react-three")
-            ) {
-              return "three-vendor";
-            }
             if (id.includes("node_modules/framer-motion")) {
               return "motion-vendor";
             }
@@ -88,7 +85,7 @@ export default defineConfig(async ({ mode }) => {
       allowedHosts: true,
       proxy: {
         "/api": {
-          target: "https://engg.fly.dev",
+          target: proxyTarget,
           changeOrigin: true,
           secure: false,
           headers: {
@@ -96,12 +93,17 @@ export default defineConfig(async ({ mode }) => {
           },
         },
         "/socket.io": {
-          target: "https://engg.fly.dev",
+          target: proxyTarget,
           changeOrigin: true,
           ws: true,
           headers: {
             origin: "https://engg.online",
           },
+        },
+        "/errant-night": {
+          target: gameProxyTarget,
+          changeOrigin: true,
+          secure: false,
         },
       },
       fs: {

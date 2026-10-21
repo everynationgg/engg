@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,11 +22,16 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { register, isLoggedIn } = useAuth();
+  const { register, isLoggedIn, isVerified } = useAuth();
   const [, setLocation] = useLocation();
 
+  useEffect(() => {
+    if (isLoggedIn) {
+      setLocation(isVerified ? "/profile" : "/verify");
+    }
+  }, [isLoggedIn, isVerified, setLocation]);
+
   if (isLoggedIn) {
-    setLocation("/profile");
     return null;
   }
 
@@ -63,8 +68,10 @@ export default function Register() {
     try {
       await register(email, username, password);
       setLocation("/verify");
-    } catch (err: any) {
-      setError(err.message || "Registration failed. Please check your information.");
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : "Registration failed. Please check your information."
+      );
     } finally {
       setLoading(false);
     }
@@ -85,14 +92,14 @@ export default function Register() {
             <div className="text-center mb-8">
               <div className="inline-flex items-center gap-2 mb-3">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-[#7c3aed] bg-[#7c3aed]/10 px-3 py-1 rounded-full">
-                  Join ENGG
+                  Join Every Nation
                 </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">
                 Create Account
               </h1>
               <p className="text-sm text-neutral-500 mt-2">
-                Join our gaming community, multiplayer lobbies, and studio ecosystem.
+                Save your game progress, connect with friends, and join live multiplayer lobbies.
               </p>
             </div>
 
@@ -177,7 +184,7 @@ export default function Register() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-4 text-neutral-400 hover:text-neutral-700 focus:outline-none p-1"
+                    className="absolute right-4 text-neutral-400 hover:text-neutral-700 focus:outline-none p-1 cursor-pointer"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? (

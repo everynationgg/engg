@@ -21,11 +21,11 @@ const ACHIEVEMENTS_SEED: Omit<Achievement, "createdAt">[] = [
   { id: "achievement_alien_master",     slug: "alien_master",         name: "Alien Master",   description: "Win 10 games as alien",                       icon: "👽", rarity: "rare",      category: "gameplay", prestigeXp: 750, pointsRequired: 0 },
   
   // Platform & Social
-  { id: "achievement_neural_handshake", slug: "neural_handshake",     name: "Neural Handshake", description: "Verify your operator identity",             icon: "🤝", rarity: "rare",      category: "social",   prestigeXp: 500, pointsRequired: 0 },
+  { id: "achievement_neural_handshake", slug: "neural_handshake",     name: "Verified Account", description: "Verify your email address",                 icon: "🤝", rarity: "rare",      category: "social",   prestigeXp: 500, pointsRequired: 0 },
   { id: "achievement_early_adopter",    slug: "early_adopter",        name: "Early Adopter",    description: "Initialize account during rebranding phase",   icon: "🛰️", rarity: "rare",      category: "social",   prestigeXp: 300, pointsRequired: 0 },
   
   // Economy
-  { id: "achievement_capitalist_void",  slug: "capitalist_void",      name: "Capitalist of the Void", description: "Acquire your first Credit Core pack",   icon: "💎", rarity: "rare",      category: "economy",  prestigeXp: 500, pointsRequired: 0 },
+  { id: "achievement_capitalist_void",  slug: "capitalist_void",      name: "Studio Supporter", description: "Complete your first store purchase",        icon: "💎", rarity: "rare",      category: "economy",  prestigeXp: 500, pointsRequired: 0 },
   { id: "achievement_market_whale",     slug: "market_whale",         name: "Market Whale",     description: "Hold a high-capacity credit balance",         icon: "🐳", rarity: "legendary", category: "economy",  prestigeXp: 5000, pointsRequired: 0 },
 
   // Special

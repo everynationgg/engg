@@ -6,16 +6,15 @@ import {
   MarketplaceApp,
   AppCategory,
 } from "@/lib/marketplaceCatalog";
+import { PROJECT_STUDIO_URL, launchErrantNight } from "@/lib/externalLinks";
 import {
   FaDownload,
   FaExternalLinkAlt,
   FaAndroid,
   FaGlobe,
   FaSearch,
-  FaMagic,
   FaMobileAlt,
   FaGamepad,
-  FaRobot,
   FaTools,
   FaCheck,
   FaInfoCircle,
@@ -23,6 +22,7 @@ import {
   FaTimes,
   FaArrowRight,
   FaLayerGroup,
+  FaPlay,
 } from "react-icons/fa";
 
 export default function MarketplacePage() {
@@ -36,7 +36,7 @@ export default function MarketplacePage() {
   const filteredApps = MARKETPLACE_APPS.filter((app) => {
     const matchesCat =
       selectedCategory === "all" ||
-      (selectedCategory === "mobile" && app.platforms.includes("android")) ||
+      (selectedCategory === "mobile" && app.currentRelease.availability === "apk-available") ||
       app.category === selectedCategory;
 
     const matchesSearch =
@@ -49,35 +49,54 @@ export default function MarketplacePage() {
   });
 
   const handleDownloadApk = (app: MarketplaceApp) => {
-    setDownloadNotification(`Initiating APK download for ${app.name} (${app.currentRelease.version})...`);
+    if (app.currentRelease.availability !== "apk-available" || !app.currentRelease.downloadUrl) {
+      setSelectedApp(app);
+      return;
+    }
+
+    setDownloadNotification(
+      `Starting APK download for ${app.name} (${app.currentRelease.version})...`
+    );
     setTimeout(() => {
       setDownloadNotification(null);
     }, 4500);
 
-    if (app.currentRelease.downloadUrl) {
-      if (app.currentRelease.downloadUrl.startsWith("http")) {
-        window.location.assign(app.currentRelease.downloadUrl);
-      } else {
-        const a = document.createElement("a");
-        a.href = app.currentRelease.downloadUrl;
-        a.download = `${app.id}-${app.currentRelease.version}.apk`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      }
+    if (app.currentRelease.downloadUrl.startsWith("http")) {
+      window.location.assign(app.currentRelease.downloadUrl);
+    } else {
+      const a = document.createElement("a");
+      a.href = app.currentRelease.downloadUrl;
+      a.download = `${app.id}-${app.currentRelease.version}.apk`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
   };
 
-  const handleRequestCustomVersion = (app: MarketplaceApp) => {
-    window.open("https://visien-gray.vercel.app/", "_blank", "noopener,noreferrer");
+  const handleLaunchDemo = (demoUrl?: string) => {
+    if (!demoUrl) return;
+    if (demoUrl === "/errant-night" || demoUrl.endsWith("/errant-night")) {
+      launchErrantNight();
+    } else if (demoUrl.startsWith("http")) {
+      window.open(demoUrl, "_blank", "noopener,noreferrer");
+    } else {
+      setLocation(demoUrl);
+    }
   };
 
-  const categories: { id: AppCategory; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-    { id: "all", label: "All Apps", icon: FaLayerGroup },
-    { id: "mobile", label: "Mobile APKs", icon: FaMobileAlt },
-    { id: "games", label: "Interactive Games", icon: FaGamepad },
-    { id: "ai", label: "AI Platforms", icon: FaRobot },
-    { id: "tools", label: "Studio Tools", icon: FaTools },
+  const handleRequestCustomVersion = () => {
+    window.open(PROJECT_STUDIO_URL, "_blank", "noopener,noreferrer");
+  };
+
+  const categories: {
+    id: AppCategory;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }[] = [
+    { id: "all", label: "All Releases", icon: FaLayerGroup },
+    { id: "games", label: "Games", icon: FaGamepad },
+    { id: "mobile", label: "Android APKs", icon: FaMobileAlt },
+    { id: "tools", label: "Studio & Web Tools", icon: FaTools },
   ];
 
   return (
@@ -85,34 +104,32 @@ export default function MarketplacePage() {
       <div className="max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 2xl:px-10 py-8 sm:py-12">
         <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#7c3aed]/10 text-[#7c3aed] text-xs font-bold uppercase tracking-wider mb-3">
-            <FaMagic className="text-amber-500" />
-            <span>Official Every Nation GG App Store</span>
+            <FaLayerGroup className="text-[#7c3aed]" />
+            <span>Every Nation Releases &amp; Showcase</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-neutral-900 mb-3">
-            ENGG Marketplace
+            Games &amp; Software Marketplace
           </h1>
           <p className="text-sm sm:text-base text-neutral-600 leading-relaxed">
-            Discover applications, mobile APKs, and interactive systems crafted by our studio.
-            Experience what we can build for your business or gaming squad, download Android APKs directly,
-            or commission a custom version with VISIEN AI.
+            Download official Android builds, launch our live browser games, or explore the web and mobile software we engineer for clients.
           </p>
 
           <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
             <button
               onClick={() => setInstallGuideOpen(true)}
-              className="inline-flex items-center gap-1.5 text-xs text-neutral-600 hover:text-[#7c3aed] font-semibold bg-neutral-100 hover:bg-neutral-200/80 px-3 py-1.5 rounded-full transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs text-neutral-600 hover:text-[#7c3aed] font-semibold bg-neutral-100 hover:bg-neutral-200/80 px-3 py-1.5 rounded-full transition-colors cursor-pointer"
             >
               <FaQuestionCircle className="text-amber-500" />
-              <span>How to install Android APK files (Guide)</span>
+              <span>How to install Android APK files</span>
             </button>
 
             <button
-              onClick={() => window.open("https://visien-gray.vercel.app/", "_blank", "noopener,noreferrer")}
-              className="inline-flex items-center gap-1.5 text-xs text-[#7c3aed] hover:text-[#6d28d9] font-bold bg-purple-50 hover:bg-purple-100 px-3.5 py-1.5 rounded-full border border-purple-200 transition-colors"
+              onClick={handleRequestCustomVersion}
+              className="inline-flex items-center gap-1.5 text-xs text-[#7c3aed] hover:text-[#6d28d9] font-bold bg-purple-50 hover:bg-purple-100 px-3.5 py-1.5 rounded-full border border-purple-200 transition-colors cursor-pointer"
             >
-              <FaRobot className="text-[#7c3aed]" />
-              <span>Launch VISIEN AI Discovery Platform →</span>
+              <FaTools className="text-[#7c3aed]" />
+              <span>Scope a Custom Project with Our Studio →</span>
             </button>
           </div>
         </div>
@@ -127,7 +144,7 @@ export default function MarketplacePage() {
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 whitespace-nowrap transition-all ${
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 whitespace-nowrap transition-all cursor-pointer ${
                     isActive
                       ? "bg-[#7c3aed] text-white shadow-xs"
                       : "bg-white text-neutral-600 hover:text-neutral-900 border border-neutral-200"
@@ -146,7 +163,7 @@ export default function MarketplacePage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search apps, APKs, features..."
+              placeholder="Search games, apps, features..."
               className="w-full bg-white text-neutral-900 text-xs pl-9 pr-4 py-2 rounded-xl border border-neutral-200 focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/20 outline-none transition-all"
             />
           </div>
@@ -160,7 +177,7 @@ export default function MarketplacePage() {
             </div>
             <button
               onClick={() => setInstallGuideOpen(true)}
-              className="text-[#7c3aed] hover:underline font-bold"
+              className="text-[#7c3aed] hover:underline font-bold cursor-pointer"
             >
               View Install Steps
             </button>
@@ -168,133 +185,159 @@ export default function MarketplacePage() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredApps.map((app) => (
-            <div
-              key={app.id}
-              className="bg-white rounded-2xl border border-neutral-200/90 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group hover:-translate-y-1"
-            >
-              <div>
-                <div
-                  className="h-32 sm:h-36 w-full bg-neutral-900 relative bg-cover bg-center overflow-hidden"
-                  style={{ backgroundImage: `url('${app.bannerImage}')` }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
+          {filteredApps.map((app) => {
+            const hasApk = app.currentRelease.availability === "apk-available" && Boolean(app.currentRelease.downloadUrl);
+            const hasDemo = Boolean(app.currentRelease.demoUrl);
 
-                  <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-                    <span
-                      className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border backdrop-blur-xs ${app.badgeColor}`}
-                    >
-                      {app.badge}
-                    </span>
+            return (
+              <div
+                key={app.id}
+                className="bg-white rounded-2xl border border-neutral-200/90 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group hover:-translate-y-1"
+              >
+                <div>
+                  <div
+                    className="h-32 sm:h-36 w-full bg-neutral-900 relative bg-cover bg-center overflow-hidden"
+                    style={{ backgroundImage: `url('${app.bannerImage}')` }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
 
-                    <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded-full text-white text-xs">
-                      {app.platforms.includes("android") && (
-                        <span title="Android APK Available">
-                          <FaAndroid className="text-emerald-400" />
-                        </span>
-                      )}
-                      {app.platforms.includes("web") && (
-                        <span title="Web Browser App">
-                          <FaGlobe className="text-sky-400" />
-                        </span>
-                      )}
+                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+                      <span
+                        className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border backdrop-blur-xs ${app.badgeColor}`}
+                      >
+                        {app.badge}
+                      </span>
+
+                      <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded-full text-white text-xs">
+                        {hasApk && (
+                          <span title="Android APK Ready">
+                            <FaAndroid className="text-emerald-400" />
+                          </span>
+                        )}
+                        {app.platforms.includes("web") && (
+                          <span title="Web App">
+                            <FaGlobe className="text-sky-400" />
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="absolute -bottom-4 left-4 w-12 h-12 rounded-xl bg-white border border-neutral-200 shadow-md p-1.5 flex items-center justify-center overflow-hidden z-10">
+                      <img
+                        src={app.icon}
+                        alt={app.name}
+                        className="w-full h-full object-contain"
+                      />
                     </div>
                   </div>
 
-                  <div className="absolute -bottom-4 left-4 w-12 h-12 rounded-xl bg-white border border-neutral-200 shadow-md p-1.5 flex items-center justify-center overflow-hidden z-10">
-                    <img
-                      src={app.icon}
-                      alt={app.name}
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                </div>
+                  <div className="p-5 pt-6 space-y-3">
+                    <div>
+                      <h3 className="text-base sm:text-lg font-bold text-neutral-900 group-hover:text-[#7c3aed] transition-colors leading-tight">
+                        {app.name}
+                      </h3>
+                      <p className="text-xs font-semibold text-[#f97316] mt-0.5 leading-snug">
+                        {app.tagline}
+                      </p>
+                    </div>
 
-                <div className="p-5 pt-6 space-y-3">
-                  <div>
-                    <h3 className="text-base sm:text-lg font-bold text-neutral-900 group-hover:text-[#7c3aed] transition-colors leading-tight">
-                      {app.name}
-                    </h3>
-                    <p className="text-xs font-semibold text-[#f97316] mt-0.5 leading-snug">
-                      {app.tagline}
+                    <p className="text-xs text-neutral-600 line-clamp-2 leading-relaxed">
+                      {app.description}
                     </p>
-                  </div>
 
-                  <p className="text-xs text-neutral-600 line-clamp-2 leading-relaxed">
-                    {app.description}
-                  </p>
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {app.highlights.map((h, i) => (
+                        <span
+                          key={i}
+                          className="bg-neutral-100 text-neutral-700 text-[10px] font-semibold px-2 py-0.5 rounded-md"
+                        >
+                          {h}
+                        </span>
+                      ))}
+                    </div>
 
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {app.highlights.map((h, i) => (
-                      <span
-                        key={i}
-                        className="bg-neutral-100 text-neutral-700 text-[10px] font-semibold px-2 py-0.5 rounded-md"
-                      >
-                        {h}
+                    <div className="pt-2 border-t border-neutral-100 flex items-center justify-between text-[11px] text-neutral-500">
+                      <span className="font-mono font-bold text-neutral-700">
+                        {app.currentRelease.version}
                       </span>
-                    ))}
-                  </div>
-
-                  <div className="pt-2 border-t border-neutral-100 flex items-center justify-between text-[11px] text-neutral-500">
-                    <span className="font-mono font-bold text-neutral-700">
-                      {app.currentRelease.version}
-                    </span>
-                    <span className="bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-md">
-                      {app.currentRelease.apkSize}
-                    </span>
+                      <span
+                        className={`font-bold px-2 py-0.5 rounded-md ${
+                          hasApk
+                            ? "bg-emerald-50 text-emerald-700"
+                            : "bg-neutral-100 text-neutral-600"
+                        }`}
+                      >
+                        {app.currentRelease.apkSize}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="p-5 pt-0 space-y-2">
-                <div className="grid grid-cols-2 gap-2">
+                <div className="p-5 pt-0 space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    {hasApk ? (
+                      <button
+                        onClick={() => handleDownloadApk(app)}
+                        className="w-full bg-[#7c3aed] hover:bg-[#6d28d9] text-white py-2 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <FaDownload className="text-xs" />
+                        <span>Get APK</span>
+                      </button>
+                    ) : hasDemo ? (
+                      <button
+                        onClick={() => handleLaunchDemo(app.currentRelease.demoUrl)}
+                        className="w-full bg-[#7c3aed] hover:bg-[#6d28d9] text-white py-2 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <FaPlay className="text-[10px]" />
+                        <span>Open Web App</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setSelectedApp(app)}
+                        className="w-full bg-neutral-900 hover:bg-neutral-800 text-white py-2 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <FaInfoCircle className="text-xs" />
+                        <span>Preview</span>
+                      </button>
+                    )}
+
+                    {hasApk && hasDemo ? (
+                      <button
+                        onClick={() => handleLaunchDemo(app.currentRelease.demoUrl)}
+                        className="w-full bg-neutral-100 hover:bg-neutral-200 text-neutral-800 py-2 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <FaExternalLinkAlt className="text-xs" />
+                        <span>Play on Web</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setSelectedApp(app)}
+                        className="w-full bg-neutral-100 hover:bg-neutral-200 text-neutral-800 py-2 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <FaInfoCircle className="text-xs" />
+                        <span>Details &amp; Specs</span>
+                      </button>
+                    )}
+                  </div>
+
                   <button
-                    onClick={() => handleDownloadApk(app)}
-                    className="w-full bg-[#7c3aed] hover:bg-[#6d28d9] text-white py-2 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5"
+                    onClick={() => setSelectedApp(app)}
+                    className="w-full py-1.5 px-3 rounded-xl text-[11px] font-semibold text-neutral-500 hover:text-[#7c3aed] hover:bg-purple-50 transition-colors flex items-center justify-center gap-1 cursor-pointer"
                   >
-                    <FaDownload className="text-xs" />
-                    <span>Get APK</span>
+                    <span>View Release Notes &amp; Tech Stack</span>
                   </button>
-
-                  {app.currentRelease.demoUrl && app.currentRelease.demoUrl.startsWith("http") ? (
-                    <a
-                      href={app.currentRelease.demoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full bg-neutral-100 hover:bg-neutral-200 text-neutral-800 py-2 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all text-center flex items-center justify-center gap-1.5"
-                    >
-                      <FaExternalLinkAlt className="text-xs" />
-                      <span>Live Demo</span>
-                    </a>
-                  ) : (
-                    <button
-                      onClick={() => setSelectedApp(app)}
-                      className="w-full bg-neutral-100 hover:bg-neutral-200 text-neutral-800 py-2 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all text-center flex items-center justify-center gap-1.5"
-                    >
-                      <FaInfoCircle className="text-xs" />
-                      <span>Specs</span>
-                    </button>
-                  )}
                 </div>
-
-                <button
-                  onClick={() => handleRequestCustomVersion(app)}
-                  className="w-full py-1.5 px-3 rounded-xl text-[11px] font-semibold text-[#7c3aed] hover:bg-purple-50 transition-colors flex items-center justify-center gap-1"
-                >
-                  <FaMagic className="text-amber-500 text-[10px]" />
-                  <span>Request Custom App Like This (VISIEN)</span>
-                </button>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {filteredApps.length === 0 && (
           <div className="text-center py-16 bg-neutral-50 rounded-2xl border border-dashed border-neutral-300">
             <FaMobileAlt className="w-10 h-10 text-neutral-400 mx-auto mb-2" />
-            <h3 className="text-base font-bold text-neutral-700">No Applications Matched</h3>
+            <h3 className="text-base font-bold text-neutral-700">No Matching Releases Found</h3>
             <p className="text-xs text-neutral-500 mt-1">
-              Try adjusting your search query or selecting "All Apps" above.
+              Try adjusting your search query or selecting &quot;All Releases&quot; above.
             </p>
           </div>
         )}
@@ -302,23 +345,22 @@ export default function MarketplacePage() {
         <div className="mt-16 bg-gradient-to-r from-neutral-900 via-purple-950 to-neutral-900 rounded-3xl p-8 sm:p-12 text-white shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="max-w-xl">
             <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400 mb-2">
-              <FaMagic />
-              <span>Custom Mobile & Web Engineering</span>
+              <FaTools />
+              <span>Custom Web &amp; Mobile Engineering</span>
             </div>
             <h3 className="text-2xl sm:text-3xl font-black tracking-tight mb-2">
-              Have an app idea for your business or gaming community?
+              Need a custom web platform or mobile app for your business?
             </h3>
             <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">
-              We engineer custom Android APKs, customer portals, interactive games, and automated tools.
-              Launch VISIEN AI to outline your requirements and get a production roadmap.
+              We design and build custom web portals, Android applications, and real-time multiplayer systems. Open our Project Studio to outline your goals and get a clear technical roadmap.
             </p>
           </div>
 
           <button
-            onClick={() => window.open("https://visien-gray.vercel.app/", "_blank", "noopener,noreferrer")}
-            className="shrink-0 bg-white hover:bg-neutral-100 text-[#7c3aed] font-extrabold text-xs sm:text-sm uppercase tracking-wider px-8 py-3.5 rounded-full shadow-lg transition-all active:scale-95 flex items-center gap-2"
+            onClick={handleRequestCustomVersion}
+            className="shrink-0 bg-white hover:bg-neutral-100 text-[#7c3aed] font-extrabold text-xs sm:text-sm uppercase tracking-wider px-8 py-3.5 rounded-full shadow-lg transition-all active:scale-95 flex items-center gap-2 cursor-pointer"
           >
-            <span>Consult VISIEN AI</span>
+            <span>Start a Project</span>
             <FaArrowRight className="text-xs" />
           </button>
         </div>
@@ -336,7 +378,11 @@ export default function MarketplacePage() {
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl bg-neutral-100 p-1.5 flex items-center justify-center border border-neutral-200">
-                  <img src={selectedApp.icon} alt={selectedApp.name} className="w-full h-full object-contain" />
+                  <img
+                    src={selectedApp.icon}
+                    alt={selectedApp.name}
+                    className="w-full h-full object-contain"
+                  />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-neutral-900">{selectedApp.name}</h3>
@@ -345,19 +391,17 @@ export default function MarketplacePage() {
               </div>
               <button
                 onClick={() => setSelectedApp(null)}
-                className="text-neutral-400 hover:text-neutral-700 p-1"
+                className="text-neutral-400 hover:text-neutral-700 p-1 cursor-pointer"
               >
                 <FaTimes />
               </button>
             </div>
 
-            <p className="text-xs text-neutral-600 leading-relaxed">
-              {selectedApp.description}
-            </p>
+            <p className="text-xs text-neutral-600 leading-relaxed">{selectedApp.description}</p>
 
             <div>
               <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-1.5">
-                What's New in {selectedApp.currentRelease.version}
+                What&apos;s Included in {selectedApp.currentRelease.version}
               </h4>
               <ul className="space-y-1 text-xs text-neutral-700">
                 {selectedApp.currentRelease.whatsNew.map((item, i) => (
@@ -385,37 +429,57 @@ export default function MarketplacePage() {
 
             <div>
               <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-1.5">
-                Architecture & Technologies
+                Architecture &amp; Technologies
               </h4>
               <div className="flex flex-wrap gap-1.5">
                 {selectedApp.techStack.map((tech, i) => (
-                  <span key={i} className="bg-neutral-100 text-neutral-700 text-[10px] font-mono px-2 py-0.5 rounded">
+                  <span
+                    key={i}
+                    className="bg-neutral-100 text-neutral-700 text-[10px] font-mono px-2 py-0.5 rounded"
+                  >
                     {tech}
                   </span>
                 ))}
               </div>
             </div>
 
-            <div className="pt-3 border-t border-neutral-200 flex gap-2">
-              <button
-                onClick={() => {
-                  handleDownloadApk(selectedApp);
-                  setSelectedApp(null);
-                }}
-                className="flex-1 bg-[#7c3aed] hover:bg-[#6d28d9] text-white py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2"
-              >
-                <FaDownload />
-                <span>Download APK ({selectedApp.currentRelease.apkSize})</span>
-              </button>
+            <div className="pt-3 border-t border-neutral-200 flex flex-wrap gap-2">
+              {selectedApp.currentRelease.availability === "apk-available" &&
+                selectedApp.currentRelease.downloadUrl && (
+                  <button
+                    onClick={() => {
+                      handleDownloadApk(selectedApp);
+                      setSelectedApp(null);
+                    }}
+                    className="flex-1 bg-[#7c3aed] hover:bg-[#6d28d9] text-white py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <FaDownload />
+                    <span>Download APK ({selectedApp.currentRelease.apkSize})</span>
+                  </button>
+                )}
+
+              {selectedApp.currentRelease.demoUrl && (
+                <button
+                  onClick={() => {
+                    const url = selectedApp.currentRelease.demoUrl;
+                    setSelectedApp(null);
+                    handleLaunchDemo(url);
+                  }}
+                  className="flex-1 bg-neutral-900 hover:bg-neutral-800 text-white py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <FaExternalLinkAlt className="text-xs" />
+                  <span>Open Web Version</span>
+                </button>
+              )}
 
               <button
                 onClick={() => {
                   setSelectedApp(null);
-                  handleRequestCustomVersion(selectedApp);
+                  handleRequestCustomVersion();
                 }}
-                className="bg-purple-50 text-[#7c3aed] hover:bg-purple-100 px-4 py-2.5 rounded-xl text-xs font-bold"
+                className="bg-purple-50 text-[#7c3aed] hover:bg-purple-100 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer"
               >
-                Request Custom Build
+                Scope Similar Project
               </button>
             </div>
           </div>
@@ -438,14 +502,14 @@ export default function MarketplacePage() {
               </h3>
               <button
                 onClick={() => setInstallGuideOpen(false)}
-                className="text-neutral-400 hover:text-neutral-700 p-1"
+                className="text-neutral-400 hover:text-neutral-700 p-1 cursor-pointer"
               >
                 <FaTimes />
               </button>
             </div>
 
             <p className="text-xs text-neutral-600 leading-relaxed">
-              Android allows direct sideloading of applications so you can run software immediately without app store delays:
+              Android allows direct installation of official studio `.apk` packages:
             </p>
 
             <ol className="space-y-3 text-xs text-neutral-700">
@@ -454,7 +518,7 @@ export default function MarketplacePage() {
                   1
                 </span>
                 <div>
-                  <strong className="text-neutral-900">Download the .apk:</strong> Tap "Get APK" on any app card in the marketplace.
+                  <strong className="text-neutral-900">Download the .apk:</strong> Tap &quot;Get APK&quot; on Errant Night to download the release package.
                 </div>
               </li>
               <li className="flex gap-3">
@@ -462,7 +526,7 @@ export default function MarketplacePage() {
                   2
                 </span>
                 <div>
-                  <strong className="text-neutral-900">Allow installation from browser:</strong> When prompted by Android, enable "Install unknown apps" or "Allow from this source".
+                  <strong className="text-neutral-900">Allow browser installation:</strong> If prompted by Android, enable &quot;Install unknown apps&quot; for your browser.
                 </div>
               </li>
               <li className="flex gap-3">
@@ -470,7 +534,7 @@ export default function MarketplacePage() {
                   3
                 </span>
                 <div>
-                  <strong className="text-neutral-900">Open & Enjoy:</strong> Tap Install. Once finished, launch the app directly from your home screen.
+                  <strong className="text-neutral-900">Launch &amp; Play:</strong> Tap Install, then open the game from your home screen.
                 </div>
               </li>
             </ol>
@@ -478,7 +542,7 @@ export default function MarketplacePage() {
             <div className="pt-2 border-t border-neutral-100">
               <button
                 onClick={() => setInstallGuideOpen(false)}
-                className="w-full bg-neutral-900 hover:bg-neutral-800 text-white py-2 rounded-xl text-xs font-bold uppercase tracking-wider"
+                className="w-full bg-neutral-900 hover:bg-neutral-800 text-white py-2 rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer"
               >
                 Got It
               </button>

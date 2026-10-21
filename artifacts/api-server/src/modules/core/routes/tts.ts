@@ -6,7 +6,7 @@ const ttsRouter: IRouter = Router();
 
 const ttsLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 30, // max 30 TTS requests per minute per IP
+  max: 20, // max 20 TTS requests per minute per IP
   message: { error: "Too many TTS requests, please slow down." },
   standardHeaders: true,
   legacyHeaders: false,
@@ -22,13 +22,18 @@ ttsRouter.post("/tts", ttsLimiter, async (req: Request, res: Response) => {
     return;
   }
 
+  if (text.length > 500) {
+    res.status(400).json({ error: "text must be 500 characters or fewer" });
+    return;
+  }
+
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     res.status(503).json({ error: "TTS service not configured" });
     return;
   }
 
-  const truncated = text.slice(0, 4096);
+  const truncated = text.slice(0, 500);
 
   try {
     const upstream = await fetch("https://api.openai.com/v1/audio/speech", {

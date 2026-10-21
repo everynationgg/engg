@@ -1,11 +1,11 @@
-import { pgTable, text, timestamp, bigint, boolean, integer, jsonb, bigserial } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, bigint, boolean, integer, jsonb, bigserial, primaryKey, uniqueIndex, index } from "drizzle-orm/pg-core";
 import { type InferSelectModel } from "drizzle-orm";
 
 export const usersTable = pgTable("users", {
   id: text("id").primaryKey(),
-  username: text("username").notNull(),
+  username: text("username").notNull().unique(),
   name: text("name"),
-  email: text("email").notNull(),
+  email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   isVerified: boolean("is_verified").default(false),
   credits: integer("credits").default(0).notNull(),
@@ -17,7 +17,10 @@ export const usersTable = pgTable("users", {
   lockedUntil: timestamp("locked_until"),
   lastClaimedAt: timestamp("last_claimed_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  emailIdx: uniqueIndex("users_email_idx").on(table.email),
+  usernameIdx: uniqueIndex("users_username_idx").on(table.username),
+}));
 
 export const gameChatsTable = pgTable("game_chats", {
   id: bigserial("id", { mode: "bigint" }).primaryKey(),
@@ -39,7 +42,10 @@ export const creditTransactionsTable = pgTable("credit_transactions", {
   paypalOrderId: text("paypal_order_id"),
   packId: text("pack_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  userIdIdx: index("credit_transactions_user_id_idx").on(table.userId),
+  paypalOrderIdIdx: index("credit_transactions_paypal_order_id_idx").on(table.paypalOrderId),
+}));
 
 export const playerStatsTable = pgTable("player_stats", {
   id: text("id").primaryKey(),
@@ -78,7 +84,7 @@ export const userAchievementsTable = pgTable("user_achievements", {
   achievementId: text("achievement_id").notNull(),
   unlockedAt: timestamp("unlocked_at").defaultNow().notNull(),
 }, (table) => ({
-  pk: { columns: [table.userId, table.achievementId] },
+  pk: primaryKey({ columns: [table.userId, table.achievementId] }),
 }));
 
 export const emailVerificationTokensTable = pgTable("email_verification_tokens", {
@@ -102,7 +108,10 @@ export const friendshipsTable = pgTable("friendships", {
   status: text("status").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  userIdIdx: index("friendships_user_id_idx").on(table.userId),
+  friendIdIdx: index("friendships_friend_id_idx").on(table.friendId),
+}));
 
 export const userPreferencesTable = pgTable("user_preferences", {
   userId: text("user_id").primaryKey(),
@@ -169,7 +178,7 @@ export const userMissionsTable = pgTable("user_missions", {
   completedAt: timestamp("completed_at"),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
-  pk: { columns: [table.userId, table.missionId] },
+  pk: primaryKey({ columns: [table.userId, table.missionId] }),
 }));
 
 export const operationHistoryTable = pgTable("operation_history", {
@@ -191,7 +200,10 @@ export const privateMessagesTable = pgTable("private_messages", {
   message: text("message").notNull(),
   isRead: boolean("is_read").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  senderReceiverIdx: index("private_messages_sender_receiver_idx").on(table.senderId, table.receiverId),
+  receiverReadIdx: index("private_messages_receiver_read_idx").on(table.receiverId, table.isRead),
+}));
 
 export type User = InferSelectModel<typeof usersTable>;
 export type Achievement = InferSelectModel<typeof achievementsTable>;

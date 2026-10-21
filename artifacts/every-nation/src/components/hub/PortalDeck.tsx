@@ -49,9 +49,9 @@ function getTheme(game: GameCatalogItem): GameTheme {
 }
 
 function getLaunchLabel(game: GameCatalogItem): string {
-  if (game.status === "offline") return "Access Locked";
-  if (game.status === "coming-soon") return "Signal Pending";
-  return "Enter Portal";
+  if (game.status === "offline") return "Unavailable";
+  if (game.status === "coming-soon") return "Coming Soon";
+  return "Play Now";
 }
 
 function isLaunchableGame(game: GameCatalogItem): boolean {
@@ -585,7 +585,7 @@ function WorldPaintOverlay({
             transition={{ duration: 1.1, ease: "easeOut" }}
           >
             <span className="border border-yellow-500/20 rounded-full w-[80%] h-[80%] absolute" />
-            RUNE_SEAL
+            ENGRAVED NETHER
           </motion.div>
 
           {elements.map((el) => (
@@ -981,12 +981,12 @@ function PortalWorldScene({
   const fragments = useMemo(
     () =>
       (isSpace
-        ? ["SIG", "TRACE", "NULL", "A1", "DRIFT", "ECHO", "SCAN", "LOST"]
+        ? ([] as string[])
         : isNether
-          ? ["RUNE", "SEAL", "RELIC", "GATE", "ALTAR", "WARD", "ASH", "DEEP"]
+          ? ([] as string[])
           : isOrbital
-            ? ["MECH", "DRONE", "ALIEN", "FIRE", "BREACH", "E-9", "SPARK", "LOCK"]
-            : ["ORBIT", "GRID", "LOCK", "BAY", "SYNC"]
+            ? ([] as string[])
+            : ([] as string[])
       ).map((label, index) => ({
         id: `${game.slug}-data-${label}-${index}`,
         label,
@@ -1792,7 +1792,7 @@ function PortalFragments({
       )}
 
       {particles.includes("role-card") &&
-        ["CMD", "SCAN", "WARD"].map((label, index) => (
+        ["CREW", "ALIEN", "VOTE"].map((label, index) => (
           <motion.div
             key={label}
             className={cn(
@@ -2702,7 +2702,7 @@ export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
                           className="mt-1 block truncate font-mono text-[9px] uppercase tracking-[0.18em]"
                           style={{ color: isActive ? theme.accent : "rgba(255,255,255,0.35)" }}
                         >
-                          {isActive ? theme.portalEffect.replace("-", "_") : statusCopy[game.status]}
+                          {game.subtitle}
                         </span>
                       </span>
                     </span>
@@ -2726,14 +2726,14 @@ export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
 
           <div className="flex max-w-full flex-col items-center gap-3 sm:flex-row">
             <span className="font-mono text-[10px] uppercase tracking-[0.26em] text-white/45">
-              {activeTheme.portalEffect.replace("-", "_")}
+              {activeGame.subtitle}
             </span>
             <span className="hidden h-px w-10 bg-white/15 sm:block" aria-hidden="true" />
             <span
               className="max-w-[86vw] truncate text-center font-mono text-[10px] uppercase tracking-[0.26em]"
               style={{ color: activeTheme.accent }}
             >
-              {activeGame.href || `/${activeGame.slug}`}
+              {activeGame.description}
             </span>
           </div>
 

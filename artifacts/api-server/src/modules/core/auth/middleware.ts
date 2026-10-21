@@ -38,7 +38,7 @@ export function registeredOnly(
   next: NextFunction
 ): void {
   if (req.isGuest) {
-    res.status(403).json({ error: "REGISTRATION_REQUIRED", message: "This tactical interface requires a verified persistent identity." });
+    res.status(403).json({ error: "REGISTRATION_REQUIRED", message: "Authentication required. Please sign in." });
     return;
   }
   next();

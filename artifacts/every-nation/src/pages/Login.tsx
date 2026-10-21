@@ -31,15 +31,22 @@ export default function Login() {
     }
   }, []);
 
+  useEffect(() => {
+    if (isLoggedIn) {
+      const searchParams = new URLSearchParams(window.location.search);
+      const redirectTarget = searchParams.get("redirect") || "/profile";
+      setLocation(redirectTarget);
+    }
+  }, [isLoggedIn, setLocation]);
+
   if (isLoggedIn) {
-    setLocation("/profile");
     return null;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!identifier.trim() || !password) {
-      setError("Please fill in all credentials.");
+      setError("Please fill in your username/email and password.");
       return;
     }
 
@@ -47,12 +54,13 @@ export default function Login() {
     setError(null);
     try {
       await login(identifier, password);
-      // Check for redirect query param
       const searchParams = new URLSearchParams(window.location.search);
       const redirectTarget = searchParams.get("redirect") || "/profile";
       setLocation(redirectTarget);
-    } catch (err: any) {
-      setError(err.message || "Invalid credentials. Please verify your details.");
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : "Invalid credentials. Please check your details."
+      );
     } finally {
       setLoading(false);
     }
@@ -73,14 +81,14 @@ export default function Login() {
             <div className="text-center mb-8">
               <div className="inline-flex items-center gap-2 mb-3">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-[#7c3aed] bg-[#7c3aed]/10 px-3 py-1 rounded-full">
-                  ENGG Account
+                  Every Nation Account
                 </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">
                 Welcome Back
               </h1>
               <p className="text-sm text-neutral-500 mt-2">
-                Sign in to your Every Nation GG profile & gaming access.
+                Sign in to access your profile, friends, and game progress.
               </p>
             </div>
 
@@ -101,7 +109,6 @@ export default function Login() {
 
             {/* Login Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Operator Identifier (Email or Username) */}
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 mb-1.5 ml-1">
                   Email or Username
@@ -151,7 +158,7 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-4 text-neutral-400 hover:text-neutral-700 focus:outline-none p-1"
+                    className="absolute right-4 text-neutral-400 hover:text-neutral-700 focus:outline-none p-1 cursor-pointer"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? (
@@ -182,17 +189,13 @@ export default function Login() {
                 )}
               </button>
 
-              {/* Local Dev Instant Login Button (Visible on Localhost Only) */}
-              {typeof window !== "undefined" && (
-                window.location.hostname === "localhost" ||
-                window.location.hostname === "127.0.0.1" ||
-                window.location.hostname.startsWith("192.168.")
-              ) && (
+              {/* Local Dev Instant Login Button (Strictly Dev Mode Only) */}
+              {import.meta.env.DEV && (
                 <div className="pt-2">
                   <div className="relative flex py-2 items-center">
                     <div className="flex-grow border-t border-neutral-200"></div>
                     <span className="flex-shrink mx-3 text-[11px] font-mono uppercase text-neutral-400">
-                      Localhost Fast-Pass
+                      Development Mode Only
                     </span>
                     <div className="flex-grow border-t border-neutral-200"></div>
                   </div>
@@ -206,7 +209,7 @@ export default function Login() {
                     }}
                     className="w-full bg-purple-50 hover:bg-purple-100 text-[#7c3aed] border border-purple-200 hover:border-purple-300 rounded-2xl py-3 px-4 font-bold text-xs tracking-wide transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <span>⚡ Instant Dev Login (meowionly)</span>
+                    <span>Dev Mode Login (meowionly)</span>
                   </button>
                 </div>
               )}
@@ -214,7 +217,7 @@ export default function Login() {
 
             {/* Register Footer */}
             <div className="mt-8 pt-6 border-t border-neutral-200/80 text-center text-sm text-neutral-600">
-              Don't have an account yet?{" "}
+              Don&apos;t have an account yet?{" "}
               <Link
                 href="/register"
                 className="font-bold text-[#7c3aed] hover:text-[#6d28d9] underline underline-offset-4 transition-colors"

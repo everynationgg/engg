@@ -6,15 +6,14 @@ import { logger } from "../../../lib/logger.js";
 export type BotDifficulty = "easy" | "medium" | "hard" | "extreme";
 
 export const BOT_NAMES = [
-  "UNIT-01 (Bot)",
-  "SYNTH-02 (Bot)",
-  "NEXUS-03 (Bot)",
-  "VALKYRIE-04 (Bot)",
-  "TITAN-05 (Bot)",
-  "SPECTRE-06 (Bot)",
-  "AEGIS-07 (Bot)",
-  "ORION-08 (Bot)",
-  "VORTEX-09 (Bot)",
+  "Vance",
+  "Kael",
+  "Ripley",
+  "Soren",
+  "Mira",
+  "Tarkin",
+  "Lin",
+  "Chen",
 ];
 
 /**

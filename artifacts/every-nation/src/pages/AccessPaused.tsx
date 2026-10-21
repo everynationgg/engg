@@ -1,93 +1,66 @@
-import { Link } from "wouter";
+import React from "react";
+import { useLocation } from "wouter";
+import StudioLayout from "@/components/StudioLayout";
+import { FaLock, FaShoppingBag, FaGamepad, FaHome } from "react-icons/fa";
 
 type PausedScreenProps = {
-  eyebrow: string;
+  badge: string;
   title: string;
   message: string;
-  status: string;
-  telemetry: readonly string[];
-  accent: "cyan" | "violet";
+  icon: React.ComponentType<{ className?: string }>;
 };
 
-const accentStyles = {
-  cyan: {
-    text: "text-cyan-300",
-    border: "border-cyan-300/35",
-    bg: "bg-cyan-300/10",
-    shadow: "shadow-[0_0_80px_rgba(34,211,238,0.18)]",
-    line: "from-transparent via-cyan-300/70 to-transparent",
-  },
-  violet: {
-    text: "text-fuchsia-300",
-    border: "border-fuchsia-300/35",
-    bg: "bg-fuchsia-300/10",
-    shadow: "shadow-[0_0_80px_rgba(217,70,239,0.18)]",
-    line: "from-transparent via-fuchsia-300/70 to-transparent",
-  },
-} as const;
-
-function PausedScreen({ eyebrow, title, message, status, telemetry, accent }: PausedScreenProps) {
-  const theme = accentStyles[accent];
+function PausedScreen({ badge, title, message, icon: Icon }: PausedScreenProps) {
+  const [, setLocation] = useLocation();
 
   return (
-    <main className="relative flex min-h-[calc(100dvh-120px)] items-center justify-center overflow-hidden bg-black px-5 py-12 text-white sm:px-8">
-      <div
-        className="pointer-events-none absolute inset-0 opacity-80"
-        style={{
-          background:
-            "radial-gradient(circle at 50% 28%, rgba(34,211,238,0.14), transparent 32%), radial-gradient(circle at 70% 72%, rgba(217,70,239,0.12), transparent 30%), linear-gradient(180deg, rgba(2,6,23,0.72), rgba(0,0,0,0.98))",
-        }}
-        aria-hidden="true"
-      />
-      <div className="pointer-events-none absolute inset-x-0 top-20 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" aria-hidden="true" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-24 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" aria-hidden="true" />
-
-      <section className="relative flex min-h-[620px] w-full max-w-4xl flex-col items-center justify-center text-center">
-        <div className={`absolute left-1/2 top-1/2 h-[min(74vw,520px)] w-[min(74vw,520px)] -translate-x-1/2 -translate-y-1/2 rounded-full border ${theme.border} ${theme.shadow}`} aria-hidden="true" />
-        <div className={`absolute left-1/2 top-1/2 h-[min(50vw,360px)] w-[min(50vw,360px)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed ${theme.border}`} aria-hidden="true" />
-
-        <div className="relative w-full border border-white/10 bg-black/45 px-5 py-10 shadow-2xl backdrop-blur-md sm:px-10 sm:py-12">
-          <div className={`mx-auto mb-7 h-px w-44 bg-gradient-to-r ${theme.line}`} aria-hidden="true" />
-          <p className={`font-mono text-[9px] uppercase tracking-[0.42em] ${theme.text}`}>{eyebrow}</p>
-          <h1 className="mx-auto mt-4 max-w-3xl font-orbitron text-3xl font-black uppercase leading-tight tracking-[0.18em] text-white sm:text-5xl">
-            {title}
-          </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-white/68 sm:text-base">
-            {message}
-          </p>
-
-          <div className="mx-auto mt-8 grid max-w-2xl gap-3 sm:grid-cols-3">
-            {telemetry.map((item) => (
-              <div key={item} className="border border-white/10 bg-white/[0.03] px-4 py-3">
-                <span className="block font-mono text-[8px] uppercase tracking-[0.28em] text-white/38">{item}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link
-              href="/hub"
-              className={`inline-flex min-h-12 items-center justify-center border ${theme.border} ${theme.bg} px-6 py-3 font-orbitron text-[10px] font-bold uppercase tracking-[0.28em] ${theme.text} transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-300/60`}
-            >
-              Return To Hub
-            </Link>
-            <span className="font-mono text-[9px] uppercase tracking-[0.32em] text-white/34">{status}</span>
-          </div>
+    <StudioLayout>
+      <div className="py-16 sm:py-24 max-w-2xl mx-auto px-6 flex flex-col items-center text-center">
+        <div className="w-14 h-14 rounded-2xl bg-[#7c3aed]/10 text-[#7c3aed] flex items-center justify-center mb-5 shadow-2xs">
+          <Icon className="w-6 h-6" />
         </div>
-      </section>
-    </main>
+
+        <span className="text-[11px] font-bold uppercase tracking-wider text-[#7c3aed] bg-[#7c3aed]/10 px-3.5 py-1 rounded-full mb-4">
+          {badge}
+        </span>
+
+        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-900 mb-4">
+          {title}
+        </h1>
+
+        <p className="text-sm sm:text-base text-neutral-600 leading-relaxed mb-8 max-w-xl">
+          {message}
+        </p>
+
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <button
+            onClick={() => setLocation("/hub")}
+            className="inline-flex items-center gap-2 bg-[#7c3aed] hover:bg-[#6d28d9] text-white px-6 py-3 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider transition-all shadow-sm active:scale-95 cursor-pointer"
+          >
+            <FaGamepad className="w-4 h-4" />
+            <span>Open Game Hub</span>
+          </button>
+
+          <button
+            onClick={() => setLocation("/")}
+            className="inline-flex items-center gap-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 px-6 py-3 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider transition-all cursor-pointer"
+          >
+            <FaHome className="w-4 h-4" />
+            <span>Back to Home</span>
+          </button>
+        </div>
+      </div>
+    </StudioLayout>
   );
 }
 
 export function AuthAccessPaused() {
   return (
     <PausedScreen
-      accent="cyan"
-      eyebrow="Identity Access Paused"
-      title="Public Login Offline"
-      message="Identity terminals are temporarily sealed while access protocols are recalibrated. Game and hub navigation remain available."
-      status="AUTH_PUBLIC_ACCESS_ENABLED=false"
-      telemetry={["Login Hidden", "Forms Sealed", "Profiles Gated"]}
+      badge="Maintenance"
+      title="Account Sign-In Temporarily Unavailable"
+      message="Account registration and sign-in are briefly offline while we complete scheduled maintenance. You can still browse the studio, explore the Marketplace, and play games as a guest."
+      icon={FaLock}
     />
   );
 }
@@ -95,12 +68,10 @@ export function AuthAccessPaused() {
 export function ShopOffline() {
   return (
     <PausedScreen
-      accent="violet"
-      eyebrow="Vault Access Temporarily Offline"
-      title="Game Shop Under Construction"
-      message="Credit systems are being recalibrated. The vault is offline until the next deployment window, and no purchase controls are available."
-      status="SHOP_ENABLED=false"
-      telemetry={["Vault Offline", "Purchases Disabled", "Credits Safe"]}
+      badge="Store Maintenance"
+      title="Credit Store Temporarily Offline"
+      message="Credit pack purchases are currently paused while we update our store checkout. Your existing credit balance and account items remain safe."
+      icon={FaShoppingBag}
     />
   );
 }

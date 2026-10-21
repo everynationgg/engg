@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, usersTable, privateMessagesTable } from "@workspace/db";
-import { eq, and, or, desc, sql } from "drizzle-orm";
+import { eq, and, or, desc, sql, inArray } from "drizzle-orm";
 import { authMiddleware, type AuthRequest } from "../auth/middleware";
 import { logger } from "../../../lib/logger.js";
 
@@ -55,7 +55,7 @@ messagesRouter.get(
         await db
           .update(privateMessagesTable)
           .set({ isRead: true })
-          .where(sql`${privateMessagesTable.id} IN ${unreadIds}`);
+          .where(inArray(privateMessagesTable.id, unreadIds));
         // Emit read receipt to the original senders
         const io = req.app.get("io");
         if (io) {

@@ -63,7 +63,7 @@ export function setupEmailProvider() {
       secure,
       auth: { user, pass },
       tls: {
-        rejectUnauthorized: false,
+        rejectUnauthorized: process.env.NODE_ENV === "production",
       },
       connectionTimeout: 10000,
       greetingTimeout: 5000,

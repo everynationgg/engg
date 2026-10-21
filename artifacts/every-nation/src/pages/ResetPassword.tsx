@@ -3,6 +3,7 @@ import { useLocation, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FaLock,
+  FaKey,
   FaArrowRight,
   FaExclamationCircle,
   FaCheckCircle,
@@ -13,6 +14,10 @@ import {
 import StudioLayout from "@/components/StudioLayout";
 
 export default function ResetPassword() {
+  const queryParams = new URLSearchParams(window.location.search);
+  const urlToken = queryParams.get("token") || "";
+
+  const [tokenInput, setTokenInput] = useState(urlToken);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -21,14 +26,11 @@ export default function ResetPassword() {
   const [error, setError] = useState<string | null>(null);
   const [, setLocation] = useLocation();
 
-  // Get token from URL
-  const queryParams = new URLSearchParams(window.location.search);
-  const token = queryParams.get("token");
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) {
-      setError("Reset token is missing or expired. Please request a new link.");
+    const effectiveToken = tokenInput.trim();
+    if (!effectiveToken) {
+      setError("Reset token is required. Please use the link from your email or paste your reset token.");
       return;
     }
 
@@ -55,8 +57,8 @@ export default function ResetPassword() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token, newPassword: password }),
-        },
+          body: JSON.stringify({ token: effectiveToken, newPassword: password }),
+        }
       );
 
       if (response.ok) {
@@ -64,9 +66,9 @@ export default function ResetPassword() {
         setTimeout(() => setLocation("/login"), 2500);
       } else {
         const errorData = await response.json().catch(() => ({}));
-        setError(errorData.error || "The reset link is invalid or has expired.");
+        setError(errorData.error || "The reset token is invalid or has expired.");
       }
-    } catch (err: any) {
+    } catch {
       setError("Failed to reset password. Please check your network and try again.");
     } finally {
       setLoading(false);
@@ -95,7 +97,7 @@ export default function ResetPassword() {
                 Create New Password
               </h1>
               <p className="text-sm text-neutral-500 mt-2">
-                Set a secure new password for your ENGG account.
+                Set a secure new password for your Every Nation account.
               </p>
             </div>
 
@@ -116,6 +118,27 @@ export default function ResetPassword() {
 
             {!success ? (
               <form onSubmit={handleSubmit} className="space-y-4">
+                {!urlToken && (
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 mb-1.5 ml-1">
+                      Reset Token
+                    </label>
+                    <div className="relative flex items-center">
+                      <div className="absolute left-4 text-neutral-400 pointer-events-none">
+                        <FaKey className="w-4 h-4" />
+                      </div>
+                      <input
+                        type="text"
+                        value={tokenInput}
+                        onChange={(e) => setTokenInput(e.target.value)}
+                        placeholder="Paste reset token from your email"
+                        required
+                        className="w-full bg-[#f5f5f7] border border-neutral-300 focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/15 rounded-2xl pl-11 pr-4 py-3.5 text-sm font-medium text-neutral-900 placeholder-neutral-400 outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {/* New Password */}
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 mb-1.5 ml-1">
@@ -132,12 +155,13 @@ export default function ResetPassword() {
                       placeholder="At least 6 characters"
                       required
                       minLength={6}
+                      autoComplete="new-password"
                       className="w-full bg-[#f5f5f7] border border-neutral-300 focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/15 rounded-2xl pl-11 pr-12 py-3.5 text-sm font-medium text-neutral-900 placeholder-neutral-400 outline-none transition-all"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword((prev) => !prev)}
-                      className="absolute right-4 text-neutral-400 hover:text-neutral-700 focus:outline-none p-1"
+                      className="absolute right-4 text-neutral-400 hover:text-neutral-700 focus:outline-none p-1 cursor-pointer"
                       aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? (
@@ -165,6 +189,7 @@ export default function ResetPassword() {
                       placeholder="Re-enter your password"
                       required
                       minLength={6}
+                      autoComplete="new-password"
                       className="w-full bg-[#f5f5f7] border border-neutral-300 focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/15 rounded-2xl pl-11 pr-4 py-3.5 text-sm font-medium text-neutral-900 placeholder-neutral-400 outline-none transition-all"
                     />
                   </div>
@@ -173,7 +198,7 @@ export default function ResetPassword() {
                 {/* Submit CTA */}
                 <button
                   type="submit"
-                  disabled={loading || !token}
+                  disabled={loading || !tokenInput.trim()}
                   className="w-full mt-3 bg-[#7c3aed] hover:bg-[#6d28d9] text-white rounded-2xl py-3.5 px-6 font-bold text-sm tracking-wide transition-all shadow-md hover:shadow-lg active:scale-98 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                   {loading ? (

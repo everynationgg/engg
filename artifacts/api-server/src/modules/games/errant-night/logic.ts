@@ -13,7 +13,8 @@ import {
   autoCompleteOrbitActions,
   processRevealActions,
   startVoting,
-  tallyVotes
+  tallyVotes,
+  isChaoticRole
 } from "./engine.js";
 import { syncUserAchievements } from "../../core/routes/achievements.js";
 import { logAudit } from "../../../lib/audit.js";
@@ -36,15 +37,32 @@ export async function handleSaveConflict(
 
 export async function recordGameResults(io: SocketIOServer, sessionId: string, voteResult: any, session: any) {
   try {
-    const results = voteResult.allRoles;
+    const results = voteResult?.allRoles;
     if (!results || !Array.isArray(results)) return;
 
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
     for (const player of results) {
-      const userId = player.stablePlayerId;
-      if (!userId) continue;
+      const sessionPlayer = (session?.players || []).find(
+        (p: any) =>
+          (player.playerId && p.playerId === player.playerId) ||
+          (player.socketId && p.id === player.socketId) ||
+          (player.playerId && p.id === player.playerId)
+      );
+
+      if (sessionPlayer?.isBot) continue;
+
+      const userId: string | undefined =
+        sessionPlayer?.userId || player.userId || player.stablePlayerId;
+
+      // Safely skip unauthenticated guests or non-persisted UUIDs
+      if (!userId || (!UUID_REGEX.test(userId) && !userId.startsWith("guest_"))) {
+        continue;
+      }
 
       const role = player.role;
-      const socketId = player.playerId;
+      const pKey = player.playerId || sessionPlayer?.playerId || sessionPlayer?.id;
+      const socketId = player.socketId || sessionPlayer?.id || player.playerId;
       const winTeam = voteResult.winTeam;
 
       let wonStatus: "yes" | "no" | "draw" = "no";
@@ -53,29 +71,34 @@ export async function recordGameResults(io: SocketIOServer, sessionId: string, v
         wonStatus = "draw";
       } else {
         let playerTeam = "crew";
-        const chaoticRoles = new Set(["disruptor", "shifter", "warper", "router"]);
         if (role === "alien" || role === "parasite" || role === "virus") {
           playerTeam = "alien";
-        } else if (chaoticRoles.has(role)) {
-          const alignment = session.chaoticAlignments?.[socketId] ?? "Good";
-          playerTeam = (alignment === "Bad") ? "alien" : "crew";
+        } else if (isChaoticRole(role)) {
+          const alignment =
+            session.chaoticAlignments?.[pKey] ??
+            session.chaoticAlignments?.[socketId] ??
+            "Good";
+          playerTeam = alignment === "Bad" ? "alien" : "crew";
         }
 
-        wonStatus = (playerTeam === winTeam) ? "yes" : "no";
+        wonStatus = playerTeam === winTeam ? "yes" : "no";
       }
+
+      const alignmentVal =
+        session.chaoticAlignments?.[pKey] ?? session.chaoticAlignments?.[socketId];
 
       const recorded = await recordPlayerGameResult(
         sessionId,
         userId,
         role,
         wonStatus,
-        session.chaoticAlignments?.[socketId]
+        alignmentVal
       );
 
       if (!recorded) continue;
 
       const newAchievements = await syncUserAchievements(userId);
-      if (newAchievements.length > 0) {
+      if (newAchievements.length > 0 && socketId) {
         const sock = io.sockets.sockets.get(socketId);
         if (sock) {
           sock.emit("achievements_unlocked", { count: newAchievements.length });

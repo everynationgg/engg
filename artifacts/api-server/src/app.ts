@@ -5,10 +5,7 @@ import rateLimit from "express-rate-limit";
 import pinoHttp from "pino-http";
 import router from "./modules/core/routes/index.js";
 import { logger } from "./lib/logger.js";
-import { logReplay } from "./modules/games/errant-night/replay-log.js";
 import * as Sentry from "@sentry/node";
-import i18next from "./modules/games/errant-night/i18n.js";
-import { BasicAIBot } from "./modules/games/errant-night/ai-bot.js";
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN || "",
@@ -91,7 +88,7 @@ function isAllowedOrigin(origin?: string): boolean {
 
   const cleanOrigin = origin.replace(/\/$/, "");
 
-  if (/\.vercel\.app$/.test(cleanOrigin)) return true;
+  if (/^https:\/\/(every-nation|errant-night|engg)[a-z0-9-]*\.vercel\.app$/.test(cleanOrigin)) return true;
   if (/^https?:\/\/.*\.fly\.dev$/.test(cleanOrigin)) return true;
   if (/^https?:\/\/localhost(:\d+)?$/.test(cleanOrigin)) return true;
   if (/^capacitor:\/\/localhost$/.test(cleanOrigin)) return true;
@@ -209,15 +206,5 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   logger.error({ err }, "Unhandled error");
   res.status(500).json({ error: "Internal server error" });
 });
-
-// Example: Call logReplay(gameId, replayData) at the end of each game session
-// (Removed app.use(logReplay) as it is a utility, not middleware)
-
-// Example usage: i18next.t("welcome")
-// TODO: Integrate with API responses and UI
-
-// Example: Use BasicAIBot in game session logic where bots are needed
-// Example usage: i18next.t("welcome")
-// TODO: Integrate with API responses and UI
 
 export default app;

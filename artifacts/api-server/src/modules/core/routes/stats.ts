@@ -23,7 +23,7 @@ const router: IRouter = Router();
 
 const VALID_ROLES = new Set([
   "alien", "crew", "commander", "scanner", "sentinel",
-  "shifter", "warper", "disruptor", "parasite", "seeker",
+  "shifter", "warper", "disruptor", "parasite", "seeker", "virus", "router", "doctor", "chaotic", "watcher",
 ]);
 
 // Record game result
@@ -107,7 +107,7 @@ router.post("/stats/record-game", authMiddleware, async (req: AuthRequest, res) 
         await tx.update(usersTable)
           .set({ 
             xp: newXp, 
-            credits: sql`${usersTable.credits} + ${creditReward}`,
+            credits: sql`COALESCE(${usersTable.credits}, 0) + ${creditReward}`,
             level: newLevel 
           })
           .where(eq(usersTable.id, req.userId!));
@@ -120,7 +120,7 @@ router.post("/stats/record-game", authMiddleware, async (req: AuthRequest, res) 
             username: user.username,
             amount: creditReward,
             type: "REWARD",
-            description: `Combat_Service_Reward: ${body.role.toUpperCase()}_Deployment (${body.won.toUpperCase()})`,
+            description: isWin ? "Match Reward: Errant Night (Win)" : "Match Reward: Errant Night",
             createdAt: new Date()
           });
 
@@ -133,7 +133,7 @@ router.post("/stats/record-game", authMiddleware, async (req: AuthRequest, res) 
             type: "MATCH_REWARD",
             xpGained: xpReward,
             creditsGained: creditReward,
-            description: `Operation_${body.gameId.substring(0, 8)}: ${body.role.toUpperCase()}_DEPLOYMENT`,
+            description: isWin ? "Match Reward: Errant Night (Win)" : "Match Reward: Errant Night",
             metadata: { role: body.role, won: body.won, alignment: body.alignment },
             createdAt: new Date()
           });
@@ -177,8 +177,8 @@ router.post("/stats/record-game", authMiddleware, async (req: AuthRequest, res) 
               // Grant Mission Rewards
               await tx.update(usersTable)
                 .set({ 
-                  xp: sql`${usersTable.xp} + ${mission.xpReward}`,
-                  credits: sql`${usersTable.credits} + ${mission.creditReward}`
+                  xp: sql`COALESCE(${usersTable.xp}, 0) + ${mission.xpReward}`,
+                  credits: sql`COALESCE(${usersTable.credits}, 0) + ${mission.creditReward}`
                 })
                 .where(eq(usersTable.id, req.userId!));
 

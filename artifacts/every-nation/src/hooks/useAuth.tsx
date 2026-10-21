@@ -1,4 +1,23 @@
-import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  ReactNode,
+} from "react";
+
+interface AuthUser {
+  id: string | null;
+  username: string | null;
+  email: string | null;
+  isVerified: boolean;
+  credits: number;
+  xp: number;
+  level: number;
+}
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -14,21 +33,13 @@ interface AuthContextType {
   register: (email: string, username: string, password: string) => Promise<void>;
   verify: (code: string) => Promise<void>;
   resendVerification: () => Promise<void>;
-  logout: () => void;
+  logout: (reason?: string) => void;
   refreshUser: () => Promise<void>;
   devLogin: (customUsername?: string, customEmail?: string) => void;
   isLoading: boolean;
   isInitialized: boolean;
   error: string | null;
-  user: {
-    id: string | null;
-    username: string | null;
-    email: string | null;
-    isVerified: boolean;
-    credits: number;
-    xp: number;
-    level: number;
-  } | null;
+  user: AuthUser | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -58,11 +69,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isInitializingRef = useRef(false);
   const hasInitializedRef = useRef(false);
 
+  const logout = useCallback((reason?: string) => {
+    localStorage.removeItem(STORAGE_KEY_TOKEN);
+    localStorage.removeItem(STORAGE_KEY_USER_ID);
+    localStorage.removeItem(STORAGE_KEY_USERNAME);
+    localStorage.removeItem(STORAGE_KEY_EMAIL);
+    localStorage.removeItem(STORAGE_KEY_IS_VERIFIED);
+    localStorage.removeItem(STORAGE_KEY_CREDITS);
+    localStorage.removeItem(STORAGE_KEY_XP);
+    localStorage.removeItem(STORAGE_KEY_LEVEL);
+
+    setToken(null);
+    setUserId(null);
+    setUsername(null);
+    setEmail(null);
+    setIsVerified(false);
+    setCredits(0);
+    setXp(0);
+    setLevel(1);
+    setIsLoggedIn(false);
+    setError(reason || null);
+  }, []);
+
   const refreshUser = useCallback(async () => {
     const currentToken = localStorage.getItem(STORAGE_KEY_TOKEN) || token;
     if (!currentToken) return;
     if (currentToken.startsWith("dev_")) {
-      // Local dev simulated session: keep user state and avoid remote CORS failure
+      if (!import.meta.env.DEV) {
+        logout();
+      } else {
+        setCredits(parseInt(localStorage.getItem(STORAGE_KEY_CREDITS) || "0", 10));
+        setXp(parseInt(localStorage.getItem(STORAGE_KEY_XP) || "0", 10));
+        setLevel(parseInt(localStorage.getItem(STORAGE_KEY_LEVEL) || "1", 10));
+      }
       return;
     }
 
@@ -75,32 +114,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const data = await response.json();
         setIsVerified(data.isVerified === true);
         setCredits(data.credits || 0);
-        setXp(data.xp || 0);
-        setLevel(data.level || 1);
+        setXp((prev) => (typeof data.xp === "number" ? data.xp : prev));
+        setLevel((prev) => (typeof data.level === "number" ? data.level : prev));
         setUsername(data.username);
-        
+
         localStorage.setItem(STORAGE_KEY_IS_VERIFIED, String(data.isVerified));
         localStorage.setItem(STORAGE_KEY_CREDITS, String(data.credits || 0));
-        localStorage.setItem(STORAGE_KEY_XP, String(data.xp || 0));
-        localStorage.setItem(STORAGE_KEY_LEVEL, String(data.level || 1));
+        if (typeof data.xp === "number") localStorage.setItem(STORAGE_KEY_XP, String(data.xp));
+        if (typeof data.level === "number") localStorage.setItem(STORAGE_KEY_LEVEL, String(data.level));
         localStorage.setItem(STORAGE_KEY_USERNAME, data.username);
       } else if (response.status === 401) {
-        // If token is invalid/expired, we might want to clear it and get an anonymous one
-        // instead of a full logout if we were just a guest.
         const isGuest = (localStorage.getItem(STORAGE_KEY_USER_ID) || "").startsWith("guest_");
         if (isGuest) {
-          logout(); 
+          logout();
         } else {
-          logout("Session expired. Please log in again.");
+          logout("Session expired. Please sign in again.");
         }
       }
     } catch (err) {
       console.error("Failed to refresh user:", err);
-      if (!(localStorage.getItem(STORAGE_KEY_USER_ID) || "").startsWith("guest_")) {
-        logout("Tactical sync failed. Re-authentication required.");
-      }
     }
-  }, [token]);
+  }, [token, logout]);
 
   const initAnonymous = useCallback(async () => {
     if (isInitializingRef.current) return;
@@ -122,9 +156,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setToken(data.token);
         setUserId(data.id);
         setUsername(data.username);
-        setIsLoggedIn(false); // They are "authenticated" but not "logged in" (no persistent account)
+        setIsLoggedIn(false);
       } else {
-        // Fallback local guest session so user isn't blocked by backend errors
         const fallbackGuestId = `guest_${Math.random().toString(36).substring(2, 9)}`;
         const fallbackUsername = `Guest_${Math.random().toString(36).substring(2, 6)}`;
         localStorage.setItem(STORAGE_KEY_USER_ID, fallbackGuestId);
@@ -133,8 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUsername(fallbackUsername);
         setIsLoggedIn(false);
       }
-    } catch (err) {
-      console.warn("Anonymous server init unavailable, using local guest session:", err);
+    } catch {
       const fallbackGuestId = `guest_${Math.random().toString(36).substring(2, 9)}`;
       const fallbackUsername = `Guest_${Math.random().toString(36).substring(2, 6)}`;
       localStorage.setItem(STORAGE_KEY_USER_ID, fallbackGuestId);
@@ -164,7 +196,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const savedCredits = parseInt(localStorage.getItem(STORAGE_KEY_CREDITS) || "0", 10);
     const savedXp = parseInt(localStorage.getItem(STORAGE_KEY_XP) || "0", 10);
     const savedLevel = parseInt(localStorage.getItem(STORAGE_KEY_LEVEL) || "1", 10);
-    
+
+    if (savedToken && savedToken.startsWith("dev_") && !import.meta.env.DEV) {
+      logout();
+      initAnonymous();
+      return;
+    }
+
     if (savedToken && savedUserId) {
       setToken(savedToken);
       setUserId(savedUserId);
@@ -174,10 +212,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCredits(savedCredits);
       setXp(savedXp);
       setLevel(savedLevel);
-      
+
       const isGuest = savedUserId.startsWith("guest_");
-      setIsLoggedIn(!isGuest); // guest users are not "logged in"
-      
+      setIsLoggedIn(!isGuest);
+
       if (!isGuest) {
         refreshUser();
       }
@@ -185,14 +223,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       initAnonymous();
     }
-  }, [refreshUser, initAnonymous]);
+  }, [refreshUser, initAnonymous, logout]);
 
   const devLogin = useCallback((customUsername = "meowionly", customEmail = "") => {
+    if (!import.meta.env.DEV) {
+      return;
+    }
     const devToken = `dev_token_${Date.now()}`;
     const devId = `dev_usr_${Date.now()}`;
-    const devCredits = 15400;
-    const devXp = 4850;
-    const devLevel = 5;
+    const devCredits = 500;
+    const devXp = 250;
+    const devLevel = 2;
 
     localStorage.setItem(STORAGE_KEY_TOKEN, devToken);
     localStorage.setItem(STORAGE_KEY_USER_ID, devId);
@@ -219,48 +260,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (emailInput: string, passwordInput: string) => {
     setIsLoading(true);
     setError(null);
 
-    const isLocalHost = typeof window !== "undefined" && (
-      window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1" ||
-      window.location.hostname.startsWith("192.168.")
-    );
-
-    // If testing credentials meowionly entered on localhost, instantly authenticate without waiting for remote CORS error
-    if (isLocalHost && (email.toLowerCase().includes("meowionly") || password.toLowerCase().includes("meowionly"))) {
-      const realEmail = email.includes("@") ? email : "";
-      devLogin("meowionly", realEmail);
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: emailInput, password: passwordInput }),
       });
 
       if (!response.ok) {
-        if (isLocalHost) {
-          console.warn("Localhost backend returned non-ok, activating local dev session.");
-          const uname = email.includes("@") ? email.split("@")[0] : email;
-          const actualEmail = email.includes("@") ? email : "";
-          devLogin(uname || "meowionly", actualEmail);
-          return;
-        }
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Invalid credentials");
+        throw new Error(errorData.error || "Invalid username/email or password");
       }
 
       const data = await response.json();
       localStorage.setItem(STORAGE_KEY_TOKEN, data.token);
       localStorage.setItem(STORAGE_KEY_USER_ID, data.id);
       localStorage.setItem(STORAGE_KEY_USERNAME, data.username);
-      localStorage.setItem(STORAGE_KEY_EMAIL, email);
+      localStorage.setItem(STORAGE_KEY_EMAIL, emailInput);
       localStorage.setItem(STORAGE_KEY_IS_VERIFIED, String(data.isVerified));
       localStorage.setItem(STORAGE_KEY_CREDITS, String(data.credits || 0));
       localStorage.setItem(STORAGE_KEY_XP, String(data.xp || 0));
@@ -269,183 +289,186 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(data.token);
       setUserId(data.id);
       setUsername(data.username);
-      setEmail(email);
+      setEmail(emailInput);
       setIsVerified(data.isVerified === true);
       setCredits(data.credits || 0);
       setXp(data.xp || 0);
       setLevel(data.level || 1);
       setIsLoggedIn(true);
     } catch (err) {
-      if (isLocalHost) {
-        console.warn("Localhost network or CORS error, activating local dev session:", err);
-        const uname = email.includes("@") ? email.split("@")[0] : email;
-        const actualEmail = email.includes("@") ? email : "";
-        devLogin(uname || "meowionly", actualEmail);
-        return;
-      }
-      const message = err instanceof Error ? err.message : "Login failed";
+      const message = err instanceof Error ? err.message : "Sign in failed";
       setError(message);
       throw new Error(message);
     } finally {
       setIsLoading(false);
     }
-  }, [devLogin]);
-
-  const register = useCallback(async (email: string, username: string, password: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, username, password }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Registration failed");
-      }
-
-      const data = await response.json();
-      localStorage.setItem(STORAGE_KEY_TOKEN, data.token);
-      localStorage.setItem(STORAGE_KEY_USER_ID, data.id);
-      localStorage.setItem(STORAGE_KEY_USERNAME, data.username);
-      localStorage.setItem(STORAGE_KEY_EMAIL, email);
-      localStorage.setItem(STORAGE_KEY_IS_VERIFIED, "false");
-      localStorage.setItem(STORAGE_KEY_CREDITS, String(data.credits || 0));
-      localStorage.setItem(STORAGE_KEY_XP, "0");
-      localStorage.setItem(STORAGE_KEY_LEVEL, "1");
-
-      setToken(data.token);
-      setUserId(data.id);
-      setUsername(data.username);
-      setEmail(email);
-      setIsVerified(false);
-      setCredits(data.credits || 0);
-      setXp(0);
-      setLevel(1);
-      setIsLoggedIn(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Registration failed");
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
   }, []);
 
-  const verify = useCallback(async (code: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify`, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}` 
-        },
-        body: JSON.stringify({ code }),
-      });
+  const register = useCallback(
+    async (emailInput: string, usernameInput: string, passwordInput: string) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: emailInput,
+            username: usernameInput,
+            password: passwordInput,
+          }),
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Verification failed");
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error || "Registration failed");
+        }
+
+        const data = await response.json();
+        localStorage.setItem(STORAGE_KEY_TOKEN, data.token);
+        localStorage.setItem(STORAGE_KEY_USER_ID, data.id);
+        localStorage.setItem(STORAGE_KEY_USERNAME, data.username);
+        localStorage.setItem(STORAGE_KEY_EMAIL, emailInput);
+        localStorage.setItem(STORAGE_KEY_IS_VERIFIED, "false");
+        localStorage.setItem(STORAGE_KEY_CREDITS, String(data.credits || 0));
+        localStorage.setItem(STORAGE_KEY_XP, "0");
+        localStorage.setItem(STORAGE_KEY_LEVEL, "1");
+
+        setToken(data.token);
+        setUserId(data.id);
+        setUsername(data.username);
+        setEmail(emailInput);
+        setIsVerified(false);
+        setCredits(data.credits || 0);
+        setXp(0);
+        setLevel(1);
+        setIsLoggedIn(true);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Registration failed");
+        throw err;
+      } finally {
+        setIsLoading(false);
       }
+    },
+    []
+  );
 
-      setIsVerified(true);
-      localStorage.setItem(STORAGE_KEY_IS_VERIFIED, "true");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Verification failed");
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [token]);
+  const verify = useCallback(
+    async (code: string) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/auth/verify`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ code }),
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error || "Verification failed");
+        }
+
+        setIsVerified(true);
+        localStorage.setItem(STORAGE_KEY_IS_VERIFIED, "true");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Verification failed");
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [token]
+  );
 
   const resendVerification = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/resend`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/auth/resend`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Resend failed");
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Unable to resend verification code");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Resend failed");
+      setError(err instanceof Error ? err.message : "Unable to resend verification code");
       throw err;
     } finally {
       setIsLoading(false);
     }
   }, [token]);
 
-  const logout = useCallback((reason?: string) => {
-    localStorage.removeItem(STORAGE_KEY_TOKEN);
-    localStorage.removeItem(STORAGE_KEY_USER_ID);
-    localStorage.removeItem(STORAGE_KEY_USERNAME);
-    localStorage.removeItem(STORAGE_KEY_EMAIL);
-    localStorage.removeItem(STORAGE_KEY_IS_VERIFIED);
-    localStorage.removeItem(STORAGE_KEY_CREDITS);
-    localStorage.removeItem(STORAGE_KEY_XP);
-    localStorage.removeItem(STORAGE_KEY_LEVEL);
-
-    setToken(null);
-    setUserId(null);
-    setUsername(null);
-    setEmail(null);
-    setIsVerified(false);
-    setCredits(0);
-    setXp(0);
-    setLevel(1);
-    setIsLoggedIn(false);
-    if (reason) {
-      setError(reason);
-    } else {
-      setError(null);
-    }
-  }, []);
-
-  const user = isLoggedIn ? {
-    id: userId,
-    username,
-    email,
-    isVerified,
-    credits,
-    xp,
-    level
-  } : null;
-
-  return (
-    <AuthContext.Provider
-      value={{
-        isLoggedIn,
-        userId,
-        username,
-        token,
-        email,
-        isVerified,
-        credits,
-        xp,
-        level,
-        login,
-        register,
-        verify,
-        resendVerification,
-        logout,
-        refreshUser,
-        devLogin,
-        isLoading,
-        error,
-        isInitialized,
-        user
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const user = useMemo<AuthUser | null>(
+    () =>
+      isLoggedIn
+        ? {
+            id: userId,
+            username,
+            email,
+            isVerified,
+            credits,
+            xp,
+            level,
+          }
+        : null,
+    [isLoggedIn, userId, username, email, isVerified, credits, xp, level]
   );
+
+  const contextValue = useMemo<AuthContextType>(
+    () => ({
+      isLoggedIn,
+      userId,
+      username,
+      token,
+      email,
+      isVerified,
+      credits,
+      xp,
+      level,
+      login,
+      register,
+      verify,
+      resendVerification,
+      logout,
+      refreshUser,
+      devLogin,
+      isLoading,
+      error,
+      isInitialized,
+      user,
+    }),
+    [
+      isLoggedIn,
+      userId,
+      username,
+      token,
+      email,
+      isVerified,
+      credits,
+      xp,
+      level,
+      login,
+      register,
+      verify,
+      resendVerification,
+      logout,
+      refreshUser,
+      devLogin,
+      isLoading,
+      error,
+      isInitialized,
+      user,
+    ]
+  );
+
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

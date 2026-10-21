@@ -31,6 +31,7 @@ import {
 import { systemToast } from "@/components/common/SystemToast";
 import { MARKETPLACE_APPS, type MarketplaceApp } from "@/lib/marketplaceCatalog";
 import { gameCatalog } from "@/lib/gameCatalog";
+import { DISCORD_INVITE_URL, launchErrantNight } from "@/lib/externalLinks";
 
 type DashboardTab = "overview" | "apps" | "games" | "purchases" | "security";
 
@@ -177,7 +178,7 @@ export default function Profile() {
               {
                 id: "act-1",
                 type: "CREDIT_GRANT",
-                description: "Executive Welcome Grant: 15,400 ENGG Tactical Credits",
+                description: "Studio Welcome Grant: 15,400 Credits",
                 timestamp: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
                 amount: 15400,
                 xp: 250,
@@ -185,7 +186,7 @@ export default function Profile() {
               {
                 id: "act-2",
                 type: "GAME_VICTORY",
-                description: "Ranked Match Victory in Tactical Arena",
+                description: "Match Victory: Errant Night",
                 timestamp: new Date(Date.now() - 1000 * 60 * 140).toISOString(),
                 amount: 350,
                 xp: 500,
@@ -193,19 +194,19 @@ export default function Profile() {
               {
                 id: "act-3",
                 type: "SECURITY_UPDATE",
-                description: "Passkey Security Audit & Biometric Link active",
+                description: "Account Security Verified",
                 timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
               },
               {
                 id: "act-4",
                 type: "MARKETPLACE_ORDER",
-                description: "Errant Night Mobile Companion License confirmed",
+                description: "Errant Night Mobile APK Downloaded",
                 timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
                 amount: -1200,
               },
             ],
             missions: [
-              { id: "m-1", title: "Tactical Specialist", progress: 80, max: 100, reward: "500 XP" },
+              { id: "m-1", title: "First Victory", progress: 80, max: 100, reward: "500 XP" },
               { id: "m-2", title: "Cross-Platform Pioneer", progress: 100, max: 100, reward: "1,000 Credits" },
             ],
           });
@@ -214,7 +215,7 @@ export default function Profile() {
         return;
       }
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/profile`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/user/profile`, {
           headers: { Authorization: `Bearer ${effectiveToken}` },
         });
         if (res.ok) {
@@ -271,7 +272,7 @@ export default function Profile() {
 
     setIsUpdatingPassword(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/update-password`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/user/update-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -346,6 +347,7 @@ export default function Profile() {
             Sign in to access your apps, download APK releases, launch web games, and manage your account credentials.
           </p>
           <div className="space-y-3">
+            {import.meta.env.DEV && (
             <button
               onClick={() => {
                 devLogin("meowionly", "");
@@ -354,6 +356,7 @@ export default function Profile() {
             >
               <span>⚡ Instant Local Dev Login (meowionly)</span>
             </button>
+            )}
             <button
               onClick={() => setLocation("/login")}
               className="w-full py-2.5 px-4 bg-white/80 hover:bg-white text-neutral-800 font-semibold text-xs rounded-xl border border-neutral-300/80 transition-all cursor-pointer"
@@ -689,7 +692,7 @@ export default function Profile() {
           {!isSidebarCollapsed ? (
             <>
               <a
-                href="https://discord.gg/engg"
+                href={DISCORD_INVITE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-between px-3 py-2 rounded-xl frost-subcard hover:bg-white/80 text-xs font-semibold text-neutral-700 hover:text-neutral-900 transition-all cursor-pointer group"
@@ -720,7 +723,7 @@ export default function Profile() {
           ) : (
             <div className="flex flex-col items-center space-y-2">
               <a
-                href="https://discord.gg/engg"
+                href={DISCORD_INVITE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2.5 rounded-xl frost-subcard hover:bg-white/80 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer"
@@ -914,18 +917,18 @@ export default function Profile() {
                           Errant Night
                         </h3>
                         <p className="text-xs text-neutral-500">
-                          Tactical Defense & Strategy Game
+                          Sci-Fi Social Deduction Game
                         </p>
                       </div>
                     </div>
 
                     <p className="text-xs text-neutral-600 leading-relaxed mb-6">
-                      Engage tactical real-time defense against incoming anomalies. Upgrade defenses and protect core sectors directly in your browser.
+                      Crew vs. Alien aboard a failing deep-space vessel. Investigate roles, survive night phases, and vote out the threat before the hull breaches.
                     </p>
                   </div>
 
                   <a
-                    href="https://errant-night-yogs-projects-cee6471c.vercel.app"
+                    href={gameCatalog[0].href}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full py-2.5 px-4 rounded-xl bg-cyan-600 hover:bg-cyan-700 active:scale-[0.99] text-white text-xs font-semibold tracking-wide flex items-center justify-center space-x-2 transition-all shadow-xs cursor-pointer"
@@ -942,7 +945,7 @@ export default function Profile() {
                       <span className="text-[11px] font-semibold text-purple-700 px-2.5 py-0.5 rounded-full bg-purple-50 border border-purple-200">
                         Mobile Release
                       </span>
-                      <span className="text-xs text-neutral-500">Android APK • v1.3.4</span>
+                      <span className="text-xs text-neutral-500">Android APK • {MARKETPLACE_APPS[0].currentRelease.version}</span>
                     </div>
 
                     <div className="flex items-center space-x-4 mb-4">
@@ -954,7 +957,7 @@ export default function Profile() {
                           Errant Night Mobile APK
                         </h3>
                         <p className="text-xs text-neutral-500">
-                          48.2 MB • Android 9.0+
+                          {MARKETPLACE_APPS[0].currentRelease.apkSize} • {MARKETPLACE_APPS[0].currentRelease.minAndroidVersion}
                         </p>
                       </div>
                     </div>
@@ -970,7 +973,7 @@ export default function Profile() {
                       className="w-full py-2.5 px-4 rounded-xl bg-[#7c3aed] hover:bg-[#6d28d9] active:scale-[0.99] text-white text-xs font-semibold tracking-wide flex items-center justify-center space-x-2 transition-all shadow-xs cursor-pointer"
                     >
                       <Download className="w-3.5 h-3.5" />
-                      <span>Download Android APK (48.2 MB)</span>
+                      <span>Download Android APK ({MARKETPLACE_APPS[0].currentRelease.apkSize})</span>
                     </button>
 
                     <button
@@ -1182,7 +1185,7 @@ export default function Profile() {
 
                     {/* Actions */}
                     <div className="pt-4 border-t border-neutral-200/70 flex items-center space-x-3">
-                      {app.currentRelease.downloadUrl && (
+                      {app.currentRelease.availability === "apk-available" && app.currentRelease.downloadUrl && (
                         <button
                           onClick={() => handleDownloadApk(app)}
                           className="flex-1 py-2.5 px-4 rounded-xl bg-[#7c3aed] hover:bg-[#6d28d9] active:scale-[0.99] text-white text-xs font-semibold flex items-center justify-center space-x-2 transition-all shadow-xs cursor-pointer"
@@ -1224,7 +1227,7 @@ export default function Profile() {
                   Game Library
                 </h2>
                 <p className="text-xs text-neutral-500 mt-1">
-                  High-stakes tactical, network defense, and sci-fi titles playable instantly in your browser.
+                  Multiplayer social deduction and tactical card games playable instantly in your browser.
                 </p>
               </div>
 
@@ -1602,7 +1605,7 @@ export default function Profile() {
                   </p>
                 </div>
                 <a
-                  href="https://discord.gg/engg"
+                  href={DISCORD_INVITE_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-4 py-2.5 rounded-xl bg-[#5865F2] hover:bg-[#4752c4] text-white text-xs font-semibold flex items-center justify-center space-x-2 transition-all shrink-0 cursor-pointer shadow-xs"

@@ -12,7 +12,7 @@ import {
 } from "@workspace/api-zod";
 import { hashPassword, comparePassword, generateToken, generateRefreshToken, verifyRefreshToken } from "../../../lib/auth.js";
 import { sendEmail, generateVerificationEmailHTML, generatePasswordResetEmailHTML } from "../../../lib/email.js";
-import { authMiddleware, type AuthRequest } from "../auth/middleware";
+import { authMiddleware, optionalAuthMiddleware, type AuthRequest } from "../auth/middleware";
 import xss from "xss";
 import { Filter } from "bad-words";
 import { logger } from "../../../lib/logger.js";
@@ -31,7 +31,7 @@ router.post("/auth/anonymous", async (req, res) => {
     const guestId = `guest_${randomUUID()}`;
     const token = generateToken(guestId);
     
-    const shortCode = guestId.substring(6, 10).toUpperCase();
+    const shortCode = guestId.replace(/^guest_/, "").replace(/-/g, "").substring(0, 8).toUpperCase();
     const guestUsername = `GUEST_${shortCode}`;
     
     // Persist the guest identity in the database to allow credits/coins tracking
@@ -41,7 +41,10 @@ router.post("/auth/anonymous", async (req, res) => {
       email: `${guestId}@guest.engg.online`,
       passwordHash: "",
       isVerified: false,
-    });
+      credits: 0,
+      xp: 0,
+      level: 1,
+    }).onConflictDoNothing();
     
     await logAudit({
       userId: guestId,
@@ -50,7 +53,7 @@ router.post("/auth/anonymous", async (req, res) => {
       req,
     });
 
-    res.json({ token, id: guestId, username: guestUsername, isVerified: false });
+    res.json({ token, id: guestId, username: guestUsername, isVerified: false, credits: 0, xp: 0, level: 1 });
   } catch (err) {
     logger.error({ err }, "Anonymous auth failure");
     res.status(500).json({ error: "Failed to issue guest credentials" });
@@ -80,7 +83,7 @@ const identifierLimit = rateLimit({
     const identifier = String(req.body.email || "").normalize('NFKC').toLowerCase().trim();
     return identifier;
   },
-  message: { error: "Too many login attempts. Protocol synchronized delay active." },
+  message: { error: "Please wait before requesting another code." },
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => !req.body.email,
@@ -92,7 +95,7 @@ const ipLimit = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
   max: 20, // 20 requests per minute
   // Using default MemoryStore instead of RedisStore
-  message: { error: "Tactical network congestion detected. Please wait." },
+  message: { error: "Too many requests. Please wait a moment and try again." },
   standardHeaders: true,
   legacyHeaders: false,
   passOnStoreError: true,
@@ -115,7 +118,7 @@ const identifierResetLimit = rateLimit({
   keyGenerator: (req) => {
     return String(req.body.email || "").normalize('NFKC').toLowerCase().trim();
   },
-  message: { error: "Reset protocol active. Check your uplink for previous keys." },
+  message: { error: "Please wait before requesting another code." },
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => !req.body.email,
@@ -142,7 +145,7 @@ router.post("/auth/register", authLimit, async (req, res) => {
     const body = RegisterUserBody.parse(req.body);
 
     if (body.password.length < 6) {
-      res.status(400).json({ error: "Security protocol requires a minimum of 6 characters for passwords" });
+      res.status(400).json({ error: "Password must be at least 6 characters." });
       return;
     }
 
@@ -200,6 +203,9 @@ router.post("/auth/register", authLimit, async (req, res) => {
         username: sanitizedUsername,
         passwordHash,
         isVerified: false,
+        credits: 0,
+        xp: 0,
+        level: 1,
       })
       .returning({ id: usersTable.id, email: usersTable.email, username: usersTable.username, credits: usersTable.credits });
 
@@ -251,21 +257,23 @@ router.post("/auth/register", authLimit, async (req, res) => {
       logger.error({ err, userId }, "Failed to assign starter missions on registration");
     }
 
-    const response: z.infer<typeof LoginUserResponse> = {
+    const response = {
       id: user[0].id,
       email: user[0].email,
       username: user[0].username,
       token,
       refreshToken,
       isVerified: false,
-      credits: user[0].credits,
+      credits: user[0].credits ?? 0,
+      xp: 0,
+      level: 1,
       isAdmin: false,
     };
 
     await logAudit({
       userId,
       eventType: "AUTH_REGISTER_SUCCESS",
-      description: `New user protocol initiated for: ${sanitizedUsername}`,
+      description: `User registered: ${sanitizedUsername}`,
       req,
     });
 
@@ -365,7 +373,7 @@ router.post("/auth/login", ipLimit, authLimit, identifierLimit, async (req, res)
     await logAudit({
       userId: user.id,
       eventType: "AUTH_LOGIN_SUCCESS",
-      description: `Session synchronized for: ${user.username}`,
+      description: `User logged in: ${user.username}`,
       req,
     });
 
@@ -387,14 +395,18 @@ router.post("/auth/login", ipLimit, authLimit, identifierLimit, async (req, res)
       logger.error({ err, userId: user.id }, "Failed to ensure missions on login");
     }
 
-    const response: z.infer<typeof LoginUserResponse> = {
+    const response = {
       id: user.id,
       email: user.email,
       username: user.username,
       token,
       refreshToken,
       isVerified: user.isVerified === true,
-      credits: user.credits,
+      credits: user.credits ?? 0,
+      xp: user.xp ?? 0,
+      level: user.level ?? 1,
+      currentStreak: user.currentStreak,
+      lastDailyClaim: user.lastClaimedAt,
       isAdmin: user.isAdmin === true,
     };
 
@@ -423,6 +435,10 @@ router.get("/auth/me", authMiddleware, async (req: AuthRequest, res) => {
         isVerified: usersTable.isVerified, 
         createdAt: usersTable.createdAt, 
         credits: usersTable.credits,
+        xp: usersTable.xp,
+        level: usersTable.level,
+        currentStreak: usersTable.currentStreak,
+        lastClaimedAt: usersTable.lastClaimedAt,
         isAdmin: usersTable.isAdmin
       })
       .from(usersTable)
@@ -434,13 +450,17 @@ router.get("/auth/me", authMiddleware, async (req: AuthRequest, res) => {
     }
 
     const user = users[0];
-    const response: z.infer<typeof GetCurrentUserResponse> = {
+    const response = {
       id: user.id,
       email: user.email,
       username: user.username,
       createdAt: user.createdAt,
       isVerified: user.isVerified === true,
-      credits: user.credits,
+      credits: user.credits ?? 0,
+      xp: user.xp ?? 0,
+      level: user.level ?? 1,
+      currentStreak: user.currentStreak,
+      lastDailyClaim: user.lastClaimedAt,
       isAdmin: user.isAdmin === true,
     };
 
@@ -451,10 +471,19 @@ router.get("/auth/me", authMiddleware, async (req: AuthRequest, res) => {
   }
 });
 
+const otpVerifyLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Strict max 5 attempts per 15 minutes per IP
+  message: { error: "Please wait before requesting another code." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  passOnStoreError: true,
+});
+
 // Verify email with token/code
-router.post(["/auth/verify", "/auth/verify-email"], async (req, res) => {
+router.post(["/auth/verify", "/auth/verify-email"], otpVerifyLimit, optionalAuthMiddleware, async (req: AuthRequest, res) => {
   try {
-    const { token, code } = req.body;
+    const { token, code, email } = req.body;
     const verificationCode = token || code;
 
     if (!verificationCode || typeof verificationCode !== "string") {
@@ -462,11 +491,33 @@ router.post(["/auth/verify", "/auth/verify-email"], async (req, res) => {
       return;
     }
 
-    // Find the verification token
+    let targetUserId = req.userId;
+    if (!targetUserId && email && typeof email === "string") {
+      const cleanEmail = email.trim().normalize("NFKC").toLowerCase();
+      const [matchedUser] = await db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(eq(usersTable.email, cleanEmail))
+        .limit(1);
+      if (!matchedUser) {
+        res.status(400).json({ error: "Invalid verification token" });
+        return;
+      }
+      targetUserId = matchedUser.id;
+    }
+
+    // Find the verification token (bound to targetUserId when provided)
+    const whereClause = targetUserId
+      ? and(
+          eq(emailVerificationTokensTable.token, verificationCode),
+          eq(emailVerificationTokensTable.userId, targetUserId)
+        )
+      : eq(emailVerificationTokensTable.token, verificationCode);
+
     const verificationRecords = await db
       .select()
       .from(emailVerificationTokensTable)
-      .where(eq(emailVerificationTokensTable.token, verificationCode))
+      .where(whereClause)
       .limit(1);
 
     if (verificationRecords.length === 0) {
@@ -491,7 +542,7 @@ router.post(["/auth/verify", "/auth/verify-email"], async (req, res) => {
     // Delete the verification token (one-time use)
     await db.delete(emailVerificationTokensTable).where(eq(emailVerificationTokensTable.id, verificationRecord.id));
 
-    res.json({ success: true, message: "Email verified successfully" });
+    res.json({ success: true, message: "Email verified successfully." });
   } catch (error) {
     logger.error({ error }, "Email verification error");
     res.status(500).json({ error: "Email verification failed" });
@@ -551,7 +602,7 @@ router.post(["/auth/resend", "/auth/resend-verification-email"], authLimit, auth
       res.json({ success: true, message: "Verification code sent" });
     } catch (emailError) {
       logger.error({ emailError, userId: req.userId }, "Failed to send verification email");
-      res.status(500).json({ error: "Failed to send verification email" });
+      res.status(500).json({ error: "Unable to send verification email. Please try again." });
     }
   } catch (error) {
     console.error("Resend verification email error:", error);
@@ -612,7 +663,7 @@ router.post("/auth/request-password-reset", resetLimit, identifierResetLimit, as
       await logAudit({
         userId: user.id,
         eventType: "AUTH_PASSWORD_RESET_REQUEST",
-        description: `Identity recovery requested for: ${user.username}`,
+        description: `Password reset requested for: ${user.username}`,
         req,
       });
 
@@ -760,10 +811,10 @@ router.post("/auth/logout", async (req, res) => {
 
 // ── EMAIL COIN RESTORATION (SOLUTION 1) ──────────────────────────────────────
 
-router.post("/auth/recover-request", async (req, res) => {
+router.post("/auth/recover-request", authLimit, identifierResetLimit, async (req, res) => {
   try {
     const { email } = req.body;
-    if (!email || !email.includes("@")) {
+    if (!email || typeof email !== "string" || !email.includes("@")) {
       res.status(400).json({ error: "Valid email address is required" });
       return;
     }
@@ -800,102 +851,148 @@ router.post("/auth/recover-request", async (req, res) => {
       html,
     });
 
-    res.json({ success: true, message: "Restoration code dispatched to email" });
+    res.json({ success: true, message: "Verification code sent to your email." });
   } catch (error) {
     logger.error({ error }, "Recovery request failure");
-    res.status(500).json({ error: "Failed to dispatch restoration code" });
+    res.status(500).json({ error: "Unable to send verification email. Please try again." });
   }
 });
 
-router.post("/auth/recover-verify", async (req, res) => {
+router.post("/auth/recover-verify", otpVerifyLimit, async (req, res) => {
   try {
     const { email, code, currentGuestId } = req.body;
-    if (!email || !code || !currentGuestId) {
+    if (!email || !code || typeof email !== "string" || typeof code !== "string") {
       res.status(400).json({ error: "Missing required verification parameters" });
       return;
     }
 
     const cleanEmail = email.trim().toLowerCase();
+    const cleanCode = code.trim();
 
-    // Validate recovery code
-    const tokens = await db
-      .select()
-      .from(emailVerificationTokensTable)
-      .where(and(eq(emailVerificationTokensTable.token, code), gt(emailVerificationTokensTable.expiresAt, new Date())))
-      .limit(1);
-
-    if (tokens.length === 0) {
-      res.status(400).json({ error: "Invalid or expired restoration code" });
-      return;
-    }
-
-    // Burn token after use
-    await db.delete(emailVerificationTokensTable).where(eq(emailVerificationTokensTable.id, tokens[0].id));
-
-    // Fetch all user accounts linked to this email
-    const accounts = await db
+    // 1. Look up the user by email FIRST
+    const [targetUser] = await db
       .select()
       .from(usersTable)
-      .where(eq(usersTable.email, cleanEmail));
+      .where(eq(usersTable.email, cleanEmail))
+      .limit(1);
 
-    let totalCoins = 0;
-    const oldUserIds: string[] = [];
-
-    for (const acc of accounts) {
-      if (acc.id !== currentGuestId) {
-        totalCoins += acc.credits;
-        oldUserIds.push(acc.id);
-      }
-    }
-
-    if (totalCoins === 0) {
-      // Just link the email if no balance was found on old accounts
-      await db
-        .update(usersTable)
-        .set({ email: cleanEmail })
-        .where(eq(usersTable.id, currentGuestId));
-      
-      res.json({ success: true, mergedCredits: 0 });
+    if (!targetUser) {
+      res.status(400).json({ error: "Invalid or expired verification code" });
       return;
     }
 
-    // Perform database transaction to merge balances
-    await db.transaction(async (tx) => {
-      // 1. Zero out old accounts
-      for (const oldId of oldUserIds) {
-        await tx
-          .update(usersTable)
-          .set({ credits: 0 })
-          .where(eq(usersTable.id, oldId));
+    const MAX_GUEST_CREDITS_MERGE = 500;
+    let mergedCredits = 0;
+
+    // 2. Verify token and perform recovery atomically inside a transaction
+    const txSuccess = await db.transaction(async (tx) => {
+      const tokens = await tx
+        .select()
+        .from(emailVerificationTokensTable)
+        .where(
+          and(
+            eq(emailVerificationTokensTable.userId, targetUser.id),
+            eq(emailVerificationTokensTable.token, cleanCode),
+            gt(emailVerificationTokensTable.expiresAt, new Date())
+          )
+        )
+        .limit(1);
+
+      if (tokens.length === 0) {
+        return false;
       }
 
-      // 2. Add merged balance to active guest account and link verified email
+      // Burn token immediately inside transaction
       await tx
-        .update(usersTable)
-        .set({ 
-          credits: sql`${usersTable.credits} + ${totalCoins}`,
-          email: cleanEmail 
-        })
-        .where(eq(usersTable.id, currentGuestId));
+        .delete(emailVerificationTokensTable)
+        .where(eq(emailVerificationTokensTable.id, tokens[0].id));
 
-      // 3. Log merge transaction
-      await tx.insert(creditTransactionsTable).values({
-        id: randomUUID(),
-        userId: currentGuestId,
-        username: "GUEST",
-        email: cleanEmail,
-        amount: totalCoins,
-        type: "merge",
-        packId: "merge",
-        description: `Restored and merged ${totalCoins} credits from older profiles linked to ${cleanEmail}`,
-      });
+      // Only merge guest credits if currentGuestId is an actual guest account (isGuest: true)
+      if (
+        typeof currentGuestId === "string" &&
+        currentGuestId.startsWith("guest_") &&
+        currentGuestId !== targetUser.id
+      ) {
+        const [guestUser] = await tx
+          .select()
+          .from(usersTable)
+          .where(eq(usersTable.id, currentGuestId))
+          .limit(1);
+
+        if (guestUser && guestUser.id.startsWith("guest_") && !guestUser.isVerified) {
+          if (targetUser.id.startsWith("guest_")) {
+            // Transferring from an older guest account into the active guest session (capped)
+            mergedCredits = Math.min(Math.max(targetUser.credits, 0), MAX_GUEST_CREDITS_MERGE);
+            if (mergedCredits > 0) {
+              await tx
+                .update(usersTable)
+                .set({ credits: sql`GREATEST(0, ${usersTable.credits} - ${mergedCredits})` })
+                .where(eq(usersTable.id, targetUser.id));
+
+              await tx
+                .update(usersTable)
+                .set({ credits: sql`COALESCE(${usersTable.credits}, 0) + ${mergedCredits}` })
+                .where(eq(usersTable.id, guestUser.id));
+
+              await tx.insert(creditTransactionsTable).values({
+                id: randomUUID(),
+                userId: guestUser.id,
+                username: guestUser.username,
+                email: cleanEmail,
+                amount: mergedCredits,
+                type: "merge",
+                packId: "merge",
+                description: `Restored ${mergedCredits} guest credits for ${cleanEmail}`,
+              });
+            }
+          } else {
+            // Merging capped guest credits into the recovered persistent account
+            mergedCredits = Math.min(Math.max(guestUser.credits, 0), MAX_GUEST_CREDITS_MERGE);
+            if (mergedCredits > 0) {
+              await tx
+                .update(usersTable)
+                .set({ credits: 0 })
+                .where(eq(usersTable.id, guestUser.id));
+
+              await tx
+                .update(usersTable)
+                .set({ credits: sql`COALESCE(${usersTable.credits}, 0) + ${mergedCredits}` })
+                .where(eq(usersTable.id, targetUser.id));
+
+              await tx.insert(creditTransactionsTable).values({
+                id: randomUUID(),
+                userId: targetUser.id,
+                username: targetUser.username,
+                email: cleanEmail,
+                amount: mergedCredits,
+                type: "merge",
+                packId: "merge",
+                description: `Merged ${mergedCredits} guest credits into account ${targetUser.username}`,
+              });
+            }
+          }
+        }
+      }
+
+      return true;
     });
 
-    logger.info({ currentGuestId, totalCoins, cleanEmail }, "Credits successfully merged from recovery");
-    res.json({ success: true, mergedCredits: totalCoins });
+    if (!txSuccess) {
+      res.status(400).json({ error: "Invalid or expired verification code" });
+      return;
+    }
+
+    const freshToken = generateToken(targetUser.id);
+    logger.info({ targetUserId: targetUser.id, currentGuestId, mergedCredits, cleanEmail }, "Account recovery verified");
+    res.json({
+      success: true,
+      mergedCredits,
+      token: freshToken,
+      userId: targetUser.id,
+    });
   } catch (error) {
     logger.error({ error }, "Recovery verification failed");
-    res.status(500).json({ error: "Restoration failed during account merge" });
+    res.status(500).json({ error: "Account recovery failed" });
   }
 });
 

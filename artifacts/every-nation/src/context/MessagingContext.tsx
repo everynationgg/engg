@@ -11,7 +11,7 @@ export interface Message {
   isRead: boolean;
   isPending?: boolean;
   isError?: boolean;
-  clientId?: string; // For correlation
+  clientId?: string;
 }
 
 interface MessagingContextType {
@@ -30,71 +30,88 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [conversations, setConversations] = useState<Record<string, Message[]>>({});
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [activeChatUserId, setActiveChatUserId] = useState<string | null>(null);
-  
+
   const socketRef = useRef<any>(null);
 
-  // 1. ATOMIC STATE UPDATE LOGIC
-  const upsertMessage = useCallback((msg: Message, options: { isIncoming: boolean } = { isIncoming: false }) => {
-    if (!user?.id) return;
-    const otherUserId = msg.senderId === user.id ? msg.receiverId : msg.senderId;
+  const upsertMessage = useCallback(
+    (msg: Message, options: { isIncoming: boolean } = { isIncoming: false }) => {
+      if (!user?.id) return;
+      const otherUserId = msg.senderId === user.id ? msg.receiverId : msg.senderId;
 
-    setConversations(prev => {
-      const existing = prev[otherUserId] || [];
-      
-      // A: Deduplication by real ID
-      if (existing.some(m => !m.isPending && m.id === msg.id)) return prev;
+      setConversations((prev) => {
+        const existing = prev[otherUserId] || [];
 
-      let updated = [...existing];
-      
-      // B: Correlation Matching (Pending -> Real)
-      if (!msg.isPending) {
-        const pendingIdx = updated.findIndex(m => 
-          m.isPending && (
-            (msg.clientId && m.clientId === msg.clientId) || // Match by Correlation ID
-            (m.message === msg.message && Math.abs(new Date(m.createdAt).getTime() - new Date(msg.createdAt).getTime()) < 10000) // Fallback: 10s window
-          )
-        );
-        
-        if (pendingIdx !== -1) {
-          updated[pendingIdx] = msg;
+        if (existing.some((m) => !m.isPending && m.id === msg.id)) return prev;
+
+        const updated = [...existing];
+
+        if (!msg.isPending) {
+          const pendingIdx = updated.findIndex(
+            (m) =>
+              m.isPending &&
+              ((msg.clientId && m.clientId === msg.clientId) ||
+                (m.message === msg.message &&
+                  Math.abs(new Date(m.createdAt).getTime() - new Date(msg.createdAt).getTime()) <
+                    10000))
+          );
+
+          if (pendingIdx !== -1) {
+            updated[pendingIdx] = msg;
+          } else {
+            updated.push(msg);
+          }
         } else {
           updated.push(msg);
         }
-      } else {
-        updated.push(msg); // Just a pending message
+
+        return {
+          ...prev,
+          [otherUserId]: updated.sort(
+            (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          ),
+        };
+      });
+
+      if (options.isIncoming && msg.senderId !== user.id && activeChatUserId !== otherUserId) {
+        setUnreadCounts((prev) => ({
+          ...prev,
+          [otherUserId]: (prev[otherUserId] || 0) + 1,
+        }));
       }
+    },
+    [user?.id, activeChatUserId]
+  );
 
-      return { 
-        ...prev, 
-        [otherUserId]: updated.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-      };
-    });
+  const handleIncomingMessage = useCallback(
+    (msg: Message) => {
+      upsertMessage(msg, { isIncoming: true });
+    },
+    [upsertMessage]
+  );
 
-    // C: Side Effects (Unread counts) - Only for truly incoming new messages
-    if (options.isIncoming && msg.senderId !== user.id && activeChatUserId !== otherUserId) {
-      setUnreadCounts(prev => ({
-        ...prev,
-        [otherUserId]: (prev[otherUserId] || 0) + 1
-      }));
-    }
-  }, [user?.id, activeChatUserId]);
-
-  // 2. SOCKET MASTER HANDLER
-  const handleIncomingMessage = useCallback((msg: Message) => {
-    upsertMessage(msg, { isIncoming: true });
-  }, [upsertMessage]);
-
-  // 3. LIFECYCLE
   useEffect(() => {
-    if (isLoggedIn && token) {
-      // Initialize or reuse existing socket
+    if (isLoggedIn && token && !token.startsWith("dev_")) {
       const socket = getSocket(token);
       socketRef.current = socket;
 
-      return () => {
-        // We DO NOT disconnect here on chat switch. 
-        // Disconnection should only happen on logout.
-      };
+      fetch(`${import.meta.env.VITE_API_URL || ""}/api/messages/unread-counts`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (Array.isArray(data)) {
+            const counts: Record<string, number> = {};
+            for (const row of data) {
+              if (row?.senderId && Number(row.count) > 0) {
+                counts[row.senderId] = Number(row.count);
+              }
+            }
+            setUnreadCounts(counts);
+          }
+        })
+        .catch(() => {});
+
+      return () => {};
     } else {
       if (socketRef.current) disconnectSocket();
       socketRef.current = null;
@@ -105,7 +122,6 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [isLoggedIn, token]);
 
-  // 4. ATTACH MESSAGE HANDLER
   useEffect(() => {
     const socket = socketRef.current;
     if (!socket) return;
@@ -116,34 +132,38 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
   }, [handleIncomingMessage]);
 
-  // 5. UNREAD SYNC
   useEffect(() => {
     if (activeChatUserId) {
-      setUnreadCounts(prev => (prev[activeChatUserId] ? { ...prev, [activeChatUserId]: 0 } : prev));
+      setUnreadCounts((prev) => (prev[activeChatUserId] ? { ...prev, [activeChatUserId]: 0 } : prev));
     }
   }, [activeChatUserId]);
 
-  // 5. HISTORY LOADING
   const loadConversationHistory = async (userId: string) => {
-    if (!isLoggedIn || !token) return;
+    if (!isLoggedIn || !token || token.startsWith("dev_")) return;
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/messages/private/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL || ""}/api/messages/private/${userId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       if (!res.ok) return;
       const data: Message[] = await res.json();
-      setConversations(prev => ({
+      setConversations((prev) => ({
         ...prev,
-        [userId]: data.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+        [userId]: data.sort(
+          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        ),
       }));
-    } catch (err) { console.error("[Signal Error]", err); }
+    } catch (err) {
+      console.error("[Messaging Error]", err);
+    }
   };
 
-  // 6. TRANSMISSION (Optimistic)
   const sendMessage = async (receiverId: string, text: string) => {
     if (!isLoggedIn || !token || !user?.id) return;
 
-    const clientId = `cl-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+    const clientId = `cl-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     const optimisticMsg: Message = {
       id: clientId,
       clientId,
@@ -152,32 +172,41 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       message: text,
       createdAt: new Date().toISOString(),
       isRead: true,
-      isPending: true
+      isPending: true,
     };
 
     upsertMessage(optimisticMsg);
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/messages/send`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/messages/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ receiverId, message: text, clientId }) // We pass clientId even if server ignores it
+        body: JSON.stringify({ receiverId, message: text, clientId }),
       });
 
-      if (!res.ok) throw new Error("Link Terminated");
+      if (!res.ok) throw new Error("Failed to send message");
     } catch (err) {
-      console.error("[Transmission Error]", err);
-      setConversations(prev => ({
+      console.error("[Messaging Error]", err);
+      setConversations((prev) => ({
         ...prev,
-        [receiverId]: (prev[receiverId] || []).map(m => m.id === clientId ? { ...m, isError: true } : m)
+        [receiverId]: (prev[receiverId] || []).map((m) =>
+          m.id === clientId ? { ...m, isError: true } : m
+        ),
       }));
     }
   };
 
   return (
-    <MessagingContext.Provider value={{ 
-      conversations, unreadCounts, activeChatUserId, setActiveChatUserId, sendMessage, loadConversationHistory 
-    }}>
+    <MessagingContext.Provider
+      value={{
+        conversations,
+        unreadCounts,
+        activeChatUserId,
+        setActiveChatUserId,
+        sendMessage,
+        loadConversationHistory,
+      }}
+    >
       {children}
     </MessagingContext.Provider>
   );

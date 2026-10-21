@@ -34,16 +34,18 @@ export default function ForgotPassword() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email }),
-        },
+        }
       );
 
       if (response.ok) {
         setSubmitted(true);
       } else {
         const errorData = await response.json().catch(() => ({}));
-        setError(errorData.error || "Unable to send reset link. Please check the email address.");
+        setError(
+          errorData.error || "Unable to send reset link. Please check the email address."
+        );
       }
-    } catch (err: any) {
+    } catch {
       setError("Network timeout. Please check your connection and try again.");
     } finally {
       setLoading(false);
@@ -72,7 +74,7 @@ export default function ForgotPassword() {
                 Reset Password
               </h1>
               <p className="text-sm text-neutral-500 mt-2">
-                Enter your registered email and we'll send you instructions to reset your password.
+                Enter your registered email and we&apos;ll send you instructions to reset your password.
               </p>
             </div>
 
@@ -138,10 +140,17 @@ export default function ForgotPassword() {
                 </div>
                 <h3 className="text-lg font-bold text-neutral-900">Check Your Email</h3>
                 <p className="text-sm text-neutral-600 leading-relaxed">
-                  We've sent password reset instructions to{" "}
+                  We&apos;ve sent password reset instructions to{" "}
                   <strong className="text-neutral-900">{email}</strong>. Please check your inbox and spam folder.
                 </p>
-                <div className="pt-2">
+                <div className="pt-2 flex flex-col items-center gap-2">
+                  <Link
+                    href={`/reset-password?email=${encodeURIComponent(email)}`}
+                    className="inline-flex items-center gap-2 text-xs font-bold text-neutral-700 hover:text-[#7c3aed]"
+                  >
+                    <span>Have a reset token? Enter it here</span>
+                    <FaArrowRight className="w-3 h-3" />
+                  </Link>
                   <Link
                     href="/login"
                     className="inline-flex items-center gap-2 text-sm font-bold text-[#7c3aed] hover:text-[#6d28d9]"

@@ -1,6 +1,14 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaUserPlus, FaUserFriends, FaSearch, FaCheck, FaTimes, FaUserSecret, FaCircle, FaArrowLeft, FaSatelliteDish, FaArrowRight, FaTrash, FaExclamationCircle } from "react-icons/fa";
+import {
+  FaUserFriends,
+  FaCheck,
+  FaTimes,
+  FaArrowLeft,
+  FaArrowRight,
+  FaTrash,
+  FaSearch,
+} from "react-icons/fa";
 import { useAuth } from "@/hooks/useAuth";
 import { useUI } from "@/context/UIContext";
 import { useMessaging } from "@/context/MessagingContext";
@@ -22,27 +30,24 @@ export default function AlliesSidebar() {
   const [activeTab, setActiveTab] = useState<"allies" | "search">("allies");
   const [loading, setLoading] = useState(false);
   const [isAccepting, setIsAccepting] = useState<string | null>(null);
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
 
-  // Messaging State (Consumed from Global Store)
   const {
     conversations,
     unreadCounts,
     sendMessage: transmitMessage,
     loadConversationHistory,
-    setActiveChatUserId
+    setActiveChatUserId,
   } = useMessaging();
 
   const [activeChatAlly, setActiveChatAlly] = useState<Ally | null>(null);
   const [messageInput, setMessageInput] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [isAllyTyping, setIsAllyTyping] = useState(false);
-  const isTypingRef = useRef(false);
-  const typingTimeoutRef = useRef<any>(null);
 
-  const chatMessages = activeChatAlly ? (conversations[activeChatAlly.id] || []) : [];
+  const chatMessages = activeChatAlly ? conversations[activeChatAlly.id] || [] : [];
 
   useEffect(() => {
-    if (isLoggedIn && token) {
+    if (isLoggedIn && token && !token.startsWith("dev_")) {
       fetchAllies();
       fetchPendingRequests();
     }
@@ -55,13 +60,7 @@ export default function AlliesSidebar() {
     } else {
       setActiveChatUserId(null);
     }
-  }, [activeChatAlly]);
-
-  // Typing logic remains local for UI feedback, but we keep it minimal
-  const handleTyping = (text: string) => {
-    setMessageInput(text);
-    // (Optional: Implement global typing update via MessagingContext later)
-  };
+  }, [activeChatAlly, loadConversationHistory, setActiveChatUserId]);
 
   const sendMessage = async () => {
     if (!activeChatAlly || !messageInput.trim() || isSending) return;
@@ -78,72 +77,118 @@ export default function AlliesSidebar() {
 
   const fetchAllies = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/friends`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/user/friends`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
+      if (!res.ok) return;
       const data = await res.json();
-      setAllies(data);
-    } catch (err) { console.error(err); }
+      if (Array.isArray(data)) {
+        setAllies(data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const fetchPendingRequests = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/friend-requests`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/user/friend-requests`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
+      if (!res.ok) return;
       const data = await res.json();
-      setPendingRequests(data);
-    } catch (err) { console.error(err); }
+      if (Array.isArray(data)) {
+        setPendingRequests(data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const removeFriend = async (friendId: string) => {
-    if (!confirm("Terminate secure link?")) return;
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/remove-friend`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/user/remove-friend`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ friendId })
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ friendId }),
       });
       if (res.ok) {
+        setConfirmRemoveId(null);
         fetchAllies();
         if (activeChatAlly?.id === friendId) setActiveChatAlly(null);
       }
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleSearch = async () => {
-    if (searchQuery.length < 2) return;
+    if (searchQuery.trim().length < 2) return;
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/search-friends?query=${searchQuery}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL || ""}/api/user/search-friends?query=${encodeURIComponent(
+          searchQuery.trim()
+        )}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (!res.ok) return;
       const data = await res.json();
-      setSearchResults(data);
-    } catch (err) { console.error(err); } finally { setLoading(false); }
+      if (Array.isArray(data)) {
+        setSearchResults(data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const sendRequest = async (friendId: string) => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/send-friend-request`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ friendId })
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL || ""}/api/user/send-friend-request`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ friendId }),
+        }
+      );
       if (res.ok) handleSearch();
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const acceptRequest = async (friendId: string) => {
+    if (isAccepting) return;
     setIsAccepting(friendId);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/accept-friend-request`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ friendId })
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL || ""}/api/user/accept-friend-request`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ friendId }),
+        }
+      );
       if (res.ok) await Promise.all([fetchAllies(), fetchPendingRequests()]);
-    } catch (err) { console.error(err); } finally { setIsAccepting(null); }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsAccepting(null);
+    }
   };
 
   if (!isLoggedIn) return null;
@@ -154,15 +199,18 @@ export default function AlliesSidebar() {
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); togglePanel("allies"); }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            togglePanel("allies");
+          }}
           data-allies-trigger
-          className="fixed bottom-6 right-6 z-[100] w-12 h-12 bg-[#0a0b1e]/80 border border-cyan-500/20 hover:bg-cyan-500/10 hover:border-cyan-400/50 transition-all flex lg:hidden items-center justify-center group overflow-hidden shadow-[0_0_20px_rgba(6,182,212,0.15)]"
+          className="fixed bottom-6 right-6 z-[100] w-12 h-12 rounded-xl bg-[#0b101b]/90 border border-cyan-500/30 hover:bg-cyan-500/15 hover:border-cyan-400 transition-all flex lg:hidden items-center justify-center group shadow-lg cursor-pointer"
+          aria-label="Open Friends Panel"
         >
-          <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-cyan-500/40" />
-          <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-cyan-500/40" />
-          <FaUserFriends className="text-cyan-400/60 text-lg group-hover:text-cyan-400 transition-colors" />
+          <FaUserFriends className="text-cyan-400 text-lg" />
           {(pendingRequests.length > 0 || Object.keys(unreadCounts).length > 0) && (
-            <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full animate-pulse border border-white/20" />
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse border border-white/20" />
           )}
         </motion.button>
       )}
@@ -170,7 +218,6 @@ export default function AlliesSidebar() {
       <AnimatePresence>
         {activePanel === "allies" && (
           <>
-            {/* Click-Away Overlay (Backdrop) */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -183,121 +230,245 @@ export default function AlliesSidebar() {
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
-              transition={{ type: "tween", duration: 0.3 }}
+              transition={{ type: "tween", duration: 0.25 }}
               onClick={(e) => e.stopPropagation()}
-              className="fixed top-0 right-0 bottom-0 w-full sm:w-[320px] z-[100] flex flex-col bg-[#020408] border-l border-white/5"
+              className="fixed top-0 right-0 bottom-0 w-full sm:w-[340px] z-[100] flex flex-col bg-[#080d16] border-l border-white/10"
             >
-              {/* Scanline Header */}
-              <div className="relative pt-12 px-6 pb-4 border-b border-white/5">
-                <div className="absolute top-0 left-0 w-full h-[1px] bg-cyan-500/20" />
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex flex-col">
-                    <h2 className="font-orbitron text-xl font-black tracking-[0.2em] uppercase text-white">
-                      Allies <span className="text-cyan-400">Net</span>
-                    </h2>
-                    <span className="font-mono text-[9px] tracking-[0.4em] uppercase text-cyan-400/40 mt-1.5">Status: Active</span>
-                  </div>
-                  <button onClick={() => activeChatAlly ? setActiveChatAlly(null) : closeAll()} className="w-8 h-8 flex items-center justify-center hover:bg-white/5 transition-colors">
-                    {activeChatAlly ? <FaArrowLeft className="text-xs text-white/20" /> : <FaTimes className="text-xs text-white/20" />}
-                  </button>
+              {/* Header */}
+              <div className="pt-6 px-6 pb-4 border-b border-white/10 flex items-center justify-between">
+                <div>
+                  <h2 className="font-orbitron text-base font-bold tracking-wider uppercase text-white">
+                    Friends &amp; Chat
+                  </h2>
+                  <span className="font-sans text-xs text-white/50">
+                    {allies.filter((a) => a.status === "online").length} online
+                  </span>
                 </div>
+                <button
+                  onClick={() => (activeChatAlly ? setActiveChatAlly(null) : closeAll())}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 text-white/60 hover:text-white transition-colors cursor-pointer"
+                  aria-label={activeChatAlly ? "Back to friends list" : "Close friends panel"}
+                >
+                  {activeChatAlly ? <FaArrowLeft className="text-xs" /> : <FaTimes className="text-xs" />}
+                </button>
               </div>
 
               {activeChatAlly ? (
                 /* Chat View */
                 <div className="flex-1 flex flex-col overflow-hidden">
-                  <div className="px-6 py-3 border-b border-white/5 flex items-center gap-3 bg-cyan-500/[0.02]">
-                    <FaUserSecret className="text-cyan-400/40 text-xs" />
-                    <span className="font-orbitron text-[11px] uppercase text-white tracking-widest">{activeChatAlly.username}</span>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-                    {chatMessages.map((msg) => (
-                      <div key={msg.id} className={`flex flex-col ${msg.senderId === activeChatAlly.id ? 'items-start' : 'items-end'}`}>
-                        <div className={`max-w-[90%] p-3 font-mono text-[11px] leading-relaxed border ${msg.senderId === activeChatAlly.id ? 'bg-white/5 border-white/5 text-white/70' : 'bg-cyan-500/5 border-cyan-500/10 text-cyan-100/80'
-                          }`}>
-                          {msg.message}
-                        </div>
-                        <span className="font-mono text-[6px] uppercase text-white/10 mt-1">
-                          {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
+                  <div className="px-6 py-3 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          activeChatAlly.status === "online" ? "bg-emerald-400" : "bg-white/25"
+                        }`}
+                      />
+                      <span className="font-sans text-sm font-bold text-white">
+                        {activeChatAlly.username}
+                      </span>
+                    </div>
+                    {confirmRemoveId === activeChatAlly.id ? (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => removeFriend(activeChatAlly.id)}
+                          className="text-[11px] font-bold text-red-400 hover:text-red-300 cursor-pointer"
+                        >
+                          Confirm Remove
+                        </button>
+                        <button
+                          onClick={() => setConfirmRemoveId(null)}
+                          className="text-[11px] text-white/50 hover:text-white cursor-pointer"
+                        >
+                          Cancel
+                        </button>
                       </div>
-                    ))}
-                    {isAllyTyping && <span className="font-mono text-[9px] uppercase text-cyan-400/40 animate-pulse">Receiving...</span>}
+                    ) : (
+                      <button
+                        onClick={() => setConfirmRemoveId(activeChatAlly.id)}
+                        className="text-white/30 hover:text-red-400 p-1 transition-colors cursor-pointer"
+                        title="Remove friend"
+                      >
+                        <FaTrash size={11} />
+                      </button>
+                    )}
                   </div>
-                  <div className="p-4 border-t border-white/5">
+
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                    {chatMessages.length === 0 ? (
+                      <p className="text-center text-xs text-white/40 py-8">
+                        No messages yet. Say hello!
+                      </p>
+                    ) : (
+                      chatMessages.map((msg) => (
+                        <div
+                          key={msg.id}
+                          className={`flex flex-col ${
+                            msg.senderId === activeChatAlly.id ? "items-start" : "items-end"
+                          }`}
+                        >
+                          <div
+                            className={`max-w-[85%] px-3.5 py-2.5 rounded-xl text-xs leading-relaxed border ${
+                              msg.senderId === activeChatAlly.id
+                                ? "bg-white/5 border-white/10 text-white/85"
+                                : "bg-cyan-500/15 border-cyan-500/30 text-cyan-50"
+                            }`}
+                          >
+                            {msg.message}
+                          </div>
+                          <span className="text-[10px] text-white/30 mt-1">
+                            {new Date(msg.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="p-4 border-t border-white/10">
                     <div className="relative">
                       <input
                         type="text"
-                        placeholder="TRANSMIT..."
+                        placeholder="Write a message..."
                         value={messageInput}
-                        onChange={(e) => handleTyping(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                        className="w-full bg-white/[0.02] border border-white/10 p-3 font-mono text-[9px] uppercase tracking-widest outline-none focus:border-cyan-500/30 transition-all pr-10"
+                        onChange={(e) => setMessageInput(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                        className="w-full bg-white/5 border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-white/35 outline-none focus:border-cyan-400 transition-all pr-10"
                       />
-                      <button onClick={sendMessage} className="absolute right-3 top-1/2 -translate-y-1/2 text-cyan-400/40"><FaArrowRight size={10} /></button>
+                      <button
+                        onClick={sendMessage}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-cyan-400 hover:text-cyan-300 cursor-pointer"
+                        aria-label="Send message"
+                      >
+                        <FaArrowRight size={12} />
+                      </button>
                     </div>
                   </div>
                 </div>
               ) : (
-                /* List View */
+                /* Friends / Add Friend View */
                 <>
                   <div className="flex p-4 gap-2">
-                    {['allies', 'search'].map(t => (
+                    {(["allies", "search"] as const).map((t) => (
                       <button
                         key={t}
-                        onClick={() => setActiveTab(t as any)}
-                        className={`flex-1 py-2 font-orbitron text-[8px] uppercase tracking-widest transition-all border ${activeTab === t ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" : "bg-white/[0.01] text-white/20 border-white/5"
-                          }`}
+                        onClick={() => setActiveTab(t)}
+                        className={`flex-1 py-2 rounded-lg font-sans text-xs font-bold transition-all border cursor-pointer ${
+                          activeTab === t
+                            ? "bg-cyan-500/15 text-cyan-300 border-cyan-500/40"
+                            : "bg-white/[0.02] text-white/50 border-white/10 hover:text-white"
+                        }`}
                       >
-                        {t === 'allies' ? 'Roster' : 'Scan'}
+                        {t === "allies" ? `Friends (${allies.length})` : "Add Friend"}
                       </button>
                     ))}
                   </div>
 
-                  <div className="flex-1 overflow-y-auto px-4 space-y-4 custom-scrollbar pb-8">
-                    {activeTab === 'search' && (
-                      <div className="relative">
+                  <div className="flex-1 overflow-y-auto px-4 space-y-3 custom-scrollbar pb-8">
+                    {activeTab === "search" && (
+                      <div className="relative flex gap-2">
                         <input
                           type="text"
-                          placeholder="OPERATOR_ID..."
+                          placeholder="Search by username..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                          className="w-full bg-white/[0.02] border border-white/10 p-3 font-mono text-[9px] uppercase tracking-widest text-white outline-none"
+                          className="flex-1 bg-white/5 border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-white/35 outline-none focus:border-cyan-400"
                         />
+                        <button
+                          onClick={handleSearch}
+                          disabled={loading}
+                          className="px-3.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30 flex items-center justify-center cursor-pointer"
+                          aria-label="Search friends"
+                        >
+                          <FaSearch size={12} />
+                        </button>
                       </div>
                     )}
 
-                    {activeTab === 'allies' ? (
-                      <div className="space-y-4">
-                        {pendingRequests.map(req => (
-                          <div key={req.id} className="p-3 bg-yellow-500/5 border border-yellow-500/10 flex items-center justify-between">
-                            <span className="font-orbitron text-[9px] uppercase text-white">{req.username}</span>
-                            <button onClick={() => acceptRequest(req.id)} className="w-6 h-6 flex items-center justify-center bg-yellow-500/20 text-yellow-500"><FaCheck size={8} /></button>
-                          </div>
-                        ))}
-                        {allies.map(ally => (
-                          <div
-                            key={ally.id}
-                            onClick={() => setActiveChatAlly(ally)}
-                            className="p-3 bg-white/[0.02] border border-white/5 hover:border-cyan-500/20 transition-all cursor-pointer group"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className={`w-2 h-2 rounded-full ${ally.status === 'online' ? 'bg-cyan-500 shadow-[0_0_8px_#06b6d4]' : 'bg-white/10'}`} />
-                                <span className="font-orbitron text-[12px] uppercase text-white/60 group-hover:text-white transition-colors">{ally.username}</span>
+                    {activeTab === "allies" ? (
+                      <div className="space-y-2.5">
+                        {pendingRequests.length > 0 && (
+                          <div className="space-y-2 pb-2 border-b border-white/10">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400">
+                              Friend Requests ({pendingRequests.length})
+                            </span>
+                            {pendingRequests.map((req) => (
+                              <div
+                                key={req.id}
+                                className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between"
+                              >
+                                <span className="font-sans text-xs font-semibold text-white">
+                                  {req.username}
+                                </span>
+                                <button
+                                  onClick={() => acceptRequest(req.id)}
+                                  disabled={isAccepting === req.id}
+                                  className="px-3 py-1 rounded-lg bg-amber-500 text-black text-xs font-bold flex items-center gap-1 cursor-pointer"
+                                >
+                                  <FaCheck size={9} />
+                                  <span>Accept</span>
+                                </button>
                               </div>
-                              {unreadCounts[ally.id] && <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}
-                            </div>
+                            ))}
                           </div>
-                        ))}
+                        )}
+
+                        {allies.length === 0 ? (
+                          <p className="text-center text-xs text-white/40 py-8">
+                            Your friends list is empty. Use &quot;Add Friend&quot; to connect with other players.
+                          </p>
+                        ) : (
+                          allies.map((ally) => (
+                            <div
+                              key={ally.id}
+                              onClick={() => setActiveChatAlly(ally)}
+                              className="p-3 rounded-xl bg-white/[0.03] border border-white/10 hover:border-cyan-500/30 transition-all cursor-pointer group"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div
+                                    className={`w-2 h-2 rounded-full ${
+                                      ally.status === "online"
+                                        ? "bg-emerald-400 shadow-[0_0_8px_#34d399]"
+                                        : "bg-white/20"
+                                    }`}
+                                  />
+                                  <span className="font-sans text-xs font-semibold text-white/80 group-hover:text-white transition-colors">
+                                    {ally.username}
+                                  </span>
+                                </div>
+                                {unreadCounts[ally.id] ? (
+                                  <span className="px-2 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold">
+                                    {unreadCounts[ally.id]}
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] text-white/30">
+                                    {ally.status === "online" ? "Online" : "Offline"}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        )}
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        {searchResults.map(u => (
-                          <div key={u.id} className="p-3 bg-white/[0.02] border border-white/5 flex items-center justify-between">
-                            <span className="font-orbitron text-[11px] uppercase text-white">{u.username}</span>
-                            <button onClick={() => sendRequest(u.id)} className="px-4 py-1.5 bg-cyan-500/10 text-cyan-400 font-orbitron text-[8px] uppercase border border-cyan-500/30">Add</button>
+                        {searchResults.map((u) => (
+                          <div
+                            key={u.id}
+                            className="p-3 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-between"
+                          >
+                            <span className="font-sans text-xs font-semibold text-white">
+                              {u.username}
+                            </span>
+                            <button
+                              onClick={() => sendRequest(u.id)}
+                              className="px-3 py-1.5 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 font-sans text-xs font-bold border border-cyan-500/30 cursor-pointer"
+                            >
+                              Add Friend
+                            </button>
                           </div>
                         ))}
                       </div>
@@ -305,24 +476,10 @@ export default function AlliesSidebar() {
                   </div>
                 </>
               )}
-
-              <div className="mt-auto p-6 border-t border-white/5 bg-black/20">
-                <div className="flex justify-between items-center opacity-20">
-                  <span className="font-mono text-[9px] uppercase tracking-widest">Link_Latency</span>
-                  <span className="font-mono text-[9px] uppercase tracking-widest">14ms</span>
-                </div>
-              </div>
             </motion.div>
           </>
         )}
       </AnimatePresence>
-
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        .custom-scrollbar::-webkit-scrollbar { width: 1px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(6, 182, 212, 0.2); }
-      `}} />
     </>
   );
 }

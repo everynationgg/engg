@@ -33,9 +33,9 @@ friendsRouter.get("/user/friends", authMiddleware, async (req: AuthRequest, res)
         )
       );
 
-    const friendIds = friendRows.map((row) =>
+    const friendIds = Array.from(new Set(friendRows.map((row) =>
       row.userId === userId ? row.friendId : row.userId
-    );
+    )));
 
     if (friendIds.length === 0) {
       res.json([]);
@@ -207,7 +207,7 @@ friendsRouter.post(
           userId,
           friendId,
           status: "accepted",
-        });
+        }).onConflictDoNothing();
       });
 
       res.json({ success: true, message: "Friend request accepted" });

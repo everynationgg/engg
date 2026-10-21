@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { DISCORD_INVITE_URL, PROJECT_STUDIO_URL } from "@/lib/externalLinks";
 import {
   FaHome,
   FaInfo,
@@ -17,19 +18,16 @@ import {
   FaCompass,
   FaLayerGroup,
   FaStore,
-  FaRobot,
   FaUser,
   FaSignOutAlt,
-  FaCoins,
   FaShieldAlt,
   FaMobileAlt,
   FaShoppingBag,
-  FaArrowRight,
 } from "react-icons/fa";
 
 export default function HomeHeroNav() {
   const [location, setLocation] = useLocation();
-  const { isLoggedIn, user, username, credits, level, email, logout } = useAuth();
+  const { isLoggedIn, user, username, credits, level, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [socialsModalOpen, setSocialsModalOpen] = useState(false);
   const [aboutDropdownOpen, setAboutDropdownOpen] = useState(false);
@@ -40,17 +38,14 @@ export default function HomeHeroNav() {
     location === "/what-we-do" ||
     location === "/mission-and-vision"
   );
-  const aboutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const aboutTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const aboutContainerRef = useRef<HTMLDivElement | null>(null);
-  const userTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const userTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const effectiveUsername = user?.username || username || "meowionly";
-  const effectiveEmail = (user?.email && !user.email.toLowerCase().endsWith("@everynation.gg")) 
-    ? user.email 
-    : (email && !email.toLowerCase().endsWith("@everynation.gg") ? email : "");
-  const effectiveCredits = user?.credits ?? credits ?? 15400;
-  const effectiveLevel = user?.level ?? level ?? 5;
+  const effectiveUsername = user?.username || username || "Player";
+  const effectiveCredits = user?.credits ?? credits ?? 0;
+  const effectiveLevel = user?.level ?? level ?? 1;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -138,6 +133,13 @@ export default function HomeHeroNav() {
       active: isAboutActive,
     },
     {
+      id: "gaming",
+      label: "Games",
+      icon: FaGamepad,
+      action: () => handleNavigate("/hub"),
+      active: location === "/hub",
+    },
+    {
       id: "marketplace",
       label: "Marketplace",
       icon: FaStore,
@@ -145,28 +147,21 @@ export default function HomeHeroNav() {
       active: location === "/marketplace",
     },
     {
-      id: "visien",
-      label: "VISIEN AI",
-      icon: FaRobot,
+      id: "studio",
+      label: "Project Studio",
+      icon: FaLayerGroup,
       action: () => {
-        window.open("https://visien-gray.vercel.app/", "_blank", "noopener,noreferrer");
+        window.open(PROJECT_STUDIO_URL, "_blank", "noopener,noreferrer");
         setMobileMenuOpen(false);
       },
       active: false,
-    },
-    {
-      id: "gaming",
-      label: "Gaming",
-      icon: FaGamepad,
-      action: () => handleNavigate("/hub"),
-      active: location === "/hub",
     },
     {
       id: "community",
       label: "Community",
       icon: FaUsers,
       action: () => {
-        window.open("https://discord.gg/everynation", "_blank", "noopener,noreferrer");
+        window.open(DISCORD_INVITE_URL, "_blank", "noopener,noreferrer");
         setMobileMenuOpen(false);
       },
       active: false,
@@ -187,22 +182,22 @@ export default function HomeHeroNav() {
     <>
       <header className="shrink-0 w-full bg-white/90 backdrop-blur-md border-b border-neutral-200/80 z-40 sticky top-0 transition-all">
         <div className="max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 2xl:px-10 h-16 flex items-center justify-between">
-          {/* Brand Logo - Preserves existing official ENGG logo */}
+          {/* Brand Logo */}
           <div className="flex items-center gap-3">
             <button
               onClick={() => handleNavigate("/")}
-              className="flex items-center hover:opacity-85 transition-opacity"
-              aria-label="ENGG Home"
+              className="flex items-center hover:opacity-85 transition-opacity cursor-pointer"
+              aria-label="Every Nation Home"
             >
               <img
                 src="/logo.png"
-                alt="ENGG Logo"
+                alt="Every Nation Logo"
                 className="h-9 sm:h-10 w-auto object-contain"
               />
             </button>
             <span className="hidden sm:inline-block h-4 w-[1px] bg-neutral-300" />
             <span className="hidden sm:inline-block text-[11px] font-semibold tracking-wider uppercase text-neutral-500">
-              Gaming & Software Studio
+              Games &amp; Software Studio
             </span>
           </div>
 
@@ -226,32 +221,35 @@ export default function HomeHeroNav() {
                         e.stopPropagation();
                         setAboutDropdownOpen((prev) => !prev);
                       }}
-                      className="flex flex-col items-center focus:outline-none"
+                      className="flex flex-col items-center focus:outline-none cursor-pointer"
                     >
                       <div
-                        className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 shadow-xs ${item.active
+                        className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 shadow-xs ${
+                          item.active
                             ? "bg-[#7c3aed] text-white ring-2 ring-[#7c3aed]/30 scale-105"
                             : "bg-[#7c3aed]/15 text-[#7c3aed] group-hover:bg-[#7c3aed] group-hover:text-white group-hover:scale-105"
-                          }`}
+                        }`}
                       >
                         <Icon className="w-3.5 h-3.5" />
                       </div>
                       <div className="flex items-center gap-1 mt-1">
                         <span
-                          className={`text-[10px] font-semibold tracking-tight transition-colors ${item.active
+                          className={`text-[10px] font-semibold tracking-tight transition-colors ${
+                            item.active
                               ? "text-[#7c3aed] font-bold"
                               : "text-neutral-600 group-hover:text-neutral-900"
-                            }`}
+                          }`}
                         >
                           {item.label}
                         </span>
                         <FaChevronDown
-                          className={`w-2 h-2 transition-transform duration-200 ${aboutDropdownOpen
+                          className={`w-2 h-2 transition-transform duration-200 ${
+                            aboutDropdownOpen
                               ? "rotate-180 text-[#7c3aed]"
                               : item.active
                                 ? "text-[#7c3aed]"
                                 : "text-neutral-400 group-hover:text-neutral-700"
-                            }`}
+                          }`}
                         />
                       </div>
                     </button>
@@ -263,10 +261,10 @@ export default function HomeHeroNav() {
                           {/* Top Header Badge */}
                           <div className="flex items-center justify-between px-2 pb-2 mb-2 border-b border-neutral-100">
                             <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
-                              Studio Navigation
+                              About the Studio
                             </span>
                             <span className="text-[10px] font-semibold text-[#7c3aed] bg-[#7c3aed]/10 px-2 py-0.5 rounded-full">
-                              ENGG Studio
+                              Every Nation
                             </span>
                           </div>
 
@@ -274,12 +272,13 @@ export default function HomeHeroNav() {
                             {/* 1. Who We Are */}
                             <button
                               onClick={() => handleNavigate("/about/who-we-are")}
-                              className={`w-full flex items-start gap-3 p-2.5 rounded-xl transition-all ${location === "/about" ||
-                                  location === "/about/who-we-are" ||
-                                  location === "/who-we-are"
+                              className={`w-full flex items-start gap-3 p-2.5 rounded-xl transition-all cursor-pointer ${
+                                location === "/about" ||
+                                location === "/about/who-we-are" ||
+                                location === "/who-we-are"
                                   ? "bg-[#7c3aed]/10 text-[#7c3aed]"
                                   : "hover:bg-neutral-100/80 text-neutral-800"
-                                }`}
+                              }`}
                             >
                               <div className="w-8 h-8 rounded-lg bg-[#7c3aed]/15 text-[#7c3aed] flex items-center justify-center shrink-0 mt-0.5">
                                 <FaUsers className="w-3.5 h-3.5" />
@@ -287,7 +286,7 @@ export default function HomeHeroNav() {
                               <div>
                                 <div className="text-xs font-bold leading-tight">1. Who We Are</div>
                                 <div className="text-[11px] text-neutral-500 leading-snug mt-0.5">
-                                  Ideas, people, technology & the founders
+                                  Our story, our community &amp; the founders
                                 </div>
                               </div>
                             </button>
@@ -295,10 +294,11 @@ export default function HomeHeroNav() {
                             {/* 2. What We Do */}
                             <button
                               onClick={() => handleNavigate("/about/what-we-do")}
-                              className={`w-full flex items-start gap-3 p-2.5 rounded-xl transition-all ${location === "/about/what-we-do" || location === "/what-we-do"
+                              className={`w-full flex items-start gap-3 p-2.5 rounded-xl transition-all cursor-pointer ${
+                                location === "/about/what-we-do" || location === "/what-we-do"
                                   ? "bg-[#7c3aed]/10 text-[#7c3aed]"
                                   : "hover:bg-neutral-100/80 text-neutral-800"
-                                }`}
+                              }`}
                             >
                               <div className="w-8 h-8 rounded-lg bg-blue-500/15 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
                                 <FaLayerGroup className="w-3.5 h-3.5" />
@@ -306,7 +306,7 @@ export default function HomeHeroNav() {
                               <div>
                                 <div className="text-xs font-bold leading-tight">2. What We Do</div>
                                 <div className="text-[11px] text-neutral-500 leading-snug mt-0.5">
-                                  One ecosystem across 7 core capabilities
+                                  Multiplayer games, community &amp; custom software
                                 </div>
                               </div>
                             </button>
@@ -314,18 +314,19 @@ export default function HomeHeroNav() {
                             {/* 3. Mission & Vision */}
                             <button
                               onClick={() => handleNavigate("/about/mission-and-vision")}
-                              className={`w-full flex items-start gap-3 p-2.5 rounded-xl transition-all ${location === "/about/mission-and-vision" || location === "/mission-and-vision"
+                              className={`w-full flex items-start gap-3 p-2.5 rounded-xl transition-all cursor-pointer ${
+                                location === "/about/mission-and-vision" || location === "/mission-and-vision"
                                   ? "bg-[#7c3aed]/10 text-[#7c3aed]"
                                   : "hover:bg-neutral-100/80 text-neutral-800"
-                                }`}
+                              }`}
                             >
                               <div className="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
                                 <FaCompass className="w-3.5 h-3.5" />
                               </div>
                               <div>
-                                <div className="text-xs font-bold leading-tight">3. Mission & Vision</div>
+                                <div className="text-xs font-bold leading-tight">3. Mission &amp; Vision</div>
                                 <div className="text-[11px] text-neutral-500 leading-snug mt-0.5">
-                                  Our guiding purpose & long-term horizon
+                                  Our core values &amp; long-term direction
                                 </div>
                               </div>
                             </button>
@@ -341,21 +342,23 @@ export default function HomeHeroNav() {
                 <button
                   key={item.id}
                   onClick={item.action}
-                  className="flex flex-col items-center group py-1 focus:outline-none"
+                  className="flex flex-col items-center group py-1 focus:outline-none cursor-pointer"
                 >
                   <div
-                    className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 shadow-xs ${item.active
+                    className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 shadow-xs ${
+                      item.active
                         ? "bg-[#7c3aed] text-white ring-2 ring-[#7c3aed]/30 scale-105"
                         : "bg-[#7c3aed]/15 text-[#7c3aed] group-hover:bg-[#7c3aed] group-hover:text-white group-hover:scale-105"
-                      }`}
+                    }`}
                   >
                     <Icon className="w-3.5 h-3.5" />
                   </div>
                   <span
-                    className={`text-[10px] font-semibold mt-1 tracking-tight transition-colors ${item.active
+                    className={`text-[10px] font-semibold mt-1 tracking-tight transition-colors ${
+                      item.active
                         ? "text-[#7c3aed] font-bold"
                         : "text-neutral-600 group-hover:text-neutral-900"
-                      }`}
+                    }`}
                   >
                     {item.label}
                   </span>
@@ -424,7 +427,7 @@ export default function HomeHeroNav() {
                             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100/80 transition-colors text-xs font-semibold cursor-pointer"
                           >
                             <FaMobileAlt className="w-3.5 h-3.5 text-neutral-400" />
-                            <span>Apps & Downloads</span>
+                            <span>Apps &amp; Downloads</span>
                           </button>
 
                           <button
@@ -440,7 +443,7 @@ export default function HomeHeroNav() {
                             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100/80 transition-colors text-xs font-semibold cursor-pointer"
                           >
                             <FaShoppingBag className="w-3.5 h-3.5 text-neutral-400" />
-                            <span>Store</span>
+                            <span>Marketplace</span>
                           </button>
 
                           <button
@@ -448,7 +451,7 @@ export default function HomeHeroNav() {
                             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100/80 transition-colors text-xs font-semibold cursor-pointer"
                           >
                             <FaShieldAlt className="w-3.5 h-3.5 text-neutral-400" />
-                            <span>Settings & Security</span>
+                            <span>Settings &amp; Security</span>
                           </button>
                         </div>
 
@@ -471,7 +474,7 @@ export default function HomeHeroNav() {
                   onClick={() => handleNavigate("/login")}
                   className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white rounded-full px-6 py-2 text-xs font-bold uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer"
                 >
-                  LOGIN
+                  SIGN IN
                 </button>
               )}
             </div>
@@ -494,7 +497,7 @@ export default function HomeHeroNav() {
                 onClick={() => handleNavigate("/login")}
                 className="bg-[#8b5cf6] text-white rounded-full px-4 py-1.5 text-[11px] font-bold uppercase cursor-pointer"
               >
-                LOGIN
+                SIGN IN
               </button>
             )}
             <button
@@ -535,8 +538,9 @@ export default function HomeHeroNav() {
                         aria-label="Toggle About Submenu"
                       >
                         <FaChevronDown
-                          className={`w-3.5 h-3.5 transition-transform duration-200 ${mobileAboutExpanded ? "rotate-180 text-[#7c3aed]" : ""
-                            }`}
+                          className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                            mobileAboutExpanded ? "rotate-180 text-[#7c3aed]" : ""
+                          }`}
                         />
                       </button>
                     </div>
@@ -546,32 +550,35 @@ export default function HomeHeroNav() {
                       <div className="pl-10 pr-2 py-2 space-y-2 bg-neutral-50/80 rounded-xl mt-1 text-xs text-neutral-700">
                         <button
                           onClick={() => handleNavigate("/about/who-we-are")}
-                          className={`block w-full text-left py-1 font-semibold ${location === "/about" ||
-                              location === "/about/who-we-are" ||
-                              location === "/who-we-are"
+                          className={`block w-full text-left py-1 font-semibold ${
+                            location === "/about" ||
+                            location === "/about/who-we-are" ||
+                            location === "/who-we-are"
                               ? "text-[#7c3aed]"
                               : "hover:text-neutral-900"
-                            }`}
+                          }`}
                         >
                           • 1. Who We Are
                         </button>
                         <button
                           onClick={() => handleNavigate("/about/what-we-do")}
-                          className={`block w-full text-left py-1 font-semibold ${location === "/about/what-we-do" || location === "/what-we-do"
+                          className={`block w-full text-left py-1 font-semibold ${
+                            location === "/about/what-we-do" || location === "/what-we-do"
                               ? "text-[#7c3aed]"
                               : "hover:text-neutral-900"
-                            }`}
+                          }`}
                         >
                           • 2. What We Do
                         </button>
                         <button
                           onClick={() => handleNavigate("/about/mission-and-vision")}
-                          className={`block w-full text-left py-1 font-semibold ${location === "/about/mission-and-vision" || location === "/mission-and-vision"
+                          className={`block w-full text-left py-1 font-semibold ${
+                            location === "/about/mission-and-vision" || location === "/mission-and-vision"
                               ? "text-[#7c3aed]"
                               : "hover:text-neutral-900"
-                            }`}
+                          }`}
                         >
-                          • 3. Mission & Vision
+                          • 3. Mission &amp; Vision
                         </button>
                       </div>
                     )}
@@ -595,7 +602,7 @@ export default function HomeHeroNav() {
               );
             })}
 
-            {/* Mobile Logged In Operative Card */}
+            {/* Mobile Logged In Player Card */}
             {isLoggedIn && (
               <div className="pt-3 mt-2 border-t border-neutral-200/80 space-y-2">
                 <div className="flex items-center justify-between p-2.5 rounded-xl bg-purple-50/70 border border-purple-100">
@@ -605,7 +612,9 @@ export default function HomeHeroNav() {
                     </div>
                     <div>
                       <div className="text-xs font-bold text-neutral-900">{effectiveUsername}</div>
-                      <div className="text-[10px] text-[#7c3aed] font-semibold">{effectiveCredits.toLocaleString()} Credits</div>
+                      <div className="text-[10px] text-[#7c3aed] font-semibold">
+                        Level {effectiveLevel} • {effectiveCredits.toLocaleString()} Credits
+                      </div>
                     </div>
                   </div>
                   <button
@@ -641,18 +650,18 @@ export default function HomeHeroNav() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-neutral-900 flex items-center gap-2">
                 <FaShareAlt className="text-[#7c3aed]" />
-                <span>ENGG Community & Socials</span>
+                <span>Every Nation Community &amp; Socials</span>
               </h3>
               <button
                 onClick={() => setSocialsModalOpen(false)}
-                className="text-neutral-400 hover:text-neutral-700 p-1"
+                className="text-neutral-400 hover:text-neutral-700 p-1 cursor-pointer"
               >
                 <FaTimes />
               </button>
             </div>
             <div className="space-y-2.5 text-sm">
               <a
-                href="https://discord.gg/everynation"
+                href={DISCORD_INVITE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 p-3 rounded-xl bg-[#5865F2]/10 hover:bg-[#5865F2]/20 text-[#5865F2] font-semibold transition-all"

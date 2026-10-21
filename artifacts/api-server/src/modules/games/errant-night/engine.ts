@@ -314,6 +314,12 @@ export interface KickPlayerResult {
 
 const PASSIVE_ROLE_IDS = new Set<string>([]); // All roles must manually acknowledge as requested
 
+export const CHAOTIC_ROLES = ["chaotic", "disruptor", "shifter", "warper", "router"] as const;
+
+export function isChaoticRole(role?: string | null): boolean {
+  return !!role && (CHAOTIC_ROLES as readonly string[]).includes(role);
+}
+
 /** Strict resolution order for ability processing. */
 const ROLE_ORDER = [
   "doctor",
@@ -513,6 +519,12 @@ export function startGame(
   state.hijackedTargets = {};
   state.emergencyVote = freshEmergencyVote();
   state.votes = {};
+  state.chaoticAlignments = {};
+  for (const [pId, rId] of Object.entries(state.rolesAssigned)) {
+    if (isChaoticRole(rId)) {
+      state.chaoticAlignments[pId] = rng() < 0.5 ? "Good" : "Bad";
+    }
+  }
   state.anesthetizedPlayers = [];
   state.voteResult = null;
   state.roundSummary = freshRoundSummary();
@@ -566,7 +578,7 @@ export function acknowledgeRole(
       if (roleId === "router" && revealAction.type !== "gateway_hijack") {
         return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "invalid router action" };
       }
-      const isChaotic = ["disruptor", "shifter", "warper", "router"].includes(roleId);
+      const isChaotic = isChaoticRole(roleId);
       if (roleId !== "doctor" && roleId !== "virus" && !isChaotic) {
         return { accepted: false, orbitInfo: { type: "none" }, allAcknowledged: false, error: "unauthorized reveal action" };
       }
@@ -707,7 +719,7 @@ export function submitAction(
   action: PlayerAction,
 ): ActionResult {
   if (state.phase !== "orbit_action") {
-    return { accepted: false, allSubmitted: false, error: "Phase protocol mismatch: orbit_action required" };
+    return { accepted: false, allSubmitted: false, error: "Action not allowed in the current phase" };
   }
 
   const playerId = normalizeToPlayerId(state, id);
@@ -760,7 +772,7 @@ export function submitAction(
   } else {
     const allowed = allowedActions[roleId] || ["none", "skip"];
     if (!allowed.includes(action.type) && action.type !== "none" && action.type !== "skip") {
-      return { accepted: false, allSubmitted: false, error: `Unauthorized protocol for role: ${roleId}` };
+      return { accepted: false, allSubmitted: false, error: `Action not allowed for role: ${roleId}` };
     }
   }
 
@@ -1064,7 +1076,7 @@ export function resolveRound(state: GameState): ResolutionResult {
             let alignment = role === "alien" || role === "parasite" || role === "virus" ? "Bad" : "Good";
 
             // Chaotic Alignment Override
-            if (role === "chaotic" && state.chaoticAlignments[target.playerId || target.id]) {
+            if (isChaoticRole(role) && state.chaoticAlignments[target.playerId || target.id]) {
               alignment = state.chaoticAlignments[target.playerId || target.id];
             }
 
@@ -1355,7 +1367,7 @@ export function castVote(
   targetId: string, // socketId or playerId or "abstain"
 ): VoteCastResult {
   if (state.phase !== "voting") {
-    return { accepted: false, votingComplete: false, error: "Phase protocol mismatch: voting phase required" };
+    return { accepted: false, votingComplete: false, error: "Action not allowed in the current phase" };
   }
 
   const vPlayerId = normalizeToPlayerId(state, voterId);
@@ -1375,7 +1387,7 @@ export function castVote(
 
   // ── ANESTHESIA ENFORCEMENT ──
   if (state.anesthetizedPlayers?.includes(vPlayerId)) {
-    return { accepted: false, votingComplete: false, error: "Neural link inhibited: you cannot cast a vote this round" };
+    return { accepted: false, votingComplete: false, error: "You are jammed this round" };
   }
 
   // Validate target
@@ -1386,7 +1398,7 @@ export function castVote(
       return { accepted: false, votingComplete: false, error: "Target identity verification failed" };
     }
     if (tPlayerId === vPlayerId) {
-      return { accepted: false, votingComplete: false, error: "Self-targeting prohibited in voting protocol" };
+      return { accepted: false, votingComplete: false, error: "You cannot vote for yourself" };
     }
     const targetPlayer = state.players.find((p) => p.playerId === tPlayerId);
     if (!targetPlayer) {
@@ -1761,22 +1773,45 @@ export function addPlayer(state: GameState, player: Player): { success: boolean;
  * MUTATION: modifies `state` in place.
  * Returns true if the player was found and removed.
  */
-export function removePlayer(state: GameState, socketId: string): boolean {
-  const idx = state.players.findIndex((p) => p.id === socketId);
+export function removePlayer(state: GameState, playerIdentifier: string): boolean {
+  const idx = state.players.findIndex(
+    (p) => p.id === playerIdentifier || p.playerId === playerIdentifier
+  );
   if (idx === -1) return false;
 
   const player = state.players[idx];
-  const playerId = player.playerId || socketId;
+  const wasHost = player.isHost;
+  const keysToClean = new Set<string>([playerIdentifier]);
+  if (player.id) keysToClean.add(player.id);
+  if (player.playerId) keysToClean.add(player.playerId);
 
   state.players.splice(idx, 1);
-  delete state.rolesAssigned[playerId];
-  delete state.initialRoles[playerId];
-  delete state.orbitActions[playerId];
-  delete state.orbitFeedback[playerId];
-  delete state.votes[playerId];
-  state.orbitCompleted = state.orbitCompleted.filter((id) => id !== playerId);
-  state.roleAcknowledgements = state.roleAcknowledgements.filter((id) => id !== playerId);
-  state.playersInGrace = (state.playersInGrace || []).filter((id) => id !== playerId);
+
+  if (wasHost && state.players.length > 0 && !state.players.some((p) => p.isHost)) {
+    const nextHost = state.players.find((p) => !p.isBot) ?? state.players[0];
+    if (nextHost) nextHost.isHost = true;
+  }
+
+  for (const key of keysToClean) {
+    delete state.rolesAssigned[key];
+    delete state.initialRoles[key];
+    delete state.orbitActions[key];
+    delete state.orbitFeedback[key];
+    delete state.votes[key];
+    if (state.chaoticAlignments) delete state.chaoticAlignments[key];
+    if (state.revealActions) delete state.revealActions[key];
+    if (state.hijackedTargets) delete state.hijackedTargets[key];
+  }
+
+  state.orbitCompleted = state.orbitCompleted.filter((id) => !keysToClean.has(id));
+  state.roleAcknowledgements = state.roleAcknowledgements.filter((id) => !keysToClean.has(id));
+  if (state.revealCompleted) {
+    state.revealCompleted = state.revealCompleted.filter((id) => !keysToClean.has(id));
+  }
+  if (state.anesthetizedPlayers) {
+    state.anesthetizedPlayers = state.anesthetizedPlayers.filter((id) => !keysToClean.has(id));
+  }
+  state.playersInGrace = (state.playersInGrace || []).filter((id) => !keysToClean.has(id));
 
   return true;
 }
@@ -1867,9 +1902,9 @@ export function processRevealActions(state: GameState): void {
       if (sourceId && destId && sourceRole !== "virus") {
         state.hijackedTargets[sourceId] = destId;
       }
-    } else if (role === "chaotic") {
-      const alignment = action.targets[0] as "Good" | "Bad";
-      if (alignment) {
+    } else if (isChaoticRole(role)) {
+      const alignment = (action.alignment || action.targets[0]) as "Good" | "Bad";
+      if (alignment === "Good" || alignment === "Bad") {
         state.chaoticAlignments[actorId] = alignment;
       }
     }
@@ -2064,9 +2099,9 @@ export interface EndGameResult {
  */
 export function endGame(
   state: GameState,
-  requesterSocketId: string,
+  requesterId: string,
 ): EndGameResult {
-  const requester = state.players.find((p) => p.id === requesterSocketId);
+  const requester = state.players.find((p) => p.id === requesterId || p.playerId === requesterId);
   if (!requester) return { accepted: false, error: "Not in session" };
   if (!requester.isHost) return { accepted: false, error: "Only host can end the game" };
   if (state.phase !== "interrupted") return { accepted: false, error: "Game is not interrupted" };
@@ -2097,9 +2132,9 @@ export interface ContinueGameResult {
  */
 export function continueGame(
   state: GameState,
-  requesterSocketId: string,
+  requesterId: string,
 ): ContinueGameResult {
-  const requester = state.players.find((p) => p.id === requesterSocketId);
+  const requester = state.players.find((p) => p.id === requesterId || p.playerId === requesterId);
   if (!requester) return { accepted: false, error: "Not in session" };
   if (!requester.isHost) return { accepted: false, error: "Only host can continue the game" };
 
@@ -2202,12 +2237,16 @@ export function computeSanitizedState(state: GameState, viewerSocketId: string):
   }
 
   // 1. Clear globally sensitive data unless in result phase
-  if (state.phase !== "result") {
+  if (state.phase !== "result" && (state.phase as string) !== "game_over" && (state.phase as string) !== "resolution") {
     sanitized.centerCards = [];
     sanitized.orbitActions = {};
     sanitized.revealActions = {};
     sanitized.revealCompleted = [];
     sanitized.initialRoles = {};
+    sanitized.hijackedTargets = {};
+    sanitized.jammedPlayerId = null;
+    sanitized.anesthetizedPlayers = [];
+    sanitized.chaoticAlignments = {};
 
     // Anonymous voting: hide voter targets
     if (state.settings?.anonymousVoting && state.phase === "voting") {

@@ -6,9 +6,9 @@ import { AuthProvider } from "@/hooks/useAuth";
 import SystemToastContainer from "@/components/common/SystemToast";
 import { MessagingProvider } from "@/context/MessagingContext";
 import { UIProvider } from "@/context/UIContext";
-import { HUDFilters } from "@/components/common/HUDRenderer";
 import { AuthAccessPaused, ShopOffline } from "@/pages/AccessPaused";
 import { AUTH_PUBLIC_ACCESS_ENABLED, SHOP_ENABLED } from "@/lib/productAccess";
+import { PROJECT_STUDIO_URL } from "@/lib/externalLinks";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 
@@ -30,14 +30,14 @@ const NotFound = lazy(() => import("@/pages/not-found"));
 const Navbar = lazy(() => import("@/components/Navbar"));
 const AlliesSidebar = lazy(() => import("@/components/AlliesSidebar"));
 
-function VisienRedirect() {
+function ProjectStudioRedirect() {
   useEffect(() => {
-    window.location.replace("https://visien-gray.vercel.app/");
+    window.location.replace(PROJECT_STUDIO_URL);
   }, []);
   return (
     <div className="min-h-[40vh] flex items-center justify-center px-6 text-center">
       <p className="font-sans text-xs uppercase tracking-widest text-neutral-500">
-        Redirecting to VISIEN...
+        Opening Project Studio...
       </p>
     </div>
   );
@@ -74,8 +74,8 @@ function Router() {
         <Route path="/what-we-do" component={WhatWeDo} />
         <Route path="/mission-and-vision" component={MissionVision} />
         <Route path="/marketplace" component={Marketplace} />
-        <Route path="/visien" component={VisienRedirect} />
-        <Route path="/visein" component={VisienRedirect} />
+        <Route path="/visien" component={ProjectStudioRedirect} />
+        <Route path="/visein" component={ProjectStudioRedirect} />
         <Route path="/hub" component={Hub} />
         <Route path="/shop" component={ShopRoute} />
         <Route path="/login" component={LoginRoute} />
@@ -92,39 +92,22 @@ function Router() {
 
 function AppContent() {
   const [location] = useLocation();
-  const isStudioPage =
-    location === "/" ||
-    location === "" ||
-    location.startsWith("/about") ||
-    location === "/who-we-are" ||
-    location === "/what-we-do" ||
-    location === "/mission-and-vision" ||
-    location === "/marketplace" ||
-    location === "/visien" ||
-    location === "/login" ||
-    location === "/register" ||
-    location === "/forgot-password" ||
-    location === "/reset-password" ||
-    location === "/verify" ||
-    location === "/profile";
+  const isGameHubPage = location === "/hub";
 
   return (
     <div
       className={`min-h-screen ${
-        isStudioPage ? "bg-[#fbfbfd] text-[#1d1d1f]" : "bg-[#020408] text-white"
+        isGameHubPage ? "bg-[#020408] text-white" : "bg-[#fbfbfd] text-[#1d1d1f]"
       } selection:bg-neutral-200 selection:text-black overflow-x-clip`}
     >
-      <HUDFilters />
       <SystemToastContainer />
-      {!isStudioPage && (
+      {isGameHubPage && (
         <Suspense fallback={null}>
           <Navbar />
           <AlliesSidebar />
         </Suspense>
       )}
-      <div className={`${!isStudioPage ? "pt-[100px] lg:pt-[120px]" : ""}`}>
-        <Router />
-      </div>
+      <Router />
     </div>
   );
 }

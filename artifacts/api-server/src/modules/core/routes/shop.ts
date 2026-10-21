@@ -1,8 +1,8 @@
 import { Router, type IRouter } from "express";
 import { db, usersTable, creditTransactionsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
-import { authMiddleware, registeredOnly, type AuthRequest } from "../auth/middleware";
-import { randomUUID } from "node:crypto";
+import { authMiddleware, optionalAuthMiddleware, registeredOnly, type AuthRequest } from "../auth/middleware";
+import { randomUUID, createHmac, timingSafeEqual } from "node:crypto";
 import { logger } from "../../../lib/logger.js";
 
 const router: IRouter = Router();
@@ -15,10 +15,10 @@ const PAYPAL_API = PAYPAL_MODE === "live"
 logger.info({ mode: PAYPAL_MODE, endpoint: PAYPAL_API }, "PayPal Service Initialized");
 
 const CREDIT_PACKS = [
-  { id: "pack_250", name: "Standard Core", amount: 250, price: "4.99", currency: "USD", rarity: "common" },
-  { id: "pack_500", name: "Tactical Core", amount: 500, price: "8.99", currency: "USD", rarity: "rare" },
-  { id: "pack_1000", name: "Elite Core", amount: 1000, price: "15.99", currency: "USD", rarity: "epic" },
-  { id: "pack_2500", name: "Sovereign Core", amount: 2500, price: "34.99", currency: "USD", rarity: "legendary" },
+  { id: "pack_250", name: "Starter Pack", amount: 250, price: "4.99", currency: "USD", rarity: "common" },
+  { id: "pack_500", name: "Standard Pack", amount: 500, price: "8.99", currency: "USD", bonus: "+50 Bonus", rarity: "rare" },
+  { id: "pack_1000", name: "Pro Pack", amount: 1000, price: "15.99", currency: "USD", bonus: "+150 Bonus", rarity: "epic" },
+  { id: "pack_2500", name: "Founder Pack", amount: 2500, price: "34.99", currency: "USD", bonus: "+500 Bonus", rarity: "legendary" },
 ];
 
 async function getPayPalAccessToken() {
@@ -45,8 +45,8 @@ async function getPayPalAccessToken() {
   return data.access_token;
 }
 
-router.get("/shop/config", async (req, res) => {
-  const userId = req.query.userId as string;
+router.get("/shop/config", optionalAuthMiddleware, async (req: AuthRequest, res) => {
+  const userId = req.userId;
   let purchasedPackIds: string[] = [];
 
   if (userId) {
@@ -159,13 +159,22 @@ router.post("/shop/capture-order", authMiddleware, async (req: AuthRequest, res)
     const captureData = await response.json() as any;
 
     if (captureData.status === "COMPLETED") {
-      // 1. PRICE VERIFICATION
-      // Check if the amount paid matches our pack price to prevent frontend tampering
+      // 1. PRICE, CURRENCY & USER VERIFICATION
+      // Check if the amount paid, currency, and custom_id match to prevent tampering
       const purchaseUnit = captureData.purchase_units?.[0];
-      const capturedAmount = purchaseUnit?.payments?.captures?.[0]?.amount?.value;
+      const captureObj = purchaseUnit?.payments?.captures?.[0];
+      const capturedAmount = captureObj?.amount?.value;
+      const capturedCurrency = captureObj?.amount?.currency_code;
+      const customId = purchaseUnit?.custom_id || captureObj?.custom_id;
 
-      if (capturedAmount !== pack.price) {
-        logger.error({ orderID, capturedAmount, expectedPrice: pack.price }, "Price mismatch detected!");
+      if (customId && String(customId) !== String(req.userId)) {
+        logger.error({ orderID, customId, userId: req.userId }, "Order owner mismatch detected!");
+        res.status(403).json({ error: "Order does not belong to the authenticated user." });
+        return;
+      }
+
+      if (capturedAmount !== pack.price || capturedCurrency !== "USD") {
+        logger.error({ orderID, capturedAmount, capturedCurrency, expectedPrice: pack.price }, "Price or currency mismatch detected!");
         res.status(400).json({ error: "Price verification failed. Potential tampering detected." });
         return;
       }
@@ -202,7 +211,7 @@ router.post("/shop/capture-order", authMiddleware, async (req: AuthRequest, res)
             // 3. Update user balance
             await tx
               .update(usersTable)
-              .set({ credits: sql`${usersTable.credits} + ${finalCreditAmount}` })
+              .set({ credits: sql`COALESCE(${usersTable.credits}, 0) + ${finalCreditAmount}` })
               .where(eq(usersTable.id, userId));
 
             // 4. Record transaction with PayPal ID, User details, and packId
@@ -325,8 +334,37 @@ router.post("/shop/paymongo-create-session", authMiddleware, async (req: AuthReq
 });
 
 // PayMongo Webhook Handler
-router.post("/shop/paymongo-webhook", async (req, res) => {
+router.post("/shop/paymongo-webhook", async (req: any, res) => {
   try {
+    // 0. Verify PayMongo webhook signature if secret is configured
+    const webhookSecret = (process.env.PAYMONGO_WEBHOOK_SECRET || "").trim();
+    if (webhookSecret) {
+      const signatureHeader = String(req.headers["paymongo-signature"] || "");
+      const parts = Object.fromEntries(
+        signatureHeader.split(",").map((kv) => {
+          const [k, v] = kv.trim().split("=");
+          return [k, v];
+        })
+      );
+      const timestamp = parts.t;
+      const signature = parts.li || parts.te;
+      const rawBody = req.rawBody ? req.rawBody.toString("utf8") : JSON.stringify(req.body);
+      if (!timestamp || !signature) {
+        res.status(401).json({ error: "Missing PayMongo signature" });
+        return;
+      }
+      const expectedSig = createHmac("sha256", webhookSecret)
+        .update(`${timestamp}.${rawBody}`)
+        .digest("hex");
+      const sigBuf = Buffer.from(signature, "utf8");
+      const expBuf = Buffer.from(expectedSig, "utf8");
+      if (sigBuf.length !== expBuf.length || !timingSafeEqual(sigBuf, expBuf)) {
+        logger.warn("Invalid PayMongo webhook signature");
+        res.status(401).json({ error: "Invalid PayMongo signature" });
+        return;
+      }
+    }
+
     const event = req.body;
     const eventType = event.data?.attributes?.type;
 
@@ -336,8 +374,8 @@ router.post("/shop/paymongo-webhook", async (req, res) => {
     }
 
     const checkoutSessionId = event.data?.attributes?.data?.id;
-    if (!checkoutSessionId) {
-      res.status(400).json({ error: "Missing checkout session ID in event" });
+    if (!checkoutSessionId || typeof checkoutSessionId !== "string" || !/^cs_[a-zA-Z0-9_]+$/.test(checkoutSessionId)) {
+      res.status(400).json({ error: "Missing or invalid checkout session ID in event" });
       return;
     }
 
@@ -380,6 +418,18 @@ router.post("/shop/paymongo-webhook", async (req, res) => {
       return;
     }
 
+    // Verify paid amount and currency against CREDIT_PACKS
+    const expectedPhpCents = getPHPAmount(pack.price);
+    const lineItem = sessionData.data?.attributes?.line_items?.[0];
+    const paidAmount = lineItem?.amount ?? sessionData.data?.attributes?.payments?.[0]?.attributes?.amount;
+    const paidCurrency = (lineItem?.currency ?? sessionData.data?.attributes?.payments?.[0]?.attributes?.currency ?? "PHP").toUpperCase();
+
+    if (paidAmount !== undefined && (Number(paidAmount) !== expectedPhpCents || paidCurrency !== "PHP")) {
+      logger.error({ checkoutSessionId, paidAmount, paidCurrency, expectedPhpCents }, "PayMongo amount/currency mismatch");
+      res.status(400).json({ error: "Payment amount or currency mismatch" });
+      return;
+    }
+
     const email = sessionData.data?.attributes?.payments?.[0]?.attributes?.billing?.email || "Unknown";
 
     // DB Transaction to credit coins and log transaction
@@ -411,18 +461,33 @@ router.post("/shop/paymongo-webhook", async (req, res) => {
       const user = await tx.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
       const userInfo = user[0];
 
-      // 3. Update guest coins balance
+      // 3. Update coins balance
       await tx
         .update(usersTable)
-        .set({ credits: sql`${usersTable.credits} + ${finalCreditAmount}` })
+        .set({ credits: sql`COALESCE(${usersTable.credits}, 0) + ${finalCreditAmount}` })
         .where(eq(usersTable.id, userId));
 
-      // 4. Overwrite guest email with verified payment recovery email
-      if (email && email !== "Unknown") {
-        await tx
-          .update(usersTable)
-          .set({ email: email })
-          .where(eq(usersTable.id, userId));
+      // 4. Only update email if this is an unverified guest account and email is not already taken by a verified user
+      if (
+        email &&
+        email !== "Unknown" &&
+        userInfo &&
+        !userInfo.isVerified &&
+        userInfo.id.startsWith("guest_")
+      ) {
+        const cleanBillingEmail = email.trim().toLowerCase();
+        const existingVerified = await tx
+          .select({ id: usersTable.id })
+          .from(usersTable)
+          .where(sql`${usersTable.email} = ${cleanBillingEmail} AND ${usersTable.isVerified} = true`)
+          .limit(1);
+
+        if (existingVerified.length === 0) {
+          await tx
+            .update(usersTable)
+            .set({ email: cleanBillingEmail })
+            .where(eq(usersTable.id, userId));
+        }
       }
 
       // 5. Log transaction
@@ -430,7 +495,7 @@ router.post("/shop/paymongo-webhook", async (req, res) => {
         id: randomUUID(),
         userId,
         username: userInfo?.username || "Unknown",
-        email: email,
+        email: userInfo?.email || email,
         amount: finalCreditAmount,
         type: "purchase",
         paypalOrderId: checkoutSessionId, // Store PayMongo session ID for idempotency/reference

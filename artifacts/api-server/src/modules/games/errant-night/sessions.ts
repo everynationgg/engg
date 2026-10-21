@@ -63,6 +63,32 @@ export function isRedisOverloaded(): boolean {
 export const sessionCache = new Map<string, VersionedSession>();
 let _redisState: "healthy" | "degraded" = "healthy";
 
+const SESSION_EVICTION_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+const SESSION_MAX_IDLE_MS = 30 * 60 * 1000; // 30 minutes
+
+const sessionEvictionTimer = setInterval(() => {
+  const now = Date.now();
+  let evictedCount = 0;
+  for (const [sessionId, session] of sessionCache.entries()) {
+    const lastActive =
+      session.lastGlobalNow ||
+      session.lastTransitionAt ||
+      session.phaseStartedAt ||
+      session.createdAt ||
+      0;
+    if (now - lastActive > SESSION_MAX_IDLE_MS) {
+      stopHeartbeat(sessionId);
+      sessionCache.delete(sessionId);
+      evictedCount++;
+    }
+  }
+  if (evictedCount > 0) {
+    logger.info({ evictedCount, remaining: sessionCache.size }, "Evicted stale game sessions from memory cache");
+  }
+}, SESSION_EVICTION_INTERVAL_MS);
+
+sessionEvictionTimer.unref();
+
 export function getRedisState(): "healthy" | "degraded" {
   return _redisState;
 }

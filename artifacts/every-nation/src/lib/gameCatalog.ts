@@ -43,9 +43,9 @@ export const gameCatalog = [
   {
     title: "Errant Night",
     slug: "errant-night",
-    subtitle: "Neural Defense Protocol",
+    subtitle: "Sci-Fi Social Deduction",
     description:
-      "A high-stakes network defense simulator. Trace the anomaly through the digital ether before system-wide compromise.",
+      "Crew vs. Alien aboard a failing deep-space vessel. Investigate roles, survive the blackout, and vote out the impostor before the ship falls.",
     image: "/ERRANT.png",
     href: getGameUrl(),
     status: "online",
@@ -65,9 +65,9 @@ export const gameCatalog = [
   {
     title: "Engraved Nether",
     slug: "engraved-nether",
-    subtitle: "Sub-Surface Extraction",
+    subtitle: "Tactical Card Battles",
     description:
-      "Descend into the encrypted depths of the Nether. Harvest exotic matter while evading the ancient sentinels of the deep.",
+      "Build your deck, control the grid, and outmaneuver rivals in fast-paced tactical card duels set in ancient subterranean ruins.",
     image: "/hub_engraved.webp",
     href: "https://triple-triad-theta.vercel.app",
     status: "online",
@@ -85,12 +85,12 @@ export const gameCatalog = [
   {
     title: "Epsilon Nine",
     slug: "epsilon-nine",
-    subtitle: "Orbital Command",
+    subtitle: "Cooperative Station Defense",
     description:
-      "Coordinate the defense of the Epsilon Nine station. Manage energy grids and orbital batteries against incoming threats.",
+      "Coordinate the defense of Epsilon Nine station with your squad. Manage power routing and turret batteries against incoming waves.",
     image: "/hub_epsilon.webp",
     href: "",
-    status: "offline",
+    status: "coming-soon",
     theme: {
       accent: "#f59e0b",
       accentSoft: "rgba(245, 158, 11, 0.18)",

@@ -255,7 +255,7 @@ export function registerGameHandlers(
         });
         const fresh = await getSession(sessionId);
         if (fresh) phaseUpdate(io, sessionId, fresh);
-        chatSystemMessage(io, sessionId, `${roleId.toUpperCase()} protocol initialized`);
+        chatSystemMessage(io, sessionId, `${roleId.toUpperCase()} role unlocked`);
 
         await logAudit({
           userId: state.currentUserId,
@@ -379,7 +379,7 @@ export function registerGameHandlers(
       ack?.({ success: true });
       phaseUpdate(io, sessionId, cas.session);
       await advanceGameFlow(io, sessionId, cas.session);
-      chatSystemMessage(io, sessionId, "Host forced neural link synchronization");
+      chatSystemMessage(io, sessionId, "Host advanced to the next phase");
     } else {
       ack?.({ success: false, error: "Unauthorized or wrong phase" });
     }

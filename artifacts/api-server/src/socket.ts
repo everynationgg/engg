@@ -36,7 +36,7 @@ export function attachSocketIO(httpServer: HttpServer): SocketIOServer {
     const cleanOrigin = origin.replace(/\/$/, "");
 
     const allowed =
-      /^https?:\/\/.*\.vercel\.app$/.test(cleanOrigin)
+      /^https:\/\/(every-nation|errant-night|engg)[a-z0-9-]*\.vercel\.app$/.test(cleanOrigin)
       || /^https?:\/\/.*\.fly\.dev$/.test(cleanOrigin)
       || /^https?:\/\/localhost(:\d+)?$/.test(cleanOrigin)
       || /^capacitor:\/\/localhost$/.test(cleanOrigin)
@@ -87,6 +87,32 @@ export function attachSocketIO(httpServer: HttpServer): SocketIOServer {
   });
 
   // Register all feature-based handlers (session, game, chat)
+  io.on("connection", (socket) => {
+    if (socket.data.userId) {
+      socket.join(`user:${socket.data.userId}`);
+    }
+
+    socket.on("authenticate", (payload: unknown) => {
+      try {
+        const rawToken =
+          typeof payload === "string"
+            ? payload
+            : (payload as { token?: string } | null)?.token;
+        if (!rawToken || typeof rawToken !== "string") return;
+        const cleanToken = rawToken.startsWith("Bearer ")
+          ? rawToken.slice(7)
+          : rawToken;
+        const decoded = verifyToken(cleanToken);
+        if (decoded?.userId) {
+          socket.data.userId = decoded.userId;
+          socket.join(`user:${decoded.userId}`);
+        }
+      } catch (err) {
+        logger.warn({ err }, "Socket authenticate event failed");
+      }
+    });
+  });
+
   initSockets(io);
 
   logger.info("Socket.IO server initialized (Memory Adapter)");

@@ -32,7 +32,9 @@ import {
   checkSinglePlayerEdgeCase,
   recheckVotingCompletion,
   interruptGame,
-  resumeFromInterrupt
+  resumeFromInterrupt,
+  computeSanitizedState,
+  type Player
 } from "../engine.js";
 import { addBot, removeBot, type BotDifficulty } from "../ai-bot.js";
 import { checkRateLimit } from "../../../../lib/rate-limit.js";
@@ -113,7 +115,7 @@ export function registerSessionHandlers(
           // after browser refreshes where tokens might have been lost.
           const isRecentlyDisconnected = reconnecting.connectionStatus === "disconnected" || reconnecting.connectionStatus === "reconnecting";
           const verified = parsed.playerToken 
-            ? verifyPlayerToken(reconnecting.playerId || "", parsed.playerToken) 
+            ? verifyPlayerToken(parsed.playerToken, reconnecting.playerId || "") 
             : (reconnecting.playerId === parsed.playerId && isRecentlyDisconnected);
 
           if (!verified) {
@@ -139,7 +141,7 @@ export function registerSessionHandlers(
 
           const resumeRes = resumeFromInterrupt(session);
           if (resumeRes.resumed) {
-            chatSystemMessage(io, sessionId, "All systems re-synced. Resuming operation...");
+            chatSystemMessage(io, sessionId, "All players reconnected. Resuming match...");
           }
 
           if (!await saveSession(session)) {
@@ -183,7 +185,7 @@ export function registerSessionHandlers(
           state.currentUserId = userId;
           state.currentRateLimitId = userId;
           phaseUpdate(io, sessionId, session);
-          ack?.({ success: true, session, playerToken: issuePlayerToken(pId) });
+          ack?.({ success: true, session: computeSanitizedState(session, socket.id), playerToken: issuePlayerToken(pId) });
           return;
         }
         socket.join(sessionId);
@@ -192,8 +194,9 @@ export function registerSessionHandlers(
         state.currentUserId = userId;
         state.currentRateLimitId = userId;
         sortPlayersByStatus(session);
-        socket.emit("phase_update", session);
-        ack?.({ success: true, session, playerToken: parsed.playerToken || issuePlayerToken(state.currentPlayerId || "") });
+        const sanitizedReconnect = computeSanitizedState(session, socket.id);
+        socket.emit("phase_update", sanitizedReconnect);
+        ack?.({ success: true, session: sanitizedReconnect, playerToken: parsed.playerToken || issuePlayerToken(state.currentPlayerId || "") });
         return;
       }
 
@@ -222,7 +225,7 @@ export function registerSessionHandlers(
       phaseUpdate(io, sessionId, session);
       logGameEvent("session_created", sessionId, socket.id, { playerName });
       const playerToken = issuePlayerToken(pId);
-      ack?.({ success: true, session, playerToken });
+      ack?.({ success: true, session: computeSanitizedState(session, socket.id), playerToken });
     } finally {
       await release();
     }
@@ -328,7 +331,7 @@ export function registerSessionHandlers(
     if (session) {
       phaseUpdate(io, sessionId, session);
       chatSystemMessage(io, sessionId, `${playerName} joined`);
-      ack?.({ success: true, session, playerToken: resolvedToken });
+      ack?.({ success: true, session: computeSanitizedState(session, socket.id), playerToken: resolvedToken });
     }
   });
 
@@ -396,7 +399,7 @@ export function registerSessionHandlers(
       await advanceGameFlow(io, sessionId, session);
     }
     
-    ack?.({ success: true, session });
+    ack?.({ success: true, session: computeSanitizedState(session, socket.id) });
   });
 
   socket.on("quit_game", async (data: unknown, ack) => {
@@ -578,7 +581,7 @@ export function registerSessionHandlers(
     }
 
     phaseUpdate(io, sessionId, cas.session);
-    chatSystemMessage(io, sessionId, `Mission sector visibility set to ${cas.result ? "PUBLIC 🌐" : "PRIVATE 🔒"}`);
+    chatSystemMessage(io, sessionId, `Match visibility updated (${cas.result ? "PUBLIC 🌐" : "PRIVATE 🔒"})`);
     ack?.({ success: true, isPublic: cas.result });
   });
 
@@ -589,7 +592,7 @@ export function registerSessionHandlers(
       return;
     }
 
-    let addedBot = null;
+    let addedBot: Player | null = null;
     const cas = await withCasRetry(sessionId, (session) => {
       const caller = session.players.find(
         (p) => p.id === socket.id || (state.currentPlayerId && p.playerId === state.currentPlayerId)
@@ -607,8 +610,8 @@ export function registerSessionHandlers(
     }
 
     phaseUpdate(io, sessionId, cas.session);
-    chatSystemMessage(io, sessionId, `${addedBot.name} joined the crew (${(difficulty || cas.session.difficulty || "medium").toUpperCase()})`);
-    ack?.({ success: true, bot: addedBot });
+    chatSystemMessage(io, sessionId, `${cas.result?.name ?? "Bot"} joined the crew (${(difficulty || cas.session.difficulty || "medium").toUpperCase()})`);
+    ack?.({ success: true, bot: cas.result });
   });
 
   socket.on("remove_bot", async (data, ack) => {
@@ -633,7 +636,7 @@ export function registerSessionHandlers(
     }
 
     phaseUpdate(io, sessionId, cas.session);
-    chatSystemMessage(io, sessionId, "Bot unit deactivated and removed.");
+    chatSystemMessage(io, sessionId, "Bot removed from the lobby.");
     ack?.({ success: true });
   });
 
