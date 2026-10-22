@@ -29,7 +29,7 @@ export default function HamburgerMenu({
   isHost = false,
   onRestartRound,
 }: HamburgerMenuProps) {
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, isGuest, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const { midGame, showConfirm, openConfirm, closeConfirm, handleConfirmQuit } = useQuitGame(isHost);
@@ -103,7 +103,7 @@ export default function HamburgerMenu({
     id: "resume",
     icon: <PlayIcon />,
     label: "RESUME",
-    tooltip: "Return to active engagement.",
+    tooltip: "Return to the current match.",
     onClick: closeMenu,
     color: "#00f3ff",
   });
@@ -113,15 +113,15 @@ export default function HamburgerMenu({
       id: "profile",
       icon: <ProfileIcon />,
       label: "PROFILE",
-      tooltip: "Access service records and personal identity data.",
+      tooltip: "View account details and restore credits.",
       onClick: () => handleMenuItemClick(onShowProfile),
       color: "#00f3ff",
     });
     menuItems.push({
       id: "logout",
       icon: <LogoutIcon />,
-      label: "RESET PROFILE",
-      tooltip: "Reset guest profile and reload page.",
+      label: isGuest ? "RESET GUEST" : "SIGN OUT",
+      tooltip: isGuest ? "Reset guest session and reload." : "Sign out of your account.",
       onClick: handleLogout,
       color: "#ffaa00",
     });
@@ -131,7 +131,7 @@ export default function HamburgerMenu({
     id: "settings",
     icon: <SettingsIcon />,
     label: "SETTINGS",
-    tooltip: "Adjust mission parameters and interface aesthetics.",
+    tooltip: "Adjust audio, graphics, and accessibility.",
     onClick: () => handleMenuItemClick(onShowSettings),
     color: "#c084fc",
   });
@@ -139,8 +139,8 @@ export default function HamburgerMenu({
   menuItems.push({
     id: "howtoplay",
     icon: <ManualIcon />,
-    label: "MANUAL",
-    tooltip: "Consult the operative's tactical field manual.",
+    label: "HOW TO PLAY",
+    tooltip: "Read rules, game phases, and role abilities.",
     onClick: () => {
       playSound();
       closeMenu();
@@ -152,8 +152,8 @@ export default function HamburgerMenu({
   menuItems.push({
     id: "sound",
     icon: musicOn ? <SoundOnIcon /> : <SoundOffIcon />,
-    label: "AUDIO",
-    tooltip: musicOn ? "Audio feedback active" : "Audio muted",
+    label: "MUSIC",
+    tooltip: musicOn ? "Background music is on" : "Background music is muted",
     onClick: () => {
       playSound();
       onToggleMusic();
@@ -166,8 +166,8 @@ export default function HamburgerMenu({
     menuItems.push({
       id: "quit",
       icon: <ExitIcon />,
-      label: midGame ? "QUIT GAME" : "QUIT",
-      tooltip: midGame ? "Abort active mission and retreat." : "Exit current sector.",
+      label: midGame ? "LEAVE MATCH" : "LEAVE LOBBY",
+      tooltip: midGame ? "Leave the active match and return to the lobby." : "Return to the main screen.",
       onClick: () => {
         playSound();
         closeMenu();
@@ -182,7 +182,7 @@ export default function HamburgerMenu({
       id: "restart",
       icon: <RestartIcon />,
       label: "RESTART ROUND",
-      tooltip: "Re-initialize current mission cycle.",
+      tooltip: "Return all players to role selection.",
       onClick: () => handleMenuItemClick(onRestartRound),
       color: "#00f3ff",
     });
@@ -192,7 +192,7 @@ export default function HamburgerMenu({
     <>
       {/* Floating Trigger Button (Bottom-Right) */}
       <div
-        className="fixed z-50 pointer-events-auto"
+        className="fixed z-[65] pointer-events-auto"
         style={{
           right: "max(16px, calc(env(safe-area-inset-right, 16px) + 8px))",
           bottom: "max(16px, calc(env(safe-area-inset-bottom, 16px) + 12px))",
@@ -270,10 +270,10 @@ export default function HamburgerMenu({
                 <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#00f3ff]" />
                 <div>
                   <h3 className="font-orbitron font-bold text-sm tracking-[0.2em] text-cyan-300 uppercase">
-                    Mission Controls
+                    Game Menu
                   </h3>
-                  <p className="font-mono text-[9px] text-white/40 tracking-widest uppercase">
-                    Tactical Interface Override
+                  <p className="font-mono text-[10px] text-white/55 tracking-widest uppercase">
+                    Match Controls &amp; Options
                   </p>
                 </div>
               </div>
@@ -355,7 +355,7 @@ export default function HamburgerMenu({
                 className="w-full py-3.5 rounded-xl border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 active:scale-[0.98] text-cyan-300 font-orbitron text-xs tracking-[0.2em] uppercase font-bold transition-all cursor-pointer flex items-center justify-center gap-2"
                 style={{ touchAction: "manipulation" }}
               >
-                <span>RESUME ENGAGEMENT</span>
+                <span>RESUME GAME</span>
                 <span className="text-sm">↩</span>
               </button>
             </div>
@@ -368,17 +368,17 @@ export default function HamburgerMenu({
       {showQuitButton && (
         <ConfirmModal
           isOpen={showConfirm}
-          title="TERMINATE SESSION"
-          message="Confirm intentional disconnect from current operation?"
+          title="LEAVE MATCH"
+          message="Are you sure you want to leave the current match?"
           warning={
             isHost
-              ? "WARNING: HOST_STATUS ACTIVE. SESSION WILL TERMINATE FOR ALL OPERATORS."
+              ? "You are the host. Leaving will end the match for everyone in the lobby."
               : midGame
-                ? "WARNING: MID_ENGAGEMENT. DISCONNECT WILL IMPACT UNIT COHESION."
+                ? "Leaving during an active match will forfeit the round for your team."
                 : undefined
           }
-          confirmLabel="TERMINATE"
-          cancelLabel="RESUME"
+          confirmLabel="LEAVE MATCH"
+          cancelLabel="STAY"
           onConfirm={handleConfirmQuit}
           onCancel={closeConfirm}
         />

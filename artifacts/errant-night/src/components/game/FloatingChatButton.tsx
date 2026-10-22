@@ -16,13 +16,8 @@ export default function FloatingChatButton({
       onClick={onClick}
       aria-label={isOpen ? "Close chat" : "Open chat"}
       title={isOpen ? "Close chat (Esc)" : "Open chat (Enter)"}
-      className="fixed z-20 flex items-center justify-center transition-all duration-200 ix-btn"
+      className="fixed left-0 top-[32%] sm:top-1/2 -translate-y-1/2 w-7 h-14 sm:h-16 z-20 flex items-center justify-center transition-all duration-200 ix-btn"
       style={{
-        left: 0,
-        top: typeof window !== 'undefined' && window.innerWidth < 640 ? "35%" : "50%",
-        transform: "translateY(-50%)",
-        width: typeof window !== 'undefined' && window.innerWidth < 640 ? "38px" : "28px",
-        height: "68px",
         borderRadius: "0 12px 12px 0",
         background: isOpen
           ? "hsl(185 80% 18% / 0.85)"

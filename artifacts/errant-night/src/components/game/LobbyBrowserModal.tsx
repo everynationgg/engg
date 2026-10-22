@@ -97,8 +97,8 @@ export default function LobbyBrowserModal({
               <h3 className="font-orbitron font-bold text-base sm:text-lg tracking-widest text-cyan-300 uppercase">
                 PUBLIC LOBBIES
               </h3>
-              <p className="font-mono text-[10px] text-white/50 tracking-wider uppercase">
-                Active Sector Transmissions
+              <p className="font-mono text-[10px] text-white/60 tracking-wider uppercase">
+                Join an Open Game
               </p>
             </div>
           </div>
@@ -134,7 +134,7 @@ export default function LobbyBrowserModal({
             <div className="py-12 flex flex-col items-center justify-center text-center">
               <div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin mb-3 shadow-[0_0_12px_rgba(6,182,212,0.4)]" />
               <p className="font-orbitron text-xs tracking-wider text-cyan-300 uppercase">
-                Scanning Sector Channels...
+                Loading open lobbies...
               </p>
             </div>
           ) : error ? (
@@ -144,7 +144,7 @@ export default function LobbyBrowserModal({
                 onClick={fetchLobbies}
                 className="mt-3 px-4 py-1.5 rounded bg-red-900/50 hover:bg-red-800/60 border border-red-500/40 text-red-200 text-xs font-orbitron"
               >
-                RETRY SCAN
+                RETRY
               </button>
             </div>
           ) : lobbies.length === 0 ? (
@@ -153,8 +153,8 @@ export default function LobbyBrowserModal({
               <h4 className="font-orbitron font-bold text-sm tracking-widest text-white/80 uppercase mb-1">
                 No Open Public Lobbies
               </h4>
-              <p className="text-xs text-white/50 max-w-sm mx-auto mb-4 font-mono">
-                No commanders are currently broadcasting open signals. Create your own lobby or invite friends with a room link!
+              <p className="text-xs text-white/60 max-w-sm mx-auto mb-4 font-mono">
+                No public lobbies are open right now. Create your own lobby or share a room code with friends!
               </p>
             </div>
           ) : (

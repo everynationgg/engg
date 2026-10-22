@@ -115,16 +115,16 @@ function RewardSummary({ rewards, onClose }: { rewards: { xp: number; credits: n
         <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-cyan-500/40" />
         
         <div className="flex flex-col items-center gap-2">
-          <span className="font-mono text-[8px] uppercase tracking-[0.6em] text-cyan-400/40">Mission_Debrief</span>
-          <h2 className="font-orbitron font-black text-2xl tracking-[0.3em] uppercase text-white text-center leading-tight">Operation_Results</h2>
+          <span className="font-mono text-[8px] uppercase tracking-[0.6em] text-cyan-400/40">Match Complete</span>
+          <h2 className="font-orbitron font-black text-2xl tracking-[0.3em] uppercase text-white text-center leading-tight">Match Rewards</h2>
         </div>
 
         <div className="w-full flex flex-col gap-6">
           {/* XP PROGRESS */}
           <div className="flex flex-col gap-2">
             <div className="flex justify-between items-end">
-              <span className="font-mono text-[8px] uppercase text-white/30">Neural_XP</span>
-              <span className="font-orbitron text-[10px] text-cyan-400 font-bold">LVL_{level}</span>
+              <span className="font-mono text-[8px] uppercase text-white/30">Experience</span>
+              <span className="font-orbitron text-[10px] text-cyan-400 font-bold">Level {level}</span>
             </div>
             <div className="w-full h-2 bg-white/5 relative">
               <motion.div 
@@ -136,14 +136,14 @@ function RewardSummary({ rewards, onClose }: { rewards: { xp: number; credits: n
             </div>
             <div className="flex justify-between">
                <span className="font-mono text-[7px] text-cyan-400/60">+{rewards.xp} XP</span>
-               <span className="font-mono text-[7px] text-white/20 uppercase tracking-tighter">Syncing...</span>
+               <span className="font-mono text-[7px] text-white/20 uppercase tracking-tighter">Updated</span>
             </div>
           </div>
 
           {/* CREDITS DEPOSIT */}
           <div className="p-4 bg-white/[0.02] border border-white/5 flex items-center justify-between">
             <div className="flex flex-col">
-              <span className="font-mono text-[7px] uppercase tracking-widest text-white/20">Assets_Recovered</span>
+              <span className="font-mono text-[7px] uppercase tracking-widest text-white/20">Credits Earned</span>
               <span className="font-orbitron text-xl font-black text-white">+{count} <span className="text-[10px] text-cyan-400">CC</span></span>
             </div>
             <div className="w-10 h-10 border border-cyan-500/20 flex items-center justify-center">
@@ -157,13 +157,13 @@ function RewardSummary({ rewards, onClose }: { rewards: { xp: number; credits: n
              onClick={onClose}
              className="w-full py-4 bg-cyan-500/10 border border-cyan-500/40 hover:bg-cyan-500/20 transition-all font-orbitron text-[10px] uppercase tracking-[0.4em] text-cyan-400 font-bold"
            >
-             Continue_Sequence
+             Continue
            </button>
            <button 
              onClick={() => window.location.href = "/hub"}
              className="w-full py-4 border border-white/5 hover:border-white/10 transition-all font-orbitron text-[10px] uppercase tracking-[0.4em] text-white/20 hover:text-white"
            >
-             Return_to_Nexus
+             Back to Hub
            </button>
         </div>
       </motion.div>
@@ -403,7 +403,7 @@ export default function ResultPage() {
   }, [result]);
 
   return (
-    <div className={`relative min-h-screen w-full flex flex-col overflow-hidden ${alienWon ? "ix-glitch-bg" : ""}`} style={{ background: bgTint, color: "hsl(190 80% 90%)" }}>
+    <div className={`relative min-h-[100dvh] w-full flex flex-col overflow-hidden ${alienWon ? "ix-glitch-bg" : ""}`} style={{ background: bgTint, color: "hsl(190 80% 90%)" }}>
       {/* Victory/Defeat Screen Takeover Overlays */}
       {alienWon && (
         <div className="absolute inset-0 pointer-events-none z-0">
@@ -480,7 +480,7 @@ export default function ResultPage() {
                   EJECTED
                 </div>
                 <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-3 font-bold" style={{ color: "hsl(0 75% 60%)" }}>
-                  TERMINATED SUBJECT
+                  EJECTED PLAYER
                 </div>
                 <div className="flex items-center gap-4 relative">
                   {(() => {

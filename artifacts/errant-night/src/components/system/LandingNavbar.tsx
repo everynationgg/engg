@@ -34,8 +34,8 @@ export default function LandingNavbar({
           <span className="font-orbitron font-black text-white text-base tracking-widest uppercase">
             ENGG<span className="text-cyan-400">.</span>
           </span>
-          <span className="font-orbitron text-[8px] text-cyan-400/40 tracking-[0.4em] uppercase font-bold">
-            Ops_Nexus_Terminal
+          <span className="font-orbitron text-[8px] text-cyan-400/50 tracking-[0.28em] uppercase font-bold">
+            Every Nation Games
           </span>
         </div>
       </div>

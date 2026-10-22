@@ -260,8 +260,8 @@ export default function RoleRevealPage() {
   if (revealState === "black") {
     return (
       <div className="fixed inset-0 bg-black z-[9999] flex flex-col items-center justify-center">
-        <div className="font-orbitron text-xs tracking-[0.4em] uppercase" style={{ color: "hsl(210 30% 25%)" }}>
-          DECRYPTING NEURAL LINK<span className="animate-pulse">...</span>
+        <div className="font-orbitron text-xs tracking-[0.35em] uppercase" style={{ color: "hsl(210 30% 45%)" }}>
+          ASSIGNING ROLES<span className="animate-pulse">...</span>
         </div>
       </div>
     );
@@ -271,7 +271,7 @@ export default function RoleRevealPage() {
   if (isSpectator) {
     // Spectator UI: Hide all role info, show only spectator message
     return (
-      <div className="relative min-h-screen w-full flex flex-col items-center justify-center ix-page-enter" style={{ background: "hsl(210 30% 8%)", color: "hsl(190 80% 90%)" }}>
+      <div className="relative min-h-[100dvh] w-full flex flex-col items-center justify-center ix-page-enter" style={{ background: "hsl(210 30% 8%)", color: "hsl(190 80% 90%)" }}>
         <div className="flex flex-col items-center justify-center flex-1 w-full">
           <div className="font-orbitron text-3xl sm:text-5xl lg:text-6xl font-black tracking-widest uppercase mb-6" style={{ color: "hsl(185 100% 70%)", textShadow: "0 0 24px hsl(185 100% 50% / 0.4)" }}>
             Spectator
@@ -286,7 +286,7 @@ export default function RoleRevealPage() {
           {Object.keys(rolesAssigned).length > 0 && (
             <div className="w-full max-w-md rounded-md p-4" style={{ background: "hsl(220 28% 9%)", border: "1px solid hsl(210 30% 18%)" }}>
               <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-4 font-bold text-center" style={{ color: "hsl(185 100% 70%)" }}>
-                IDENTIFIED SUBJECTS
+                ASSIGNED ROLES
               </div>
               <div className="flex flex-col gap-1.5">
                 {sessionPlayers.map((p) => {
@@ -328,12 +328,12 @@ export default function RoleRevealPage() {
 
   return (
     <div
-      className="relative min-h-screen w-full flex flex-col ix-page-enter"
+      className="relative min-h-[100dvh] w-full flex flex-col ix-page-enter"
       style={{ background: bgTint, color: "hsl(190 80% 90%)" }}
     >
       {/* Top bar */}
       <div
-        className="w-full px-6 py-3 flex items-center justify-between border-b shrink-0"
+        className="w-full px-4 sm:px-6 py-3 flex items-center justify-between border-b shrink-0"
         style={{
           background: "hsl(220 28% 7%)",
           borderColor: `${accentColor.replace(")", " / 0.25)")}`,
@@ -342,30 +342,30 @@ export default function RoleRevealPage() {
       >
         <div>
           <div
-            className="font-orbitron font-black text-lg tracking-widest uppercase leading-none"
+            className="font-orbitron font-black text-base sm:text-lg tracking-widest uppercase leading-none"
             style={{ color: accentColorLight, textShadow: `0 0 12px ${accentGlow}` }}
           >
             ERRANT NIGHT
           </div>
           <div
-            className="font-orbitron font-bold text-xs tracking-[0.3em] uppercase"
+            className="font-orbitron font-bold text-[10px] sm:text-xs tracking-[0.25em] uppercase mt-0.5"
             style={{ color: "hsl(270 80% 65%)" }}
           >
-            DETECTED
+            STARTING ROLE
           </div>
         </div>
-        <div className="text-right flex items-center gap-6">
+        <div className="text-right flex items-center gap-4 sm:gap-6">
           <div className="flex-1">
-            <div className="text-[10px] tracking-[0.4em] uppercase opacity-40 font-bold mb-1">
-              MISSION_BRIEFING
+            <div className="text-[10px] tracking-[0.3em] uppercase opacity-50 font-bold mb-0.5">
+              PHASE 1
             </div>
-            <div className="font-orbitron font-black text-2xl sm:text-4xl tracking-[0.2em] uppercase italic" style={{ color: isAlien ? "hsl(0 75% 70%)" : "hsl(185 100% 70%)" }}>
+            <div className="font-orbitron font-black text-xl sm:text-3xl tracking-[0.15em] uppercase italic" style={{ color: isAlien ? "hsl(0 75% 70%)" : "hsl(185 100% 70%)" }}>
               ROLE REVEAL
             </div>
           </div>
           <div className="text-right pl-4 border-l border-white/10">
-            <div className="text-[10px] tracking-[0.3em] uppercase mb-1 opacity-40">Auto_Deploy</div>
-            <div className="font-orbitron font-bold text-2xl tracking-widest" style={{ color: secondsLeft < 10 ? "hsl(0 75% 60%)" : "hsl(185 100% 70%)" }}>
+            <div className="text-[10px] tracking-[0.25em] uppercase mb-0.5 opacity-50">TIME LEFT</div>
+            <div className="font-orbitron font-bold text-xl sm:text-2xl tracking-widest" style={{ color: secondsLeft < 10 ? "hsl(0 75% 60%)" : "hsl(185 100% 70%)" }}>
               0:{secondsLeft.toString().padStart(2, '0')}
             </div>
           </div>
@@ -517,9 +517,9 @@ export default function RoleRevealPage() {
             >
               <div
                 className="font-orbitron text-xs tracking-[0.25em] uppercase mb-2 font-bold"
-                style={{ color: "hsl(210 30% 50%)" }}
+                style={{ color: "hsl(210 30% 55%)" }}
               >
-                INTEL FILE
+                BACKGROUND
               </div>
               <p
                 className="text-sm leading-relaxed"
@@ -549,34 +549,42 @@ export default function RoleRevealPage() {
                 {livePlayers.length > 0 ? (
                   <span>{readyCount} / {livePlayers.filter(p => !p.isSpectator).length} players ready</span>
                 ) : (
-                  <span className="animate-pulse">Syncing crew manifest... ({readyCount} / {totalPlayers})</span>
+                  <span className="animate-pulse">Waiting for players... ({readyCount} / {totalPlayers})</span>
                 )}
               </div>
               {livePlayers.some(p => p.connectionStatus !== "connected") && (
-                <div className="text-[10px] text-amber-500/80 font-mono animate-pulse uppercase tracking-tighter">
-                  [ System_Paused: Waiting for Reconnection ]
+                <div className="text-[11px] text-amber-400/90 font-mono animate-pulse uppercase tracking-wider">
+                  Waiting for player to reconnect...
                 </div>
               )}
             </div>
 
             {/* Chaotic Choice UI */}
             {!acknowledged && revealState === "ready" && role.team === "chaotic" && (
-              <div className="flex flex-col gap-4 mb-6 mt-2">
-                <div className="text-[10px] tracking-[0.4em] uppercase font-mono text-center mb-1" style={{ color: "hsl(210 30% 60%)" }}>Alignment_Select</div>
+              <div className="flex flex-col gap-3 mb-6 mt-2">
+                <div className="text-xs tracking-[0.25em] uppercase font-orbitron font-bold text-center mb-1" style={{ color: "hsl(210 30% 70%)" }}>
+                  Choose Your Side
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => { playSciFiClick(); setChaoticChoice("Good"); }}
-                    className={`py-4 rounded border-2 font-orbitron font-bold text-[10px] tracking-widest transition-all ${chaoticChoice === "Good" ? "bg-cyan-500/20 border-cyan-400 text-cyan-200" : "bg-black/40 border-cyan-900/50 text-cyan-900 hover:border-cyan-700"}`}
-                    style={{ boxShadow: chaoticChoice === "Good" ? "0 0 20px hsl(185 100% 50% / 0.3)" : "none" }}
+                    style={{
+                      boxShadow: chaoticChoice === "Good" ? "0 0 20px hsl(185 100% 50% / 0.3)" : "none",
+                      touchAction: "manipulation",
+                    }}
+                    className={`py-4 rounded-lg border-2 font-orbitron font-bold text-xs tracking-wider transition-all cursor-pointer ${chaoticChoice === "Good" ? "bg-cyan-500/20 border-cyan-400 text-cyan-200" : "bg-black/40 border-cyan-900/50 text-cyan-400/60 hover:border-cyan-600"}`}
                   >
-                    ENLIST (GOOD)
+                    CREW SIDE (GOOD)
                   </button>
                   <button
                     onClick={() => { playSciFiClick(); setChaoticChoice("Bad"); }}
-                    className={`py-4 rounded border-2 font-orbitron font-bold text-[10px] tracking-widest transition-all ${chaoticChoice === "Bad" ? "bg-red-500/20 border-red-400 text-red-200" : "bg-black/40 border-red-900/50 text-red-900 hover:border-red-700"}`}
-                    style={{ boxShadow: chaoticChoice === "Bad" ? "0 0 20px hsl(0 100% 50% / 0.3)" : "none" }}
+                    style={{
+                      boxShadow: chaoticChoice === "Bad" ? "0 0 20px hsl(0 100% 50% / 0.3)" : "none",
+                      touchAction: "manipulation",
+                    }}
+                    className={`py-4 rounded-lg border-2 font-orbitron font-bold text-xs tracking-wider transition-all cursor-pointer ${chaoticChoice === "Bad" ? "bg-red-500/20 border-red-400 text-red-200" : "bg-black/40 border-red-900/50 text-red-400/60 hover:border-red-600"}`}
                   >
-                    INFILTRATE (BAD)
+                    ALIEN SIDE (BAD)
                   </button>
                 </div>
               </div>
@@ -660,14 +668,14 @@ export default function RoleRevealPage() {
         </div>
       </div>
 
-      {/* Acknowledge button — mobile (fixed bottom) */}
+      {/* Acknowledge button — mobile (fixed bottom, leaves room on right for floating menu button) */}
       <div
-        className={`lg:hidden fixed bottom-0 left-0 right-0 px-6 py-4 border-t transition-transform duration-500 delay-300 ${revealState === "ready" ? "translate-y-0" : "translate-y-full"}`}
+        className={`lg:hidden fixed bottom-0 left-0 right-0 pl-4 pr-24 py-3.5 border-t transition-transform duration-500 delay-300 ${revealState === "ready" ? "translate-y-0" : "translate-y-full"}`}
         style={{
           background: bgTint,
           borderColor: `${accentColor.replace(")", " / 0.2)")}`,
           backdropFilter: "blur(8px)",
-          zIndex: 60,
+          zIndex: 55,
           paddingBottom: "max(16px, calc(env(safe-area-inset-bottom, 16px) + 8px))",
         }}
       >
@@ -734,7 +742,7 @@ function AcknowledgeButton({ acknowledged, accentColor, accentColorLight, accent
         btn.style.color = accentColorLight;
       }}
     >
-      {isPhaseReady ? "I ACKNOWLEDGE MY ROLE" : "SYNCING NEURAL LINK..."}
+      {isPhaseReady ? "READY" : "PREPARING..."}
     </button>
   );
 }

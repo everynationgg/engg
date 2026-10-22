@@ -150,7 +150,7 @@ export default function LandingPage() {
   }, [callsign, roomCodeInput, userId, setLocation]);
 
   return (
-    <article className="relative w-full h-screen overflow-hidden flex items-end justify-center">
+    <article className="relative w-full h-[100dvh] overflow-hidden flex items-end justify-center">
       {/* Full-width background */}
       <div
         className="absolute inset-0"
@@ -209,7 +209,7 @@ export default function LandingPage() {
       />
 
       {/* Bottom content */}
-      <section className="relative z-10 flex flex-col items-center text-center px-6 max-w-lg w-full pb-24 sm:pb-12">
+      <section className="relative z-10 flex flex-col items-center text-center px-6 max-w-lg w-full pb-10 sm:pb-12">
         {view === "main" && (
           <div className="ix-page-enter">
             {/* Title */}
@@ -260,7 +260,7 @@ export default function LandingPage() {
                   boxShadow: "0 0 16px hsl(185 100% 50% / 0.6), inset 0 0 12px hsl(185 100% 50% / 0.2)",
                 }}
               >
-                {isQuickMatching ? "SCANNING SECTORS..." : "QUICK MATCH ⚡"}
+                {isQuickMatching ? "FINDING MATCH..." : "QUICK MATCH ⚡"}
               </button>
 
               {/* 2. Public Lobby Browser */}
@@ -311,7 +311,7 @@ export default function LandingPage() {
               </div>
 
               <a
-                href="/"
+                href="/hub"
                 onClick={() => playSciFiClick()}
                 className="ix-btn relative w-full py-4 font-orbitron font-bold text-sm tracking-[0.25em] uppercase rounded-md border-2 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 text-center"
                 style={{
@@ -335,7 +335,7 @@ export default function LandingPage() {
                   btn.style.background = "rgba(0, 0, 0, 0.4)";
                 }}
               >
-                RETURN TO BASE
+                BACK TO HUB
               </a>
             </nav>
             </div>
@@ -373,7 +373,7 @@ export default function LandingPage() {
                 placeholder="ENTER CALLSIGN..."
                 maxLength={20}
                 data-testid="input-callsign"
-                className="w-full py-3 px-4 rounded-md font-orbitron text-sm tracking-wider uppercase outline-none transition-all duration-200 ix-input"
+                className="w-full py-3 px-4 rounded-md font-orbitron text-base sm:text-sm tracking-wider uppercase outline-none transition-all duration-200 ix-input"
                 style={{
                   background: "hsl(220 28% 8% / 0.9)",
                   border: "1px solid hsl(185 100% 50% / 0.4)",
@@ -481,7 +481,7 @@ export default function LandingPage() {
                 placeholder="ENTER ROOM CODE..."
                 maxLength={6}
                 data-testid="input-roomcode"
-                className="w-full py-3 px-4 rounded-md font-orbitron text-sm tracking-wider uppercase outline-none transition-all duration-200 ix-input"
+                className="w-full py-3 px-4 rounded-md font-orbitron text-base sm:text-sm tracking-wider uppercase outline-none transition-all duration-200 ix-input"
                 style={{
                   background: "hsl(220 28% 8% / 0.9)",
                   border: "1px solid hsl(270 80% 55% / 0.4)",
@@ -517,7 +517,7 @@ export default function LandingPage() {
                 placeholder="ENTER CALLSIGN..."
                 maxLength={20}
                 data-testid="input-join-callsign"
-                className="w-full py-3 px-4 rounded-md font-orbitron text-sm tracking-wider uppercase outline-none transition-all duration-200 ix-input"
+                className="w-full py-3 px-4 rounded-md font-orbitron text-base sm:text-sm tracking-wider uppercase outline-none transition-all duration-200 ix-input"
                 style={{
                   background: "hsl(220 28% 8% / 0.9)",
                   border: "1px solid hsl(270 80% 55% / 0.4)",

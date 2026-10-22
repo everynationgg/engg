@@ -370,9 +370,9 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
 
             {/* Right Column: Player Manifest */}
             <div className="lg:col-span-7 flex flex-col gap-6">
-              <h3 className="font-orbitron text-xs tracking-[0.4em] uppercase mb-4 flex items-center gap-2" style={{ color: "hsl(185 100% 50%)" }}>
+              <h3 className="font-orbitron text-xs tracking-[0.25em] uppercase mb-4 flex items-center gap-2" style={{ color: "hsl(185 100% 50%)" }}>
                 <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full" />
-                Biometric Manifest  -  {sessionPlayers.length > 0 ? sessionPlayers.filter(p => !p.isSpectator).length : gameSessionStore.getTotalPlayers("0")} Active Subjects
+                Players ({sessionPlayers.length > 0 ? sessionPlayers.filter(p => !p.isSpectator).length : gameSessionStore.getTotalPlayers("0")})
               </h3>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -417,10 +417,9 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
               {/* Observer Status */}
               <div className="mt-auto pt-10">
                 <div className="p-6 rounded-2xl border border-dashed border-white/10 bg-white/[0.01] text-center">
-                  <div className="font-orbitron text-[10px] tracking-[0.5em] uppercase text-white/20 mb-2">Neural Observation Protocol</div>
-                  <p className="text-xs text-white/40 leading-relaxed max-w-sm mx-auto italic" style={{ fontFamily: "'Exo 2', sans-serif" }}>
-                    You are currently out of phase with the crew. <br />
-                    Direct interaction is suspended until the mission concludes.
+                  <div className="font-orbitron text-[10px] tracking-[0.35em] uppercase text-white/40 mb-2">Spectator Mode</div>
+                  <p className="text-xs text-white/60 leading-relaxed max-w-sm mx-auto italic" style={{ fontFamily: "'Exo 2', sans-serif" }}>
+                    You are watching the crew discussion. Voting will begin when the timer ends or an emergency vote passes.
                   </p>
                 </div>
               </div>
@@ -436,7 +435,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
 
   return (
     <div
-      className={`relative min-h-screen w-full flex flex-col ${isAlien ? "ix-glitch-bg" : ""}`}
+      className={`relative min-h-[100dvh] w-full flex flex-col ${isAlien ? "ix-glitch-bg" : ""}`}
       style={{
         backgroundImage: `linear-gradient(${bgOverlay}, ${bgOverlay}), url('${import.meta.env.BASE_URL}moon-phases.webp')`,
         backgroundSize: "cover",
@@ -456,7 +455,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
       
       <div className="relative z-10 flex flex-col flex-1 h-full">
       {/* Main content */}
-      <div className="flex-1 flex flex-col px-6 py-10 gap-10 overflow-y-auto pb-32 lg:pb-8 max-w-2xl mx-auto w-full">
+      <div className="flex-1 flex flex-col px-4 sm:px-6 py-4 sm:py-10 gap-5 sm:gap-8 overflow-y-auto pb-28 lg:pb-8 max-w-2xl mx-auto w-full">
         {/* Phase title + role */}
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-6 bg-white/[0.02] border border-white/5 rounded-sm shadow-xl relative">
           <div className="relative shrink-0">
@@ -471,22 +470,22 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
             <WingIcon accentColor={accentColor} />
           </div>
           <div className="text-center sm:text-left flex-1 min-w-0">
-            <div className="font-orbitron font-black text-3xl sm:text-4xl tracking-[0.2em] uppercase italic" style={{ color: accentLight, textShadow: `0 0 15px ${accentGlow}` }}>
-              DELIBERATION
+            <div className="font-orbitron font-black text-2xl sm:text-4xl tracking-[0.2em] uppercase italic" style={{ color: accentLight, textShadow: `0 0 15px ${accentGlow}` }}>
+              DISCUSSION
             </div>
             <div className="flex flex-col gap-1 mt-2">
-              <div className="text-[10px] tracking-[0.4em] uppercase opacity-40 font-bold break-all">
-                Identity: <span className="text-white opacity-100">{callsign}</span>
+              <div className="text-[11px] tracking-[0.2em] uppercase opacity-60 font-bold break-all">
+                Player: <span className="text-white opacity-100">{callsign}</span>
               </div>
-              <div className="text-[10px] tracking-[0.4em] uppercase opacity-40 font-bold break-all">
-                Authorized_Role: <span className="font-orbitron font-bold opacity-100" style={{ color: accentLight }}>{role.name.toUpperCase()}</span>
+              <div className="text-[11px] tracking-[0.2em] uppercase opacity-60 font-bold break-all">
+                Starting Role: <span className="font-orbitron font-bold opacity-100" style={{ color: accentLight }}>{role.name.toUpperCase()}</span>
               </div>
             </div>
           </div>
           
           {/* Timer - Fixed/Floating on mobile header */}
-          <div className="absolute top-4 right-4 text-right">
-            <div className="text-[10px] tracking-[0.3em] uppercase mb-1 opacity-40">Phase_End</div>
+          <div className="sm:absolute sm:top-4 sm:right-4 text-center sm:text-right">
+            <div className="text-[10px] tracking-[0.25em] uppercase mb-1 opacity-60">Time Left</div>
             <div className="font-orbitron font-bold text-xl tracking-widest" style={{ color: secondsLeft < 20 ? "hsl(0 75% 60%)" : accentLight }}>
               {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, '0')}
             </div>
@@ -499,11 +498,11 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
             <div className="flex items-center gap-3">
               <FaExclamationTriangle className="text-red-500" />
               <div className="font-orbitron text-xs font-bold tracking-widest text-red-400 uppercase break-words">
-                CRITICAL ALERT: NEURAL LINK INHIBITED
+                ANESTHETIZED — VOTE BLOCKED
               </div>
             </div>
-            <p className="mt-2 text-xs text-red-200/70 leading-relaxed font-mono">
-              The Doctor has anesthetized your interface. You are unable to cast a vote in the upcoming phase.
+            <p className="mt-2 text-xs text-red-200/80 leading-relaxed font-mono">
+              The Doctor sedated you during Role Reveal. You cannot cast a vote in the upcoming Voting phase.
             </p>
           </div>
         )}
@@ -587,18 +586,18 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
             )})}
           </div>
         </div>
-        {/* Communication terminal */}
+        {/* Emergency Vote panel */}
         {!isSpectator && (
           <div className="rounded-md p-5" style={{ background: "hsl(185 80% 8% / 0.3)", border: "1px solid hsl(185 100% 50% / 0.2)", boxShadow: "0 0 20px hsl(185 100% 50% / 0.05)" }}>
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-3">
               <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
               <div className="font-orbitron text-xs tracking-[0.25em] uppercase font-bold text-cyan-400">
-                COMMUNICATION TERMINAL
+                EMERGENCY VOTE
               </div>
             </div>
             
-            <p className="text-[10px] leading-relaxed uppercase tracking-wider mb-5 text-white/40 font-mono">
-              The orbit is stable. Engage the crew via local comms to determine the infestation threat.
+            <p className="text-xs leading-relaxed mb-4 text-white/65">
+              Ready to vote early? Call an emergency vote to end discussion and proceed directly to voting.
             </p>
 
             <button

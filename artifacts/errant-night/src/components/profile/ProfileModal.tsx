@@ -9,7 +9,7 @@ interface ProfileModalProps {
 }
 
 export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
-  const { username, userId, credits, logout, refreshUser } = useAuth();
+  const { username, userId, credits, isGuest, logout, refreshUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -51,7 +51,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         setRecoveryError(data.error || "Verification request failed");
       }
     } catch (err) {
-      setRecoveryError("Handshake failure");
+      setRecoveryError("Connection failed. Please try again.");
     } finally {
       setIsRecovering(false);
     }
@@ -134,42 +134,42 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     >
       <div
         ref={modalRef}
-        className="relative w-full max-w-lg bg-[#0c1016] border border-white/10 shadow-[0_0_50px_rgba(0,243,255,0.1)] overflow-hidden rounded-lg"
+        className="relative w-full max-w-lg max-h-[90dvh] flex flex-col bg-[#0c1016] border border-white/15 shadow-[0_0_50px_rgba(0,243,255,0.12)] overflow-hidden rounded-xl"
         onClick={(e) => e.stopPropagation()}
+        data-no-swipe="true"
       >
-        {/* HUD Elements */}
-        <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-cyan-500/40 pointer-events-none" />
-        <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-cyan-500/40 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-cyan-500/40 pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-cyan-500/40 pointer-events-none" />
-        
-        {/* Animated Scanline */}
-        <div className="absolute inset-x-0 top-0 h-[2px] bg-cyan-500/20 shadow-[0_0_15px_rgba(0,243,255,0.5)] animate-[scan_4s_linear_infinite] pointer-events-none" />
+        {/* Corner Accents */}
+        <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-cyan-500/40 pointer-events-none" />
+        <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-cyan-500/40 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-cyan-500/40 pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-cyan-500/40 pointer-events-none" />
 
         <button
           onClick={() => { playSciFiClick(); onClose(); }}
-          className="absolute top-4 right-4 z-20 w-11 h-11 flex items-center justify-center rounded-lg border border-white/10 hover:border-cyan-500/50 hover:bg-cyan-500/10 active:scale-95 transition-all text-white/50 hover:text-cyan-400 font-mono text-xl cursor-pointer"
+          className="absolute top-4 right-4 z-20 w-11 h-11 flex items-center justify-center rounded-lg border border-white/15 hover:border-cyan-400/50 hover:bg-cyan-500/10 active:scale-95 transition-all text-white/70 hover:text-cyan-300 font-mono text-lg cursor-pointer"
           style={{ touchAction: "manipulation" }}
           aria-label="Close profile"
         >
           ✕
         </button>
 
-        <div className="p-8">
+        <div className="flex-1 overflow-y-auto p-5 sm:p-8 custom-scrollbar">
           {/* Header */}
-          <div className="mb-10 relative">
-            <div className="flex items-center gap-4 mb-2">
-               <div className="w-1.5 h-6 bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
-               <h2 className="font-orbitron font-black text-xl tracking-[0.3em] uppercase">
-                 Profile
-               </h2>
+          <div className="mb-6 sm:mb-8 relative pr-12">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-1.5 h-6 bg-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.5)] rounded-full" />
+              <h2 className="font-orbitron font-black text-lg sm:text-xl tracking-[0.2em] uppercase text-white">
+                Profile
+              </h2>
             </div>
-            <div className="flex items-baseline gap-3">
-              <span className="font-mono text-2xl text-cyan-400 tracking-wider">{username}</span>
-              <div className="flex items-center gap-2 px-2 py-0.5 bg-cyan-500/10 border border-cyan-500/30 rounded-sm">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="font-mono text-xl sm:text-2xl text-cyan-300 font-bold tracking-wider break-all">
+                {username}
+              </span>
+              <div className="flex items-center gap-2 px-2.5 py-0.5 bg-cyan-500/10 border border-cyan-500/30 rounded">
                 <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                <span className="font-mono text-[8px] tracking-widest uppercase text-cyan-400/80">
-                  GUEST SESSION
+                <span className="font-mono text-[10px] tracking-wider uppercase text-cyan-300">
+                  {isGuest ? "Guest Session" : "Verified Account"}
                 </span>
               </div>
             </div>
@@ -177,78 +177,83 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12">
-              <div className="w-12 h-12 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
-              <p className="mt-4 font-mono text-[10px] tracking-widest uppercase opacity-40">Accessing Data...</p>
+              <div className="w-10 h-10 border-2 border-cyan-500/20 border-t-cyan-400 rounded-full animate-spin" />
+              <p className="mt-4 font-mono text-xs tracking-wider uppercase text-white/60">Loading profile...</p>
             </div>
           ) : (
-            <div className="space-y-6">
-              {/* Identity & Coin Balance HUD */}
-              <div className="p-6 bg-white/5 border border-white/5 relative">
-                <div className="absolute top-0 right-0 p-2 font-mono text-[8px] opacity-20">IDENTITY_v2.5</div>
-                <h3 className="font-orbitron text-[10px] tracking-[0.3em] uppercase opacity-40 mb-6 border-b border-white/5 pb-2">Guest Account Data</h3>
-                
+            <div className="space-y-5">
+              {/* Account Details & Credit Balance */}
+              <div className="p-4 sm:p-5 rounded-xl bg-white/[0.03] border border-white/10">
+                <h3 className="font-orbitron font-bold text-xs tracking-[0.15em] uppercase text-cyan-300 mb-4 border-b border-white/10 pb-2">
+                  Account Details
+                </h3>
+
                 <div className="space-y-4">
                   <div>
-                    <p className="font-mono text-[9px] uppercase opacity-40 mb-1">Guest UUID</p>
-                    <p className="font-mono text-xs text-white/80 break-all select-all">
+                    <p className="font-mono text-[10px] uppercase text-white/50 mb-1">Player ID</p>
+                    <p className="font-mono text-xs text-white/85 break-all select-all">
                       {userId}
                     </p>
                   </div>
-                  <div className="pt-2">
-                    <p className="font-mono text-[9px] uppercase opacity-40 mb-1">Balance</p>
-                    <div className="flex items-center gap-3">
-                      <FaCoins className="text-cyan-500/40 text-xs" />
-                      <p className="font-orbitron text-2xl text-cyan-400 font-black">
-                        {credits} <span className="text-xs text-cyan-500/40 font-bold text-sm">CC</span>
+                  <div className="pt-1">
+                    <p className="font-mono text-[10px] uppercase text-white/50 mb-1">Credit Balance</p>
+                    <div className="flex items-center gap-2.5">
+                      <FaCoins className="text-cyan-400 text-sm" />
+                      <p className="font-orbitron text-xl sm:text-2xl text-cyan-300 font-black">
+                        {credits} <span className="text-xs text-cyan-400/70 font-bold">CC</span>
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Restoration Protocol */}
-              <div className="p-6 bg-white/[0.02] border border-white/5 relative">
-                <h3 className="font-orbitron text-[10px] tracking-[0.3em] uppercase opacity-40 mb-4 border-b border-white/5 pb-2">Coin Restoration Protocol</h3>
-                
+              {/* Restore Purchased Credits */}
+              <div className="p-4 sm:p-5 rounded-xl bg-white/[0.02] border border-white/10">
+                <h3 className="font-orbitron font-bold text-xs tracking-[0.15em] uppercase text-cyan-300 mb-3 border-b border-white/10 pb-2">
+                  Restore Purchased Credits
+                </h3>
+
                 {!recoveryStep ? (
                   <div className="space-y-3">
-                    <p className="font-mono text-[8px] leading-relaxed uppercase text-white/40">
-                      Enter the email address used during PayPal or GCash checkout to recover and restore your coin balance.
+                    <p className="text-xs leading-relaxed text-white/65">
+                      Enter the email address used during PayPal or GCash checkout to restore your purchased credits.
                     </p>
                     <input
                       type="email"
-                      placeholder="ENTER BILLING EMAIL..."
+                      placeholder="Billing email address"
                       value={recoveryEmail}
                       onChange={(e) => setRecoveryEmail(e.target.value)}
-                      className="w-full py-2.5 px-3 bg-black/60 border border-white/10 text-cyan-400 font-mono text-[10px] outline-none tracking-widest"
+                      className="w-full py-2.5 px-3 rounded-lg bg-black/60 border border-white/15 focus:border-cyan-400/60 text-cyan-200 font-mono text-base sm:text-xs outline-none"
                     />
                     <button
                       type="button"
                       onClick={handleRequestCode}
                       disabled={isRecovering}
-                      className="w-full py-2.5 bg-cyan-950 border border-cyan-500/40 text-cyan-400 font-orbitron font-bold text-[9px] tracking-widest uppercase hover:bg-cyan-500/10 transition-all disabled:opacity-40"
+                      style={{ touchAction: "manipulation" }}
+                      className="w-full py-3 rounded-lg bg-cyan-950 border border-cyan-500/40 text-cyan-300 font-orbitron font-bold text-xs tracking-wider uppercase hover:bg-cyan-500/15 transition-all disabled:opacity-40 cursor-pointer"
                     >
-                      {isRecovering ? "DISPATCHING CODE..." : "SEND RESTORATION CODE"}
+                      {isRecovering ? "Sending Code..." : "Send Verification Code"}
                     </button>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <p className="font-mono text-[8px] leading-relaxed uppercase text-amber-500/80">
-                      Restoration protocol initialized. Enter the 6-digit code sent to {recoveryEmail}.
+                    <p className="text-xs leading-relaxed text-amber-300/90">
+                      Enter the 6-digit verification code sent to <strong>{recoveryEmail}</strong>.
                     </p>
                     <input
                       type="text"
-                      placeholder="ENTER 6-DIGIT CODE..."
+                      placeholder="6-digit code"
                       maxLength={6}
                       value={recoveryCode}
                       onChange={(e) => setRecoveryCode(e.target.value)}
-                      className="w-full py-2.5 px-3 bg-black/60 border border-white/10 text-cyan-400 font-mono text-[10px] text-center outline-none tracking-widest"
+                      className="w-full py-2.5 px-3 rounded-lg bg-black/60 border border-white/15 focus:border-cyan-400/60 text-cyan-200 font-mono text-base sm:text-sm text-center outline-none tracking-widest"
                     />
                     <div className="grid grid-cols-2 gap-3">
                       <button
                         type="button"
                         onClick={() => { playSciFiClick(); setRecoveryStep(0); setRecoveryCode(""); }}
-                        className="py-2.5 border border-white/10 font-orbitron text-[9px] tracking-widest text-white/40 uppercase hover:bg-white/5"
+                        style={{ touchAction: "manipulation" }}
+                        className="py-2.5 rounded-lg border border-white/15 font-orbitron text-xs tracking-wider text-white/70 uppercase hover:bg-white/5 cursor-pointer"
                       >
                         Back
                       </button>
@@ -256,32 +261,34 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                         type="button"
                         onClick={handleVerifyCode}
                         disabled={isRecovering}
-                        className="py-2.5 bg-cyan-600 border border-cyan-400 text-white font-orbitron font-bold text-[9px] tracking-widest uppercase hover:bg-cyan-500 transition-all disabled:opacity-40"
+                        style={{ touchAction: "manipulation" }}
+                        className="py-2.5 rounded-lg bg-cyan-600 border border-cyan-400 text-white font-orbitron font-bold text-xs tracking-wider uppercase hover:bg-cyan-500 transition-all disabled:opacity-40 cursor-pointer"
                       >
-                        {isRecovering ? "VERIFYING..." : "RESTORE BALANCE"}
+                        {isRecovering ? "Verifying..." : "Restore Credits"}
                       </button>
                     </div>
                   </div>
                 )}
-                
+
                 {recoveryError && (
-                  <div className="mt-3 p-2 bg-red-500/10 border border-red-500/20 text-center">
-                    <p className="font-mono text-[8px] text-red-400 uppercase font-bold">{recoveryError}</p>
+                  <div className="mt-3 p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-center">
+                    <p className="font-mono text-xs text-red-300 font-semibold">{recoveryError}</p>
                   </div>
                 )}
                 {recoverySuccess && (
-                  <div className="mt-3 p-2 bg-green-500/10 border border-green-500/20 text-center">
-                    <p className="font-mono text-[8px] text-green-400 uppercase font-bold">Protocol successful. Coins merged!</p>
+                  <div className="mt-3 p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-center">
+                    <p className="font-mono text-xs text-emerald-300 font-semibold">Credits restored to your account!</p>
                   </div>
                 )}
               </div>
 
-              <div className="flex flex-col gap-3 mt-8">
+              <div className="flex flex-col gap-2.5 pt-2">
                 <button
                   onClick={() => { playSciFiClick(); onClose(); }}
-                  className="w-full py-3 border border-white/10 hover:border-cyan-500/40 font-orbitron text-[10px] tracking-[0.4em] uppercase hover:bg-cyan-500/5 transition-all text-white/60 hover:text-white"
+                  style={{ touchAction: "manipulation" }}
+                  className="w-full py-3 rounded-lg border border-white/15 hover:border-cyan-400/40 font-orbitron font-bold text-xs tracking-[0.2em] uppercase hover:bg-cyan-500/10 transition-all text-white/80 hover:text-white cursor-pointer"
                 >
-                  Close Terminal
+                  Close
                 </button>
                 <button
                   onClick={() => {
@@ -290,9 +297,10 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     onClose();
                     window.location.reload();
                   }}
-                  className="w-full py-3 border border-red-500/20 hover:border-red-500/50 font-orbitron text-[10px] tracking-[0.4em] uppercase hover:bg-red-500/10 transition-all text-red-500/60 hover:text-red-500"
+                  style={{ touchAction: "manipulation" }}
+                  className="w-full py-3 rounded-lg border border-red-500/25 hover:border-red-500/50 font-orbitron font-bold text-xs tracking-[0.2em] uppercase hover:bg-red-500/10 transition-all text-red-400 hover:text-red-300 cursor-pointer"
                 >
-                  Reset Guest Profile
+                  {isGuest ? "Reset Guest Profile" : "Sign Out"}
                 </button>
               </div>
             </div>

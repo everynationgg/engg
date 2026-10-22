@@ -736,8 +736,8 @@ export default function RoleConfigPage() {
             </div>
           ) : (
             <div className="text-right">
-              <div className="text-[10px] tracking-[0.4em] uppercase mb-1 opacity-40 font-bold">Unauthenticated_Session</div>
-              <div className="font-orbitron font-black text-sm tracking-[0.3em] text-white/60">GUEST_ACCESS</div>
+              <div className="text-[10px] tracking-[0.25em] uppercase mb-1 opacity-50 font-bold">Guest Session</div>
+              <div className="font-orbitron font-black text-sm tracking-[0.2em] text-white/70">Guest Player</div>
             </div>
           )}
         </div>
@@ -870,7 +870,7 @@ export default function RoleConfigPage() {
           )}
 
           <div className="flex-1 overflow-y-auto px-4 py-3">
-            <div className="text-[10px] tracking-widest uppercase mb-3 px-1" style={{ color: "hsl(210 30% 45%)" }}>Personnel_List</div>
+            <div className="text-[10px] tracking-widest uppercase mb-3 px-1 font-bold" style={{ color: "hsl(210 30% 55%)" }}>Players</div>
             <div className="space-y-1">
               {players.map((player) => (
                 <div
@@ -922,7 +922,7 @@ export default function RoleConfigPage() {
 
         {/* CENTER PANEL */}
         <div
-          className="flex-1 overflow-y-auto px-4 sm:px-6 pb-8 h-full custom-scrollbar"
+          className="flex-1 overflow-y-auto px-4 sm:px-6 pb-24 lg:pb-8 h-full custom-scrollbar"
           style={{
             paddingTop: "max(16px, calc(env(safe-area-inset-top, 36px) + 12px))",
           }}
@@ -1253,7 +1253,7 @@ export default function RoleConfigPage() {
                           </div>
                         ) : (
                           <select
-                            className="px-2 py-1 rounded border bg-black text-white"
+                            className="px-2 py-1.5 rounded border bg-black text-white text-base sm:text-xs"
                             value={customRoles[player.id] || ""}
                             onChange={e => setCustomRoles(r => ({ ...r, [player.id]: e.target.value }))}
                           >
@@ -1272,7 +1272,7 @@ export default function RoleConfigPage() {
                         <div key={idx} className="flex items-center gap-3">
                           <span className="min-w-[80px] font-orbitron text-xs" style={{ color: "hsl(210 80% 70%)" }}>{`Card ${idx + 1}`}</span>
                           <select
-                            className="px-2 py-1 rounded border bg-black text-white"
+                            className="px-2 py-1.5 rounded border bg-black text-white text-base sm:text-xs"
                             value={customDeck[idx]}
                             onChange={e => handleCustomDeckChange(idx, e.target.value)}
                           >
@@ -1433,11 +1433,11 @@ export default function RoleConfigPage() {
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: "100%", opacity: 0 }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="fixed lg:relative inset-x-0 bottom-0 z-50 lg:z-0 flex w-full lg:w-[clamp(240px,30%,400px)] shrink-0 flex-col border-t lg:border-t-0 lg:border-l lg:h-full lg:overflow-hidden shadow-[0_-20px_40px_rgba(0,0,0,0.5)] lg:shadow-none backdrop-blur-xl lg:backdrop-blur-0"
+                data-no-swipe="true"
+                className="fixed lg:relative inset-x-0 bottom-0 z-50 lg:z-0 flex w-full lg:w-[clamp(240px,30%,400px)] shrink-0 flex-col border-t lg:border-t-0 lg:border-l max-h-[82dvh] lg:max-h-none lg:h-full overflow-y-auto lg:overflow-hidden rounded-t-2xl lg:rounded-none shadow-[0_-20px_40px_rgba(0,0,0,0.5)] lg:shadow-none backdrop-blur-xl lg:backdrop-blur-0"
                 style={{
-                  background: "hsl(220 30% 6% / 0.95)",
-                  borderColor: "hsl(210 30% 14%)",
-                  minHeight: "70vh",
+                  background: "hsl(220 30% 6% / 0.96)",
+                  borderColor: "hsl(210 30% 18%)",
                   paddingBottom: "max(16px, env(safe-area-inset-bottom, 16px))",
                 }}
               >
@@ -1624,49 +1624,51 @@ function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRe
           {role.name}
         </div>
         {showControls && !isLocked && (
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center justify-center gap-1.5 sm:gap-2">
             <button
               onClick={(e) => onRemove(role.id, e)}
               data-testid={`button-remove-${role.id}`}
-              className="w-6 h-6 rounded flex items-center justify-center font-bold text-xs transition-all duration-150 cursor-pointer"
+              className="w-8 h-8 sm:w-7 sm:h-7 rounded flex items-center justify-center font-bold text-sm sm:text-xs transition-all duration-150 active:scale-90 cursor-pointer"
               style={{
                 background: "hsl(220 28% 14%)",
-                border: "1px solid hsl(210 30% 20%)",
-                color: "hsl(210 30% 55%)",
+                border: "1px solid hsl(210 30% 24%)",
+                color: "hsl(210 30% 65%)",
+                touchAction: "manipulation",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = "hsl(0 75% 55%)";
                 e.currentTarget.style.color = "hsl(0 75% 70%)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "hsl(210 30% 20%)";
-                e.currentTarget.style.color = "hsl(210 30% 55%)";
+                e.currentTarget.style.borderColor = "hsl(210 30% 24%)";
+                e.currentTarget.style.color = "hsl(210 30% 65%)";
               }}
             >
               −
             </button>
             <span
-              className="font-orbitron text-xs w-4 text-center"
-              style={{ color: count > 0 ? accentColorLight : "hsl(210 30% 35%)" }}
+              className="font-orbitron font-bold text-xs w-5 text-center"
+              style={{ color: count > 0 ? accentColorLight : "hsl(210 30% 45%)" }}
             >
               {count}
             </span>
             <button
               onClick={(e) => onAdd(role.id, e)}
               data-testid={`button-add-${role.id}`}
-              className="w-6 h-6 rounded flex items-center justify-center font-bold text-xs transition-all duration-150 cursor-pointer"
+              className="w-8 h-8 sm:w-7 sm:h-7 rounded flex items-center justify-center font-bold text-sm sm:text-xs transition-all duration-150 active:scale-90 cursor-pointer"
               style={{
                 background: "hsl(220 28% 14%)",
-                border: "1px solid hsl(210 30% 20%)",
-                color: "hsl(210 30% 55%)",
+                border: "1px solid hsl(210 30% 24%)",
+                color: "hsl(210 30% 65%)",
+                touchAction: "manipulation",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = accentColor;
                 e.currentTarget.style.color = accentColorLight;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "hsl(210 30% 20%)";
-                e.currentTarget.style.color = "hsl(210 30% 55%)";
+                e.currentTarget.style.borderColor = "hsl(210 30% 24%)";
+                e.currentTarget.style.color = "hsl(210 30% 65%)";
               }}
             >
               +
@@ -1693,7 +1695,7 @@ function RoleCard({ role, count, isSelected, showControls, onSelect, onAdd, onRe
           }}
         >
           <div className="font-orbitron text-[10px] tracking-[0.2em] uppercase mb-1.5 font-black" style={{ color: accentColorLight }}>
-            Tactical_Ability
+            Ability
           </div>
           <p className="text-[11px] leading-relaxed font-medium" style={{ color: "hsl(190 60% 85%)", fontFamily: "'Exo 2', sans-serif" }}>
             {role.ability}
@@ -1724,12 +1726,14 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
   if (!role) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-black/20">
-        <div className="w-16 h-16 rounded-full border border-white/5 flex items-center justify-center mb-6 opacity-20">
-          <div className="w-8 h-8 border border-cyan-500/20 rounded-full animate-pulse" />
+        <div className="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center mb-5 opacity-40">
+          <div className="w-8 h-8 border border-cyan-500/40 rounded-full animate-pulse" />
         </div>
-        <h3 className="font-orbitron text-[10px] tracking-[0.4em] uppercase text-white/30 mb-2">Neural_Link_Standby</h3>
-        <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-white/10 max-w-[200px]">
-          Select a role protocol from the grid to establish identity uplink and view tactical parameters.
+        <h3 className="font-orbitron font-bold text-xs tracking-[0.25em] uppercase text-white/60 mb-2">
+          Select a Role
+        </h3>
+        <p className="text-xs leading-relaxed text-white/45 max-w-[220px]">
+          Click any role card to preview its team, win condition, and ability.
         </p>
       </div>
     );
@@ -1831,46 +1835,46 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
 
           {isLocked && (
             <div className="mt-4 pt-6 border-t border-white/10 flex flex-col items-center">
-              <div className="flex items-center gap-2 mb-4 opacity-50">
-                <FaLock className="text-[10px]" />
-                <div className="text-[10px] tracking-[0.3em] uppercase font-mono">Authorization Required</div>
+              <div className="flex items-center gap-2 mb-4 text-white/60">
+                <FaLock className="text-xs" />
+                <div className="text-xs tracking-[0.2em] uppercase font-mono">Premium Role Locked</div>
               </div>
 
               {!isLoggedIn ? (
                 <button
                   onClick={onShowProfile}
-                  className="w-full py-4 rounded-md border border-cyan-500/30 bg-cyan-500/5 hover:bg-cyan-500/10 hover:border-cyan-400 transition-all flex flex-col items-center gap-1 group"
+                  className="w-full py-4 rounded-lg border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 hover:border-cyan-400 transition-all flex flex-col items-center gap-1 group cursor-pointer"
                 >
-                  <span className="font-orbitron font-bold text-xs tracking-[0.2em] text-cyan-400">INITIALIZE IDENTITY HANDSHAKE</span>
-                  <span className="font-mono text-[8px] text-cyan-400/40 uppercase tracking-widest group-hover:text-cyan-400/60 transition-colors">Login to authorize premium access</span>
+                  <span className="font-orbitron font-bold text-xs tracking-[0.18em] text-cyan-300">SIGN IN TO UNLOCK</span>
+                  <span className="font-mono text-[10px] text-cyan-200/60">Sign in to unlock premium roles</span>
                 </button>
               ) : (
                 <div className="w-full flex flex-col gap-3">
-                  <div className="flex justify-between items-center px-4 py-3 bg-white/5 border border-white/10 rounded-md">
-                    <span className="font-mono text-[9px] uppercase tracking-widest text-white/30">Protocol Fee</span>
-                    <span className="font-orbitron text-sm font-bold text-cyan-400">{ROLE_PRICES[role.id] || 0} CC</span>
+                  <div className="flex justify-between items-center px-4 py-3 bg-white/5 border border-white/10 rounded-lg">
+                    <span className="font-mono text-xs uppercase tracking-wider text-white/60">Unlock Cost</span>
+                    <span className="font-orbitron text-sm font-bold text-cyan-300">{ROLE_PRICES[role.id] || 0} CC</span>
                   </div>
 
                   {userCredits >= (ROLE_PRICES[role.id] || 0) ? (
                     <button
                       onClick={() => onUnlock(role.id)}
                       disabled={isUnlocking}
-                      className="w-full py-4 rounded-md bg-cyan-600 hover:bg-cyan-500 text-white transition-all flex flex-col items-center gap-1 shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+                      className="w-full py-4 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white transition-all flex flex-col items-center gap-1 shadow-[0_0_20px_rgba(6,182,212,0.3)] cursor-pointer"
                     >
-                      <span className="font-orbitron font-bold text-xs tracking-[0.2em]">{isUnlocking ? "AUTHORIZING..." : "AUTHORIZE UNLOCK"}</span>
-                      <span className="font-mono text-[8px] text-white/50 uppercase tracking-widest">Deduct credits from secure balance</span>
+                      <span className="font-orbitron font-bold text-xs tracking-[0.18em]">{isUnlocking ? "UNLOCKING..." : "UNLOCK FOR THIS MATCH"}</span>
+                      <span className="font-mono text-[10px] text-white/70">Uses {ROLE_PRICES[role.id] || 0} credits from your balance</span>
                     </button>
                   ) : (
                     <button
                       onClick={onBuyCredits}
-                      className="w-full py-4 rounded-md border border-red-500/30 bg-red-500/5 hover:bg-red-500/10 hover:border-red-400 transition-all flex flex-col items-center gap-1 group"
+                      className="w-full py-4 rounded-lg border border-red-500/40 bg-red-500/10 hover:bg-red-500/15 hover:border-red-400 transition-all flex flex-col items-center gap-1 group cursor-pointer"
                     >
-                      <span className="font-orbitron font-bold text-xs tracking-[0.2em] text-red-400">INSUFFICIENT CREDITS</span>
-                      <span className="font-mono text-[8px] text-red-400/40 uppercase tracking-widest group-hover:text-red-400/60 transition-colors">Access the Credit Exchange to continue</span>
+                      <span className="font-orbitron font-bold text-xs tracking-[0.18em] text-red-300">NOT ENOUGH CREDITS</span>
+                      <span className="font-mono text-[10px] text-red-200/70">Open Credit Store to get credits</span>
                     </button>
                   )}
-                  <div className="text-center font-mono text-[8px] text-amber-500/80 uppercase tracking-wider leading-normal px-2 mt-1">
-                    Notice: Unlocking this role is temporary and will only apply to the current game session.
+                  <div className="text-center font-mono text-[10px] text-amber-400/85 leading-normal px-2 mt-1">
+                    Note: Unlocking a premium role applies to the current match session.
                   </div>
                 </div>
               )}

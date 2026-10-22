@@ -185,43 +185,26 @@ export default function Hub() {
   const games = gameCatalog;
 
   return (
-    <div className="h-[100svh] pt-[76px] lg:pt-[88px] relative flex flex-col items-center overflow-hidden bg-[#020408] selection:bg-cyan-500/30 w-full select-none">
+    <div className="h-[100dvh] pt-[64px] sm:pt-[76px] lg:pt-[88px] relative flex flex-col items-center overflow-hidden bg-[#020408] selection:bg-cyan-500/30 w-full select-none">
       {/* Main Content Area */}
-      <main className="relative z-20 w-full max-w-[1400px] px-4 sm:px-6 md:px-12 xl:px-16 flex-1 flex flex-col items-center min-h-0 overflow-hidden pb-4">
+      <main className="relative z-20 w-full max-w-[1400px] px-3 sm:px-6 md:px-12 xl:px-16 flex-1 flex flex-col items-center min-h-0 overflow-hidden pb-3 sm:pb-4">
         <div className="flex-1 flex flex-col w-full min-h-0 overflow-hidden">
-          {/* Header Overlay */}
-          <header className="w-full flex flex-col items-center gap-1 sm:gap-1.5 mb-2 sm:mb-4 text-center px-4 md:px-8 shrink-0">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-[1px] bg-cyan-500/40" />
-              <span className="font-mono text-[9px] uppercase tracking-[0.45em] text-cyan-300/75">
-                Every Nation Games
-              </span>
-              <div className="w-6 h-[1px] bg-cyan-500/40" />
-            </div>
-            <h1 className="font-orbitron font-black text-lg sm:text-2xl lg:text-3xl tracking-[0.25em] uppercase text-white leading-tight">
-              Game <span className="text-cyan-400">Hub</span>
-            </h1>
-            <p className="max-w-xl text-[11px] tracking-wide text-white/70 sm:text-xs">
-              Select a game below to jump into a live match or preview upcoming studio releases.
-            </p>
-          </header>
-
           {/* Daily Login Reward */}
           {isLoggedIn && !claimed && (
-            <div className="relative z-30 shrink-0 mb-3 sm:mb-4 w-full">
+            <div className="relative z-30 shrink-0 mb-2 sm:mb-4 w-full max-w-2xl mx-auto">
               <TacticalSlate>
-                <div className="p-3 sm:p-4 flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-6">
-                  <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 text-center sm:text-left">
-                    <div className="w-10 h-10 border border-cyan-500/20 flex items-center justify-center relative shrink-0 rounded-lg">
+                <div className="p-2.5 sm:p-4 flex flex-row items-center justify-between gap-3 sm:gap-6">
+                  <div className="flex items-center gap-2.5 sm:gap-4 text-left min-w-0">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 border border-cyan-500/20 flex items-center justify-center relative shrink-0 rounded-lg">
                       <div className="absolute inset-0 bg-cyan-400/5" />
-                      <FaGift className="text-cyan-400 text-lg" />
+                      <FaGift className="text-cyan-400 text-sm sm:text-lg" />
                     </div>
-                    <div className="flex flex-col gap-0.5">
-                      <h3 className="font-orbitron text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-white">
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                      <h3 className="font-orbitron text-[11px] sm:text-sm font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-white truncate">
                         Daily Login Reward
                       </h3>
-                      <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/50">
-                        {claimed ? "Claimed Today — Come back tomorrow" : "+50 Credits & +25 XP available"}
+                      <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.14em] sm:tracking-[0.2em] text-white/55 truncate">
+                        +50 Credits &amp; +25 XP
                       </span>
                     </div>
                   </div>
@@ -230,9 +213,9 @@ export default function Hub() {
                     variant={claimed ? "ghost" : "primary"}
                     disabled={claimed || claiming}
                     onClick={handleClaim}
-                    className="min-w-[180px] h-9 sm:h-10 text-xs"
+                    className="shrink-0 px-3 sm:px-5 h-8 sm:h-10 text-[10px] sm:text-xs"
                   >
-                    {claiming ? "Claiming..." : claimed ? "Claimed Today" : "Claim +50 Credits"}
+                    {claiming ? "Claiming..." : "Claim +50"}
                   </SciFiButton>
                 </div>
               </TacticalSlate>

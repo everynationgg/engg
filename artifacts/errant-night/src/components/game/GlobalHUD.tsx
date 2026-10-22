@@ -98,34 +98,6 @@ export default function GlobalHUD({ isWarping = false }: { isWarping?: boolean }
         )}
       </AnimatePresence>
 
-      {/* Corner HUD Elements */}
-      <div className="absolute inset-0 flex flex-col justify-between p-4 mix-blend-overlay opacity-30">
-        <div className="flex justify-between items-start font-mono text-[10px] tracking-tighter text-cyan-400">
-          <div className="flex flex-col">
-            <span>SEC_ID: PX-928</span>
-            <span className="animate-pulse">STATUS: LINK_ACTIVE</span>
-          </div>
-          <div className="flex flex-col text-right">
-            <span>COORD_X: {(mousePos.x * 100).toFixed(2)}</span>
-            <span>COORD_Y: {(mousePos.y * 100).toFixed(2)}</span>
-          </div>
-        </div>
-
-        <div className="flex justify-between items-end font-mono text-[10px] tracking-tighter text-cyan-400">
-          <div className="flex flex-col">
-            <span>ERRANT_NIGHT_OS v2.4.2</span>
-            <div className="flex gap-1 mt-1">
-              {[1, 2, 3, 4, 5].map(i => (
-                <div key={i} className="w-1 h-1 bg-cyan-500 animate-pulse" style={{ animationDelay: `${i * 0.2}s` }} />
-              ))}
-            </div>
-          </div>
-          <div className="text-right">
-            <span>AUTH_HASH: 0x82A..F9</span>
-          </div>
-        </div>
-      </div>
-
       {/* Vignette Overlay */}
       <div className="absolute inset-0 shadow-[inset_0_0_150px_rgba(0,0,0,0.8)] pointer-events-none" />
       

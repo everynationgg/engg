@@ -337,10 +337,10 @@ export default function OrbitPage() {
   if (isSpectator) {
     const completedCount = sessionPlayers.filter(p => !p.isSpectator && p.hasActed).length;
     return (
-      <div className="relative min-h-screen w-full flex flex-col ix-page-enter" style={{ background: "hsl(220 30% 4%)", color: "hsl(190 80% 90%)", overflow: "hidden" }}>
+      <div className="relative min-h-[100dvh] w-full flex flex-col ix-page-enter" style={{ background: "hsl(220 30% 4%)", color: "hsl(190 80% 90%)", overflow: "hidden" }}>
 
-        {/* Tactical HUD — Sidebars */}
-        <div className="absolute inset-0 pointer-events-none flex items-center justify-between px-2 sm:px-6 z-20">
+        {/* Tactical HUD — Sidebars (Desktop only to prevent mobile overlap) */}
+        <div className="hidden lg:flex absolute inset-0 pointer-events-none items-center justify-between px-6 z-20">
           {/* Left Sidebar Tabs */}
           <div className="flex flex-col gap-4 pointer-events-auto">
             <HudSidebarTab label="PLAYERS" active />
@@ -374,7 +374,7 @@ export default function OrbitPage() {
 
             {/* Tactical Label Overlay */}
             <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded backdrop-blur-md">
-              <div className="font-orbitron text-[9px] tracking-[0.4em] uppercase text-cyan-400 break-all">Spectator_Link_Active</div>
+              <div className="font-orbitron text-[10px] tracking-[0.25em] uppercase text-cyan-300">Spectating</div>
             </div>
           </div>
 
@@ -385,25 +385,24 @@ export default function OrbitPage() {
             <div className="h-px w-24 mx-auto mb-6" style={{ background: "linear-gradient(90deg, transparent, hsl(185 100% 50%), transparent)" }} />
 
             <div className="mb-8">
-              <div className="font-orbitron text-[10px] tracking-[0.3em] uppercase mb-3" style={{ color: "hsl(210 30% 50%)" }}>Synchronization Progress</div>
-              <div className="w-full max-w-xs mx-auto h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
+              <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-3" style={{ color: "hsl(210 30% 60%)" }}>Orbit Phase Progress</div>
+              <div className="w-full max-w-xs mx-auto h-1.5 bg-white/10 rounded-full overflow-hidden border border-white/10">
                 <div
-                  className="h-full bg-cyan-500 shadow-[0_0_10px_hsl(185,100%,50%)] transition-all duration-700"
+                  className="h-full bg-cyan-400 shadow-[0_0_10px_hsl(185,100%,50%)] transition-all duration-700"
                   style={{ width: `${(completedCount / Math.max(1, sessionPlayers.filter(p => !p.isSpectator).length)) * 100}%` }}
                 />
               </div>
-              <div className="mt-2 font-mono text-[9px] text-cyan-500/60 uppercase">
+              <div className="mt-2 font-mono text-xs text-cyan-300/80 uppercase">
                 {sessionPlayers.length > 0 ? (
-                  <span>{completedCount} / {sessionPlayers.filter(p => !p.isSpectator).length} Neural Links Established</span>
+                  <span>{completedCount} / {sessionPlayers.filter(p => !p.isSpectator).length} Players Ready</span>
                 ) : (
-                  <span className="animate-pulse">Syncing Neural Grid...</span>
+                  <span className="animate-pulse">Waiting for players...</span>
                 )}
               </div>
             </div>
 
-            <p className="text-xs text-white/40 leading-relaxed font-light tracking-wide italic" style={{ fontFamily: "'Exo 2', sans-serif" }}>
-              "Neural phase sync complete. Observation deck active. <br className="hidden sm:block" />
-              Ghosting active mission Errant Night."
+            <p className="text-xs text-white/60 leading-relaxed tracking-wide italic" style={{ fontFamily: "'Exo 2', sans-serif" }}>
+              Players are secretly using their Orbit abilities before discussion begins.
             </p>
           </div>
         </div>
@@ -448,7 +447,7 @@ export default function OrbitPage() {
         ]
       } : { x: 0, filter: "none" }}
       transition={{ duration: 0.4 }}
-      className="min-h-screen w-full flex flex-col relative"
+      className="min-h-[100dvh] w-full flex flex-col relative"
       style={{
         backgroundImage: `linear-gradient(${bgOverlay}, ${bgOverlay}), url('${import.meta.env.BASE_URL}moon-phases.webp')`,
         backgroundSize: "cover",
@@ -458,8 +457,8 @@ export default function OrbitPage() {
       }}
     >
       {/* Main content */}
-      <div className="flex-1 flex flex-col px-6 py-10 gap-8 overflow-y-auto pb-32 lg:pb-8 max-w-2xl mx-auto w-full">
-        {/* NEURAL LINK STABILIZATION OVERLAY */}
+      <div className="flex-1 flex flex-col px-4 sm:px-6 py-6 sm:py-10 gap-6 sm:gap-8 overflow-y-auto pb-32 lg:pb-8 max-w-2xl mx-auto w-full">
+        {/* PHASE READY OVERLAY */}
         <AnimatePresence>
           {!isPhaseReady && pageState !== "waiting" && pageState !== "resolving" && pageState !== "done" && (
             <motion.div
@@ -471,9 +470,9 @@ export default function OrbitPage() {
               <motion.div
                 animate={{ opacity: [0.4, 1, 0.4] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                className="text-cyan-400 font-mono tracking-[0.2em] text-lg"
+                className="text-cyan-400 font-orbitron font-bold tracking-[0.2em] text-base sm:text-lg"
               >
-                NEURAL LINK STABILIZING...
+                STARTING ORBIT PHASE...
               </motion.div>
               <div className="w-48 h-1 bg-cyan-950 mt-4 overflow-hidden rounded-full">
                 <motion.div
@@ -487,20 +486,20 @@ export default function OrbitPage() {
         </AnimatePresence>
 
         {/* Role header */}
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-6 bg-white/[0.02] border border-white/5 rounded-sm relative">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 p-5 sm:p-6 bg-white/[0.03] border border-white/10 rounded-xl relative">
           <img
             src={role.image}
             alt={role.name}
-            className="w-24 h-24 rounded-lg object-cover shrink-0 shadow-[0_0_20px_rgba(0,0,0,0.5)]"
+            className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg object-cover shrink-0 shadow-[0_0_20px_rgba(0,0,0,0.5)]"
             loading="lazy"
             style={{ border: `2px solid ${accentColor.replace(")", " / 0.6)")}` }}
           />
           <div className="text-center sm:text-left flex-1 min-w-0">
-            <div className="text-[10px] tracking-[0.4em] uppercase mb-2 opacity-40 font-bold break-words">
-              AUTHORIZED_OPERATIVE_ROLE
+            <div className="text-[10px] tracking-[0.3em] uppercase mb-1.5 opacity-60 font-bold">
+              YOUR ROLE
             </div>
             <div
-              className="font-orbitron font-black text-3xl sm:text-4xl tracking-widest uppercase italic"
+              className="font-orbitron font-black text-2xl sm:text-4xl tracking-widest uppercase italic"
               style={{ color: accentLight, textShadow: `0 0 15px ${accentGlow}` }}
             >
               {role.name}
@@ -508,8 +507,8 @@ export default function OrbitPage() {
           </div>
 
           {/* Timer - Prominent for coordination awareness */}
-          <div className="absolute top-4 right-4 text-right">
-            <div className="text-[10px] tracking-[0.3em] uppercase mb-1 opacity-40">Sync_Lock</div>
+          <div className="sm:absolute sm:top-4 sm:right-4 text-center sm:text-right">
+            <div className="text-[10px] tracking-[0.25em] uppercase mb-0.5 opacity-60">TIME LEFT</div>
             <div className="font-orbitron font-bold text-xl tracking-widest" style={{ color: secondsLeft < 15 ? "hsl(0 75% 60%)" : accentLight }}>
               {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, '0')}
             </div>
@@ -518,13 +517,13 @@ export default function OrbitPage() {
 
         {/* Ability text */}
         <div
-          className="rounded-sm p-6"
+          className="rounded-xl p-5 sm:p-6"
           style={{ background: accentDim, border: `1px solid ${accentColor.replace(")", " / 0.3)")}` }}
         >
-          <div className="font-orbitron text-[11px] tracking-[0.3em] uppercase mb-4 font-black break-all" style={{ color: accentLight }}>
-            PRIMARY_Neural_Link_Protocol
+          <div className="font-orbitron text-xs tracking-[0.25em] uppercase mb-3 font-black" style={{ color: accentLight }}>
+            ROLE ABILITY
           </div>
-          <p className="text-base leading-relaxed" style={{ color: "hsl(190 60% 85%)", fontFamily: "'Exo 2', sans-serif", whiteSpace: "pre-line" }}>
+          <p className="text-sm sm:text-base leading-relaxed" style={{ color: "hsl(190 60% 88%)", fontFamily: "'Exo 2', sans-serif", whiteSpace: "pre-line" }}>
             {role.ability}
           </p>
         </div>
@@ -618,7 +617,7 @@ export default function OrbitPage() {
         {pageState === "done" && (
           <div className="flex flex-col gap-4 text-center">
              <p className="font-orbitron text-xs tracking-[0.2em] animate-pulse" style={{ color: accentColor }}>
-               SYNCHRONIZING NEURAL LINKS...
+               ADVANCING TO DISCUSSION...
              </p>
           </div>
         )}

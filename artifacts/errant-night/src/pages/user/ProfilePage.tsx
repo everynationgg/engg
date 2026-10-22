@@ -9,7 +9,7 @@ import LandingNavbar from "@/components/system/LandingNavbar";
 
 export default function ProfilePage() {
   const [, setLocation] = useLocation();
-  const { isLoggedIn, username, userId, logout, credits, refreshUser } = useAuth();
+  const { isLoggedIn, isGuest, username, userId, logout, credits, refreshUser } = useAuth();
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showShopModal, setShowShopModal] = useState(false);
 
@@ -57,7 +57,7 @@ export default function ProfilePage() {
         setRecoveryError(data.error || "Verification request failed");
       }
     } catch (err) {
-      setRecoveryError("Handshake failure");
+      setRecoveryError("Connection failed. Please try again.");
     } finally {
       setIsRecovering(false);
     }
@@ -119,61 +119,59 @@ export default function ProfilePage() {
       <div className="h-[var(--nav-height)] shrink-0" />
 
       {/* --- ATTENTION-DRIVEN HERO HUB --- */}
-      <div className="max-w-xl mx-auto w-full px-6 pt-16 pb-24 relative z-10 flex flex-col items-center text-center">
+      <div className="max-w-xl mx-auto w-full px-4 sm:px-6 pt-12 sm:pt-16 pb-24 relative z-10 flex flex-col items-center text-center">
         
         {/* 1. Identity Header */}
         <div className="mb-8">
            <div className="w-1.5 h-6 bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)] mx-auto mb-4" />
-           <h2 className="font-orbitron font-black text-xl tracking-[0.3em] uppercase opacity-40 mb-2">
-             Profile Terminal
+           <h2 className="font-orbitron font-black text-xl tracking-[0.25em] uppercase text-white/80 mb-2">
+             Profile
            </h2>
         </div>
 
         {/* 2. Identity card */}
-        <div className="w-full p-8 bg-white/[0.02] border border-white/10 rounded-sm mb-6 text-left relative">
-          <div className="absolute top-0 right-0 p-3 font-mono text-[8px] opacity-25">OPERATOR_LOG</div>
-          
-          <div className="flex items-center gap-6">
-            <div className="w-16 h-16 border border-white/10 bg-white/[0.02] p-1 overflow-hidden shrink-0">
+        <div className="w-full p-6 sm:p-8 bg-white/[0.02] border border-white/10 rounded-xl mb-6 text-left relative space-y-5">
+          <div className="flex items-center gap-4 sm:gap-6">
+            <div className="w-16 h-16 border border-white/10 bg-white/[0.02] p-1 overflow-hidden shrink-0 rounded-lg">
                <img 
                 src={`https://api.dicebear.com/7.x/bottts/svg?seed=${username ?? 'operator'}&backgroundColor=transparent`} 
-                alt={username ?? 'Operator'}
-                className="w-full h-full object-cover opacity-60"
+                alt={username ?? 'Player'}
+                className="w-full h-full object-cover opacity-80"
                />
             </div>
             <div className="min-w-0">
-               <h1 className="font-orbitron font-bold text-2xl tracking-[0.1em] uppercase text-white/90 truncate">{username}</h1>
-               <div className="inline-flex items-center gap-2 mt-1 px-2 py-0.5 bg-cyan-500/10 border border-cyan-500/20 rounded-sm">
-                 <div className="w-1 h-1 rounded-full bg-cyan-400 animate-pulse" />
-                 <span className="font-mono text-[8px] tracking-widest uppercase text-cyan-400/80">
-                   GUEST SESSION
+               <h1 className="font-orbitron font-bold text-xl sm:text-2xl tracking-[0.1em] uppercase text-white truncate">{username}</h1>
+               <div className="inline-flex items-center gap-2 mt-1.5 px-2.5 py-0.5 bg-cyan-500/10 border border-cyan-500/25 rounded">
+                 <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                 <span className="font-mono text-[10px] tracking-wider uppercase text-cyan-300">
+                   {isGuest ? "Guest Session" : "Verified Account"}
                  </span>
                </div>
             </div>
           </div>
 
-          <div className="h-px bg-white/5" />
+          <div className="h-px bg-white/10" />
 
           <div className="space-y-4">
             <div>
-              <p className="font-mono text-[8px] tracking-widest uppercase opacity-30 mb-1">Guest UUID</p>
-              <p className="font-mono text-[11px] text-white/70 break-all select-all leading-relaxed">
+              <p className="font-mono text-[10px] tracking-wider uppercase text-white/50 mb-1">Player ID</p>
+              <p className="font-mono text-xs text-white/80 break-all select-all leading-relaxed">
                 {userId}
               </p>
             </div>
 
             <div>
-              <p className="font-mono text-[8px] tracking-widest uppercase opacity-30 mb-1">Balance</p>
-              <div className="flex items-center justify-between gap-3 px-4 py-3 bg-white/[0.02] border border-white/5">
+              <p className="font-mono text-[10px] tracking-wider uppercase text-white/50 mb-1">Credit Balance</p>
+              <div className="flex items-center justify-between gap-3 px-4 py-3 bg-white/[0.03] border border-white/10 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <FaCoins className="text-cyan-500/40 text-xs" />
-                  <span className="font-orbitron text-xl font-black text-white/90 tracking-tighter">
-                    {credits?.toLocaleString()} <span className="text-cyan-500/40 font-bold text-sm">CC</span>
+                  <FaCoins className="text-cyan-400 text-sm" />
+                  <span className="font-orbitron text-xl font-black text-white tracking-tight">
+                    {credits?.toLocaleString()} <span className="text-cyan-400/70 font-bold text-sm">CC</span>
                   </span>
                 </div>
                 <button 
                   onClick={() => setShowShopModal(true)} 
-                  className="w-8 h-8 flex items-center justify-center bg-cyan-500/10 hover:bg-cyan-500 border border-cyan-500/30 hover:text-black transition-all text-sm font-orbitron font-black"
+                  className="w-9 h-9 rounded-lg flex items-center justify-center bg-cyan-500/15 hover:bg-cyan-400 border border-cyan-500/40 hover:text-black transition-all text-base font-orbitron font-black cursor-pointer"
                 >
                   +
                 </button>
@@ -183,51 +181,50 @@ export default function ProfilePage() {
         </div>
 
         {/* 3. Restoration Panel */}
-        <div className="w-full p-8 bg-white/[0.02] border border-white/10 rounded-sm mb-8 text-left relative">
-          <div className="absolute top-0 right-0 p-3 font-mono text-[8px] opacity-25">RECOVERY_TERMINAL</div>
-          <h3 className="font-orbitron text-sm font-bold tracking-[0.2em] uppercase text-white/80 mb-4 pb-2 border-b border-white/5">
-            Coin Restoration
+        <div className="w-full p-6 sm:p-8 bg-white/[0.02] border border-white/10 rounded-xl mb-8 text-left relative">
+          <h3 className="font-orbitron text-sm font-bold tracking-[0.15em] uppercase text-cyan-300 mb-4 pb-2 border-b border-white/10">
+            Restore Purchased Credits
           </h3>
 
           {!recoveryStep ? (
             <div className="space-y-4">
-              <p className="font-mono text-[9px] leading-relaxed uppercase text-white/40">
-                Enter the email address used during PayPal or GCash checkout to recover and restore your coin balance.
+              <p className="text-xs leading-relaxed text-white/65">
+                Enter the email address used during PayPal or GCash checkout to recover and restore your credit balance.
               </p>
               <input
                 type="email"
-                placeholder="ENTER BILLING EMAIL..."
+                placeholder="Billing email address"
                 value={recoveryEmail}
                 onChange={(e) => setRecoveryEmail(e.target.value)}
-                className="w-full py-3 px-4 bg-black/60 border border-white/10 text-cyan-400 font-mono text-xs outline-none tracking-widest uppercase"
+                className="w-full py-3 px-4 rounded-lg bg-black/60 border border-white/15 text-cyan-300 font-mono text-base sm:text-xs outline-none"
               />
               <button
                 type="button"
                 onClick={handleRequestCode}
                 disabled={isRecovering}
-                className="w-full py-3.5 bg-cyan-950 border border-cyan-500/40 text-cyan-400 font-orbitron font-bold text-[11px] tracking-widest uppercase hover:bg-cyan-500/10 transition-all disabled:opacity-40"
+                className="w-full py-3.5 rounded-lg bg-cyan-950 border border-cyan-500/40 text-cyan-300 font-orbitron font-bold text-xs tracking-wider uppercase hover:bg-cyan-500/15 transition-all disabled:opacity-40 cursor-pointer"
               >
-                {isRecovering ? "DISPATCHING RESTORATION CODE..." : "SEND RESTORATION CODE"}
+                {isRecovering ? "Sending Verification Code..." : "Send Verification Code"}
               </button>
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="font-mono text-[9px] leading-relaxed uppercase text-amber-500/80">
-                Restoration protocol initialized. Enter the 6-digit code sent to {recoveryEmail}.
+              <p className="text-xs leading-relaxed text-amber-300/90">
+                Enter the 6-digit verification code sent to <strong>{recoveryEmail}</strong>.
               </p>
               <input
                 type="text"
-                placeholder="ENTER 6-DIGIT CODE..."
+                placeholder="6-digit code"
                 maxLength={6}
                 value={recoveryCode}
                 onChange={(e) => setRecoveryCode(e.target.value)}
-                className="w-full py-3 px-4 bg-black/60 border border-white/10 text-cyan-400 font-mono text-sm text-center outline-none tracking-widest"
+                className="w-full py-3 px-4 rounded-lg bg-black/60 border border-white/15 text-cyan-300 font-mono text-base sm:text-sm text-center outline-none tracking-widest"
               />
               <div className="grid grid-cols-2 gap-4">
                 <button
                   type="button"
                   onClick={() => { playSciFiClick(); setRecoveryStep(0); setRecoveryCode(""); }}
-                  className="py-3 border border-white/10 font-orbitron text-[10px] tracking-widest text-white/40 uppercase hover:bg-white/5"
+                  className="py-3 rounded-lg border border-white/15 font-orbitron text-xs tracking-wider text-white/70 uppercase hover:bg-white/5 cursor-pointer"
                 >
                   Back
                 </button>
@@ -235,22 +232,22 @@ export default function ProfilePage() {
                   type="button"
                   onClick={handleVerifyCode}
                   disabled={isRecovering}
-                  className="py-3 bg-cyan-600 border border-cyan-400 text-white font-orbitron font-bold text-[10px] tracking-widest uppercase hover:bg-cyan-500 transition-all disabled:opacity-40"
+                  className="py-3 rounded-lg bg-cyan-600 border border-cyan-400 text-white font-orbitron font-bold text-xs tracking-wider uppercase hover:bg-cyan-500 transition-all disabled:opacity-40 cursor-pointer"
                 >
-                  {isRecovering ? "VERIFYING..." : "RESTORE BALANCE"}
+                  {isRecovering ? "Verifying..." : "Restore Credits"}
                 </button>
               </div>
             </div>
           )}
 
           {recoveryError && (
-            <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 text-center">
-              <p className="font-mono text-[10px] text-red-400 uppercase font-bold">{recoveryError}</p>
+            <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-center">
+              <p className="font-mono text-xs text-red-300 font-semibold">{recoveryError}</p>
             </div>
           )}
           {recoverySuccess && (
-            <div className="mt-4 p-3 bg-green-500/10 border border-green-500/20 text-center">
-              <p className="font-mono text-[10px] text-green-400 uppercase font-bold">Protocol successful. Coins merged!</p>
+            <div className="mt-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-center">
+              <p className="font-mono text-xs text-emerald-300 font-semibold">Credits restored to your account!</p>
             </div>
           )}
         </div>
@@ -259,17 +256,17 @@ export default function ProfilePage() {
         <div className="w-full space-y-4">
           <button
             onClick={() => setLocation("/orbit")}
-            className="w-full relative group overflow-hidden bg-white text-black font-orbitron font-black text-base sm:text-lg tracking-[0.4em] sm:tracking-[0.8em] py-6 uppercase transition-all shadow-[0_0_50px_rgba(255,255,255,0.15)] hover:shadow-[0_0_80px_rgba(255,255,255,0.3)] active:scale-[0.97]"
+            className="w-full relative group overflow-hidden rounded-xl bg-white text-black font-orbitron font-black text-base sm:text-lg tracking-[0.25em] py-5 uppercase transition-all shadow-[0_0_40px_rgba(255,255,255,0.15)] hover:shadow-[0_0_60px_rgba(255,255,255,0.3)] active:scale-[0.98] cursor-pointer"
           >
             <div className="absolute inset-0 bg-cyan-400 translate-x-[-101%] group-hover:translate-x-0 transition-transform duration-[400ms] ease-out" />
-            <span className="relative z-10">Deploy_To_Orbit</span>
+            <span className="relative z-10">Play Errant Night</span>
           </button>
           
           <button
             onClick={handleLogout}
-            className="w-full py-4 border border-red-500/20 hover:border-red-500/50 font-orbitron text-[10px] tracking-[0.4em] uppercase hover:bg-red-500/10 transition-all text-red-500/60 hover:text-red-500"
+            className="w-full py-4 rounded-xl border border-red-500/25 hover:border-red-500/50 font-orbitron font-bold text-xs tracking-[0.25em] uppercase hover:bg-red-500/10 transition-all text-red-400 hover:text-red-300 cursor-pointer"
           >
-            Reset Guest Profile
+            {isGuest ? "Reset Guest Profile" : "Sign Out"}
           </button>
         </div>
       </div>

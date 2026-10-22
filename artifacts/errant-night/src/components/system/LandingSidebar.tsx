@@ -22,7 +22,7 @@ export default function LandingSidebar({
   onToggleMusic,
   playSound,
 }: LandingSidebarProps) {
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, isGuest, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
 
@@ -123,6 +123,17 @@ export default function LandingSidebar({
     onClick: () => {
       playSound();
       onToggleMusic();
+    },
+  });
+
+  menuItems.push({
+    id: "hub",
+    icon: <LoginIcon />,
+    label: "BACK TO HUB",
+    onClick: () => {
+      playSound();
+      closeMenu();
+      window.location.href = "/hub";
     },
   });
 
@@ -282,13 +293,13 @@ export default function LandingSidebar({
                   <span
                     className="font-orbitron"
                     style={{
-                      fontSize: "7px",
-                      letterSpacing: "0.5em",
-                      color: "rgba(34,211,238,0.6)",
+                      fontSize: "8px",
+                      letterSpacing: "0.28em",
+                      color: "rgba(34,211,238,0.65)",
                       textTransform: "uppercase",
                     }}
                   >
-                    Operational_Nexus
+                    Every Nation Games
                   </span>
                 </div>
 
@@ -361,7 +372,7 @@ export default function LandingSidebar({
                       backgroundColor: "rgba(6,182,212,0.2)",
                     }}
                   />
-                  Main_Nodes
+                  Menu
                 </div>
 
                 <div
@@ -424,12 +435,12 @@ export default function LandingSidebar({
                       style={{
                         fontSize: "10px",
                         letterSpacing: "0.2em",
-                        color: "rgba(239,68,68,0.6)",
+                        color: "rgba(239,68,68,0.75)",
                         textTransform: "uppercase",
                         fontWeight: 700,
                       }}
                     >
-                      RESET_GUEST_PROFILE
+                      {isGuest ? "Reset Guest Profile" : "Sign Out"}
                     </span>
                   </button>
                 )}
@@ -438,13 +449,13 @@ export default function LandingSidebar({
                   <span
                     className="font-orbitron"
                     style={{
-                      fontSize: "7px",
-                      letterSpacing: "0.4em",
-                      color: "rgba(255,255,255,0.1)",
+                      fontSize: "8px",
+                      letterSpacing: "0.25em",
+                      color: "rgba(255,255,255,0.25)",
                       textTransform: "uppercase",
                     }}
                   >
-                    &copy; 2026 ENGG | Secure_Channel_v1
+                    &copy; 2026 Every Nation Games
                   </span>
                 </div>
               </div>

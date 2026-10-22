@@ -224,7 +224,7 @@ export default function PlayerStatusList({ phase, roomCode }: PlayerStatusListPr
 
   return (
     <div
-      className={`ix-player-status-list ${isInterrupted ? "ix-player-status-list--interrupted" : ""}`}
+      className={`ix-player-status-list ${isInterrupted ? "ix-player-status-list--interrupted" : ""} ${phase === "role_reveal" ? "hidden lg:flex" : ""}`}
     >
       {sortedPlayers.map((p) => {
         const tag = tags[p.name];

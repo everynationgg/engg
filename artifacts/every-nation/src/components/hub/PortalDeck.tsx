@@ -1119,12 +1119,6 @@ function PortalWorldScene({
             ))}
           </WorldSceneLayer>
 
-          <WorldSceneLayer name="entities">
-            {entities.map((entity) => (
-              <AmbientEntity key={entity.id} entity={entity} accent={theme.accent} reducedMotion={reducedMotion} />
-            ))}
-          </WorldSceneLayer>
-
           <WorldSceneLayer name="data-fragments">
             {fragments.map((fragment, index) => (
               <motion.span
@@ -2581,9 +2575,9 @@ export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
                   transition={{ duration: motionProfile === "mobile" ? 6 : 3.2, repeat: Infinity, ease: "easeInOut" }}
                   aria-hidden="true"
                 />
-                <span className="absolute inset-x-10 top-10 z-40 h-[1px]" style={{ backgroundColor: activeTheme.accent }} />
+                <span className="absolute inset-x-10 top-6 sm:top-10 z-40 h-[1px]" style={{ backgroundColor: activeTheme.accent }} />
                 <span
-                  className="absolute bottom-9 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 whitespace-nowrap border bg-black/45 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.24em] backdrop-blur-sm"
+                  className="absolute bottom-2.5 sm:bottom-4 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap border bg-black/75 px-3 py-1 sm:px-4 sm:py-1.5 font-mono text-[9px] sm:text-[11px] uppercase tracking-[0.22em] backdrop-blur-md"
                   style={{ borderColor: `${activeTheme.accent}66`, color: activeTheme.accent }}
                 >
                   {statusCopy[activeGame.status]}
@@ -2606,23 +2600,23 @@ export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
           </motion.div>
         </div>
 
-        <div className="relative z-20 flex w-full max-w-[920px] flex-col items-center gap-2 sm:gap-3 shrink-0">
-          <div className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-stretch gap-2">
+        <div className="relative z-20 flex w-full max-w-[920px] flex-col items-center gap-2.5 sm:gap-3.5 shrink-0">
+          <div className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-stretch gap-1.5 sm:gap-2">
             <button
               type="button"
               onClick={() => setWrappedIndex(activeIndex - 1)}
-              className="grid h-11 w-11 shrink-0 place-items-center border border-white/10 bg-black/35 text-white/70 backdrop-blur-sm transition hover:border-white/25 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-300/60"
+              className="grid h-11 w-9 sm:w-11 shrink-0 place-items-center border border-white/10 bg-black/45 text-white/70 backdrop-blur-sm transition hover:border-white/25 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-300/60"
               aria-label="Previous game"
             >
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
 
             <div
-              className="relative flex min-w-0 flex-1 justify-center gap-2 overflow-hidden border-y bg-black/25 px-2 py-2 backdrop-blur-md"
+              className="relative flex min-w-0 flex-1 justify-center gap-1.5 sm:gap-2 overflow-hidden border-y bg-black/35 px-1.5 py-1.5 sm:px-2 sm:py-2 backdrop-blur-md"
               style={{ borderColor: `${activeTheme.accent}24`, boxShadow: `0 0 34px ${activeTheme.accent}18` }}
             >
               <span
-                className="pointer-events-none absolute left-3 right-3 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-white/25 to-transparent"
+                className="pointer-events-none absolute left-3 right-3 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent"
                 aria-hidden="true"
               />
               <span
@@ -2634,7 +2628,7 @@ export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
                 const theme = getTheme(game);
                 const isActive = index === activeIndex;
                 const isLocked = game.status !== "online";
-                const stateLabel = game.status === "online" ? "Live" : statusCopy[game.status];
+                const stateLabel = game.status === "online" ? "Live" : game.status === "coming-soon" ? "Soon" : statusCopy[game.status];
                 return (
                   <button
                     key={game.slug}
@@ -2643,18 +2637,18 @@ export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
                     onFocus={() => selectGame(index)}
                     onMouseEnter={() => selectGame(index)}
                     className={cn(
-                      "relative min-h-11 sm:min-h-14 min-w-0 flex-1 overflow-hidden border bg-black/35 px-2 py-2 text-left backdrop-blur-sm transition duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-300/60",
-                      isActive ? "border-white/35 text-white" : "border-white/10 opacity-72 hover:opacity-100",
-                      isLocked && "opacity-55",
+                      "relative min-h-11 sm:min-h-14 min-w-0 flex-1 overflow-hidden border bg-black/45 px-2 py-1.5 sm:px-3 sm:py-2 text-left backdrop-blur-sm transition duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-300/60",
+                      isActive ? "border-white/35 text-white" : "border-white/10 opacity-75 hover:opacity-100",
+                      isLocked && "opacity-60",
                     )}
                     style={{
                       clipPath:
-                        "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
+                        "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
                       ...(isActive
                         ? {
                           borderColor: `${theme.accent}a8`,
                           boxShadow: `0 0 32px ${theme.accent}66, inset 0 0 26px ${theme.accent}26`,
-                          background: `linear-gradient(135deg, ${theme.accentSoft}, rgba(0,0,0,0.34) 54%, ${theme.accent}1a)`,
+                          background: `linear-gradient(135deg, ${theme.accentSoft}, rgba(0,0,0,0.45) 54%, ${theme.accent}1a)`,
                         }
                         : {}),
                     }}
@@ -2684,30 +2678,35 @@ export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
                       style={{ background: isActive ? theme.accent : "rgba(255,255,255,0.12)" }}
                       aria-hidden="true"
                     />
-                    <span className="relative flex items-center gap-2">
-                      <span
-                        className="h-2.5 w-2.5 shrink-0 rounded-full border"
-                        style={{
-                          borderColor: `${theme.accent}99`,
-                          backgroundColor: isActive ? theme.accent : "rgba(0,0,0,0.6)",
-                          boxShadow: isActive ? `0 0 16px ${theme.accent}` : undefined,
-                        }}
-                        aria-hidden="true"
-                      />
-                      <span className="min-w-0">
-                        <span className="block truncate font-orbitron text-[10px] font-black uppercase tracking-[0.16em] text-white sm:text-[12px]">
+                    <span className="relative flex flex-col justify-center min-w-0">
+                      <span className="flex items-center gap-1.5 min-w-0">
+                        <span
+                          className="h-2 w-2 sm:h-2.5 sm:w-2.5 shrink-0 rounded-full border"
+                          style={{
+                            borderColor: `${theme.accent}99`,
+                            backgroundColor: isActive ? theme.accent : "rgba(0,0,0,0.6)",
+                            boxShadow: isActive ? `0 0 12px ${theme.accent}` : undefined,
+                          }}
+                          aria-hidden="true"
+                        />
+                        <span className="block truncate font-orbitron text-[9px] sm:text-xs font-black uppercase tracking-[0.08em] sm:tracking-[0.14em] text-white">
                           {game.title}
                         </span>
+                      </span>
+                      <span className="mt-0.5 flex items-center justify-between gap-2 min-w-0 pl-3.5 sm:pl-4">
                         <span
-                          className="mt-1 block truncate font-mono text-[9px] uppercase tracking-[0.18em]"
-                          style={{ color: isActive ? theme.accent : "rgba(255,255,255,0.35)" }}
+                          className="hidden sm:block truncate font-mono text-[9px] uppercase tracking-[0.16em]"
+                          style={{ color: isActive ? theme.accent : "rgba(255,255,255,0.4)" }}
                         >
                           {game.subtitle}
                         </span>
+                        <span
+                          className="font-mono text-[8px] sm:text-[9px] uppercase tracking-[0.14em] shrink-0"
+                          style={{ color: isActive ? theme.accent : "rgba(255,255,255,0.45)" }}
+                        >
+                          {stateLabel}
+                        </span>
                       </span>
-                    </span>
-                    <span className="absolute bottom-1.5 right-2 font-mono text-[9px] uppercase tracking-[0.18em] text-white/35">
-                      {stateLabel}
                     </span>
                   </button>
                 );
@@ -2717,29 +2716,16 @@ export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
             <button
               type="button"
               onClick={() => setWrappedIndex(activeIndex + 1)}
-              className="grid h-11 w-11 shrink-0 place-items-center border border-white/10 bg-black/35 text-white/70 backdrop-blur-sm transition hover:border-white/25 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-300/60"
+              className="grid h-11 w-9 sm:w-11 shrink-0 place-items-center border border-white/10 bg-black/45 text-white/70 backdrop-blur-sm transition hover:border-white/25 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-300/60"
               aria-label="Next game"
             >
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </div>
 
-          <div className="flex max-w-full flex-col items-center gap-3 sm:flex-row">
-            <span className="font-mono text-[10px] uppercase tracking-[0.26em] text-white/45">
-              {activeGame.subtitle}
-            </span>
-            <span className="hidden h-px w-10 bg-white/15 sm:block" aria-hidden="true" />
+          <div className="relative flex flex-row w-full max-w-md sm:w-auto items-center justify-center gap-2.5 sm:gap-3">
             <span
-              className="max-w-[86vw] truncate text-center font-mono text-[10px] uppercase tracking-[0.26em]"
-              style={{ color: activeTheme.accent }}
-            >
-              {activeGame.description}
-            </span>
-          </div>
-
-          <div className="relative flex flex-col sm:flex-row items-center justify-center gap-3">
-            <span
-              className="pointer-events-none absolute -top-5 left-1/2 h-5 w-px -translate-x-1/2"
+              className="pointer-events-none absolute -top-3 sm:-top-4 left-1/2 h-3 sm:h-4 w-px -translate-x-1/2"
               style={{ background: `linear-gradient(180deg, ${activeTheme.accent}, transparent)` }}
               aria-hidden="true"
             />
@@ -2749,13 +2735,13 @@ export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
                 type="button"
                 onClick={() => beginLaunch(activeGame)}
                 disabled={Boolean(enteringGame)}
-                className="group relative inline-flex w-full items-center justify-center gap-3 overflow-hidden border font-orbitron text-[12px] sm:text-[14px] font-black uppercase tracking-[0.34em] text-white backdrop-blur-sm transition duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-cyan-300/60 sm:w-auto h-11 sm:h-14 px-6 sm:px-10"
+                className="group relative inline-flex flex-1 sm:flex-initial items-center justify-center gap-2.5 sm:gap-3 overflow-hidden border font-orbitron text-[11px] sm:text-[14px] font-black uppercase tracking-[0.24em] sm:tracking-[0.34em] text-white backdrop-blur-sm transition duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-cyan-300/60 sm:w-auto h-11 sm:h-14 px-4 sm:px-10"
                 style={{
                   borderColor: `${activeTheme.accent}c8`,
                   background: `linear-gradient(135deg, ${activeTheme.accent}34, rgba(255,255,255,0.06) 42%, ${activeTheme.accent}1a)`,
                   boxShadow: `0 0 42px ${activeTheme.accent}44, inset 0 0 28px ${activeTheme.accent}22`,
                   clipPath:
-                    "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
+                    "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))",
                 }}
                 aria-label={`Enter ${activeGame.title}`}
               >
@@ -2773,16 +2759,16 @@ export default function PortalDeck({ games, motionProfile }: PortalDeckProps) {
                   style={{ background: `linear-gradient(90deg, transparent, ${activeTheme.accent}, transparent)` }}
                   aria-hidden="true"
                 />
-                <Play className="relative h-5 w-5 shrink-0" />
-                <span className="relative">{getLaunchLabel(activeGame)}</span>
+                <Play className="relative h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                <span className="relative whitespace-nowrap">{getLaunchLabel(activeGame)}</span>
               </button>
               {activeGame.androidApkUrl && (
                 <a
                   href="/marketplace"
-                  className="inline-flex h-11 sm:h-14 w-full sm:w-auto items-center justify-center gap-2 border border-cyan-500/40 bg-cyan-950/40 hover:bg-cyan-900/50 px-5 sm:px-6 font-orbitron text-[11px] sm:text-[13px] font-bold uppercase tracking-[0.24em] text-cyan-300 backdrop-blur-sm transition duration-200 hover:scale-[1.02]"
+                  className="inline-flex h-11 sm:h-14 shrink-0 items-center justify-center gap-2 border border-cyan-500/40 bg-cyan-950/40 hover:bg-cyan-900/50 px-4 sm:px-6 font-orbitron text-[10px] sm:text-[13px] font-bold uppercase tracking-[0.2em] sm:tracking-[0.24em] text-cyan-300 backdrop-blur-sm transition duration-200 hover:scale-[1.02] whitespace-nowrap"
                   style={{
                     clipPath:
-                      "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))",
+                      "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
                   }}
                   title="Get Android APK from Marketplace"
                 >

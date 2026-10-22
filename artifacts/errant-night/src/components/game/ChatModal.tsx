@@ -255,6 +255,7 @@ export default function ChatModal({
     <>
       {/* Chat Sidebar - Full Height */}
       <div
+        data-no-swipe="true"
         className="fixed left-0 top-0 bottom-0 z-[60] w-[88vw] sm:w-96 max-w-[420px] border-r flex flex-col transition-all duration-300"
         style={{
           transform: isOpen ? "translateX(0)" : "translateX(-100%)",
@@ -562,10 +563,10 @@ export default function ChatModal({
                   handleSend();
                 }
               }}
-              placeholder="Transmit a message..."
+              placeholder="Send a message..."
               disabled={sendLoading}
               maxLength={100}
-              className="flex-1 px-3 py-2.5 rounded-xl text-xs font-orbitron outline-none transition-all ix-input"
+              className="flex-1 px-3 py-2.5 rounded-xl text-base sm:text-xs font-orbitron outline-none transition-all ix-input"
               style={{
                 background: "hsl(220 28% 13%)",
                 border: "1px solid hsl(210 30% 28%)",

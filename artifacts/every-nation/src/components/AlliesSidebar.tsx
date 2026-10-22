@@ -195,26 +195,6 @@ export default function AlliesSidebar() {
 
   return (
     <>
-      {activePanel !== "allies" && (
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          onMouseDown={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            togglePanel("allies");
-          }}
-          data-allies-trigger
-          className="fixed bottom-6 right-6 z-[100] w-12 h-12 rounded-xl bg-[#0b101b]/90 border border-cyan-500/30 hover:bg-cyan-500/15 hover:border-cyan-400 transition-all flex lg:hidden items-center justify-center group shadow-lg cursor-pointer"
-          aria-label="Open Friends Panel"
-        >
-          <FaUserFriends className="text-cyan-400 text-lg" />
-          {(pendingRequests.length > 0 || Object.keys(unreadCounts).length > 0) && (
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse border border-white/20" />
-          )}
-        </motion.button>
-      )}
-
       <AnimatePresence>
         {activePanel === "allies" && (
           <>
@@ -334,7 +314,7 @@ export default function AlliesSidebar() {
                         value={messageInput}
                         onChange={(e) => setMessageInput(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                        className="w-full bg-white/5 border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-white/35 outline-none focus:border-cyan-400 transition-all pr-10"
+                        className="w-full bg-white/5 border border-white/15 rounded-xl px-3.5 py-2.5 text-base sm:text-xs text-white placeholder:text-white/35 outline-none focus:border-cyan-400 transition-all pr-10"
                       />
                       <button
                         onClick={sendMessage}
@@ -374,7 +354,7 @@ export default function AlliesSidebar() {
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                          className="flex-1 bg-white/5 border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-white/35 outline-none focus:border-cyan-400"
+                          className="flex-1 bg-white/5 border border-white/15 rounded-xl px-3.5 py-2.5 text-base sm:text-xs text-white placeholder:text-white/35 outline-none focus:border-cyan-400"
                         />
                         <button
                           onClick={handleSearch}

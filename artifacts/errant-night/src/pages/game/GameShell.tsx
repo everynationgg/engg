@@ -60,22 +60,22 @@ function PhaseTimeline({ currentPhase }: { currentPhase: string }) {
   if (currentIndex === -1) return null;
 
   return (
-    <div className="flex items-center justify-start sm:justify-center gap-2 py-3 px-6 z-50 bg-black/60 border-b border-white/5 backdrop-blur-md shrink-0 h-[var(--context-height)] overflow-x-auto no-scrollbar">
+    <div className="flex items-center justify-between sm:justify-center gap-1 sm:gap-2 py-2.5 sm:py-3 px-3 sm:px-6 z-50 bg-black/60 border-b border-white/5 backdrop-blur-md shrink-0 h-[var(--context-height)] overflow-x-auto no-scrollbar">
       {TIMELINE_PHASES.map((phase, idx) => {
         const isActive = idx === currentIndex;
         const isPast = idx < currentIndex;
         return (
-          <div key={phase.id} className="flex items-center">
+          <div key={phase.id} className="flex items-center shrink-0">
             <div
-              className={`text-[11px] tracking-[0.2em] uppercase font-orbitron font-bold px-4 py-1 rounded-sm transition-all duration-300 ${isActive ? "bg-cyan-500/25 text-white border border-cyan-500/60 shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+              className={`text-[9px] sm:text-[11px] tracking-wider sm:tracking-[0.2em] uppercase font-orbitron font-bold px-2 sm:px-4 py-1 rounded-sm transition-all duration-300 ${isActive ? "bg-cyan-500/25 text-white border border-cyan-500/60 shadow-[0_0_15px_rgba(6,182,212,0.4)]"
                 : isPast ? "text-cyan-700 font-medium"
-                  : "text-white/10"
+                  : "text-white/15"
                 }`}
             >
               {phase.label}
             </div>
             {idx < TIMELINE_PHASES.length - 1 && (
-              <div className={`w-6 h-[1px] mx-2 ${isPast ? "bg-cyan-900" : "bg-white/5"}`} />
+              <div className={`w-2 sm:w-6 h-[1px] mx-0.5 sm:mx-2 ${isPast ? "bg-cyan-900" : "bg-white/5"}`} />
             )}
           </div>
         );
@@ -144,17 +144,23 @@ export default function GameShell() {
   const toggleChat = useCallback(() => setChatOpen((o) => !o), []);
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (showSettings || showProfile || showHowToPlay || showGameMenu) return;
+    const target = e.target as HTMLElement | null;
+    if (target?.closest("input, select, textarea, [data-no-swipe]")) return;
     touchStartX.current = e.touches[0].clientX;
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX.current === null) return;
+    if (showSettings || showProfile || showHowToPlay || showGameMenu) {
+      touchStartX.current = null;
+      return;
+    }
     const deltaX = e.changedTouches[0].clientX - touchStartX.current;
 
-    // Swipe left (to the left) -> Open/Close Chat depending on direction
-    if (deltaX < -100) { // Swipe Left
+    if (deltaX < -100) {
       if (!chatOpen) setChatOpen(true);
-    } else if (deltaX > 100) { // Swipe Right
+    } else if (deltaX > 100) {
       if (chatOpen) setChatOpen(false);
     }
     touchStartX.current = null;
@@ -429,7 +435,7 @@ export default function GameShell() {
   };
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col overflow-hidden" style={{ background: "hsl(220 30% 2%)" }}>
+    <div className="relative min-h-[100dvh] w-full flex flex-col overflow-hidden" style={{ background: "hsl(220 30% 2%)" }}>
       <GlobalHUD isWarping={!!transition} />
 
       {/* Top Navbar — primary control system on desktop */}
@@ -497,8 +503,8 @@ export default function GameShell() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-6 flex flex-col items-center">
-                <span className="font-mono text-[8px] tracking-[0.5em] uppercase text-cyan-400/40 mb-1">Session_Status</span>
-                <h2 className="font-orbitron font-black text-xl tracking-[0.3em] uppercase text-white">Game Menu</h2>
+                <span className="font-mono text-[10px] tracking-[0.35em] uppercase text-cyan-400/60 mb-1">Paused</span>
+                <h2 className="font-orbitron font-black text-xl tracking-[0.25em] uppercase text-white">Game Menu</h2>
               </div>
 
               <MenuButton
@@ -508,9 +514,25 @@ export default function GameShell() {
                 autoFocus
               />
 
+              <MenuButton
+                label="HOW TO PLAY"
+                onClick={() => {
+                  setShowGameMenu(false);
+                  setShowHowToPlay(true);
+                }}
+              />
+
+              <MenuButton
+                label="SETTINGS"
+                onClick={() => {
+                  setShowGameMenu(false);
+                  setShowSettings(true);
+                }}
+              />
+
               {isHost && (
                 <MenuButton
-                  label="RESTART"
+                  label="RESTART ROUND"
                   onClick={() => {
                     getSocket().emit("restart_game", { sessionId: roomCode });
                     setShowGameMenu(false);
@@ -518,10 +540,10 @@ export default function GameShell() {
                 />
               )}
 
-              <div className="h-px bg-white/5 my-2" />
+              <div className="h-px bg-white/10 my-2" />
 
               <MenuButton
-                label="QUIT GAME"
+                label="LEAVE MATCH"
                 variant="danger"
                 onClick={() => {
                   setShowGameMenu(false);

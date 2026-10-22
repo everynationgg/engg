@@ -293,10 +293,10 @@ export default function VotingPage() {
 
   if (isSpectator) {
     return (
-      <div className="flex flex-col min-h-screen w-full relative overflow-hidden" style={{ background: "hsl(210 30% 6%)", color: "hsl(185 100% 70%)" }}>
+      <div className="flex flex-col min-h-[100dvh] w-full relative overflow-hidden" style={{ background: "hsl(210 30% 6%)", color: "hsl(185 100% 70%)" }}>
         
         {/* Tactical HUD — Sidebars */}
-        <div className="absolute inset-0 pointer-events-none flex items-center justify-between px-2 sm:px-6 z-20">
+        <div className="absolute inset-0 pointer-events-none hidden lg:flex items-center justify-between px-2 sm:px-6 z-20">
           <div className="flex flex-col gap-4 pointer-events-auto">
             <HudSidebarTab label="PLAYERS" active />
             <HudSidebarTab label="MAP" />
@@ -320,18 +320,18 @@ export default function VotingPage() {
                 </svg>
              </div>
              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-red-500/10 border border-red-500/30 rounded backdrop-blur-md">
-                <div className="font-orbitron text-[8px] tracking-[0.3em] uppercase text-red-500">Stalemate_Detected</div>
+                <div className="font-orbitron text-[8px] tracking-[0.3em] uppercase text-red-500">Voting in Progress</div>
              </div>
           </div>
 
           <h1 className="font-orbitron text-4xl font-black tracking-[0.3em] uppercase mb-2" style={{ color: "hsl(0 75% 70%)", textShadow: "0 0 24px hsl(0 75% 50% / 0.4)" }}>
             VOTING
           </h1>
-          <div className="font-orbitron text-[10px] tracking-[0.5em] uppercase white/30 mb-8">Observation Mode</div>
+          <div className="font-orbitron text-[10px] tracking-[0.5em] uppercase white/30 mb-8">Spectating</div>
           
           <div className="max-w-md w-full p-4 rounded-xl border border-white/5 bg-white/[0.02] backdrop-blur-sm">
              <div className="flex items-center justify-between mb-4">
-                <span className="font-orbitron text-[9px] tracking-widest text-white/40 uppercase">Voter Turnout</span>
+                <span className="font-orbitron text-[9px] tracking-widest text-white/40 uppercase">Votes Cast</span>
                 <span className="font-orbitron text-xs font-bold text-cyan-400">{votesIn} / {totalPlayers}</span>
              </div>
              <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
@@ -369,7 +369,7 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
 
   return (
     <div
-      className={`relative min-h-0 h-screen max-h-screen w-full flex flex-col transition-transform duration-1000 ${votesIn > 0 ? "scale-[1.02]" : "scale-100"} ${isAlien ? "ix-glitch-bg" : ""}`}
+      className={`relative min-h-0 h-[100dvh] max-h-[100dvh] w-full flex flex-col transition-transform duration-1000 ${isAlien ? "ix-glitch-bg" : ""}`}
       style={{ background: bgTint, color: "hsl(190 80% 90%)", overflow: "hidden" }}
     >
       {/* Critical countdown emergency hazard pulse */}
@@ -389,19 +389,19 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
       )}
       
       <div className="relative z-10 flex flex-col flex-1 h-full">
-      <div className="flex-1 flex flex-col px-4 sm:px-6 py-10 gap-6 overflow-y-auto pb-24 lg:pb-6 max-w-2xl mx-auto w-full min-h-0" style={{ WebkitOverflowScrolling: "touch" }}>
+      <div className="flex-1 flex flex-col px-4 sm:px-6 py-4 sm:py-10 gap-4 sm:gap-6 overflow-y-auto pb-28 lg:pb-6 max-w-2xl mx-auto w-full min-h-0" style={{ WebkitOverflowScrolling: "touch" }}>
         {/* Header with Timer */}
         <div className="p-6 bg-white/[0.02] border border-white/5 rounded-sm shadow-xl flex justify-between items-center">
           <div className="flex-1">
             <div className="text-[10px] tracking-[0.4em] uppercase opacity-40 font-bold mb-1">
-              MISSION_CRITICAL_DECISION
+              FINAL VOTE
             </div>
             <div className="font-orbitron font-black text-3xl sm:text-4xl tracking-[0.2em] uppercase italic" style={{ color: accentLight, textShadow: `0 0 20px ${accentGlow}` }}>
               VOTING
             </div>
           </div>
           <div className="text-right pl-4 border-l border-white/10">
-            <div className="text-[10px] tracking-[0.3em] uppercase mb-1 opacity-40">System_Lock</div>
+            <div className="text-[10px] tracking-[0.3em] uppercase mb-1 opacity-40">TIME LEFT</div>
             <div className="font-orbitron font-bold text-2xl tracking-widest" style={{ color: secondsLeft < 10 ? "hsl(0 75% 60%)" : accentLight }}>
               {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, '0')}
             </div>
@@ -411,7 +411,7 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
         {role.id === "commander" && (
           <div className="px-4 py-2 rounded border border-yellow-500/30 bg-yellow-500/10 text-center">
             <div className="text-[10px] tracking-[0.3em] uppercase font-bold" style={{ color: "hsl(45 90% 60%)" }}>
-              ★ NEURAL_PRIORITY: ALPHA (VOTE POWER X2)
+              ★ COMMANDER BONUS ACTIVE (2× VOTE)
             </div>
           </div>
         )}
@@ -558,7 +558,7 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
             <div className="w-full max-w-sm rounded-lg p-6 flex flex-col gap-6 ix-modal-enter" style={{ background: "hsl(220 30% 8%)", border: `2px solid ${accentColor.replace(")", " / 0.5)")}`, boxShadow: `0 0 60px ${accentGlow}` }}>
               <div className="text-center">
                 <div className="font-orbitron font-bold text-[9px] tracking-[0.5em] uppercase mb-4 opacity-40">
-                  NEURAL_CONFIRMATION_REQUIRED
+                  CONFIRM VOTE
                 </div>
                 {pendingVote === "abstain" ? (
                   <p className="text-xl font-bold" style={{ color: "hsl(190 60% 95%)", fontFamily: "'Exo 2', sans-serif" }}>
@@ -566,7 +566,7 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
                   </p>
                 ) : (
                   <p className="text-xl" style={{ color: "hsl(190 60% 95%)", fontFamily: "'Exo 2', sans-serif" }}>
-                    Vote to terminate <span className="font-bold font-orbitron tracking-wider text-white" style={{ color: accentLight }}>
+                    Vote to eject <span className="font-bold font-orbitron tracking-wider text-white" style={{ color: accentLight }}>
                       {sessionPlayers.find((p) => (p.playerId || p.id) === pendingVote)?.name ?? "Unknown"}
                     </span>?
                   </p>
@@ -602,13 +602,13 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
         ) : isAnesthetized && !votedFor ? (
           <div className="rounded-md p-6 text-center ix-glitch-bg" style={{ background: "hsl(0 60% 8% / 0.8)", border: `2px solid hsl(0 75% 55%)`, boxShadow: `0 0 25px hsl(0 75% 55% / 0.4)` }}>
             <div className="font-orbitron font-bold text-sm tracking-[0.25em] uppercase mb-3" style={{ color: "hsl(0 75% 70%)" }}>
-              Neural Link Inhibited
+              Anesthetized — Vote Blocked
             </div>
             <p className="text-sm mb-2" style={{ color: "hsl(0 50% 85%)", fontFamily: "'Exo 2', sans-serif" }}>
-              The Doctor has anesthetized your cognitive interface.
+              The Doctor sedated you during Role Reveal.
             </p>
             <p className="text-xs italic" style={{ color: "hsl(0 40% 60%)", fontFamily: "'Exo 2', sans-serif" }}>
-              Voting functions are temporarily offline.
+              You cannot vote this round.
             </p>
           </div>
         ) : (
@@ -630,7 +630,7 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
             <div className="mt-4 flex items-center justify-center gap-2">
               <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
               <p className="text-xs tracking-[0.2em] uppercase font-bold" style={{ color: "hsl(210 30% 45%)", fontFamily: "'Exo 2', sans-serif" }}>
-                Neural_Wait: {votesIn} / {totalPlayers} Ready
+                {votesIn} / {totalPlayers} Votes Cast
               </p>
             </div>
           </div>
