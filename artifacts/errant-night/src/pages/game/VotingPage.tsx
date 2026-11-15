@@ -391,18 +391,18 @@ function HudSidebarTab({ label, active, right }: { label: string; active?: boole
       <div className="relative z-10 flex flex-col flex-1 h-full">
       <div className="flex-1 flex flex-col px-4 sm:px-6 py-4 sm:py-10 gap-4 sm:gap-6 overflow-y-auto pb-28 lg:pb-6 max-w-2xl mx-auto w-full min-h-0" style={{ WebkitOverflowScrolling: "touch" }}>
         {/* Header with Timer */}
-        <div className="p-6 bg-white/[0.02] border border-white/5 rounded-sm shadow-xl flex justify-between items-center">
-          <div className="flex-1">
-            <div className="text-[10px] tracking-[0.4em] uppercase opacity-40 font-bold mb-1">
+        <div className="p-4 sm:p-6 bg-white/[0.02] border border-white/5 rounded-sm shadow-xl flex justify-between items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="text-[9px] sm:text-[10px] tracking-[0.3em] uppercase opacity-40 font-bold mb-1">
               FINAL VOTE
             </div>
-            <div className="font-orbitron font-black text-3xl sm:text-4xl tracking-[0.2em] uppercase italic" style={{ color: accentLight, textShadow: `0 0 20px ${accentGlow}` }}>
+            <div className="font-orbitron font-black text-2xl sm:text-4xl tracking-[0.15em] uppercase italic truncate" style={{ color: accentLight, textShadow: `0 0 20px ${accentGlow}` }}>
               VOTING
             </div>
           </div>
-          <div className="text-right pl-4 border-l border-white/10">
-            <div className="text-[10px] tracking-[0.3em] uppercase mb-1 opacity-40">TIME LEFT</div>
-            <div className="font-orbitron font-bold text-2xl tracking-widest" style={{ color: secondsLeft < 10 ? "hsl(0 75% 60%)" : accentLight }}>
+          <div className="text-right pl-3 sm:pl-4 border-l border-white/10 shrink-0">
+            <div className="text-[9px] sm:text-[10px] tracking-[0.25em] uppercase mb-0.5 opacity-40 font-orbitron font-bold">TIME LEFT</div>
+            <div className="font-orbitron font-bold text-lg sm:text-2xl tracking-widest tabular-nums" style={{ color: secondsLeft < 10 ? "hsl(0 75% 60%)" : accentLight }}>
               {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, '0')}
             </div>
           </div>

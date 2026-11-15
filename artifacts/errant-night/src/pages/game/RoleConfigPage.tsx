@@ -4,7 +4,7 @@ import Modal from "@/components/common/Modal";
 import { useLocation } from "wouter";
 import { ROLES, ALIEN_ROLES, CHAOTIC_ROLES, CREW_ROLES, type Role } from "@/data/roles";
 import { playSciFiClick, playLobbyJoin } from "@/lib/sound";
-import { getSocket } from "@/lib/socket";
+import { getSocket, disconnectSocket } from "@/lib/socket";
 import { systemToast } from "@/components/common/SystemToast";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,6 +12,7 @@ import { FaLock, FaBolt, FaCoins, FaTimes } from "react-icons/fa";
 import ShopModal from "@/components/shop/ShopModal";
 import ProfileModal from "@/components/profile/ProfileModal";
 import { gameSessionStore } from "@/lib/gameSessionStore";
+import { backNavigation } from "@/lib/backNavigation";
 
 const SPECTATOR_ROLES = ROLES.filter((r) => r.team === "spectator");
 const NON_SPECTATOR_ROLES = ROLES.filter((r) => r.team !== "spectator");
@@ -128,6 +129,30 @@ export default function RoleConfigPage() {
       gameSessionStore.setHost(roomCode, true);
     }
   }, [isCreating, roomCode]);
+
+  // Close mobile RolePreview sheet via backNavigation (Android hardware Back, Popstate, or Escape)
+  // and lock background scrolling on mobile while open
+  useEffect(() => {
+    if (!selectedRole) return;
+
+    // Lock background scrolling on mobile
+    const prevOverflow = document.body.style.overflow;
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      document.body.style.overflow = "hidden";
+    }
+
+    const unregister = backNavigation.register(() => {
+      setSelectedRole(null);
+      return true;
+    }, 80); // Priority 80 for role details modal
+
+    return () => {
+      if (typeof window !== "undefined") {
+        document.body.style.overflow = prevOverflow;
+      }
+      unregister();
+    };
+  }, [selectedRole]);
 
 
 
@@ -275,6 +300,7 @@ export default function RoleConfigPage() {
                 joinSucceeded = true;
                 systemToast("Session not found or closed.", "error", 6000);
                 gameSessionStore.clearVolatileGameState(roomCode);
+                disconnectSocket();
                 setLocation("/");
               } else {
                 // For other errors (like transient network issues), don't redirect yet.
@@ -287,7 +313,7 @@ export default function RoleConfigPage() {
       } else {
         socket.emit(
           "create_session",
-          { sessionId: roomCode, playerName: myCallsign, playerId, userId: lp_userId ?? undefined },
+          { sessionId: roomCode, playerName: myCallsign, playerId, playerToken: gameSessionStore.getPlayerToken(roomCode) ?? undefined, userId: lp_userId ?? undefined },
           (resp: { success: boolean; error?: string; session?: SessionPayload; playerToken?: string }) => {
             joinInProgress = false;
             if (resp?.success && resp.session) {
@@ -295,6 +321,9 @@ export default function RoleConfigPage() {
                 "[join] create_session OK — players:", resp.session.players.length,
               );
               joinSucceeded = true;
+              if (resp.playerToken) {
+                gameSessionStore.setPlayerToken(resp.playerToken, roomCode);
+              }
               systemToast("Lobby created", "success");
               handlePhaseUpdate(resp.session);
             } else {
@@ -344,8 +373,9 @@ export default function RoleConfigPage() {
           socket.emit(
             "get_session",
             { sessionId: roomCode, playerId: myPlayerId, playerToken: gameSessionStore.getPlayerToken(roomCode) || undefined },
-            (resp: { success: boolean; session?: SessionPayload }) => {
+            (resp: { success: boolean; session?: SessionPayload; playerToken?: string }) => {
               if (resp?.success && resp.session) {
+                if (resp.playerToken) gameSessionStore.setPlayerToken(resp.playerToken, roomCode);
                 handlePhaseUpdate(resp.session);
               }
             },
@@ -444,7 +474,7 @@ export default function RoleConfigPage() {
     navigator.clipboard.writeText(joinUrl).then(() => {
       setCopyFeedback(true);
       setTimeout(() => setCopyFeedback(false), 2000);
-    });
+    }).catch(() => {});
   }, [joinUrl]);
 
   const handleTogglePublic = useCallback(() => {
@@ -924,7 +954,7 @@ export default function RoleConfigPage() {
         <div
           className="flex-1 overflow-y-auto px-4 sm:px-6 pb-24 lg:pb-8 h-full custom-scrollbar"
           style={{
-            paddingTop: "max(16px, calc(env(safe-area-inset-top, 36px) + 12px))",
+            paddingTop: "var(--app-safe-top, 36px)",
           }}
           onClick={(e) => {
             if (e.target === e.currentTarget) setSelectedRole(null);
@@ -1434,11 +1464,13 @@ export default function RoleConfigPage() {
                 exit={{ y: "100%", opacity: 0 }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
                 data-no-swipe="true"
-                className="fixed lg:relative inset-x-0 bottom-0 z-50 lg:z-0 flex w-full lg:w-[clamp(240px,30%,400px)] shrink-0 flex-col border-t lg:border-t-0 lg:border-l max-h-[82dvh] lg:max-h-none lg:h-full overflow-y-auto lg:overflow-hidden rounded-t-2xl lg:rounded-none shadow-[0_-20px_40px_rgba(0,0,0,0.5)] lg:shadow-none backdrop-blur-xl lg:backdrop-blur-0"
+                className="fixed lg:relative inset-x-0 bottom-0 z-50 lg:z-0 flex w-full lg:w-[clamp(240px,30%,400px)] shrink-0 flex-col border-t lg:border-t-0 lg:border-l max-h-[88dvh] lg:max-h-none lg:h-full overflow-y-auto lg:overflow-hidden rounded-t-2xl lg:rounded-none shadow-[0_-20px_40px_rgba(0,0,0,0.5)] lg:shadow-none backdrop-blur-xl lg:backdrop-blur-0 overscroll-contain"
                 style={{
                   background: "hsl(220 30% 6% / 0.96)",
                   borderColor: "hsl(210 30% 18%)",
-                  paddingBottom: "max(16px, env(safe-area-inset-bottom, 16px))",
+                  paddingBottom: "max(16px, var(--app-safe-bottom, 24px))",
+                  touchAction: "pan-y",
+                  WebkitOverflowScrolling: "touch",
                 }}
               >
                 <RolePreview
@@ -1761,7 +1793,29 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
     role.team === "alien" ? "ALIEN TEAM" : role.team === "chaotic" ? "CHAOTIC" : "CREW TEAM";
 
   return (
-    <div className="flex flex-col lg:h-full">
+    <div className="flex flex-col lg:h-full relative">
+      {/* Sticky Mobile Top Bar / Close Button — always accessible regardless of scroll position */}
+      <div className="lg:hidden sticky top-0 z-50 flex items-center justify-between px-3 py-2 bg-[#0b0e14]/90 backdrop-blur-md border-b border-white/10 shrink-0">
+        <div
+          className={`px-2 py-0.5 rounded font-orbitron text-[10px] tracking-widest uppercase font-bold team-badge ${role.team}-color`}
+          style={{
+            background: accentColorDim,
+            border: `1px solid ${accentColor}`,
+            color: accentColorLight,
+          }}
+        >
+          {teamLabel}
+        </div>
+        <button
+          onClick={onClose}
+          aria-label="Close role preview"
+          className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 active:scale-95 flex items-center justify-center text-white/80 hover:text-white cursor-pointer transition-all"
+          style={{ touchAction: "manipulation" }}
+        >
+          <FaTimes className="text-sm" />
+        </button>
+      </div>
+
       {/* Role image/video — square frame */}
       <div className="relative w-full lg:w-[85%] lg:mx-auto aspect-[21/12] lg:aspect-square overflow-hidden shrink-0 p-2 lg:p-3">
         <div className="relative w-full h-full rounded-lg border border-white/10 overflow-hidden">
@@ -1779,8 +1833,8 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
             data-testid="video-role-preview"
           />
         </div>
-        {/* Team badge */}
-        <div className="absolute top-6 left-6 flex items-center gap-2">
+        {/* Team badge (Desktop) */}
+        <div className="hidden lg:flex absolute top-6 left-6 items-center gap-2">
           <div
             className={`px-1.5 lg:px-2 py-0.5 rounded font-orbitron text-xs tracking-widest uppercase font-bold team-badge ${role.team}-color`}
             style={{
@@ -1794,16 +1848,6 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
             {teamLabel}
           </div>
         </div>
-
-        {/* Mobile Close Button */}
-        <button
-          onClick={onClose}
-          aria-label="Close role preview"
-          className="lg:hidden absolute top-4 right-4 w-11 h-11 rounded-full bg-black/70 border border-white/20 active:scale-95 flex items-center justify-center text-white/80 hover:text-white cursor-pointer"
-          style={{ backdropFilter: "blur(6px)", touchAction: "manipulation" }}
-        >
-          <FaTimes />
-        </button>
       </div>
 
       {/* Right side (mobile) / Bottom section (desktop) */}
@@ -1826,8 +1870,11 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
           </div>
         </div>
 
-        {/* Details */}
-        <div className="flex-1 lg:overflow-y-auto px-3 lg:px-4 py-1 lg:py-2 flex flex-col gap-1.5 lg:gap-3 pb-32">
+        {/* Details — scrollable on both mobile and desktop with natural height and no excessive bottom padding */}
+        <div
+          className="flex-1 overflow-y-auto px-3 lg:px-4 py-2 flex flex-col gap-2 lg:gap-3 pb-6 overscroll-contain"
+          style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch" }}
+        >
           <InfoBlock label="Alignment" value={role.alignment} accentColor={accentColorLight} />
           <InfoBlock label="Win Condition" value={role.winCondition} accentColor={accentColorLight} />
           <InfoBlock label="Ability" value={role.ability} accentColor={accentColorLight} />

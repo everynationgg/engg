@@ -9,6 +9,7 @@ interface AuthContextType {
   email: string | null;
   isVerified: boolean;
   isAdmin: boolean;
+  isGuest: boolean;
   credits: number;
   xp: number;
   level: number;
@@ -388,6 +389,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [email, token]);
 
+  const isGuest = !isLoggedIn || (userId?.startsWith("guest_") ?? true);
+
   return (
     <AuthContext.Provider
       value={{
@@ -398,6 +401,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email,
         isVerified,
         isAdmin,
+        isGuest,
         credits,
         xp,
         level,

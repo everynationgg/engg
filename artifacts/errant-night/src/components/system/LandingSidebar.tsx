@@ -2,7 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import HowToPlayModal from "@/components/game/HowToPlayModal";
+import ConfirmModal from "@/components/common/ConfirmModal";
 import { playMechanicalChunk } from "@/lib/sound";
+import { backNavigation } from "@/lib/backNavigation";
 
 interface LandingSidebarProps {
   onShowSettings: () => void;
@@ -25,6 +27,7 @@ export default function LandingSidebar({
   const { isLoggedIn, isGuest, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   useEffect(() => {
     if (menuOpen) {
@@ -43,25 +46,13 @@ export default function LandingSidebar({
     setMenuOpen(false);
   }, [menuOpen]);
 
+  // Android Back & Escape handlers via backNavigation (Priority 40)
   useEffect(() => {
     if (!menuOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        closeMenu();
-      }
-    };
-    const handleBackButton = (e: Event) => {
-      e.preventDefault();
+    return backNavigation.register(() => {
       closeMenu();
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("backbutton", handleBackButton);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("backbutton", handleBackButton);
-    };
+      return true;
+    }, 40);
   }, [menuOpen, closeMenu]);
 
   const handleMenuItemClick = (callback: () => void) => {
@@ -121,8 +112,8 @@ export default function LandingSidebar({
     icon: musicOn ? <SoundOnIcon /> : <SoundOffIcon />,
     label: musicOn ? "AUDIO ON" : "AUDIO OFF",
     onClick: () => {
-      playSound();
-      onToggleMusic();
+      try { playSound(); } catch {}
+      try { onToggleMusic(); } catch {}
     },
   });
 
@@ -271,9 +262,10 @@ export default function LandingSidebar({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  padding: "24px",
-                  backgroundColor: "#161c2d",
-                  borderBottom: "1px solid rgba(255,255,255,0.1)",
+                  padding: "16px 20px",
+                  paddingTop: "max(18px, var(--app-safe-top, 36px))",
+                  backgroundColor: "hsl(220 30% 9%)",
+                  borderBottom: "1px solid hsl(210 30% 18%)",
                   flexShrink: 0,
                 }}
               >
@@ -282,7 +274,7 @@ export default function LandingSidebar({
                     className="font-orbitron"
                     style={{
                       fontWeight: 900,
-                      fontSize: "20px",
+                      fontSize: "18px",
                       letterSpacing: "0.15em",
                       color: "#ffffff",
                     }}
@@ -294,9 +286,10 @@ export default function LandingSidebar({
                     className="font-orbitron"
                     style={{
                       fontSize: "8px",
-                      letterSpacing: "0.28em",
-                      color: "rgba(34,211,238,0.65)",
+                      letterSpacing: "0.25em",
+                      color: "rgba(34,211,238,0.75)",
                       textTransform: "uppercase",
+                      fontWeight: 600,
                     }}
                   >
                     Every Nation Games
@@ -305,11 +298,12 @@ export default function LandingSidebar({
 
                 <button
                   onClick={closeMenu}
+                  aria-label="Close navigation"
                   style={{
                     padding: "8px",
-                    color: "rgba(255,255,255,0.4)",
-                    background: "none",
-                    border: "none",
+                    color: "rgba(255,255,255,0.6)",
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.1)",
                     borderRadius: "8px",
                     cursor: "pointer",
                     transition: "color 0.2s, background 0.2s",
@@ -317,18 +311,18 @@ export default function LandingSidebar({
                   onMouseEnter={(e) => {
                     (e.currentTarget as HTMLButtonElement).style.color = "#fff";
                     (e.currentTarget as HTMLButtonElement).style.background =
-                      "rgba(255,255,255,0.1)";
+                      "rgba(255,255,255,0.15)";
                   }}
                   onMouseLeave={(e) => {
                     (e.currentTarget as HTMLButtonElement).style.color =
-                      "rgba(255,255,255,0.4)";
+                      "rgba(255,255,255,0.6)";
                     (e.currentTarget as HTMLButtonElement).style.background =
-                      "none";
+                      "rgba(255,255,255,0.05)";
                   }}
                 >
                   <svg
-                    width="20"
-                    height="20"
+                    width="18"
+                    height="18"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -346,8 +340,10 @@ export default function LandingSidebar({
                 style={{
                   flex: 1,
                   overflowY: "auto",
-                  padding: "32px 16px",
-                  backgroundColor: "#0a0f1e",
+                  padding: "16px 12px",
+                  backgroundColor: "hsl(220 30% 6%)",
+                  touchAction: "pan-y",
+                  WebkitOverflowScrolling: "touch",
                 }}
               >
                 {/* Section Label */}
@@ -355,28 +351,29 @@ export default function LandingSidebar({
                   className="font-orbitron"
                   style={{
                     fontSize: "9px",
-                    letterSpacing: "0.3em",
-                    color: "rgba(6,182,212,0.4)",
-                    marginBottom: "24px",
-                    paddingLeft: "16px",
+                    letterSpacing: "0.25em",
+                    color: "rgba(6,182,212,0.6)",
+                    marginBottom: "14px",
+                    paddingLeft: "12px",
                     textTransform: "uppercase",
                     display: "flex",
                     alignItems: "center",
                     gap: "8px",
+                    fontWeight: 700,
                   }}
                 >
                   <div
                     style={{
-                      width: "16px",
+                      width: "12px",
                       height: "1px",
-                      backgroundColor: "rgba(6,182,212,0.2)",
+                      backgroundColor: "rgba(6,182,212,0.4)",
                     }}
                   />
-                  Menu
+                  Navigation
                 </div>
 
                 <div
-                  style={{ display: "flex", flexDirection: "column", gap: "4px" }}
+                  style={{ display: "flex", flexDirection: "column", gap: "3px" }}
                 >
                   {menuItems.map((item) => (
                     <SidebarNavItem
@@ -392,50 +389,57 @@ export default function LandingSidebar({
               {/* Footer */}
               <div
                 style={{
-                  padding: "24px",
-                  borderTop: "1px solid rgba(255,255,255,0.1)",
-                  backgroundColor: "#080c16",
+                  padding: "16px 18px",
+                  paddingBottom: "max(16px, var(--app-safe-bottom, 24px))",
+                  borderTop: "1px solid hsl(210 30% 16%)",
+                  backgroundColor: "hsl(220 30% 7%)",
                   flexShrink: 0,
                 }}
               >
                 {isLoggedIn && (
                   <button
-                    onClick={handleLogout}
+                    onClick={() => {
+                      if (isGuest) {
+                        setShowResetConfirm(true);
+                      } else {
+                        handleLogout();
+                      }
+                    }}
                     style={{
                       width: "100%",
                       display: "flex",
                       alignItems: "center",
-                      gap: "16px",
-                      padding: "12px 20px",
-                      borderRadius: "12px",
-                      background: "none",
-                      border: "1px solid transparent",
+                      gap: "12px",
+                      padding: "10px 16px",
+                      borderRadius: "8px",
+                      background: "rgba(239,68,68,0.06)",
+                      border: "1px solid rgba(239,68,68,0.2)",
                       cursor: "pointer",
-                      marginBottom: "16px",
-                      transition: "background 0.3s, border-color 0.3s",
+                      marginBottom: "12px",
+                      transition: "background 0.2s, border-color 0.2s",
                     }}
                     onMouseEnter={(e) => {
                       (e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                        "#2d1212";
+                        "rgba(239,68,68,0.15)";
                       (e.currentTarget as HTMLButtonElement).style.borderColor =
-                        "rgba(239,68,68,0.2)";
+                        "rgba(239,68,68,0.4)";
                     }}
                     onMouseLeave={(e) => {
                       (e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                        "transparent";
+                        "rgba(239,68,68,0.06)";
                       (e.currentTarget as HTMLButtonElement).style.borderColor =
-                        "transparent";
+                        "rgba(239,68,68,0.2)";
                     }}
                   >
-                    <span style={{ color: "rgba(239,68,68,0.6)", display: "flex" }}>
+                    <span style={{ color: "rgba(239,68,68,0.8)", display: "flex" }}>
                       <LogoutIcon />
                     </span>
                     <span
                       className="font-orbitron"
                       style={{
                         fontSize: "10px",
-                        letterSpacing: "0.2em",
-                        color: "rgba(239,68,68,0.75)",
+                        letterSpacing: "0.15em",
+                        color: "rgba(239,68,68,0.9)",
                         textTransform: "uppercase",
                         fontWeight: 700,
                       }}
@@ -445,13 +449,13 @@ export default function LandingSidebar({
                   </button>
                 )}
 
-                <div style={{ textAlign: "center", paddingTop: "16px" }}>
+                <div style={{ textAlign: "center", paddingTop: "8px" }}>
                   <span
                     className="font-orbitron"
                     style={{
                       fontSize: "8px",
-                      letterSpacing: "0.25em",
-                      color: "rgba(255,255,255,0.25)",
+                      letterSpacing: "0.2em",
+                      color: "rgba(255,255,255,0.3)",
                       textTransform: "uppercase",
                     }}
                   >
@@ -467,6 +471,20 @@ export default function LandingSidebar({
       {showHowToPlay && (
         <HowToPlayModal onClose={() => setShowHowToPlay(false)} />
       )}
+
+      <ConfirmModal
+        isOpen={showResetConfirm}
+        title="Reset Guest Profile?"
+        message="All unlinked guest progress, statistics, and local preferences on this device will be permanently erased."
+        warning="This action cannot be reversed."
+        confirmLabel="Reset Profile"
+        cancelLabel="Keep Profile"
+        onConfirm={() => {
+          setShowResetConfirm(false);
+          handleLogout();
+        }}
+        onCancel={() => setShowResetConfirm(false)}
+      />
     </>
   );
 }

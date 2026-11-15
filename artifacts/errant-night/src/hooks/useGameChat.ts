@@ -81,7 +81,20 @@ export function useGameChat(gameId: string | null, enabled = true, guestName?: s
 
     setMessages((prev) => {
       const existingIds = new Set(prev.map((m) => m.id));
-      const dedupedNew = incoming.filter((m) => !existingIds.has(m.id));
+      const dedupedNew = incoming.filter((m) => {
+        if (existingIds.has(m.id)) return false;
+        if (m.type === "system") {
+          const mTime = new Date(m.timestamp).getTime();
+          const isDuplicateSystem = prev.some(
+            (existing) =>
+              existing.type === "system" &&
+              existing.text === m.text &&
+              Math.abs(new Date(existing.timestamp).getTime() - mTime) < 3000
+          );
+          if (isDuplicateSystem) return false;
+        }
+        return true;
+      });
 
       if (dedupedNew.length === 0) return prev;
       if (!enabledRef.current) {

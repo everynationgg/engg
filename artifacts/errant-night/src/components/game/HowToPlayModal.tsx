@@ -3,6 +3,7 @@ import { ALIEN_ROLES, CREW_ROLES, CHAOTIC_ROLES, Role } from "@/data/roles";
 import howToPlayImg from "@assets/How_to_Play.webp";
 import { TeamIcon } from "@/components/common/TeamIcon";
 import { playSciFiClick } from "@/lib/sound";
+import { backNavigation } from "@/lib/backNavigation";
 
 interface HowToPlayModalProps {
   onClose: () => void;
@@ -13,33 +14,16 @@ export default function HowToPlayModal({ onClose }: HowToPlayModalProps) {
   const [zoomImage, setZoomImage] = useState(false);
   const [expandedRoleId, setExpandedRoleId] = useState<string | null>(null);
 
-  // Close on ESC or Android back button
+  // Close on ESC or Android back button via backNavigation
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        if (zoomImage) {
-          setZoomImage(false);
-        } else {
-          onClose();
-        }
-      }
-    };
-    const handleBackButton = (e: Event) => {
-      e.preventDefault();
+    return backNavigation.register(() => {
       if (zoomImage) {
         setZoomImage(false);
-      } else {
-        onClose();
+        return true;
       }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("backbutton", handleBackButton);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("backbutton", handleBackButton);
-    };
+      onClose();
+      return true;
+    }, 60);
   }, [onClose, zoomImage]);
 
   const handleTabChange = (tab: "phases" | "roles" | "image") => {

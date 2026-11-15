@@ -1,62 +1,35 @@
 import React from "react";
 
 /**
- * ReconnectGraceBanner — full-screen overlay shown during reconnect grace period.
+ * ReconnectGraceBanner — Compact, non-blocking top banner shown during reconnect grace period.
  *
- * Displayed when a player disconnects mid-game while the server waits for
- * them to reconnect (before the game is interrupted). Blocks all interactions.
- * Optional children (e.g. host controls) are rendered inside the modal box.
+ * Informs active players that a participant has temporarily disconnected and is reconnecting.
+ * Does NOT block gameplay interactions or freeze the viewport.
  */
 export default function ReconnectGraceBanner({ playerName, children }: { playerName: string; children?: React.ReactNode }) {
   return (
     <div
-      className="fixed inset-0 z-[9995] flex items-center justify-center px-6 ix-backdrop ix-backdrop-blur"
+      className="fixed top-0 left-0 right-0 z-40 flex flex-wrap items-center justify-between gap-2 px-4 py-2 bg-amber-950/90 border-b border-amber-500/50 backdrop-blur-md shadow-lg pointer-events-auto"
       style={{
-        background: "hsl(220 30% 3% / 0.88)",
-        backdropFilter: "blur(4px)",
+        paddingTop: "var(--app-safe-top, 36px)",
       }}
     >
-      <div
-        className="rounded-lg px-8 py-6 text-center ix-modal-enter"
-        style={{
-          background: "hsl(40 80% 10% / 0.95)",
-          border: "1px solid hsl(50 100% 50% / 0.5)",
-          boxShadow: "0 0 28px hsl(50 100% 50% / 0.3)",
-          maxWidth: "90vw",
-        }}
-      >
-        <div className="ix-typing-dots flex items-center justify-center gap-1 mb-3">
-          <span
-            className="inline-block w-2 h-2 rounded-full"
-            style={{ background: "hsl(50 100% 50%)" }}
-          />
-          <span
-            className="inline-block w-2 h-2 rounded-full"
-            style={{ background: "hsl(50 100% 50%)" }}
-          />
-          <span
-            className="inline-block w-2 h-2 rounded-full"
-            style={{ background: "hsl(50 100% 50%)" }}
-          />
+      <div className="flex items-center gap-2.5">
+        <span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_#f59e0b] shrink-0" />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+          <span className="font-orbitron font-bold text-xs tracking-wider uppercase text-amber-300">
+            {playerName ? `${playerName} reconnecting…` : "Player reconnecting…"}
+          </span>
+          <span className="text-[10px] text-amber-200/70 font-mono">
+            Authoritative match timer active
+          </span>
         </div>
-        <p
-          className="font-orbitron font-bold text-sm tracking-[0.15em] uppercase mb-2"
-          style={{ color: "hsl(50 100% 70%)" }}
-        >
-          Waiting for player to reconnect…
-        </p>
-        <p
-          className="font-orbitron text-xs tracking-[0.1em]"
-          style={{ color: "hsl(50 80% 60%)" }}
-        >
-          {playerName} disconnected. Game paused.
-        </p>
-        {children && (
-          <div className="mt-4 flex gap-2 justify-center">
-            {children}
-          </div>
-        )}
       </div>
+      {children && (
+        <div className="flex items-center gap-2 ml-auto">
+          {children}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,16 +1,22 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { playSciFiClick } from "@/lib/sound";
-import { FaCoins } from "react-icons/fa";
+import { disconnectSocket } from "@/lib/socket";
+import { gameSessionStore } from "@/lib/gameSessionStore";
+import AuthModal from "@/components/auth/AuthModal";
+import { FaCoins, FaUserCheck } from "react-icons/fa";
+import { backNavigation } from "@/lib/backNavigation";
 
 interface ProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onShowAuth?: () => void;
 }
 
-export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
+export default function ProfileModal({ isOpen, onClose, onShowAuth }: ProfileModalProps) {
   const { username, userId, credits, isGuest, logout, refreshUser } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Recovery States
@@ -97,27 +103,13 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   };
 
   // ESC and Android back button listener
+  // Hardware Back & Escape handlers via backNavigation
   useEffect(() => {
     if (!isOpen) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-      }
-    };
-
-    const handleBackButton = (e: Event) => {
-      e.preventDefault();
+    return backNavigation.register(() => {
       onClose();
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("backbutton", handleBackButton);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("backbutton", handleBackButton);
-    };
+      return true;
+    }, 60);
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -283,6 +275,24 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
               </div>
 
               <div className="flex flex-col gap-2.5 pt-2">
+                {isGuest && (
+                  <button
+                    onClick={() => {
+                      playSciFiClick();
+                      if (onShowAuth) {
+                        onClose();
+                        onShowAuth();
+                      } else {
+                        setShowAuthModal(true);
+                      }
+                    }}
+                    style={{ touchAction: "manipulation" }}
+                    className="w-full py-3.5 rounded-lg bg-cyan-500/15 border border-cyan-400/60 hover:bg-cyan-500/25 hover:border-cyan-300 font-orbitron font-bold text-xs tracking-[0.2em] uppercase transition-all text-cyan-200 hover:text-white flex items-center justify-center gap-2.5 shadow-[0_0_20px_rgba(6,182,212,0.18)] cursor-pointer"
+                  >
+                    <FaUserCheck className="text-cyan-300 text-sm shrink-0" />
+                    <span>Sign In / Create Account</span>
+                  </button>
+                )}
                 <button
                   onClick={() => { playSciFiClick(); onClose(); }}
                   style={{ touchAction: "manipulation" }}
@@ -293,9 +303,11 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 <button
                   onClick={() => {
                     playSciFiClick();
+                    disconnectSocket();
+                    gameSessionStore.clearVolatileGameState();
                     logout();
                     onClose();
-                    window.location.reload();
+                    window.location.href = import.meta.env.BASE_URL || "/";
                   }}
                   style={{ touchAction: "manipulation" }}
                   className="w-full py-3 rounded-lg border border-red-500/25 hover:border-red-500/50 font-orbitron font-bold text-xs tracking-[0.2em] uppercase hover:bg-red-500/10 transition-all text-red-400 hover:text-red-300 cursor-pointer"
@@ -307,6 +319,18 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           )}
         </div>
       </div>
+
+      {showAuthModal && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <AuthModal
+            onClose={() => setShowAuthModal(false)}
+            onSuccess={() => {
+              setShowAuthModal(false);
+              refreshUser();
+            }}
+          />
+        </div>
+      )}
 
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes scan {

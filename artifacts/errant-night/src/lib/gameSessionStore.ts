@@ -132,8 +132,9 @@ export const gameSessionStore = {
   getPlayerId(roomCode?: string): string | null {
     const code = normalizeRoomCode(roomCode);
     return (
-      readSession(SESSION_KEYS.playerId) ||
-      (code ? readLocal(roomKey(SESSION_KEYS.playerId, code)) : null)
+      code
+        ? readSession(roomKey(SESSION_KEYS.playerId, code)) || readLocal(roomKey(SESSION_KEYS.playerId, code))
+        : readSession(SESSION_KEYS.playerId)
     );
   },
 
@@ -141,7 +142,10 @@ export const gameSessionStore = {
     if (!playerId) return;
     const code = normalizeRoomCode(roomCode);
     writeSession(SESSION_KEYS.playerId, playerId);
-    if (code) writeLocal(roomKey(SESSION_KEYS.playerId, code), playerId);
+    if (code) {
+      writeSession(roomKey(SESSION_KEYS.playerId, code), playerId);
+      writeLocal(roomKey(SESSION_KEYS.playerId, code), playerId);
+    }
   },
 
   ensurePlayerId(roomCode: string): string {
@@ -157,8 +161,9 @@ export const gameSessionStore = {
   getPlayerToken(roomCode?: string): string | null {
     const code = normalizeRoomCode(roomCode);
     return (
-      readSession(SESSION_KEYS.playerToken) ||
-      (code ? readLocal(roomKey(SESSION_KEYS.playerToken, code)) : null)
+      code
+        ? readSession(roomKey(SESSION_KEYS.playerToken, code)) || readLocal(roomKey(SESSION_KEYS.playerToken, code))
+        : readSession(SESSION_KEYS.playerToken)
     );
   },
 
@@ -166,13 +171,19 @@ export const gameSessionStore = {
     if (!token) return;
     const code = normalizeRoomCode(roomCode);
     writeSession(SESSION_KEYS.playerToken, token);
-    if (code) writeLocal(roomKey(SESSION_KEYS.playerToken, code), token);
+    if (code) {
+      writeSession(roomKey(SESSION_KEYS.playerToken, code), token);
+      writeLocal(roomKey(SESSION_KEYS.playerToken, code), token);
+    }
   },
 
   clearPlayerToken(roomCode?: string): void {
     const code = normalizeRoomCode(roomCode);
     sessionStorage.removeItem(SESSION_KEYS.playerToken);
-    if (code) localStorage.removeItem(roomKey(SESSION_KEYS.playerToken, code));
+    if (code) {
+      sessionStorage.removeItem(roomKey(SESSION_KEYS.playerToken, code));
+      localStorage.removeItem(roomKey(SESSION_KEYS.playerToken, code));
+    }
   },
 
   getAssignedRole(fallback = ""): string {
@@ -300,6 +311,10 @@ export const gameSessionStore = {
     localStorage.removeItem(SESSION_KEYS.orbitResult);
     sessionStorage.removeItem(SESSION_KEYS.playerId);
     sessionStorage.removeItem(SESSION_KEYS.playerToken);
+    if (code) {
+      sessionStorage.removeItem(roomKey(SESSION_KEYS.playerId, code));
+      sessionStorage.removeItem(roomKey(SESSION_KEYS.playerToken, code));
+    }
     this.clearHost(code);
     this.clearActiveRoom(code);
   },

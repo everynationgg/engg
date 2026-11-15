@@ -16,7 +16,7 @@ import NotFound from "@/pages/not-found";
 import GlobalControls from "@/components/system/GlobalControls";
 import ShipOSBoot from "@/components/system/ShipOSBoot";
 import ParallaxBackground from "@/components/common/ParallaxBackground";
-import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { ErrorBoundary, SafeBoundary } from "@/components/common/ErrorBoundary";
 import { gameSessionStore } from "@/lib/gameSessionStore";
 
 const queryClient = new QueryClient();
@@ -52,10 +52,16 @@ function LegacyRoomRedirect() {
 function Router() {
   return (
     <>
-      <ShipOSBoot />
-      <ParallaxBackground />
+      <SafeBoundary>
+        <ShipOSBoot />
+      </SafeBoundary>
+      <SafeBoundary>
+        <ParallaxBackground />
+      </SafeBoundary>
       {/* Controls lobby-music.mp3 */}
-      <GlobalControls />
+      <SafeBoundary>
+        <GlobalControls />
+      </SafeBoundary>
 
       <Switch>
         <Route path="/" component={LandingPage} />

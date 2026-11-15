@@ -198,9 +198,12 @@ export default function OrbitPage() {
       const me = players.find((p) => p.isYou);
       if (me) setIsHost(me.isHost);
 
-      if (session.phase === "orbit_resolution") setPageState("resolving");
-      if (session.phase === "orbit_result") {
+      if (session.phase === "orbit_resolution") {
+        setPageState("resolving");
+      } else if (session.phase === "orbit_result") {
         setPageState("done");
+      } else if (me?.hasActed) {
+        setPageState("waiting");
       }
       // Persistence safety: ensure assigned role is cached under the correct identity (playerId)
       if (session.rolesAssigned) {
@@ -238,10 +241,11 @@ export default function OrbitPage() {
 
       socket.emit("get_session", {
         sessionId: roomCode,
-        playerId: myPlayerId,
-        playerToken: myPlayerToken
-      }, (resp: { success: boolean; session?: any }) => {
+        playerId: myPlayerId ?? undefined,
+        playerToken: myPlayerToken ?? undefined
+      }, (resp: { success: boolean; session?: any; playerToken?: string }) => {
         if (resp.success && resp.session) {
+          if (resp.playerToken) gameSessionStore.setPlayerToken(resp.playerToken, roomCode);
           applySessionUpdate(resp.session);
         }
       });
@@ -485,31 +489,33 @@ export default function OrbitPage() {
           )}
         </AnimatePresence>
 
-        {/* Role header */}
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 p-5 sm:p-6 bg-white/[0.03] border border-white/10 rounded-xl relative">
-          <img
-            src={role.image}
-            alt={role.name}
-            className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg object-cover shrink-0 shadow-[0_0_20px_rgba(0,0,0,0.5)]"
-            loading="lazy"
-            style={{ border: `2px solid ${accentColor.replace(")", " / 0.6)")}` }}
-          />
-          <div className="text-center sm:text-left flex-1 min-w-0">
-            <div className="text-[10px] tracking-[0.3em] uppercase mb-1.5 opacity-60 font-bold">
-              YOUR ROLE
-            </div>
-            <div
-              className="font-orbitron font-black text-2xl sm:text-4xl tracking-widest uppercase italic"
-              style={{ color: accentLight, textShadow: `0 0 15px ${accentGlow}` }}
-            >
-              {role.name}
+        {/* Role header with dedicated timer column */}
+        <div className="flex items-center justify-between gap-3 sm:gap-6 p-4 sm:p-6 bg-white/[0.03] border border-white/10 rounded-xl relative">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+            <img
+              src={role.image}
+              alt={role.name}
+              className="w-14 h-14 sm:w-20 sm:h-20 rounded-lg object-cover shrink-0 shadow-[0_0_20px_rgba(0,0,0,0.5)]"
+              loading="lazy"
+              style={{ border: `2px solid ${accentColor.replace(")", " / 0.6)")}` }}
+            />
+            <div className="min-w-0">
+              <div className="text-[9px] sm:text-[10px] tracking-[0.3em] uppercase mb-1 opacity-60 font-bold">
+                YOUR ROLE
+              </div>
+              <div
+                className="font-orbitron font-black text-lg sm:text-3xl tracking-widest uppercase italic truncate"
+                style={{ color: accentLight, textShadow: `0 0 15px ${accentGlow}` }}
+              >
+                {role.name}
+              </div>
             </div>
           </div>
 
-          {/* Timer - Prominent for coordination awareness */}
-          <div className="sm:absolute sm:top-4 sm:right-4 text-center sm:text-right">
-            <div className="text-[10px] tracking-[0.25em] uppercase mb-0.5 opacity-60">TIME LEFT</div>
-            <div className="font-orbitron font-bold text-xl tracking-widest" style={{ color: secondsLeft < 15 ? "hsl(0 75% 60%)" : accentLight }}>
+          {/* Timer - Prominent, tabular, never clipped */}
+          <div className="text-right pl-3 sm:pl-4 border-l border-white/10 shrink-0">
+            <div className="text-[9px] sm:text-[10px] tracking-[0.25em] uppercase mb-0.5 opacity-60 font-orbitron font-bold">TIME LEFT</div>
+            <div className="font-orbitron font-bold text-lg sm:text-2xl tracking-widest tabular-nums" style={{ color: secondsLeft < 15 ? "hsl(0 75% 60%)" : accentLight }}>
               {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, '0')}
             </div>
           </div>

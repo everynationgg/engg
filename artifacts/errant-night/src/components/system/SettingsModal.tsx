@@ -6,6 +6,7 @@ import { DEFAULTS } from "@/lib/constants";
 import { usePerformanceMode } from "@/hooks/usePerformanceMode";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { Volume2, VolumeX } from "lucide-react";
+import { backNavigation } from "@/lib/backNavigation";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -26,6 +27,16 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [localReducedMotion, setLocalReducedMotion] = useState(reducedMotion);
   const [savedNotice, setSavedNotice] = useState(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const musicTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sfxTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      if (musicTimerRef.current) clearTimeout(musicTimerRef.current);
+      if (sfxTimerRef.current) clearTimeout(sfxTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (preferences) {
@@ -52,45 +63,56 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     saveTimerRef.current = setTimeout(() => setSavedNotice(false), 1600);
   };
 
-  // Back button and ESC key handler
+  // Back button and ESC key handler via backNavigation
   useEffect(() => {
     if (!isOpen) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-      }
-    };
-
-    const handleBackButton = (e: Event) => {
-      e.preventDefault();
+    return backNavigation.register(() => {
       onClose();
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("backbutton", handleBackButton);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("backbutton", handleBackButton);
-    };
+      return true;
+    }, 60);
   }, [isOpen, onClose]);
 
   const handleMusicChange = (val: number) => {
-    setLocalMusicVolume(val);
-    if (val > 0) setPrevMusicVolume(val);
-    setMusicVolume(val);
-    void updateMusicVolume(val);
-    showSavedFlash();
+    try {
+      const parsed = Number(val);
+      const clamped = Number.isFinite(parsed) ? Math.max(0, Math.min(100, Math.round(parsed))) : 70;
+      setLocalMusicVolume(clamped);
+      if (clamped > 0) setPrevMusicVolume(clamped);
+      try {
+        setMusicVolume(clamped);
+      } catch {}
+
+      // 30-year rule: Instant local audio response; debounced storage/network persistence
+      if (musicTimerRef.current) clearTimeout(musicTimerRef.current);
+      musicTimerRef.current = setTimeout(() => {
+        updateMusicVolume(clamped).catch(() => {});
+        showSavedFlash();
+      }, 280);
+    } catch {}
   };
 
   const handleSfxChange = (val: number) => {
-    setLocalSfxVolume(val);
-    if (val > 0) setPrevSfxVolume(val);
-    setSfxVolume(val);
-    if (val > 0) playSciFiClick(val / 100);
-    void updateSfxVolume(val);
-    showSavedFlash();
+    try {
+      const parsed = Number(val);
+      const clamped = Number.isFinite(parsed) ? Math.max(0, Math.min(100, Math.round(parsed))) : 70;
+      setLocalSfxVolume(clamped);
+      if (clamped > 0) {
+        setPrevSfxVolume(clamped);
+        try {
+          playSciFiClick(clamped / 100);
+        } catch {}
+      }
+      try {
+        setSfxVolume(clamped);
+      } catch {}
+
+      // 30-year rule: Instant local audio response; debounced storage/network persistence
+      if (sfxTimerRef.current) clearTimeout(sfxTimerRef.current);
+      sfxTimerRef.current = setTimeout(() => {
+        updateSfxVolume(clamped).catch(() => {});
+        showSavedFlash();
+      }, 280);
+    } catch {}
   };
 
   const handleToggleColorblind = (val: boolean) => {
@@ -184,13 +206,13 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 label="Music Volume"
                 value={localMusicVolume}
                 onChange={handleMusicChange}
-                onToggleMute={() => handleMusicChange(localMusicVolume > 0 ? 0 : prevMusicVolume || 70)}
+                onToggleMute={() => handleMusicChange(localMusicVolume > 0 ? 0 : (Number.isFinite(prevMusicVolume) && prevMusicVolume > 0 ? prevMusicVolume : 70))}
               />
               <Slider
                 label="Sound Effects"
                 value={localSfxVolume}
                 onChange={handleSfxChange}
-                onToggleMute={() => handleSfxChange(localSfxVolume > 0 ? 0 : prevSfxVolume || 70)}
+                onToggleMute={() => handleSfxChange(localSfxVolume > 0 ? 0 : (Number.isFinite(prevSfxVolume) && prevSfxVolume > 0 ? prevSfxVolume : 70))}
               />
             </div>
           </section>
@@ -269,7 +291,8 @@ function Slider({
   onChange: (val: number) => void;
   onToggleMute: () => void;
 }) {
-  const isMuted = value === 0;
+  const safeVal = Number.isFinite(value) ? Math.max(0, Math.min(100, Math.round(value))) : 0;
+  const isMuted = safeVal === 0;
   return (
     <div
       className="p-3.5 sm:p-4 rounded-xl bg-white/[0.03] border border-white/10 space-y-3"
@@ -300,7 +323,7 @@ function Slider({
           </label>
         </div>
         <span className="font-mono font-bold text-xs sm:text-sm text-cyan-300">
-          {isMuted ? "Muted" : `${value}%`}
+          {isMuted ? "Muted" : `${safeVal}%`}
         </span>
       </div>
 
@@ -308,21 +331,24 @@ function Slider({
         <div className="absolute inset-x-0 h-2 rounded-full bg-white/10 overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-cyan-500 to-cyan-300 rounded-full"
-            style={{ width: `${value}%` }}
+            style={{ width: `${safeVal}%` }}
           />
         </div>
         <input
           type="range"
           min="0"
           max="100"
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
+          value={safeVal}
+          onChange={(e) => {
+            const parsed = Number(e.target.value);
+            onChange(Number.isFinite(parsed) ? parsed : 0);
+          }}
           style={{ touchAction: "pan-y" }}
           className="absolute inset-x-0 w-full h-7 opacity-0 cursor-pointer z-10"
         />
         <div
           className="absolute w-4 h-4 rounded-full bg-white border-2 border-cyan-400 shadow-[0_0_10px_#00f3ff] pointer-events-none transition-transform"
-          style={{ left: `calc(${value}% - 8px)` }}
+          style={{ left: `calc(${safeVal}% - 8px)` }}
         />
       </div>
     </div>

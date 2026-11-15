@@ -73,7 +73,7 @@ export default function AuthModal({ onClose, onSuccess }: AuthModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm transition-all duration-300"
+      className="fixed inset-0 z-[10002] flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm transition-all duration-300"
       style={{
         background: "hsl(220 30% 2% / 0.85)",
         paddingTop: "max(16px, env(safe-area-inset-top, 16px))",

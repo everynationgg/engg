@@ -19,6 +19,7 @@ import FloatingChatButton from "@/components/game/FloatingChatButton";
 import GlobalHUD from "@/components/game/GlobalHUD";
 import { useQuitGame } from "@/components/system/QuitGameButton";
 import ConfirmModal from "@/components/common/ConfirmModal";
+import { SafeBoundary } from "@/components/common/ErrorBoundary";
 import SettingsModal from "@/components/system/SettingsModal";
 import ProfileModal from "@/components/profile/ProfileModal";
 import HowToPlayModal from "@/components/game/HowToPlayModal";
@@ -60,7 +61,12 @@ function PhaseTimeline({ currentPhase }: { currentPhase: string }) {
   if (currentIndex === -1) return null;
 
   return (
-    <div className="flex items-center justify-between sm:justify-center gap-1 sm:gap-2 py-2.5 sm:py-3 px-3 sm:px-6 z-50 bg-black/60 border-b border-white/5 backdrop-blur-md shrink-0 h-[var(--context-height)] overflow-x-auto no-scrollbar">
+    <div
+      className="flex items-center justify-between sm:justify-center gap-1 sm:gap-2 pb-2.5 sm:py-3 px-3 sm:px-6 z-50 bg-black/60 border-b border-white/5 backdrop-blur-md shrink-0 min-h-[var(--context-height)] h-auto overflow-x-auto no-scrollbar"
+      style={{
+        paddingTop: "var(--app-safe-top, 36px)",
+      }}
+    >
       {TIMELINE_PHASES.map((phase, idx) => {
         const isActive = idx === currentIndex;
         const isPast = idx < currentIndex;
@@ -115,6 +121,7 @@ export default function GameShell() {
   const [chatUnread, setChatUnread] = useState(0);
   const [chatTypingActive, setChatTypingActive] = useState(false);
   const [isGlitching, setIsGlitching] = useState(false);
+  const [isAppHidden, setIsAppHidden] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
@@ -138,10 +145,22 @@ export default function GameShell() {
   const { midGame, showConfirm, openConfirm, closeConfirm, handleConfirmQuit } = useQuitGame(isHost);
 
   const handleToggleMusic = () => {
-    updateMusicVolume(musicOn ? 0 : 100);
+    try {
+      updateMusicVolume(musicOn ? 0 : 100).catch(() => {});
+    } catch {}
   };
 
   const toggleChat = useCallback(() => setChatOpen((o) => !o), []);
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      setIsAppHidden(document.visibilityState === "hidden");
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, []);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (showSettings || showProfile || showHowToPlay || showGameMenu) return;
@@ -271,7 +290,7 @@ export default function GameShell() {
       rolesAssigned?: Record<string, string>;
       hostEndedInterrupt?: boolean;
     }) => {
-      const isFrozen = (session.playersInGrace && session.playersInGrace.length > 0) || !!session.hostEndedInterrupt || session.phase === "interrupted";
+      const isFrozen = !!session.hostEndedInterrupt || session.phase === "interrupted";
       setIsGameFrozen(isFrozen);
       if (session.phase) applyPhase(session.phase);
       if (session.players) {
@@ -307,9 +326,7 @@ export default function GameShell() {
         if (data.players) {
           setRoomPlayers(data.players.map(p => ({ id: p.id, name: p.name })));
         }
-        setIsGameFrozen(true);
       } else {
-        setIsGameFrozen(false);
         setGracePlayerNames([]);
       }
     };
@@ -339,11 +356,12 @@ export default function GameShell() {
 
       socket.emit("get_session", {
         sessionId: roomCode,
-        playerId: myPlayerId,
-        playerToken: myPlayerToken
-      }, (resp: { success: boolean; session?: { phase: string; playersInGrace?: string[]; players?: any[]; rolesAssigned?: Record<string, string>; hostEndedInterrupt?: boolean; roleCounts?: Record<string, number> } }) => {
+        playerId: myPlayerId ?? undefined,
+        playerToken: myPlayerToken ?? undefined
+      }, (resp: { success: boolean; playerToken?: string; session?: { phase: string; playersInGrace?: string[]; players?: any[]; rolesAssigned?: Record<string, string>; hostEndedInterrupt?: boolean; roleCounts?: Record<string, number> } }) => {
         if (resp.success && resp.session) {
-          const isFrozen = (resp.session.playersInGrace && resp.session.playersInGrace.length > 0) || !!resp.session.hostEndedInterrupt || resp.session.phase === "interrupted";
+          if (resp.playerToken) gameSessionStore.setPlayerToken(resp.playerToken, roomCode);
+          const isFrozen = !!resp.session.hostEndedInterrupt || resp.session.phase === "interrupted";
           setIsGameFrozen(isFrozen);
           if (resp.session.phase) {
             if (prevPhaseRef.current === null) {
@@ -383,6 +401,7 @@ export default function GameShell() {
     const pollId = setInterval(syncSession, 3000);
 
     const handleReconnect = () => {
+      if (!prevPhaseRef.current || prevPhaseRef.current === "role_config") return;
       const callsign = gameSessionStore.getCallsign();
       const playerId = gameSessionStore.getPlayerId(roomCode);
       if (!callsign || !playerId) return;
@@ -392,7 +411,7 @@ export default function GameShell() {
         playerId,
         playerToken: gameSessionStore.getPlayerToken(roomCode) ?? undefined,
       }, (resp: JoinSessionResponse) => {
-        if (resp?.playerToken) {
+        if (resp?.success && resp.playerToken) {
           gameSessionStore.setPlayerToken(resp.playerToken, roomCode);
         }
         if (resp?.session?.phase) applyPhase(resp.session.phase);
@@ -410,13 +429,12 @@ export default function GameShell() {
       clearInterval(pollId);
       if (transitionTimeoutRef.current) clearTimeout(transitionTimeoutRef.current);
       if (transitionTickRef.current) clearInterval(transitionTickRef.current);
-      disconnectSocket();
     };
   }, [roomCode, token]);
 
   // Render the appropriate phase component
   const renderPhase = () => {
-    if (isGameFrozen && displayedPhase !== "role_config" && displayedPhase !== "result") {
+    if (displayedPhase === "interrupted" || (isGameFrozen && displayedPhase !== "role_config" && displayedPhase !== "result")) {
       return <InterruptedPage />;
     }
 
@@ -590,14 +608,16 @@ export default function GameShell() {
       )}
 
       {/* In-game chat — available during all phases including grace pause and interrupted */}
-      <ChatModal
-        gameId={roomCode || null}
-        isOpen={chatOpen}
-        onToggle={toggleChat}
-        onUnreadChange={setChatUnread}
-        onTypingActivityChange={setChatTypingActive}
-        players={roomPlayers}
-      />
+      <SafeBoundary>
+        <ChatModal
+          gameId={roomCode || null}
+          isOpen={chatOpen}
+          onToggle={toggleChat}
+          onUnreadChange={setChatUnread}
+          onTypingActivityChange={setChatTypingActive}
+          players={roomPlayers}
+        />
+      </SafeBoundary>
       <FloatingChatButton
         onClick={toggleChat}
         unreadCount={chatUnread}
@@ -632,16 +652,22 @@ export default function GameShell() {
           </div>
         </div>
       )}
-      <SettingsModal
-        isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
-      />
-      <ProfileModal
-        isOpen={showProfile}
-        onClose={() => setShowProfile(false)}
-      />
+      <SafeBoundary>
+        <SettingsModal
+          isOpen={showSettings}
+          onClose={() => setShowSettings(false)}
+        />
+      </SafeBoundary>
+      <SafeBoundary>
+        <ProfileModal
+          isOpen={showProfile}
+          onClose={() => setShowProfile(false)}
+        />
+      </SafeBoundary>
       {showHowToPlay && (
-        <HowToPlayModal onClose={() => setShowHowToPlay(false)} />
+        <SafeBoundary>
+          <HowToPlayModal onClose={() => setShowHowToPlay(false)} />
+        </SafeBoundary>
       )}
 
       {showConfirm && (
@@ -661,6 +687,18 @@ export default function GameShell() {
           onConfirm={handleConfirmQuit}
           onCancel={closeConfirm}
         />
+      )}
+
+      {/* Privacy Shield for Android Recent Apps / Background Switching */}
+      {isAppHidden && displayedPhase !== "lobby" && (
+        <div className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center p-6 text-center select-none pointer-events-none">
+          <div className="font-orbitron text-lg font-black tracking-[0.25em] text-cyan-400 uppercase">
+            ERRANT NIGHT
+          </div>
+          <div className="font-mono text-[10px] tracking-widest text-white/50 mt-2 uppercase">
+            MISSION IN PROGRESS • ROLE ENCRYPTED
+          </div>
+        </div>
       )}
     </div>
   );

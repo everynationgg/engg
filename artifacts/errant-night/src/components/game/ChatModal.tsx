@@ -276,18 +276,20 @@ export default function ChatModal({
             paddingRight: "max(16px, env(safe-area-inset-right, 16px))",
           }}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             {/* Live indicator */}
             <span
               className="w-2 h-2 rounded-full animate-pulse shrink-0"
               style={{ background: "hsl(140 70% 55%)", boxShadow: "0 0 6px hsl(140 70% 55% / 0.8)" }}
             />
-            <h3 className="font-orbitron text-sm tracking-[0.12em] uppercase" style={{ color: "hsl(185 100% 65%)" }}>
+            <h3 className="font-orbitron text-sm tracking-[0.12em] uppercase truncate" style={{ color: "hsl(185 100% 65%)" }}>
               💬 In-Game Chat
             </h3>
-            <ConnectionIndicator />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="mr-2 sm:mr-3">
+              <ConnectionIndicator />
+            </div>
             {/* TTS toggle — only shown when browser supports Web Speech API */}
             {isTTSSupported && (
               <button

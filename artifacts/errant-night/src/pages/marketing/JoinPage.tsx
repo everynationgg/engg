@@ -6,12 +6,13 @@ import { playSciFiClick } from "@/lib/sound";
 import { startLobbyMusic, stopLobbyMusic, getSoundEnabled, setSoundEnabled } from "@/lib/music";
 import howToPlayImg from "@assets/How_to_Play.webp";
 import HowToPlayModal from "@/components/game/HowToPlayModal";
+import { SafeBoundary } from "@/components/common/ErrorBoundary";
 import { gameSessionStore } from "@/lib/gameSessionStore";
 
 export default function JoinPage() {
   const params = useParams<{ roomCode: string }>();
   const roomCode = params.roomCode?.toUpperCase() ?? "";
-  const [callsign, setCallsign] = useState("");
+  const [callsign, setCallsign] = useState(() => gameSessionStore.getCallsign(""));
   const [, setLocation] = useLocation();
   const [musicOn, setMusicOn] = useState<boolean>(getSoundEnabled);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
@@ -21,14 +22,16 @@ export default function JoinPage() {
   }, []);
 
   const handleToggleMusic = useCallback(() => {
-    const next = !musicOn;
-    setMusicOn(next);
-    setSoundEnabled(next);
-    if (next) {
-      startLobbyMusic();
-    } else {
-      stopLobbyMusic();
-    }
+    try {
+      const next = !musicOn;
+      setMusicOn(next);
+      setSoundEnabled(next);
+      if (next) {
+        startLobbyMusic();
+      } else {
+        stopLobbyMusic();
+      }
+    } catch {}
   }, [musicOn]);
 
   const handleJoin = useCallback(() => {
@@ -192,7 +195,9 @@ export default function JoinPage() {
 
       {/* How to Play modal */}
       {showHowToPlay && (
-        <HowToPlayModal onClose={() => setShowHowToPlay(false)} />
+        <SafeBoundary label="JoinHowToPlayModal">
+          <HowToPlayModal onClose={() => setShowHowToPlay(false)} />
+        </SafeBoundary>
       )}
     </div>
   );

@@ -4,18 +4,20 @@ import { ROLES } from "@/data/roles";
 import { playGameOutcome, playSciFiClick, playBassDrop, playMechanicalChunk } from "@/lib/sound";
 import { useAuth } from "@/hooks/useAuth";
 import { useGameChat } from "@/hooks/useGameChat";
-import { useRecordGameResult, determinePlayerWon, generateGameId } from "@/hooks/useRecordGameResult";
+import { useRecordGameResult } from "@/hooks/useRecordGameResult";
 import StatsDisplay from "@/components/profile/StatsDisplay";
 import { motion, AnimatePresence } from "framer-motion";
 import { TeamIcon } from "@/components/common/TeamIcon";
 import { gameSessionStore } from "@/lib/gameSessionStore";
+import { findOwnResult } from "@/lib/resultIdentity";
 
 interface VoteResult {
+  roundId?: string;
   eliminatedId: string | null;
   eliminatedName: string | null;
   eliminatedRole: string | null;
   winTeam: "crew" | "alien" | "tie";
-  allRoles: { playerId: string; stablePlayerId?: string; playerName: string; role: string; initialRole: string; alive?: boolean; alignment?: "Good" | "Bad" }[];
+  allRoles: { playerId: string; playerName: string; role: string; initialRole: string; alive?: boolean; alignment?: "Good" | "Bad" }[];
   centerCards: string[];
 }
 
@@ -174,7 +176,7 @@ function RewardSummary({ rewards, onClose }: { rewards: { xp: number; credits: n
 export default function ResultPage() {
   const roomCode = getRoomCode();
   const { isLoggedIn, userId, isInitialized } = useAuth();
-  const { recordResult, personalStats, leaderboard, hasRecorded, fetchLeaderboard, lastRewards } = useRecordGameResult();
+  const { fetchResultReceipt, personalStats, leaderboard, hasRecorded, fetchLeaderboard, lastRewards } = useRecordGameResult();
   const [showRewards, setShowRewards] = useState(false);
 
   // Host status is derived from the server's session player list — not from
@@ -184,7 +186,6 @@ export default function ResultPage() {
 
   const [result, setResult] = useState<VoteResult | null>(null);
   const [summary, setSummary] = useState<RoundSummary | null>(null);
-  const [gameId] = useState(() => generateGameId());
   const { messages } = useGameChat(roomCode);
   const [revealedVoteRows, setRevealedVoteRows] = useState(0);
   const [revealedCountRows, setRevealedCountRows] = useState(0);
@@ -195,35 +196,17 @@ export default function ResultPage() {
   const handleCinematicComplete = useCallback(() => setCinematicPlayed(true), []);
 
   const resultPlayedRef = useRef(false);
-  const recordedResultRef = useRef(false);
 
   const maybeRecordMyResult = useCallback((voteResult: VoteResult) => {
-    if (recordedResultRef.current || hasRecorded) return;
-
-    const myStablePlayerId = gameSessionStore.getPlayerId(roomCode);
-    const mySocketId = getSocket().id;
-    const callsign = gameSessionStore.getCallsign().toUpperCase();
-
-    const playerData = voteResult.allRoles.find((p) =>
-      (myStablePlayerId && p.stablePlayerId === myStablePlayerId)
-      || (!!mySocketId && p.playerId === mySocketId)
-      || (!!callsign && p.playerName.toUpperCase() === callsign)
-    );
-
-    if (!playerData || playerData.role === "spectator") return;
-
-    if (!isInitialized) {
-      setPendingVoteResult(voteResult);
-      return;
-    }
-
+    if (hasRecorded || !voteResult.roundId) return;
+    const playerId = gameSessionStore.getPlayerId(roomCode);
+    const playerData = findOwnResult(voteResult.allRoles, playerId);
+    if (!playerId || !playerData || playerData.role === "spectator") return;
+    if (!isInitialized) { setPendingVoteResult(voteResult); return; }
     if (!isLoggedIn || !userId) return;
-
-    recordedResultRef.current = true;
-    const won = determinePlayerWon(playerData.role, voteResult.winTeam, playerData.alignment) ? "yes" : "no";
-    recordResult({ gameId, role: playerData.role, won, alignment: playerData.alignment });
+    void fetchResultReceipt({ roundId: voteResult.roundId, playerId });
     setPendingVoteResult(null);
-  }, [gameId, hasRecorded, isInitialized, isLoggedIn, recordResult, userId]);
+  }, [hasRecorded, roomCode, isInitialized, isLoggedIn, fetchResultReceipt, userId]);
 
   useEffect(() => {
     if (!pendingVoteResult) return;
@@ -250,7 +233,7 @@ export default function ResultPage() {
     };
 
     const handlePhaseUpdate = (session: { phase: string; voteResult?: VoteResult | null; roundSummary?: RoundSummary }) => {
-      if (session.voteResult) setResult((prev) => JSON.stringify(prev) === JSON.stringify(session.voteResult) ? prev : session.voteResult!);
+      if (session.voteResult) { setResult((prev) => JSON.stringify(prev) === JSON.stringify(session.voteResult) ? prev : session.voteResult!); maybeRecordMyResult(session.voteResult); }
       if (session.roundSummary) setSummary((prev) => JSON.stringify(prev) === JSON.stringify(session.roundSummary) ? prev : session.roundSummary!);
       // GameShell handles navigation to role_config
     };
@@ -263,7 +246,7 @@ export default function ResultPage() {
       success: boolean;
       session?: {
         phase: string;
-        players?: { id: string; name: string; isHost: boolean; isSpectator?: boolean }[];
+        players?: { id: string; playerId?: string; name: string; isHost: boolean; isSpectator?: boolean }[];
         voteResult?: VoteResult | null;
         roundSummary?: RoundSummary;
       };
@@ -281,10 +264,9 @@ export default function ResultPage() {
         if (sess.roundSummary) setSummary((prev) => JSON.stringify(prev) === JSON.stringify(sess.roundSummary) ? prev : sess.roundSummary!);
 
         if (sess.players) {
-          const mySocketId = socket.id;
           const myPlayerId = gameSessionStore.getPlayerId(roomCode);
           const me = sess.players.find(
-            (p) => p.id === mySocketId || (myPlayerId && (p as { playerId?: string }).playerId === myPlayerId),
+            (p) => !!myPlayerId && p.playerId === myPlayerId,
           );
           if (me) {
             setIsHost(!!me.isHost);
@@ -301,20 +283,19 @@ export default function ResultPage() {
         success: boolean;
         session?: {
           phase: string;
-          players?: { id: string; name: string; isHost: boolean; isSpectator?: boolean }[];
+          players?: { id: string; playerId?: string; name: string; isHost: boolean; isSpectator?: boolean }[];
           voteResult?: VoteResult | null;
           roundSummary?: RoundSummary;
         };
       }) => {
         if (resp.success && resp.session) {
           const sess = resp.session;
-          if (sess.voteResult) setResult((prev) => JSON.stringify(prev) === JSON.stringify(sess.voteResult) ? prev : sess.voteResult!);
+          if (sess.voteResult) { setResult((prev) => JSON.stringify(prev) === JSON.stringify(sess.voteResult) ? prev : sess.voteResult!); maybeRecordMyResult(sess.voteResult); }
           if (sess.roundSummary) setSummary((prev) => JSON.stringify(prev) === JSON.stringify(sess.roundSummary) ? prev : sess.roundSummary!);
           if (sess.players) {
-            const mySocketId = socket.id;
             const myPlayerId = gameSessionStore.getPlayerId(roomCode);
             const me = sess.players.find(
-              (p) => p.id === mySocketId || (myPlayerId && (p as { playerId?: string }).playerId === myPlayerId),
+              (p) => !!myPlayerId && p.playerId === myPlayerId,
             );
             if (me) {
               setIsHost(!!me.isHost);

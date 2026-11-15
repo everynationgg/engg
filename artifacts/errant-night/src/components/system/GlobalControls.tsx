@@ -9,19 +9,30 @@ export default function GlobalControls() {
   const [location] = useLocation();
 
   useEffect(() => {
-    // 1. Unified Route Logic
-    // If we are on role-reveal, kill the music immediately.
-    if (location === "/role-reveal") {
-      stopLobbyMusic();
-      return; 
-    }
+    try {
+      // 1. Route Scope: Lobby music only plays on landing/lobby screens.
+      // If we are in an active match room or role-reveal, stop lobby music.
+      if (location === "/role-reveal" || location.startsWith("/room/")) {
+        stopLobbyMusic();
+        return;
+      }
 
-    // 2. Unified Volume Logic
-    // Apply saved volume preferences and start music if not already playing.
-    if (preferences) {
-      setMusicVolume(preferences.musicVolume);
-      setSfxVolume(preferences.sfxVolume);
-      startLobbyMusic();
+      // 2. Volume & Playback Logic
+      if (preferences) {
+        const musicVol = Number.isFinite(preferences.musicVolume) ? preferences.musicVolume : 70;
+        const sfxVol = Number.isFinite(preferences.sfxVolume) ? preferences.sfxVolume : 70;
+        setMusicVolume(musicVol);
+        setSfxVolume(sfxVol);
+
+        // Only start music if volume is above 0%
+        if (musicVol > 0) {
+          startLobbyMusic();
+        } else {
+          stopLobbyMusic();
+        }
+      }
+    } catch (e) {
+      console.warn("[GlobalControls] Audio effect caught error:", e);
     }
   }, [location, preferences]);
 

@@ -36,28 +36,32 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
 
   const fetchPreferences = useCallback(async () => {
     if (!token) {
-      const localPrefs = localStorage.getItem(STORAGE_KEYS.guestPreferences);
-      if (localPrefs) {
-        try {
+      try {
+        const localPrefs = typeof localStorage !== "undefined" ? localStorage.getItem(STORAGE_KEYS.guestPreferences) : null;
+        if (localPrefs) {
           const parsed = JSON.parse(localPrefs);
-          setPreferences(parsed);
-          if (parsed.theme) {
-            document.documentElement.classList.remove("dark", "light");
-            document.documentElement.classList.add(parsed.theme);
+          if (parsed && typeof parsed === "object") {
+            parsed.musicVolume = Number.isFinite(parsed.musicVolume) ? Math.max(0, Math.min(100, Math.round(parsed.musicVolume))) : DEFAULTS.musicVolume;
+            parsed.sfxVolume = Number.isFinite(parsed.sfxVolume) ? Math.max(0, Math.min(100, Math.round(parsed.sfxVolume))) : DEFAULTS.sfxVolume;
+            setPreferences(parsed);
+            if (parsed.theme) {
+              document.documentElement.classList.remove("dark", "light");
+              document.documentElement.classList.add(parsed.theme);
+            }
+            return;
           }
-        } catch (e) {
-          // ignore
         }
-      } else {
-        setPreferences({
-          userId: "guest",
-          musicVolume: DEFAULTS.musicVolume,
-          sfxVolume: DEFAULTS.sfxVolume,
-          theme: DEFAULTS.theme,
-          notificationsEnabled: DEFAULTS.notificationsEnabled,
-          colorblindMode: DEFAULTS.colorblindMode,
-        });
+      } catch (e) {
+        // ignore
       }
+      setPreferences({
+        userId: "guest",
+        musicVolume: DEFAULTS.musicVolume,
+        sfxVolume: DEFAULTS.sfxVolume,
+        theme: DEFAULTS.theme,
+        notificationsEnabled: DEFAULTS.notificationsEnabled,
+        colorblindMode: DEFAULTS.colorblindMode,
+      });
       return;
     }
 
@@ -76,6 +80,10 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
       }
 
       const data = await response.json();
+      if (data && typeof data === "object") {
+        data.musicVolume = Number.isFinite(data.musicVolume) ? Math.max(0, Math.min(100, Math.round(data.musicVolume))) : DEFAULTS.musicVolume;
+        data.sfxVolume = Number.isFinite(data.sfxVolume) ? Math.max(0, Math.min(100, Math.round(data.sfxVolume))) : DEFAULTS.sfxVolume;
+      }
       setPreferences(data);
       // Apply theme to DOM
       if (data.theme) {
@@ -92,23 +100,31 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
 
   const updatePreferences = useCallback(
     async (updates: Partial<Omit<UserPrefs, "userId" | "createdAt" | "updatedAt">>) => {
+      // Optimistically update local state immediately so UI and audio are completely responsive
+      setPreferences((prev) => {
+        const defaultPrefs: UserPrefs = {
+          userId: token ? "user" : "guest",
+          musicVolume: DEFAULTS.musicVolume,
+          sfxVolume: DEFAULTS.sfxVolume,
+          theme: DEFAULTS.theme,
+          notificationsEnabled: DEFAULTS.notificationsEnabled,
+          colorblindMode: DEFAULTS.colorblindMode,
+        };
+        const nextPrefs = { ...(prev || defaultPrefs), ...updates } as UserPrefs;
+        if (!token) {
+          try {
+            if (typeof localStorage !== "undefined") {
+              localStorage.setItem(STORAGE_KEYS.guestPreferences, JSON.stringify(nextPrefs));
+            }
+          } catch (e) {
+            console.warn("[usePreferences] Local storage save failed:", e);
+          }
+        }
+        return nextPrefs;
+      });
+
       if (!token) {
-        return new Promise<any>((resolve) => {
-          setPreferences((prev) => {
-            const defaultPrefs: UserPrefs = {
-              userId: "guest",
-              musicVolume: DEFAULTS.musicVolume,
-              sfxVolume: DEFAULTS.sfxVolume,
-              theme: DEFAULTS.theme,
-              notificationsEnabled: DEFAULTS.notificationsEnabled,
-              colorblindMode: DEFAULTS.colorblindMode,
-            };
-            const nextPrefs = { ...(prev || defaultPrefs), ...updates } as UserPrefs;
-            localStorage.setItem(STORAGE_KEYS.guestPreferences, JSON.stringify(nextPrefs));
-            resolve(nextPrefs);
-            return nextPrefs;
-          });
-        });
+        return;
       }
 
       setIsLoading(true);
@@ -125,8 +141,9 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
         });
 
         if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || "Failed to update preferences");
+          const data = await response.json().catch(() => ({}));
+          console.warn("[usePreferences] Server rejected preferences update:", data.error || response.statusText);
+          return;
         }
 
         const data = await response.json();
@@ -135,7 +152,8 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
       } catch (err) {
         const message = err instanceof Error ? err.message : "Failed to update preferences";
         setError(message);
-        throw err;
+        console.warn("[usePreferences] Network error updating preferences:", message);
+        // Do not rethrow so UI doesn't crash into ErrorBoundary
       } finally {
         setIsLoading(false);
       }
@@ -144,11 +162,15 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
   );
 
   const updateMusicVolume = useCallback((volume: number) => {
-    return updatePreferences({ musicVolume: Math.max(0, Math.min(100, volume)) });
+    const parsed = Number(volume);
+    const safeVol = Number.isFinite(parsed) ? Math.max(0, Math.min(100, Math.round(parsed))) : DEFAULTS.musicVolume;
+    return updatePreferences({ musicVolume: safeVol });
   }, [updatePreferences]);
 
   const updateSfxVolume = useCallback((volume: number) => {
-    return updatePreferences({ sfxVolume: Math.max(0, Math.min(100, volume)) });
+    const parsed = Number(volume);
+    const safeVol = Number.isFinite(parsed) ? Math.max(0, Math.min(100, Math.round(parsed))) : DEFAULTS.sfxVolume;
+    return updatePreferences({ sfxVolume: safeVol });
   }, [updatePreferences]);
 
   const updateTheme = useCallback((theme: "dark" | "light") => {

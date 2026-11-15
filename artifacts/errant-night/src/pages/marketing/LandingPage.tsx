@@ -14,6 +14,7 @@ import howToPlayImg from "@assets/How_to_Play.webp";
 import { gameSessionStore } from "@/lib/gameSessionStore";
 import { getSocket } from "@/lib/socket";
 import { systemToast } from "@/components/common/SystemToast";
+import { SafeBoundary } from "@/components/common/ErrorBoundary";
 import LobbyBrowserModal from "@/components/game/LobbyBrowserModal";
 
 function generateRoomCode() {
@@ -46,16 +47,35 @@ export default function LandingPage() {
     startLobbyMusic();
   }, []);
 
+  // Support one-click Discord/shared invite links: ?room=ABCD, ?code=ABCD, or ?join=ABCD
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const rawRoom = params.get("room") || params.get("code") || params.get("join") || "";
+      const cleanedRoom = rawRoom.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+      if (cleanedRoom.length >= 4 && cleanedRoom.length <= 8) {
+        setRoomCodeInput(cleanedRoom);
+        setView("join");
+        const savedCallsign = gameSessionStore.getCallsign("") || (username ? username.toUpperCase() : "");
+        if (savedCallsign) {
+          setCallsign((prev) => prev || savedCallsign);
+        }
+      }
+    } catch {}
+  }, [username]);
+
   const handleToggleMusic = useCallback(() => {
-    const next = !musicOn;
-    const nextVolume = next ? 100 : 0;
-    updateMusicVolume(nextVolume);
-    setSoundEnabled(next);
-    if (next) {
-      startLobbyMusic();
-    } else {
-      stopLobbyMusic();
-    }
+    try {
+      const next = !musicOn;
+      const nextVolume = next ? 100 : 0;
+      updateMusicVolume(nextVolume).catch(() => {});
+      setSoundEnabled(next);
+      if (next) {
+        startLobbyMusic();
+      } else {
+        stopLobbyMusic();
+      }
+    } catch {}
   }, [musicOn, updateMusicVolume]);
 
   const handleCreateLobby = useCallback(() => {
@@ -79,10 +99,26 @@ export default function LandingPage() {
     playSciFiClick();
     setIsQuickMatching(true);
     const existingCallsign = callsign.trim() || gameSessionStore.getCallsign("") || (username ? username.toUpperCase() : "") || `CREW_${Math.floor(100 + Math.random() * 900)}`;
+    gameSessionStore.clearVolatileGameState();
     gameSessionStore.setCallsign(existingCallsign);
 
     const socket = getSocket();
+    if (!socket.connected) {
+      socket.connect();
+    }
+
+    let settled = false;
+    const timeoutId = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      setIsQuickMatching(false);
+      systemToast("Server busy or unreachable. Please try again.", "warning", 4000);
+    }, 5000);
+
     socket.emit("list_public_lobbies", {}, (resp: any) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeoutId);
       setIsQuickMatching(false);
       const lobbies = resp?.lobbies || [];
       const openLobbies = lobbies.filter((l: any) => l.playerCount < 10);
@@ -111,6 +147,7 @@ export default function LandingPage() {
 
   const handleJoinFromBrowser = useCallback((targetCode: string) => {
     const existingCallsign = callsign.trim() || gameSessionStore.getCallsign("") || (username ? username.toUpperCase() : "") || `CREW_${Math.floor(100 + Math.random() * 900)}`;
+    gameSessionStore.clearVolatileGameState();
     gameSessionStore.setCallsign(existingCallsign);
     gameSessionStore.setRoomCode(targetCode);
     if (userId) gameSessionStore.setUserId(userId, targetCode);
@@ -123,6 +160,7 @@ export default function LandingPage() {
     playSciFiClick();
     setIsCreatingLobby(true);
     const roomCode = generateRoomCode();
+    gameSessionStore.clearVolatileGameState();
     gameSessionStore.setCallsign(callsign);
     gameSessionStore.setRoomCode(roomCode);
     gameSessionStore.markCreating();
@@ -141,6 +179,7 @@ export default function LandingPage() {
     if (!callsign.trim() || !roomCodeInput.trim()) return;
     playSciFiClick();
     const cleanCode = roomCodeInput.trim().toUpperCase();
+    gameSessionStore.clearVolatileGameState();
     gameSessionStore.setCallsign(callsign);
     gameSessionStore.setRoomCode(cleanCode);
     if (userId) {
@@ -200,13 +239,17 @@ export default function LandingPage() {
       />
       {/* How to Play modal */}
       {showHowToPlay && (
-        <HowToPlayModal onClose={() => setShowHowToPlay(false)} />
+        <SafeBoundary>
+          <HowToPlayModal onClose={() => setShowHowToPlay(false)} />
+        </SafeBoundary>
       )}
-      <LobbyBrowserModal
-        isOpen={showLobbyBrowser}
-        onClose={() => setShowLobbyBrowser(false)}
-        onJoinRoom={handleJoinFromBrowser}
-      />
+      <SafeBoundary>
+        <LobbyBrowserModal
+          isOpen={showLobbyBrowser}
+          onClose={() => setShowLobbyBrowser(false)}
+          onJoinRoom={handleJoinFromBrowser}
+        />
+      </SafeBoundary>
 
       {/* Bottom content */}
       <section className="relative z-10 flex flex-col items-center text-center px-6 max-w-lg w-full pb-10 sm:pb-12">
@@ -590,10 +633,14 @@ export default function LandingPage() {
       {/* Auth Modal disabled */}
 
       {/* Settings Modal */}
-      <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
+      <SafeBoundary>
+        <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
+      </SafeBoundary>
 
       {/* Profile Modal */}
-      <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
+      <SafeBoundary>
+        <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
+      </SafeBoundary>
     </article>
   );
 }

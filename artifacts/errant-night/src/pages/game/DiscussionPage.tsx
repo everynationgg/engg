@@ -299,10 +299,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
             </div>
           </div>
           <div className="text-right">
-            <div className="text-[10px] tracking-[0.3em] uppercase mb-1 text-cyan-600">Neural Sync Active</div>
-            <div className="font-orbitron font-bold text-lg tracking-widest" style={{ color: "hsl(185 100% 70%)" }}>
-              {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, '0')}
-            </div>
+            <div className="text-[10px] tracking-[0.3em] uppercase text-cyan-600">Neural Sync Active</div>
           </div>
         </div>
 
@@ -469,8 +466,8 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
             {/* Wing icon with silver shine */}
             <WingIcon accentColor={accentColor} />
           </div>
-          <div className="text-center sm:text-left flex-1 min-w-0">
-            <div className="font-orbitron font-black text-2xl sm:text-4xl tracking-[0.2em] uppercase italic" style={{ color: accentLight, textShadow: `0 0 15px ${accentGlow}` }}>
+          <div className="flex-1 min-w-0">
+            <div className="font-orbitron font-black text-xl sm:text-3xl tracking-[0.2em] uppercase italic" style={{ color: accentLight, textShadow: `0 0 15px ${accentGlow}` }}>
               DISCUSSION
             </div>
             <div className="flex flex-col gap-1 mt-2">
@@ -482,11 +479,11 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
               </div>
             </div>
           </div>
-          
-          {/* Timer - Fixed/Floating on mobile header */}
-          <div className="sm:absolute sm:top-4 sm:right-4 text-center sm:text-right">
-            <div className="text-[10px] tracking-[0.25em] uppercase mb-1 opacity-60">Time Left</div>
-            <div className="font-orbitron font-bold text-xl tracking-widest" style={{ color: secondsLeft < 20 ? "hsl(0 75% 60%)" : accentLight }}>
+
+          {/* Discussion Timer */}
+          <div className="text-right pl-3 sm:pl-4 border-l border-white/10 shrink-0">
+            <div className="text-[9px] sm:text-[10px] tracking-[0.25em] uppercase mb-0.5 opacity-60 font-orbitron font-bold">TIME LEFT</div>
+            <div className="font-orbitron font-bold text-lg sm:text-2xl tracking-widest tabular-nums" style={{ color: secondsLeft < 20 ? "hsl(0 75% 60%)" : accentLight }}>
               {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, '0')}
             </div>
           </div>
@@ -603,7 +600,7 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
             <button
               onClick={handleCallEmergencyVote}
               disabled={evLoading || cooldownLeft > 0}
-              className="w-full py-5 flex flex-col items-center justify-center gap-2 font-orbitron font-black text-sm tracking-[0.4em] uppercase rounded-md border-2 transition-all duration-200 group active:scale-[0.98]"
+              className="w-full py-5 px-3 flex flex-col items-center justify-center gap-2 font-orbitron font-black text-xs sm:text-sm tracking-[0.15em] sm:tracking-[0.25em] whitespace-nowrap sm:whitespace-normal uppercase rounded-md border-2 transition-all duration-200 group active:scale-[0.98]"
               style={{
                 background: cooldownLeft > 0 ? "transparent" : "hsl(0 85% 55% / 0.12)",
                 borderColor: cooldownLeft > 0 ? "hsl(210 30% 25%)" : "hsl(0 85% 60% / 0.5)",
@@ -613,9 +610,9 @@ export default function DiscussionPage({ onOpenChat }: { onOpenChat?: () => void
                 cursor: (evLoading || cooldownLeft > 0) ? "not-allowed" : "pointer"
               }}
             >
-              <div className="flex items-center gap-4">
-                <FaExclamationTriangle className={`text-xl transition-transform ${evLoading ? 'animate-pulse' : 'group-hover:scale-120'}`} />
-                {evLoading ? "INITIATING..." : cooldownLeft > 0 ? "SYSTEM REBOOTING" : "CALL EMERGENCY VOTE"}
+              <div className="flex items-center justify-center flex-row gap-2.5 sm:gap-3">
+                <FaExclamationTriangle className={`text-base sm:text-xl shrink-0 transition-transform ${evLoading ? 'animate-pulse' : 'group-hover:scale-120'}`} />
+                <span>{evLoading ? "INITIATING..." : cooldownLeft > 0 ? "SYSTEM REBOOTING" : "CALL EMERGENCY VOTE"}</span>
               </div>
               {cooldownLeft > 0 && !evLoading && (
                 <div className="text-[9px] tracking-[0.2em] opacity-50 font-mono">

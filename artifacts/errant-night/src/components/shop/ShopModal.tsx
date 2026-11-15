@@ -3,6 +3,7 @@ import { PayPalButtons } from "@paypal/react-paypal-js";
 import { useAuth } from "@/hooks/useAuth";
 import { playSciFiClick } from "@/lib/sound";
 import { FaPaypal, FaGem, FaTimes, FaShieldAlt } from "react-icons/fa";
+import { backNavigation } from "@/lib/backNavigation";
 
 interface ShopModalProps {
   isOpen: boolean;
@@ -27,6 +28,14 @@ export default function ShopModal({ isOpen, onClose }: ShopModalProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const payPalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    return backNavigation.register(() => {
+      onClose();
+      return true;
+    }, 60);
+  }, [isOpen, onClose]);
 
   const handlePayMongoCheckout = async () => {
     if (!selectedPack) return;
@@ -172,7 +181,7 @@ export default function ShopModal({ isOpen, onClose }: ShopModalProps) {
             <button
               onClick={() => { playSciFiClick(); onClose(); }}
               style={{ touchAction: "manipulation" }}
-              className="w-11 h-11 rounded-lg flex items-center justify-center border border-white/15 hover:border-red-500/50 hover:bg-red-500/10 transition-all text-white/60 hover:text-red-400 group shrink-0 cursor-pointer"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 border border-white/15 text-white/70 hover:text-white flex items-center justify-center transition-all group shrink-0 cursor-pointer"
             >
               <FaTimes className="group-hover:scale-110 transition-transform" />
             </button>

@@ -4,6 +4,7 @@ import HowToPlayModal from "@/components/game/HowToPlayModal";
 import { useQuitGame } from "@/components/system/QuitGameButton";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import { playMechanicalChunk } from "@/lib/sound";
+import { backNavigation } from "@/lib/backNavigation";
 
 interface HamburgerMenuProps {
   onShowSettings: () => void;
@@ -44,23 +45,13 @@ export default function HamburgerMenu({
   useEffect(() => {
     if (!menuOpen) return;
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        closeMenu();
-      }
-    };
-
-    const handleBackButton = (e: Event) => {
-      e.preventDefault();
+    const unregister = backNavigation.register(() => {
       closeMenu();
-    };
+      return true;
+    }, 40);
 
-    window.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("backbutton", handleBackButton);
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("backbutton", handleBackButton);
+      unregister();
     };
   }, [menuOpen, closeMenu]);
 
@@ -155,8 +146,8 @@ export default function HamburgerMenu({
     label: "MUSIC",
     tooltip: musicOn ? "Background music is on" : "Background music is muted",
     onClick: () => {
-      playSound();
-      onToggleMusic();
+      try { playSound(); } catch {}
+      try { onToggleMusic(); } catch {}
     },
     color: musicOn ? "#00f3ff" : "rgba(255,255,255,0.4)",
     badge: musicOn ? "ON" : "OFF",

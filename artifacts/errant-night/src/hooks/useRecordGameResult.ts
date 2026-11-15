@@ -1,6 +1,5 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "./useAuth";
-import { ROLES } from "@/data/roles";
 
 export interface PlayerStats {
   id: string;
@@ -37,15 +36,13 @@ export interface LeaderboardEntry {
   rank: number;
 }
 
-export interface GameResultData {
-  gameId: string;
-  role: string;
-  won: "yes" | "no";
-  alignment?: string;
-}
+export interface RoundResultIdentity { roundId: string; playerId: string }
 
 export function useRecordGameResult() {
-  const { isLoggedIn, userId } = useAuth();
+  const { isLoggedIn, userId, token } = useAuth();
+  const authRef = useRef({ userId, token });
+  authRef.current = { userId, token };
+  const inFlight = useRef(new Set<string>());
   const [personalStats, setPersonalStats] = useState<PlayerStats | null>(null);
   const [roleStats, setRoleStats] = useState<RoleStats[]>([]);
   const [gameHistory, setGameHistory] = useState<GameHistoryEntry[]>([]);
@@ -56,68 +53,36 @@ export function useRecordGameResult() {
   const [hasRecorded, setHasRecorded] = useState(false);
   const [lastRewards, setLastRewards] = useState<{ xp: number; credits: number } | null>(null);
 
-  /**
-   * Record a game result and fetch updated stats + leaderboard
-   */
-  const recordResult = useCallback(
-    async (gameResultData: GameResultData) => {
-      if (!isLoggedIn || !userId) {
-        setError("Not logged in");
-        return;
-      }
+  useEffect(() => {
+    setHasRecorded(false); setLastRewards(null); setPersonalStats(null);
+    setRoleStats([]); setGameHistory([]); setGameHistoryTotal(0); setError(null); setIsRecording(false);
+  }, [userId, token]);
 
-      setIsRecording(true);
-      setError(null);
-
-      try {
-        // Record the game result
-        const recordResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/stats/record-game`, {
-        method: "POST",
-        headers: { 
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${localStorage.getItem("lp_auth_token")}`,
-        },
-        body: JSON.stringify(gameResultData),
-});
-
-        if (recordResponse.ok) {
-          const data = await recordResponse.json();
-          if (data.rewards) setLastRewards(data.rewards);
-        }
-
-        // Fetch updated personal stats
-        const statsResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/stats/my-stats`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("lp_auth_token")}`,
-          },
-        });
-
-        if (statsResponse.ok) {
-          const stats = await statsResponse.json();
-          setPersonalStats(stats);
-        }
-
-        // Fetch leaderboard
-        const leaderRes = await fetch(`${import.meta.env.VITE_API_URL}/api/stats/leaderboard?limit=10`, {
-          method: "GET",
-        });
-
-        if (leaderRes.ok) {
-          const data = await leaderRes.json();
-          setLeaderboard(data.entries || []);
-        }
-
-        setHasRecorded(true);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : "Failed to record result";
-        setError(message);
-      } finally {
-        setIsRecording(false);
-      }
-    },
-    [isLoggedIn, userId]
-  );
+  // Reading a receipt cannot create a reward. Ignore responses from an old login.
+  const fetchResultReceipt = useCallback(async ({ roundId, playerId }: RoundResultIdentity) => {
+    if (!isLoggedIn || !userId || !token) return;
+    const key = [roundId, playerId, userId, token].join(":");
+    if (inFlight.current.has(key)) return;
+    inFlight.current.add(key); setIsRecording(true); setError(null);
+    const stillCurrent = () => authRef.current.userId === userId && authRef.current.token === token;
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/stats/rounds/${encodeURIComponent(roundId)}/players/${encodeURIComponent(playerId)}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (!response.ok) return; // Pending or unentitled: show the game, never fabricate rewards.
+      const receipt = await response.json();
+      if (!stillCurrent()) return;
+      if (receipt.roundId !== roundId || receipt.playerId !== playerId) return;
+      setLastRewards(receipt.rewards); setHasRecorded(true);
+      const stats = await fetch(`${import.meta.env.VITE_API_URL}/api/stats/my-stats`, { headers: { Authorization: `Bearer ${token}` } });
+      if (stats.ok) { const data = await stats.json(); if (stillCurrent()) setPersonalStats(data); }
+    } catch (err) {
+      if (stillCurrent()) setError(err instanceof Error ? err.message : "Failed to load result");
+    } finally {
+      inFlight.current.delete(key); if (stillCurrent()) setIsRecording(false);
+    }
+  }, [isLoggedIn, userId, token]);
 
   /**
    * Fetch personal stats (without recording a game)
@@ -211,7 +176,7 @@ export function useRecordGameResult() {
   }, [isLoggedIn, userId]);
 
   return {
-    recordResult,
+    fetchResultReceipt,
     fetchPersonalStats,
     fetchLeaderboard,
     fetchRoleStats,
@@ -226,32 +191,4 @@ export function useRecordGameResult() {
     hasRecorded,
     lastRewards,
   };
-}
-
-/**
- * Determine if a player won based on their role and the winning team
- */
-export function determinePlayerWon(
-  playerRole: string,
-  winTeam: "crew" | "alien" | "tie",
-  alignment?: "Good" | "Bad"
-): boolean {
-  if (winTeam === "tie") return false;
-
-  const roleObj = ROLES.find((r) => r.id === playerRole);
-  if (!roleObj) return false;
-
-  let playerTeam = roleObj.team;
-  if (playerTeam === "chaotic" && alignment) {
-    playerTeam = (alignment === "Bad") ? "alien" : "crew";
-  }
-  
-  return playerTeam === winTeam;
-}
-
-/**
- * Generate a game ID (timestamp-based)
- */
-export function generateGameId(): string {
-  return `game_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }

@@ -224,6 +224,18 @@
 }
 
 :root {
+  /* Android Safe Areas and System Bar Insets */
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+
+  /* Resilient app safe areas: status bar (>= 36px on mobile) and navigation bar (>= 24px on mobile) */
+  --app-safe-top: max(var(--safe-area-inset-top, 0px), var(--sat), 36px);
+  --app-safe-bottom: max(var(--safe-area-inset-bottom, 0px), var(--sab), 24px);
+  --app-safe-left: max(var(--safe-area-inset-left, 0px), var(--sal), 0px);
+  --app-safe-right: max(var(--safe-area-inset-right, 0px), var(--sar), 0px);
+
   --button-outline: rgba(0,0,0, .10);
   --badge-outline: rgba(0,0,0, .05);
   --opaque-button-border-intensity: -8;
@@ -303,6 +315,13 @@
   --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
   --destructive-border: hsl(var(--destructive));
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --app-safe-top: max(var(--sat), 0px);
+    --app-safe-bottom: max(var(--sab), 0px);
+  }
 }
 
 .dark {

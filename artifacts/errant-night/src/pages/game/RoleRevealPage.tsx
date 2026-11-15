@@ -67,7 +67,7 @@ export default function RoleRevealPage() {
   const totalPlayers = getTotalPlayers();
   const roomCode = gameSessionStore.getRoomCode();
 
-  // Sync timer with server
+  // Sync timer and session state with server
   useEffect(() => {
     const socket = getSocket();
     const handlePhaseUpdate = (session: any) => {
@@ -76,34 +76,21 @@ export default function RoleRevealPage() {
         const elapsed = Math.floor((Date.now() - session.phaseStartedAt) / 1000);
         setSecondsLeft(Math.max(0, REVEAL_TIMEOUT - elapsed));
       }
-    };
-    socket.on("phase_update", handlePhaseUpdate);
-    
-    // Initial sync
-    socket.emit("get_session", { sessionId: roomCode }, (resp: any) => {
-      if (resp.success && resp.session) {
-        handlePhaseUpdate(resp.session);
-      }
-    });
-
-    return () => {
-      socket.off("phase_update", handlePhaseUpdate);
-    };
-  }, [roomCode]);
-
-  useEffect(() => {
-    const socket = getSocket();
-    const handlePhaseUpdate = (session: any) => {
       if (session.roleAcknowledgements !== undefined) {
         setReadyCount(session.roleAcknowledgements.length);
+        const myCheckId = myPlayerId || socket.id;
+        if (myCheckId && session.roleAcknowledgements.includes(myCheckId)) {
+          setAcknowledged(true);
+        }
       }
       if (session.players) {
         setLivePlayers(session.players);
         setSessionPlayers(session.players.map((p: any) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === socket.id })));
+        const me = session.players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === socket.id);
+        if (me) setIsHost(me.isHost);
       }
       if (session.rolesAssigned) {
         setRolesAssigned(session.rolesAssigned);
-        const myPlayerId = gameSessionStore.getPlayerId(roomCode);
         const mySocketId = socket.id;
         const myRole = session.rolesAssigned[myPlayerId || ""] || session.rolesAssigned[mySocketId || ""];
         if (myRole) {
@@ -111,9 +98,6 @@ export default function RoleRevealPage() {
         }
       }
       if (session.initialRoles) setInitialRoles(session.initialRoles);
-
-      const me = session.players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === socket.id);
-      if (me) setIsHost(me.isHost);
       if (session.phase === "orbit_action") {
         gameSessionStore.clearOrbitInfo();
         gameSessionStore.clearOrbitResult();
@@ -129,44 +113,15 @@ export default function RoleRevealPage() {
 
     socket.on("phase_update", handlePhaseUpdate);
     socket.on("orbit_info", handleOrbitInfo);
-
-    // Periodic fallback: poll every 3 seconds so the UI stays in sync even when
-    // phase_update socket events are missed (e.g. transport hiccups).
+    
+    // Initial sync & periodic polling
     const syncSession = () => {
       socket.emit("get_session", { sessionId: roomCode }, (resp: any) => {
         if (resp.success && resp.session) {
-          if (resp.session.roleAcknowledgements !== undefined) {
-            setReadyCount(resp.session.roleAcknowledgements.length);
-          }
-          if (resp.session.players) {
-            setLivePlayers(resp.session.players);
-            setSessionPlayers(resp.session.players.map((p: any) => ({ ...p, isYou: myPlayerId ? p.playerId === myPlayerId : p.id === socket.id })));
-          }
-          if (resp.session.rolesAssigned) {
-            setRolesAssigned(resp.session.rolesAssigned);
-            const myPlayerId = gameSessionStore.getPlayerId(roomCode);
-            const mySocketId = socket.id;
-            const myRole = resp.session.rolesAssigned[myPlayerId || ""] || resp.session.rolesAssigned[mySocketId || ""];
-            if (myRole) {
-              gameSessionStore.setAssignedRole(myRole);
-            }
-          }
-          if (resp.session.initialRoles) setInitialRoles(resp.session.initialRoles);
-
-          const me = resp.session.players.find((p: any) => myPlayerId ? p.playerId === myPlayerId : p.id === socket.id);
-          if (me) setIsHost(me.isHost);
-          if (resp.session.phaseReady !== undefined) {
-            setIsPhaseReady(resp.session.phaseReady);
-          }
-          const isFrozen = (resp.session.playersInGrace && resp.session.playersInGrace.length > 0) || !!resp.session.hostEndedInterrupt;
-          if (isFrozen) {
-            setIsPhaseReady(false); // Force not ready if frozen
-          }
+          handlePhaseUpdate(resp.session);
         }
       });
     };
-
-    // Initial fetch + periodic poll
     syncSession();
     const pollId = setInterval(syncSession, 3000);
 
@@ -175,7 +130,7 @@ export default function RoleRevealPage() {
       socket.off("orbit_info", handleOrbitInfo);
       clearInterval(pollId);
     };
-  }, [roomCode]);
+  }, [roomCode, myPlayerId]);
 
   const displayName = role.salutation.replace("{username}", playerName);
 
@@ -331,41 +286,37 @@ export default function RoleRevealPage() {
       className="relative min-h-[100dvh] w-full flex flex-col ix-page-enter"
       style={{ background: bgTint, color: "hsl(190 80% 90%)" }}
     >
-      {/* Top bar */}
+      {/* Top bar — rebuild: priority to ROLE REVEAL, AUTO-DEPLOY countdown, safe-area padded */}
       <div
-        className="w-full px-4 sm:px-6 py-3 flex items-center justify-between border-b shrink-0"
+        className="w-full px-4 sm:px-6 py-3 flex items-center justify-between border-b shrink-0 gap-3"
         style={{
           background: "hsl(220 28% 7%)",
           borderColor: `${accentColor.replace(")", " / 0.25)")}`,
           boxShadow: `0 1px 12px ${accentGlow.replace("0.4", "0.12")}`,
+          paddingTop: "var(--app-safe-top, 36px)",
         }}
       >
-        <div>
-          <div
-            className="font-orbitron font-black text-base sm:text-lg tracking-widest uppercase leading-none"
-            style={{ color: accentColorLight, textShadow: `0 0 12px ${accentGlow}` }}
-          >
-            ERRANT NIGHT
+        <div className="flex flex-col min-w-0">
+          <div className="text-[9px] sm:text-[10px] tracking-[0.25em] uppercase font-orbitron font-semibold text-cyan-400/80 mb-0.5">
+            MISSION BRIEFING
           </div>
           <div
-            className="font-orbitron font-bold text-[10px] sm:text-xs tracking-[0.25em] uppercase mt-0.5"
-            style={{ color: "hsl(270 80% 65%)" }}
+            className="font-orbitron font-black text-lg sm:text-2xl tracking-[0.15em] uppercase italic leading-tight truncate"
+            style={{ color: isAlien ? "hsl(0 75% 70%)" : "hsl(185 100% 70%)", textShadow: `0 0 12px ${accentGlow}` }}
           >
-            STARTING ROLE
+            ROLE REVEAL
           </div>
         </div>
-        <div className="text-right flex items-center gap-4 sm:gap-6">
-          <div className="flex-1">
-            <div className="text-[10px] tracking-[0.3em] uppercase opacity-50 font-bold mb-0.5">
-              PHASE 1
+
+        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+          <div className="text-right pl-3 sm:pl-4 border-l border-white/10">
+            <div className="text-[9px] sm:text-[10px] tracking-[0.2em] uppercase font-orbitron font-bold text-amber-300/90 mb-0.5">
+              AUTO-DEPLOY
             </div>
-            <div className="font-orbitron font-black text-xl sm:text-3xl tracking-[0.15em] uppercase italic" style={{ color: isAlien ? "hsl(0 75% 70%)" : "hsl(185 100% 70%)" }}>
-              ROLE REVEAL
-            </div>
-          </div>
-          <div className="text-right pl-4 border-l border-white/10">
-            <div className="text-[10px] tracking-[0.25em] uppercase mb-0.5 opacity-50">TIME LEFT</div>
-            <div className="font-orbitron font-bold text-xl sm:text-2xl tracking-widest" style={{ color: secondsLeft < 10 ? "hsl(0 75% 60%)" : "hsl(185 100% 70%)" }}>
+            <div
+              className="font-orbitron font-black text-xl sm:text-2xl tracking-widest tabular-nums leading-none"
+              style={{ color: secondsLeft < 10 ? "hsl(0 85% 65%)" : "hsl(185 100% 70%)" }}
+            >
               0:{secondsLeft.toString().padStart(2, '0')}
             </div>
           </div>
@@ -420,7 +371,7 @@ export default function RoleRevealPage() {
 
           {/* RIGHT — Role info stack */}
           <div
-            className="flex-1 flex flex-col overflow-y-auto px-6 lg:px-10 py-6 lg:py-8 gap-5 pb-28 lg:pb-6"
+            className="flex-1 flex flex-col overflow-y-auto px-6 lg:px-10 py-6 lg:py-8 gap-5 pb-36 lg:pb-6"
             style={{
               opacity: revealState === "ready" ? 1 : 0,
               transform: revealState === "ready" ? "translateY(0px)" : "translateY(18px)",
@@ -668,15 +619,15 @@ export default function RoleRevealPage() {
         </div>
       </div>
 
-      {/* Acknowledge button — mobile (fixed bottom, leaves room on right for floating menu button) */}
+      {/* Acknowledge button — mobile (fixed bottom, respects Android navigation safe-area) */}
       <div
-        className={`lg:hidden fixed bottom-0 left-0 right-0 pl-4 pr-24 py-3.5 border-t transition-transform duration-500 delay-300 ${revealState === "ready" ? "translate-y-0" : "translate-y-full"}`}
+        className={`lg:hidden fixed bottom-0 left-0 right-0 px-4 py-3 border-t transition-transform duration-500 delay-300 ${revealState === "ready" ? "translate-y-0" : "translate-y-full"}`}
         style={{
           background: bgTint,
           borderColor: `${accentColor.replace(")", " / 0.2)")}`,
           backdropFilter: "blur(8px)",
           zIndex: 55,
-          paddingBottom: "max(16px, calc(env(safe-area-inset-bottom, 16px) + 8px))",
+          paddingBottom: "max(16px, var(--app-safe-bottom, 24px))",
         }}
       >
         {revealState === "ready" && (
@@ -707,14 +658,14 @@ function AcknowledgeButton({ acknowledged, accentColor, accentColorLight, accent
   if (acknowledged) {
     return (
       <div
-        className="w-full py-4 font-orbitron font-bold text-sm tracking-[0.25em] uppercase rounded-md border-2 text-center"
+        className="w-full py-4 font-orbitron font-bold text-xs sm:text-sm tracking-[0.2em] uppercase rounded-md border-2 text-center"
         style={{
           background: "hsl(220 28% 9%)",
           borderColor: "hsl(210 30% 22%)",
-          color: "hsl(210 30% 45%)",
+          color: "hsl(210 30% 55%)",
         }}
       >
-        Waiting for other players...
+        WAITING FOR OTHER PLAYERS...
       </div>
     );
   }
@@ -724,7 +675,7 @@ function AcknowledgeButton({ acknowledged, accentColor, accentColorLight, accent
       onClick={onAcknowledge}
       disabled={!isPhaseReady}
       data-testid="button-acknowledge"
-      className={`w-full py-4 font-orbitron font-bold text-sm tracking-[0.25em] uppercase rounded-md border-2 transition-all duration-200 ${!isPhaseReady ? 'cursor-not-allowed grayscale-[0.5] opacity-50' : 'cursor-pointer'}`}
+      className={`w-full py-4 font-orbitron font-black text-xs sm:text-sm tracking-[0.2em] uppercase rounded-md border-2 transition-all duration-200 ${!isPhaseReady ? 'cursor-not-allowed grayscale-[0.5] opacity-50' : 'cursor-pointer active:scale-[0.99]'}`}
       style={{
         background: `linear-gradient(135deg, ${accentColor.replace(")", " / 0.25)")}, ${accentColor.replace(")", " / 0.1)")})`,
         borderColor: accentColor,
@@ -742,7 +693,7 @@ function AcknowledgeButton({ acknowledged, accentColor, accentColorLight, accent
         btn.style.color = accentColorLight;
       }}
     >
-      {isPhaseReady ? "READY" : "PREPARING..."}
+      {isPhaseReady ? "I ACKNOWLEDGE MY ROLE" : "PREPARING MISSION..."}
     </button>
   );
 }
