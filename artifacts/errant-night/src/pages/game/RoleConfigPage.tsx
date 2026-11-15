@@ -130,12 +130,12 @@ export default function RoleConfigPage() {
     }
   }, [isCreating, roomCode]);
 
-  const isRolePreviewOpen = Boolean(selectedRole);
+  const isRoleModalOpen = Boolean(selectedRole);
 
   // Close mobile RolePreview sheet via backNavigation (Android hardware Back, Popstate, or Escape)
   // and lock background scrolling on mobile while open
   useEffect(() => {
-    if (!isRolePreviewOpen) return;
+    if (!isRoleModalOpen) return;
 
     // Lock background scrolling on mobile
     const prevOverflow = document.body.style.overflow;
@@ -154,7 +154,7 @@ export default function RoleConfigPage() {
       }
       unregister();
     };
-  }, [isRolePreviewOpen]);
+  }, [isRoleModalOpen]);
 
 
 
@@ -1458,7 +1458,7 @@ export default function RoleConfigPage() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setSelectedRole(null)}
-                className="lg:hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm"
+                className="lg:hidden fixed inset-0 z-[9995] bg-black/65 backdrop-blur-sm"
               />
               <motion.div
                 initial={{ y: "100%", opacity: 0 }}
@@ -1466,11 +1466,11 @@ export default function RoleConfigPage() {
                 exit={{ y: "100%", opacity: 0 }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
                 data-no-swipe="true"
-                className="fixed lg:relative inset-x-0 bottom-0 z-[110] lg:z-0 block lg:flex lg:flex-col w-full lg:w-[clamp(240px,30%,400px)] shrink-0 border-t lg:border-t-0 lg:border-l max-h-[85dvh] lg:max-h-none lg:h-full overflow-y-auto lg:overflow-hidden rounded-t-2xl lg:rounded-none shadow-[0_-20px_40px_rgba(0,0,0,0.5)] lg:shadow-none backdrop-blur-xl lg:backdrop-blur-0 overscroll-contain custom-scrollbar"
+                className="fixed lg:relative inset-x-0 bottom-0 z-[9996] lg:z-0 block lg:flex w-full lg:w-[clamp(240px,30%,400px)] shrink-0 lg:flex-col border-t lg:border-t-0 lg:border-l max-h-[88dvh] lg:max-h-none lg:h-full overflow-y-auto lg:overflow-hidden rounded-t-2xl lg:rounded-none shadow-[0_-20px_40px_rgba(0,0,0,0.5)] lg:shadow-none backdrop-blur-xl lg:backdrop-blur-0 overscroll-contain"
                 style={{
-                  background: "hsl(220 30% 6% / 0.96)",
+                  background: "hsl(220 30% 6% / 0.98)",
                   borderColor: "hsl(210 30% 18%)",
-                  paddingBottom: "max(32px, var(--app-safe-bottom, 32px))",
+                  paddingBottom: "max(24px, env(safe-area-inset-bottom, 24px))",
                   touchAction: "pan-y",
                   WebkitOverflowScrolling: "touch",
                 }}
@@ -1795,31 +1795,34 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
     role.team === "alien" ? "ALIEN TEAM" : role.team === "chaotic" ? "CHAOTIC" : "CREW TEAM";
 
   return (
-    <div className="block lg:flex lg:flex-col lg:h-full relative">
+    <div className="flex flex-col lg:h-full relative">
       {/* Sticky Mobile Top Bar / Close Button — always accessible regardless of scroll position */}
-      <div className="lg:hidden sticky top-0 z-50 flex items-center justify-between px-3 py-2.5 bg-[#0b0e14]/95 backdrop-blur-md border-b border-white/10 shrink-0">
-        <div
-          className={`px-2 py-0.5 rounded font-orbitron text-[10px] tracking-widest uppercase font-bold team-badge ${role.team}-color`}
-          style={{
-            background: accentColorDim,
-            border: `1px solid ${accentColor}`,
-            color: accentColorLight,
-          }}
-        >
-          {teamLabel}
+      <div className="lg:hidden sticky top-0 z-50 flex flex-col px-3 pt-2 pb-1.5 bg-[#0b0e14]/95 backdrop-blur-md border-b border-white/10 shrink-0">
+        <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-1.5" />
+        <div className="flex items-center justify-between">
+          <div
+            className={`px-2 py-0.5 rounded font-orbitron text-[10px] tracking-widest uppercase font-bold team-badge ${role.team}-color`}
+            style={{
+              background: accentColorDim,
+              border: `1px solid ${accentColor}`,
+              color: accentColorLight,
+            }}
+          >
+            {teamLabel}
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close role preview"
+            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 active:scale-95 flex items-center justify-center text-white/80 hover:text-white cursor-pointer transition-all"
+            style={{ touchAction: "manipulation" }}
+          >
+            <FaTimes className="text-sm" />
+          </button>
         </div>
-        <button
-          onClick={onClose}
-          aria-label="Close role preview"
-          className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 active:scale-95 flex items-center justify-center text-white/80 hover:text-white cursor-pointer transition-all"
-          style={{ touchAction: "manipulation" }}
-        >
-          <FaTimes className="text-sm" />
-        </button>
       </div>
 
-      {/* Role image/video — square frame */}
-      <div className="relative w-full lg:w-[85%] lg:mx-auto aspect-[21/12] lg:aspect-square overflow-hidden shrink-0 p-2 lg:p-3">
+      {/* Role image/video — compact on mobile so details + unlock button fit comfortably */}
+      <div className="relative w-full h-[175px] sm:h-[210px] lg:h-auto lg:w-[85%] lg:mx-auto lg:aspect-square overflow-hidden shrink-0 p-2 lg:p-3">
         <div className="relative w-full h-full rounded-lg border border-white/10 overflow-hidden">
           <video
             key={role.id}
@@ -1853,10 +1856,10 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
       </div>
 
       {/* Right side (mobile) / Bottom section (desktop) */}
-      <div className="block lg:flex lg:flex-col lg:flex-1 min-w-0 lg:min-h-0 lg:overflow-hidden">
+      <div className="flex flex-col lg:flex-1 min-w-0 lg:overflow-hidden">
         {/* Role name */}
         <div
-          className="px-3 lg:px-4 pt-1 pb-1.5 lg:pt-1 lg:pb-2 border-b shrink-0"
+          className="px-3 lg:px-4 pt-1 pb-1 lg:pt-1 lg:pb-2 border-b shrink-0"
           style={{ borderColor: "hsl(210 30% 14%)" }}
         >
           <div
@@ -1872,9 +1875,9 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
           </div>
         </div>
 
-        {/* Details — single outer scroll on mobile, inner pane scroll on desktop */}
+        {/* Details — on mobile, outer sheet scrolls everything seamlessly (zero touch dead-zones); on desktop (lg:), inner panel scrolls */}
         <div
-          className="block lg:flex lg:flex-col lg:flex-1 lg:min-h-0 lg:overflow-y-auto px-3.5 lg:px-4 py-3 space-y-3 pb-24 lg:pb-6 lg:overscroll-contain"
+          className="lg:flex-1 lg:overflow-y-auto px-3 lg:px-4 py-2 flex flex-col gap-2 lg:gap-3 pb-8 lg:pb-6 lg:overscroll-contain"
         >
           <InfoBlock label="Alignment" value={role.alignment} accentColor={accentColorLight} />
           <InfoBlock label="Win Condition" value={role.winCondition} accentColor={accentColorLight} />
@@ -1882,8 +1885,8 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
           <InfoBlock label="Notes" value={role.notes} accentColor={accentColorLight} dim />
 
           {isLocked && (
-            <div className="mt-4 pt-6 border-t border-white/10 flex flex-col items-center">
-              <div className="flex items-center gap-2 mb-4 text-white/60">
+            <div className="mt-2 pt-3 lg:mt-4 lg:pt-6 border-t border-white/10 flex flex-col items-center">
+              <div className="flex items-center gap-2 mb-2.5 lg:mb-4 text-white/60">
                 <FaLock className="text-xs" />
                 <div className="text-xs tracking-[0.2em] uppercase font-mono">Premium Role Locked</div>
               </div>
@@ -1891,14 +1894,14 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
               {!isLoggedIn ? (
                 <button
                   onClick={onShowProfile}
-                  className="w-full py-4 rounded-lg border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 hover:border-cyan-400 transition-all flex flex-col items-center gap-1 group cursor-pointer"
+                  className="w-full py-3.5 lg:py-4 rounded-lg border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 hover:border-cyan-400 transition-all flex flex-col items-center gap-1 group cursor-pointer"
                 >
                   <span className="font-orbitron font-bold text-xs tracking-[0.18em] text-cyan-300">SIGN IN TO UNLOCK</span>
                   <span className="font-mono text-[10px] text-cyan-200/60">Sign in to unlock premium roles</span>
                 </button>
               ) : (
-                <div className="w-full flex flex-col gap-3">
-                  <div className="flex justify-between items-center px-4 py-3 bg-white/5 border border-white/10 rounded-lg">
+                <div className="w-full flex flex-col gap-2.5 lg:gap-3">
+                  <div className="flex justify-between items-center px-4 py-2.5 lg:py-3 bg-white/5 border border-white/10 rounded-lg">
                     <span className="font-mono text-xs uppercase tracking-wider text-white/60">Unlock Cost</span>
                     <span className="font-orbitron text-sm font-bold text-cyan-300">{ROLE_PRICES[role.id] || 0} CC</span>
                   </div>
@@ -1907,7 +1910,7 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
                     <button
                       onClick={() => onUnlock(role.id)}
                       disabled={isUnlocking}
-                      className="w-full py-4 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white transition-all flex flex-col items-center gap-1 shadow-[0_0_20px_rgba(6,182,212,0.3)] cursor-pointer"
+                      className="w-full py-3.5 lg:py-4 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white transition-all flex flex-col items-center gap-1 shadow-[0_0_20px_rgba(6,182,212,0.3)] cursor-pointer"
                     >
                       <span className="font-orbitron font-bold text-xs tracking-[0.18em]">{isUnlocking ? "UNLOCKING..." : "UNLOCK FOR THIS MATCH"}</span>
                       <span className="font-mono text-[10px] text-white/70">Uses {ROLE_PRICES[role.id] || 0} credits from your balance</span>
@@ -1915,7 +1918,7 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
                   ) : (
                     <button
                       onClick={onBuyCredits}
-                      className="w-full py-4 rounded-lg border border-red-500/40 bg-red-500/10 hover:bg-red-500/15 hover:border-red-400 transition-all flex flex-col items-center gap-1 group cursor-pointer"
+                      className="w-full py-3.5 lg:py-4 rounded-lg border border-red-500/40 bg-red-500/10 hover:bg-red-500/15 hover:border-red-400 transition-all flex flex-col items-center gap-1 group cursor-pointer"
                     >
                       <span className="font-orbitron font-bold text-xs tracking-[0.18em] text-red-300">NOT ENOUGH CREDITS</span>
                       <span className="font-mono text-[10px] text-red-200/70">Open Credit Store to get credits</span>
