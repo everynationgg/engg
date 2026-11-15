@@ -29,13 +29,16 @@ export default function ShopModal({ isOpen, onClose }: ShopModalProps) {
   const [success, setSuccess] = useState(false);
   const payPalRef = useRef<HTMLDivElement>(null);
 
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   useEffect(() => {
     if (!isOpen) return;
     return backNavigation.register(() => {
-      onClose();
+      onCloseRef.current();
       return true;
     }, 60);
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   const handlePayMongoCheckout = async () => {
     if (!selectedPack) return;

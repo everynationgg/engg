@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { backNavigation } from "@/lib/backNavigation";
 
 interface ConfirmModalProps {
@@ -24,14 +24,17 @@ export default function ConfirmModal({
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
+  const onCancelRef = useRef(onCancel);
+  onCancelRef.current = onCancel;
+
   useEffect(() => {
     if (!isOpen) return;
     const unregister = backNavigation.register(() => {
-      onCancel();
+      onCancelRef.current();
       return true;
     }, 100);
     return unregister;
-  }, [isOpen, onCancel]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

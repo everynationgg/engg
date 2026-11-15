@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ALIEN_ROLES, CREW_ROLES, CHAOTIC_ROLES, Role } from "@/data/roles";
 import howToPlayImg from "@assets/How_to_Play.webp";
 import { TeamIcon } from "@/components/common/TeamIcon";
@@ -14,17 +14,22 @@ export default function HowToPlayModal({ onClose }: HowToPlayModalProps) {
   const [zoomImage, setZoomImage] = useState(false);
   const [expandedRoleId, setExpandedRoleId] = useState<string | null>(null);
 
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  const zoomImageRef = useRef(zoomImage);
+  zoomImageRef.current = zoomImage;
+
   // Close on ESC or Android back button via backNavigation
   useEffect(() => {
     return backNavigation.register(() => {
-      if (zoomImage) {
+      if (zoomImageRef.current) {
         setZoomImage(false);
         return true;
       }
-      onClose();
+      onCloseRef.current();
       return true;
     }, 60);
-  }, [onClose, zoomImage]);
+  }, []);
 
   const handleTabChange = (tab: "phases" | "roles" | "image") => {
     playSciFiClick();

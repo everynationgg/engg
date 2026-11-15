@@ -40,12 +40,20 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   useEffect(() => {
     if (preferences) {
-      setLocalMusicVolume(preferences.musicVolume);
-      setLocalSfxVolume(preferences.sfxVolume);
-      if (preferences.musicVolume > 0) setPrevMusicVolume(preferences.musicVolume);
-      if (preferences.sfxVolume > 0) setPrevSfxVolume(preferences.sfxVolume);
-      setLocalNotifications(preferences.notificationsEnabled);
-      setLocalColorblindMode(preferences.colorblindMode);
+      if (Number.isFinite(preferences.musicVolume)) {
+        setLocalMusicVolume(preferences.musicVolume);
+        if (preferences.musicVolume > 0) setPrevMusicVolume(preferences.musicVolume);
+      }
+      if (Number.isFinite(preferences.sfxVolume)) {
+        setLocalSfxVolume(preferences.sfxVolume);
+        if (preferences.sfxVolume > 0) setPrevSfxVolume(preferences.sfxVolume);
+      }
+      if (typeof preferences.notificationsEnabled === "boolean") {
+        setLocalNotifications(preferences.notificationsEnabled);
+      }
+      if (typeof preferences.colorblindMode === "boolean") {
+        setLocalColorblindMode(preferences.colorblindMode);
+      }
     }
   }, [preferences]);
 
@@ -63,14 +71,18 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     saveTimerRef.current = setTimeout(() => setSavedNotice(false), 1600);
   };
 
-  // Back button and ESC key handler via backNavigation
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  // Back button and ESC key handler via backNavigation — depends ONLY on [isOpen]
+  // so parent re-renders when preferences change never close or re-register the modal.
   useEffect(() => {
     if (!isOpen) return;
     return backNavigation.register(() => {
-      onClose();
+      onCloseRef.current();
       return true;
     }, 60);
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   const handleMusicChange = (val: number) => {
     try {
@@ -96,15 +108,15 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       const parsed = Number(val);
       const clamped = Number.isFinite(parsed) ? Math.max(0, Math.min(100, Math.round(parsed))) : 70;
       setLocalSfxVolume(clamped);
+      try {
+        setSfxVolume(clamped);
+      } catch {}
       if (clamped > 0) {
         setPrevSfxVolume(clamped);
         try {
           playSciFiClick(clamped / 100);
         } catch {}
       }
-      try {
-        setSfxVolume(clamped);
-      } catch {}
 
       // 30-year rule: Instant local audio response; debounced storage/network persistence
       if (sfxTimerRef.current) clearTimeout(sfxTimerRef.current);
@@ -304,7 +316,6 @@ function Slider({
           <button
             type="button"
             onClick={() => {
-              playSciFiClick();
               onToggleMute();
             }}
             style={{ touchAction: "manipulation" }}

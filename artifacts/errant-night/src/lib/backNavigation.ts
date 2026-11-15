@@ -23,8 +23,7 @@ export interface BackHandlerEntry {
 
 class BackNavigationManager {
   private handlers: BackHandlerEntry[] = [];
-  private historyPushedCount = 0;
-  private isHandlingPopstate = false;
+  private hasHistorySentinel = false;
 
   constructor() {
     if (typeof window !== "undefined") {
@@ -34,9 +33,20 @@ class BackNavigationManager {
     }
   }
 
+  private ensureHistorySentinel(): void {
+    if (this.hasHistorySentinel || typeof window === "undefined") return;
+    try {
+      window.history.pushState({ enggModalGuard: true }, "");
+      this.hasHistorySentinel = true;
+    } catch {
+      // Ignore if pushState fails in restricted environments
+    }
+  }
+
   /**
-   * Register a back handler. Automatically pushes a synthetic history entry
-   * so browser / Android hardware back button triggers popstate.
+   * Register a back handler. Ensures a single synthetic history sentinel is active
+   * while one or more modals are open so Android hardware Back triggers popstate
+   * without ever calling history.back() during React effect cleanups.
    */
   public register(handler: () => boolean, priority = 50): () => void {
     const id = Math.random().toString(36).slice(2, 9);
@@ -50,13 +60,7 @@ class BackNavigationManager {
       this.handlers.splice(index, 0, entry);
     }
 
-    // Push a synthetic history state so Android hardware Back triggers popstate instead of leaving
-    try {
-      window.history.pushState({ enggModalId: id }, "");
-      this.historyPushedCount++;
-    } catch {
-      // Ignore if pushState fails in restricted environments
-    }
+    this.ensureHistorySentinel();
 
     return () => {
       this.unregister(id);
@@ -67,15 +71,9 @@ class BackNavigationManager {
     const idx = this.handlers.findIndex((h) => h.id === id);
     if (idx !== -1) {
       this.handlers.splice(idx, 1);
-      // Clean up the synthetic history entry if this wasn't triggered by popstate
-      if (!this.isHandlingPopstate && this.historyPushedCount > 0) {
-        this.historyPushedCount--;
-        try {
-          window.history.back();
-        } catch {
-          // ignore
-        }
-      }
+      // IMPORTANT: Never call window.history.back() inside unregister()!
+      // Calling history.back() during React useEffect cleanup fires an asynchronous
+      // popstate event on the next tick that races with re-renders and closes open modals.
     }
   }
 
@@ -99,15 +97,13 @@ class BackNavigationManager {
     }
   }
 
-  private onPopState = (e: PopStateEvent) => {
+  private onPopState = () => {
+    this.hasHistorySentinel = false;
     if (this.handlers.length > 0) {
-      // Modal is active! Consume the popstate by closing the topmost modal
-      this.isHandlingPopstate = true;
-      if (this.historyPushedCount > 0) {
-        this.historyPushedCount--;
-      }
       this.handleBack();
-      this.isHandlingPopstate = false;
+      if (this.handlers.length > 0) {
+        this.ensureHistorySentinel();
+      }
     }
   };
 
@@ -115,16 +111,7 @@ class BackNavigationManager {
     if (this.handlers.length > 0) {
       e.preventDefault();
       e.stopImmediatePropagation?.();
-      // Emulate history pop
-      if (this.historyPushedCount > 0) {
-        try {
-          window.history.back();
-        } catch {
-          this.handleBack();
-        }
-      } else {
-        this.handleBack();
-      }
+      this.handleBack();
     }
   };
 

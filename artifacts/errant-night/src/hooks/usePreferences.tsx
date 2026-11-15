@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect, createContext, useContext } from "react";
 import { useAuth } from "./useAuth";
 import { STORAGE_KEYS, DEFAULTS } from "@/lib/constants";
+import { setMusicVolume, stopLobbyMusic } from "@/lib/music";
+import { setSfxVolume } from "@/lib/sound";
 
 export interface UserPrefs {
   userId: string;
@@ -28,40 +30,125 @@ interface PreferencesContextType {
 
 const PreferencesContext = createContext<PreferencesContextType | undefined>(undefined);
 
+function clampVolume(val: unknown, fallback: number): number {
+  const num = Number(val);
+  return Number.isFinite(num) ? Math.max(0, Math.min(100, Math.round(num))) : fallback;
+}
+
+function readLocalPreferences(): UserPrefs {
+  const fallback: UserPrefs = {
+    userId: "guest",
+    musicVolume: DEFAULTS.musicVolume,
+    sfxVolume: DEFAULTS.sfxVolume,
+    theme: DEFAULTS.theme,
+    notificationsEnabled: DEFAULTS.notificationsEnabled,
+    colorblindMode: DEFAULTS.colorblindMode,
+  };
+  try {
+    if (typeof localStorage === "undefined") return fallback;
+    const raw = localStorage.getItem(STORAGE_KEYS.guestPreferences);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return fallback;
+    return {
+      userId: typeof parsed.userId === "string" ? parsed.userId : "guest",
+      musicVolume: clampVolume(parsed.musicVolume, DEFAULTS.musicVolume),
+      sfxVolume: clampVolume(parsed.sfxVolume, DEFAULTS.sfxVolume),
+      theme: parsed.theme === "light" ? "light" : "dark",
+      notificationsEnabled:
+        typeof parsed.notificationsEnabled === "boolean"
+          ? parsed.notificationsEnabled
+          : DEFAULTS.notificationsEnabled,
+      colorblindMode:
+        typeof parsed.colorblindMode === "boolean"
+          ? parsed.colorblindMode
+          : DEFAULTS.colorblindMode,
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+function writeLocalPreferences(prefs: UserPrefs): void {
+  try {
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(STORAGE_KEYS.guestPreferences, JSON.stringify(prefs));
+    }
+  } catch (e) {
+    console.warn("[usePreferences] Local storage save failed:", e);
+  }
+}
+
+function mergePrefs(
+  base: UserPrefs,
+  serverData?: Partial<UserPrefs> | null,
+  explicitUpdates?: Partial<Omit<UserPrefs, "userId" | "createdAt" | "updatedAt">>
+): UserPrefs {
+  const isGuestServerResponse = Boolean(
+    serverData?.userId && String(serverData.userId).startsWith("guest_")
+  );
+
+  // For guest tokens, the backend returns stateless dummy values (70/70 on GET,
+  // or partial req.body on POST). Always preserve local base state unless explicitly updated.
+  const s = isGuestServerResponse ? undefined : serverData;
+
+  return {
+    userId: serverData?.userId ?? base.userId ?? "guest",
+    musicVolume:
+      explicitUpdates?.musicVolume !== undefined
+        ? clampVolume(explicitUpdates.musicVolume, base.musicVolume)
+        : s?.musicVolume !== undefined
+          ? clampVolume(s.musicVolume, base.musicVolume)
+          : base.musicVolume,
+    sfxVolume:
+      explicitUpdates?.sfxVolume !== undefined
+        ? clampVolume(explicitUpdates.sfxVolume, base.sfxVolume)
+        : s?.sfxVolume !== undefined
+          ? clampVolume(s.sfxVolume, base.sfxVolume)
+          : base.sfxVolume,
+    theme:
+      explicitUpdates?.theme ??
+      (s?.theme === "light" || s?.theme === "dark" ? s.theme : base.theme),
+    notificationsEnabled:
+      typeof explicitUpdates?.notificationsEnabled === "boolean"
+        ? explicitUpdates.notificationsEnabled
+        : typeof s?.notificationsEnabled === "boolean"
+          ? s.notificationsEnabled
+          : base.notificationsEnabled,
+    colorblindMode:
+      typeof explicitUpdates?.colorblindMode === "boolean"
+        ? explicitUpdates.colorblindMode
+        : typeof s?.colorblindMode === "boolean"
+          ? s.colorblindMode
+          : base.colorblindMode,
+  };
+}
+
 export function PreferencesProvider({ children }: { children: React.ReactNode }) {
   const { token } = useAuth();
-  const [preferences, setPreferences] = useState<UserPrefs | null>(null);
+  const [preferences, setPreferences] = useState<UserPrefs>(() => {
+    const initial = readLocalPreferences();
+    setMusicVolume(initial.musicVolume);
+    setSfxVolume(initial.sfxVolume);
+    if (initial.musicVolume <= 0) {
+      stopLobbyMusic();
+    }
+    return initial;
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchPreferences = useCallback(async () => {
+    const localPrefs = readLocalPreferences();
+
     if (!token) {
-      try {
-        const localPrefs = typeof localStorage !== "undefined" ? localStorage.getItem(STORAGE_KEYS.guestPreferences) : null;
-        if (localPrefs) {
-          const parsed = JSON.parse(localPrefs);
-          if (parsed && typeof parsed === "object") {
-            parsed.musicVolume = Number.isFinite(parsed.musicVolume) ? Math.max(0, Math.min(100, Math.round(parsed.musicVolume))) : DEFAULTS.musicVolume;
-            parsed.sfxVolume = Number.isFinite(parsed.sfxVolume) ? Math.max(0, Math.min(100, Math.round(parsed.sfxVolume))) : DEFAULTS.sfxVolume;
-            setPreferences(parsed);
-            if (parsed.theme) {
-              document.documentElement.classList.remove("dark", "light");
-              document.documentElement.classList.add(parsed.theme);
-            }
-            return;
-          }
-        }
-      } catch (e) {
-        // ignore
+      setPreferences(localPrefs);
+      setMusicVolume(localPrefs.musicVolume);
+      setSfxVolume(localPrefs.sfxVolume);
+      if (localPrefs.theme) {
+        document.documentElement.classList.remove("dark", "light");
+        document.documentElement.classList.add(localPrefs.theme);
       }
-      setPreferences({
-        userId: "guest",
-        musicVolume: DEFAULTS.musicVolume,
-        sfxVolume: DEFAULTS.sfxVolume,
-        theme: DEFAULTS.theme,
-        notificationsEnabled: DEFAULTS.notificationsEnabled,
-        colorblindMode: DEFAULTS.colorblindMode,
-      });
       return;
     }
 
@@ -80,16 +167,17 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
       }
 
       const data = await response.json();
-      if (data && typeof data === "object") {
-        data.musicVolume = Number.isFinite(data.musicVolume) ? Math.max(0, Math.min(100, Math.round(data.musicVolume))) : DEFAULTS.musicVolume;
-        data.sfxVolume = Number.isFinite(data.sfxVolume) ? Math.max(0, Math.min(100, Math.round(data.sfxVolume))) : DEFAULTS.sfxVolume;
-      }
-      setPreferences(data);
-      // Apply theme to DOM
-      if (data.theme) {
-        document.documentElement.classList.remove("dark", "light");
-        document.documentElement.classList.add(data.theme);
-      }
+      setPreferences((prev) => {
+        const merged = mergePrefs(prev || localPrefs, data);
+        writeLocalPreferences(merged);
+        setMusicVolume(merged.musicVolume);
+        setSfxVolume(merged.sfxVolume);
+        if (merged.theme) {
+          document.documentElement.classList.remove("dark", "light");
+          document.documentElement.classList.add(merged.theme);
+        }
+        return merged;
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to fetch preferences";
       setError(message);
@@ -100,26 +188,14 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
 
   const updatePreferences = useCallback(
     async (updates: Partial<Omit<UserPrefs, "userId" | "createdAt" | "updatedAt">>) => {
-      // Optimistically update local state immediately so UI and audio are completely responsive
+      // Optimistically merge and persist locally immediately so partial updates (like sfxVolume)
+      // NEVER wipe out other fields (like musicVolume: 0).
       setPreferences((prev) => {
-        const defaultPrefs: UserPrefs = {
-          userId: token ? "user" : "guest",
-          musicVolume: DEFAULTS.musicVolume,
-          sfxVolume: DEFAULTS.sfxVolume,
-          theme: DEFAULTS.theme,
-          notificationsEnabled: DEFAULTS.notificationsEnabled,
-          colorblindMode: DEFAULTS.colorblindMode,
-        };
-        const nextPrefs = { ...(prev || defaultPrefs), ...updates } as UserPrefs;
-        if (!token) {
-          try {
-            if (typeof localStorage !== "undefined") {
-              localStorage.setItem(STORAGE_KEYS.guestPreferences, JSON.stringify(nextPrefs));
-            }
-          } catch (e) {
-            console.warn("[usePreferences] Local storage save failed:", e);
-          }
-        }
+        const base = prev || readLocalPreferences();
+        const nextPrefs = mergePrefs(base, null, updates);
+        writeLocalPreferences(nextPrefs);
+        setMusicVolume(nextPrefs.musicVolume);
+        setSfxVolume(nextPrefs.sfxVolume);
         return nextPrefs;
       });
 
@@ -147,13 +223,21 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
         }
 
         const data = await response.json();
-        setPreferences(data);
+        // Merge server response with previous state and explicit updates so partial
+        // guest responses ({ userId, sfxVolume }) NEVER overwrite musicVolume!
+        setPreferences((prev) => {
+          const base = prev || readLocalPreferences();
+          const merged = mergePrefs(base, data, updates);
+          writeLocalPreferences(merged);
+          setMusicVolume(merged.musicVolume);
+          setSfxVolume(merged.sfxVolume);
+          return merged;
+        });
         return data;
       } catch (err) {
         const message = err instanceof Error ? err.message : "Failed to update preferences";
         setError(message);
         console.warn("[usePreferences] Network error updating preferences:", message);
-        // Do not rethrow so UI doesn't crash into ErrorBoundary
       } finally {
         setIsLoading(false);
       }
@@ -162,14 +246,12 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
   );
 
   const updateMusicVolume = useCallback((volume: number) => {
-    const parsed = Number(volume);
-    const safeVol = Number.isFinite(parsed) ? Math.max(0, Math.min(100, Math.round(parsed))) : DEFAULTS.musicVolume;
+    const safeVol = clampVolume(volume, DEFAULTS.musicVolume);
     return updatePreferences({ musicVolume: safeVol });
   }, [updatePreferences]);
 
   const updateSfxVolume = useCallback((volume: number) => {
-    const parsed = Number(volume);
-    const safeVol = Number.isFinite(parsed) ? Math.max(0, Math.min(100, Math.round(parsed))) : DEFAULTS.sfxVolume;
+    const safeVol = clampVolume(volume, DEFAULTS.sfxVolume);
     return updatePreferences({ sfxVolume: safeVol });
   }, [updatePreferences]);
 
@@ -187,20 +269,17 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     return updatePreferences({ colorblindMode: enabled });
   }, [updatePreferences]);
 
-
-  // Fetch preferences on mount
+  // Fetch preferences when token changes
   useEffect(() => {
-    if (token && !preferences) {
-      fetchPreferences();
-    }
-  }, [token, preferences, fetchPreferences]);
+    fetchPreferences();
+  }, [token, fetchPreferences]);
 
   // Colorblind mode: toggle class on <body>
   useEffect(() => {
     if (preferences?.colorblindMode) {
-      document.body.classList.add('colorblind');
+      document.body.classList.add("colorblind");
     } else {
-      document.body.classList.remove('colorblind');
+      document.body.classList.remove("colorblind");
     }
   }, [preferences?.colorblindMode]);
 

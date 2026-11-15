@@ -102,15 +102,18 @@ export default function ProfileModal({ isOpen, onClose, onShowAuth }: ProfileMod
     }
   };
 
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   // ESC and Android back button listener
   // Hardware Back & Escape handlers via backNavigation
   useEffect(() => {
     if (!isOpen) return;
     return backNavigation.register(() => {
-      onClose();
+      onCloseRef.current();
       return true;
     }, 60);
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

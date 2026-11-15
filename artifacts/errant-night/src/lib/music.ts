@@ -1,17 +1,35 @@
 const STORAGE_KEY = "lp_musicEnabled";
+const PREFS_STORAGE_KEY = "errant_guest_preferences";
+
+function readInitialMusicVolume(): number {
+  try {
+    if (typeof localStorage === "undefined") return 70;
+    const raw = localStorage.getItem(PREFS_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && Number.isFinite(Number(parsed.musicVolume))) {
+        return Math.max(0, Math.min(100, Math.round(Number(parsed.musicVolume))));
+      }
+    }
+    const enabled = localStorage.getItem(STORAGE_KEY);
+    if (enabled === "false") return 0;
+  } catch {}
+  return 70;
+}
 
 let audio: HTMLAudioElement | null = null;
 let unlockListenersAttached = false;
-let musicVolume = 100; // 0-100, updated by setMusicVolume
+let musicVolume = readInitialMusicVolume(); // 0-100, updated by setMusicVolume
 let wasPlayingBeforeHidden = false;
 
 export function getSoundEnabled(): boolean {
   try {
+    if (musicVolume <= 0) return false;
     if (typeof localStorage === "undefined") return true;
     const val = localStorage.getItem(STORAGE_KEY);
     return val === null ? true : val === "true";
   } catch {
-    return true;
+    return musicVolume > 0;
   }
 }
 
@@ -30,6 +48,11 @@ export function setMusicVolume(volume: number): void {
   try {
     const safeVolume = Number.isFinite(volume) ? Math.max(0, Math.min(100, Math.round(volume))) : 70;
     musicVolume = safeVolume;
+    try {
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem(STORAGE_KEY, String(safeVolume > 0));
+      }
+    } catch {}
     if (audio) {
       try {
         audio.volume = Math.max(0, Math.min(1, safeVolume / 100));
@@ -39,11 +62,7 @@ export function setMusicVolume(volume: number): void {
     }
     // 30-year rule: volume === 0 means pause audio hardware stream immediately
     if (musicVolume === 0) {
-      if (audio && !audio.paused) {
-        try {
-          audio.pause();
-        } catch {}
-      }
+      stopLobbyMusic();
     } else if (getSoundEnabled() && !documentHidden() && audio && audio.paused) {
       tryPlay();
     }

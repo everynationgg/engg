@@ -1,6 +1,20 @@
+function readInitialSfxVolume(): number {
+  try {
+    if (typeof localStorage === "undefined") return 70;
+    const raw = localStorage.getItem("errant_guest_preferences");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && Number.isFinite(Number(parsed.sfxVolume))) {
+        return Math.max(0, Math.min(100, Math.round(Number(parsed.sfxVolume))));
+      }
+    }
+  } catch {}
+  return 70;
+}
+
 let audioCtx: AudioContext | null = null;
 
-let sfxVolume = 100; // 0-100, updated by setSfxVolume
+let sfxVolume = readInitialSfxVolume(); // 0-100, updated by setSfxVolume
 
 export function setSfxVolume(volume: number): void {
   try {
@@ -45,6 +59,7 @@ function safeGain(multiplier: number, v: number): number {
 
 export function playSciFiClick(volume: number = sfxVolume / 100) {
   try {
+    if (!Number.isFinite(sfxVolume) || sfxVolume <= 0) return;
     if (!Number.isFinite(volume) || volume <= 0) return;
     const safeVol = Math.max(0.001, Math.min(1, volume));
     debounced("click", 80, () => {
