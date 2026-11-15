@@ -130,10 +130,12 @@ export default function RoleConfigPage() {
     }
   }, [isCreating, roomCode]);
 
+  const isRolePreviewOpen = Boolean(selectedRole);
+
   // Close mobile RolePreview sheet via backNavigation (Android hardware Back, Popstate, or Escape)
   // and lock background scrolling on mobile while open
   useEffect(() => {
-    if (!selectedRole) return;
+    if (!isRolePreviewOpen) return;
 
     // Lock background scrolling on mobile
     const prevOverflow = document.body.style.overflow;
@@ -152,7 +154,7 @@ export default function RoleConfigPage() {
       }
       unregister();
     };
-  }, [selectedRole]);
+  }, [isRolePreviewOpen]);
 
 
 
@@ -1456,7 +1458,7 @@ export default function RoleConfigPage() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setSelectedRole(null)}
-                className="lg:hidden fixed inset-0 z-[45] bg-black/60 backdrop-blur-sm"
+                className="lg:hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm"
               />
               <motion.div
                 initial={{ y: "100%", opacity: 0 }}
@@ -1464,11 +1466,11 @@ export default function RoleConfigPage() {
                 exit={{ y: "100%", opacity: 0 }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
                 data-no-swipe="true"
-                className="fixed lg:relative inset-x-0 bottom-0 z-50 lg:z-0 flex w-full lg:w-[clamp(240px,30%,400px)] shrink-0 flex-col border-t lg:border-t-0 lg:border-l max-h-[88dvh] lg:max-h-none lg:h-full overflow-y-auto lg:overflow-hidden rounded-t-2xl lg:rounded-none shadow-[0_-20px_40px_rgba(0,0,0,0.5)] lg:shadow-none backdrop-blur-xl lg:backdrop-blur-0 overscroll-contain"
+                className="fixed lg:relative inset-x-0 bottom-0 z-[110] lg:z-0 block lg:flex lg:flex-col w-full lg:w-[clamp(240px,30%,400px)] shrink-0 border-t lg:border-t-0 lg:border-l max-h-[85dvh] lg:max-h-none lg:h-full overflow-y-auto lg:overflow-hidden rounded-t-2xl lg:rounded-none shadow-[0_-20px_40px_rgba(0,0,0,0.5)] lg:shadow-none backdrop-blur-xl lg:backdrop-blur-0 overscroll-contain custom-scrollbar"
                 style={{
                   background: "hsl(220 30% 6% / 0.96)",
                   borderColor: "hsl(210 30% 18%)",
-                  paddingBottom: "max(16px, var(--app-safe-bottom, 24px))",
+                  paddingBottom: "max(32px, var(--app-safe-bottom, 32px))",
                   touchAction: "pan-y",
                   WebkitOverflowScrolling: "touch",
                 }}
@@ -1793,9 +1795,9 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
     role.team === "alien" ? "ALIEN TEAM" : role.team === "chaotic" ? "CHAOTIC" : "CREW TEAM";
 
   return (
-    <div className="flex flex-col lg:h-full relative">
+    <div className="block lg:flex lg:flex-col lg:h-full relative">
       {/* Sticky Mobile Top Bar / Close Button — always accessible regardless of scroll position */}
-      <div className="lg:hidden sticky top-0 z-50 flex items-center justify-between px-3 py-2 bg-[#0b0e14]/90 backdrop-blur-md border-b border-white/10 shrink-0">
+      <div className="lg:hidden sticky top-0 z-50 flex items-center justify-between px-3 py-2.5 bg-[#0b0e14]/95 backdrop-blur-md border-b border-white/10 shrink-0">
         <div
           className={`px-2 py-0.5 rounded font-orbitron text-[10px] tracking-widest uppercase font-bold team-badge ${role.team}-color`}
           style={{
@@ -1851,10 +1853,10 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
       </div>
 
       {/* Right side (mobile) / Bottom section (desktop) */}
-      <div className="flex flex-col flex-1 min-w-0 lg:overflow-hidden">
+      <div className="block lg:flex lg:flex-col lg:flex-1 min-w-0 lg:min-h-0 lg:overflow-hidden">
         {/* Role name */}
         <div
-          className="px-3 lg:px-4 pt-1 pb-1 lg:pt-1 lg:pb-2 border-b shrink-0"
+          className="px-3 lg:px-4 pt-1 pb-1.5 lg:pt-1 lg:pb-2 border-b shrink-0"
           style={{ borderColor: "hsl(210 30% 14%)" }}
         >
           <div
@@ -1870,10 +1872,9 @@ function RolePreview({ role, isLocked, onUnlock, userCredits, isUnlocking, isLog
           </div>
         </div>
 
-        {/* Details — scrollable on both mobile and desktop with natural height and no excessive bottom padding */}
+        {/* Details — single outer scroll on mobile, inner pane scroll on desktop */}
         <div
-          className="flex-1 overflow-y-auto px-3 lg:px-4 py-2 flex flex-col gap-2 lg:gap-3 pb-6 overscroll-contain"
-          style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch" }}
+          className="block lg:flex lg:flex-col lg:flex-1 lg:min-h-0 lg:overflow-y-auto px-3.5 lg:px-4 py-3 space-y-3 pb-24 lg:pb-6 lg:overscroll-contain"
         >
           <InfoBlock label="Alignment" value={role.alignment} accentColor={accentColorLight} />
           <InfoBlock label="Win Condition" value={role.winCondition} accentColor={accentColorLight} />
